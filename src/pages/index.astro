@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import CaseCard from '../components/CaseCard.astro';
+import QuantizedScallop from '../components/QuantizedScallop.astro';
 import { CASES } from '../data/cases';
 
 const featured = CASES.slice(0, 2);
@@ -15,7 +16,7 @@ const featured = CASES.slice(0, 2);
 >
   <SiteHeader />
   <main id="content" class="page-shell">
-    <section class="hero">
+    <section class="hero scallop-surface">
       <p class="kicker">Product Designer · Kyiv</p>
       <h1>Design with care, ship with confidence.</h1>
       <p>
@@ -30,8 +31,39 @@ const featured = CASES.slice(0, 2);
       </div>
     </section>
 
+    <section class="section-stack">
+      <div class="section-head">
+        <h2>Quantized scallop demos</h2>
+      </div>
+      <div class="scallop-preview-grid">
+        <div class="scallop-preview-slot scallop-preview-slot-rect">
+          <QuantizedScallop class="scallop-preview scallop-preview-rect" minCols={12} minRows={8} label="Scallop rectangle preview">
+            <p class="kicker">Rectangle</p>
+            <h2>Container background test</h2>
+            <p>Width snaps by floor and height snaps by ceil to diameter step without edge clipping.</p>
+          </QuantizedScallop>
+        </div>
+
+        <div class="scallop-preview-slot scallop-preview-slot-circle">
+          <QuantizedScallop
+            class="scallop-preview scallop-preview-circle"
+            shape="circle"
+            minLobes={8}
+            clampLines={3}
+            label="Scallop circle preview"
+          >
+            <p class="kicker">Circle</p>
+            <h2 class="scallop-clamp">Circular scallop test</h2>
+            <p class="scallop-clamp">
+              Circle size is primary. Content adapts inside with padding and line clamp when space is limited.
+            </p>
+          </QuantizedScallop>
+        </div>
+      </div>
+    </section>
+
     <section class="content-grid">
-      <article class="panel">
+      <article class="panel scallop-surface">
         <h2>What moved from Framer</h2>
         <ul>
           <li>Content architecture and route contract.</li>
@@ -39,7 +71,7 @@ const featured = CASES.slice(0, 2);
           <li>Mobile-first foundations instead of desktop-only fallback.</li>
         </ul>
       </article>
-      <article class="panel">
+      <article class="panel scallop-surface">
         <h2>Current route map</h2>
         <ul>
           <li><code>/</code> - home narrative and featured work</li>

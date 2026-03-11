@@ -22,3 +22,8 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# local docs/notes/assets not needed for github publishing
+/docs/
+/tasks/
+/fonts/

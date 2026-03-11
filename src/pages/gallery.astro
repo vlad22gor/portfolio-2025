@@ -17,7 +17,7 @@ import { GALLERY_ITEMS } from '../data/gallery';
       <p class="lead-copy">Local media placeholders are used to avoid runtime dependency on Framer-hosted assets.</p>
       <div class="gallery-grid">
         {GALLERY_ITEMS.map((item) => (
-          <article class="gallery-card">
+          <article class="gallery-card scallop-surface">
             <img src={item.src} alt={item.alt} loading="lazy" />
             <h2>{item.title}</h2>
             <p>{item.description}</p>

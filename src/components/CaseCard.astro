@@ -8,7 +8,7 @@ interface Props {
 const { item } = Astro.props;
 ---
 
-<article class="case-card">
+<article class="case-card scallop-surface">
   <img src={item.media[0]?.src} alt={item.media[0]?.alt ?? item.title} loading="lazy" />
   <div class="case-card-content">
     <ul class="chip-row" aria-label="Case tags">
