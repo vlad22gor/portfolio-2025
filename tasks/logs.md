@@ -15,3 +15,10 @@
   Причина: убрать ссылку на несуществующий sitemap и закрыть SEO-базу.
   Файлы: `public/sitemap.xml`, `public/robots.txt`.
   Проверки: `npm run build` — успешно.
+- 2026-03-11: Создан публичный репозиторий `vlad22gor/portfolio-2025`, настроен `origin`, выполнен первый push ветки `main`.
+  Причина: публикация проекта в GitHub для бесплатного GitHub Pages деплоя.
+  Проверки: `git remote -v`, `git branch -vv`.
+
+- 2026-03-11: Для нового репозитория включен GitHub Pages в режиме `workflow` через API, затем перезапущен workflow `Deploy Astro to GitHub Pages`.
+  Причина: первый запуск упал с `404 Not Found` на шаге `actions/deploy-pages` из-за отключенного Pages.
+  Проверки: `gh run watch` (run `22967774136`) — `success`; Pages URL: `https://vlad22gor.github.io/portfolio-2025/`.
