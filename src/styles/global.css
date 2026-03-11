@@ -655,6 +655,32 @@ p {
   overflow: hidden;
 }
 
+.quantized-wave {
+  --wave-color: var(--color-accent-green);
+  --wave-diameter: 8px;
+  --wave-stroke: 2px;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: calc(var(--wave-diameter) + var(--wave-stroke));
+  color: var(--wave-color);
+}
+
+.quantized-wave .wave-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.quantized-wave[data-ready="false"] .wave-frame {
+  opacity: 0;
+}
+
+.wave-divider {
+  margin-top: 0.25rem;
+  margin-bottom: 0.15rem;
+}
+
 .scallop-surface {
   --scallop-size: 22px;
   --scallop-bg: var(--surface-base);

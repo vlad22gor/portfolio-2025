@@ -1,0 +1,213 @@
+---
+type WaveAlign = 'left' | 'center' | 'right';
+type WavePhase = 'up' | 'down';
+type WaveEdge = 'equator';
+
+interface Props {
+  class?: string;
+  circleDiameter?: number;
+  strokeWidth?: number;
+  minCircles?: number;
+  count?: number;
+  phase?: WavePhase;
+  align?: WaveAlign;
+  edge?: WaveEdge;
+  color?: string;
+}
+
+const {
+  class: className = '',
+  circleDiameter = 8,
+  strokeWidth = 2,
+  minCircles = 4,
+  count,
+  phase = 'up',
+  align = 'left',
+  edge = 'equator',
+  color = 'var(--color-accent-green)',
+} = Astro.props;
+---
+
+<div
+  class={`quantized-wave ${className}`.trim()}
+  data-quantized-wave
+  data-ready="false"
+  data-wave-diameter={String(circleDiameter)}
+  data-wave-stroke={String(strokeWidth)}
+  data-wave-min-circles={String(minCircles)}
+  data-wave-count={typeof count === 'number' ? String(count) : ''}
+  data-wave-phase={phase}
+  data-wave-align={align}
+  data-wave-edge={edge}
+  style={`--wave-color: ${color}; --wave-diameter: ${circleDiameter}px; --wave-stroke: ${strokeWidth}px;`}
+  role="presentation"
+  aria-hidden="true"
+>
+  <svg class="wave-frame" viewBox="0 0 1 1" preserveAspectRatio="none" focusable="false">
+    <path
+      class="wave-path"
+      d="M0 0L1 0"
+      fill="none"
+      stroke="currentColor"
+      stroke-width={String(strokeWidth)}
+      stroke-linecap="butt"
+    ></path>
+  </svg>
+</div>
+
+<script>
+  (() => {
+    const html = document.documentElement;
+    if (html.dataset.quantizedWaveRuntime === '1') {
+      return;
+    }
+    html.dataset.quantizedWaveRuntime = '1';
+
+    const states = new WeakMap();
+
+    const readNumber = (value, fallback) => {
+      const parsed = Number.parseFloat(value ?? '');
+      return Number.isFinite(parsed) ? parsed : fallback;
+    };
+
+    const clampNumber = (value, min, max) => Math.min(max, Math.max(min, value));
+    const clampInt = (value, min) => Math.max(min, Math.floor(value));
+    const round3 = (value) => Math.round(value * 1000) / 1000;
+
+    const resolveAlign = (value) => {
+      if (value === 'center' || value === 'right') {
+        return value;
+      }
+      return 'left';
+    };
+
+    const resolvePhase = (value) => {
+      if (value === 'down') {
+        return 'down';
+      }
+      return 'up';
+    };
+
+    const applyAlignment = (root, align) => {
+      if (align === 'center') {
+        root.style.marginLeft = 'auto';
+        root.style.marginRight = 'auto';
+        return;
+      }
+
+      if (align === 'right') {
+        root.style.marginLeft = 'auto';
+        root.style.marginRight = '0';
+        return;
+      }
+
+      root.style.marginLeft = '0';
+      root.style.marginRight = 'auto';
+    };
+
+    const resolveCircleCount = (root, availableWidth, diameter) => {
+      const fixedCount = clampInt(readNumber(root.dataset.waveCount, 0), 0);
+      if (fixedCount > 0) {
+        return fixedCount;
+      }
+
+      const minCircles = clampInt(readNumber(root.dataset.waveMinCircles, 4), 1);
+      const floorCount = Math.floor(availableWidth / diameter);
+      if (floorCount < 1) {
+        return 1;
+      }
+
+      const preferredCount = Math.max(minCircles, floorCount);
+      return preferredCount * diameter <= availableWidth ? preferredCount : floorCount;
+    };
+
+    const renderWave = (svg, diameter, strokeWidth, count, phase) => {
+      const radius = diameter / 2;
+      const strokeHalf = strokeWidth / 2;
+      const baseline = radius + strokeHalf;
+      const width = round3(count * diameter);
+      const height = round3(diameter + strokeWidth);
+      const commands = [`M 0 ${round3(baseline)}`];
+
+      let nextUp = phase === 'up';
+      for (let index = 0; index < count; index += 1) {
+        const endX = round3((index + 1) * diameter);
+        const sweep = nextUp ? 0 : 1;
+        commands.push(`A ${round3(radius)} ${round3(radius)} 0 0 ${sweep} ${endX} ${round3(baseline)}`);
+        nextUp = !nextUp;
+      }
+
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      svg.innerHTML = `<path class="wave-path" d="${commands.join(' ')}" fill="none" stroke="currentColor" stroke-width="${round3(strokeWidth)}" stroke-linecap="butt"></path>`;
+    };
+
+    const update = (root) => {
+      const svg = root.querySelector('.wave-frame');
+      const parent = root.parentElement;
+      if (!svg || !parent) {
+        return;
+      }
+
+      const diameter = clampNumber(readNumber(root.dataset.waveDiameter, 8), 2, 512);
+      const strokeWidth = clampNumber(readNumber(root.dataset.waveStroke, 2), 1, diameter);
+      const availableWidth = Math.max(1, Math.floor(parent.clientWidth));
+      const count = resolveCircleCount(root, availableWidth, diameter);
+      const quantizedWidth = round3(count * diameter);
+      const phase = resolvePhase(root.dataset.wavePhase);
+      const align = resolveAlign(root.dataset.waveAlign);
+      const height = round3(diameter + strokeWidth);
+
+      const signature = ['equator', quantizedWidth, diameter, strokeWidth, count, phase].join(':');
+      const prevSignature = root.dataset.waveSignature;
+
+      root.style.width = `${quantizedWidth}px`;
+      root.style.height = `${height}px`;
+      root.dataset.waveCountResolved = String(count);
+      root.dataset.waveSignature = signature;
+      root.dataset.ready = 'true';
+      applyAlignment(root, align);
+
+      if (signature !== prevSignature) {
+        renderWave(svg, diameter, strokeWidth, count, phase);
+      }
+    };
+
+    const schedule = (root) => {
+      const state = states.get(root);
+      if (!state || state.rafId !== 0) {
+        return;
+      }
+
+      state.rafId = window.requestAnimationFrame(() => {
+        state.rafId = 0;
+        update(root);
+      });
+    };
+
+    const mount = (root) => {
+      const parent = root.parentElement;
+      if (!parent) {
+        return;
+      }
+
+      const observer = new ResizeObserver(() => {
+        schedule(root);
+      });
+
+      states.set(root, { observer, rafId: 0 });
+      observer.observe(parent);
+      update(root);
+    };
+
+    const roots = document.querySelectorAll('[data-quantized-wave]');
+    roots.forEach((root) => {
+      mount(root);
+    });
+
+    window.addEventListener('resize', () => {
+      roots.forEach((root) => {
+        schedule(root);
+      });
+    });
+  })();
+</script>
