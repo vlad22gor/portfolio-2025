@@ -1,46 +1,49 @@
-# Astro Starter Kit: Basics
+# Portfolio 2025 Vibecode
 
-```sh
-npm create astro@latest -- --template basics
+Astro + Tailwind static portfolio scaffold for migration from Framer.
+
+## Stack
+- Astro (SSG)
+- Tailwind CSS v4
+- GitHub Pages via GitHub Actions
+
+## Route contract
+- `/`
+- `/cases`
+- `/gallery`
+- `/fora`
+- `/kissa`
+
+## Local development
+```bash
+npm install
+npm run dev
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
+## Production build
+```bash
+npm run build
+npm run preview
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+## Deployment
+- Workflow: `.github/workflows/deploy.yml`
+- Branch trigger: `main`
+- Artifact: `dist/`
+- Custom domain: `public/CNAME`
 
-## 🧞 Commands
+## Content model
+Case content is centralized in `src/data/cases.ts` and reused by:
+- case cards
+- dynamic case pages (`src/pages/[slug].astro`)
 
-All commands are run from the root of the project, from a terminal:
+## Media strategy
+- Current placeholders live in `public/media/`
+- Replace placeholders with optimized assets (WebP/AVIF preferred)
+- Keep heavy media under explicit performance budgets
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+## Cloudflare switch trigger
+Stay on GitHub Pages by default. Reconsider Cloudflare Pages when:
+- you consistently approach GitHub Pages traffic/build soft limits
+- you need edge logic (Functions/Workers)
+- you need stricter global caching/perf control

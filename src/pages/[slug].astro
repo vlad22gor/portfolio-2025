@@ -1,0 +1,61 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { CASES, getCaseBySlug } from '../data/cases';
+
+export function getStaticPaths() {
+  return CASES.map((item) => ({ params: { slug: item.slug } }));
+}
+
+const slug = Astro.params.slug ?? '';
+const current = getCaseBySlug(slug);
+
+if (!current) {
+  return Astro.redirect('/cases');
+}
+
+const index = CASES.findIndex((item) => item.slug === current.slug);
+const prev = CASES[(index - 1 + CASES.length) % CASES.length];
+const next = CASES[(index + 1) % CASES.length];
+---
+
+<BaseLayout title={`${current.title} - Vlad Horovyy`} description={current.subtitle} canonicalPath={`/${current.slug}`}>
+  <SiteHeader />
+  <main id="content" class="page-shell">
+    <section class="section-stack">
+      <p class="kicker">Case Study</p>
+      <h1>{current.title}</h1>
+      <p class="lead-copy">{current.subtitle}</p>
+      <img class="hero-media" src={current.media[0]?.src} alt={current.media[0]?.alt ?? current.title} />
+    </section>
+
+    <section class="metrics-grid" aria-label="Case metrics">
+      {current.metrics.map((metric) => (
+        <article>
+          <p>{metric.label}</p>
+          <strong>{metric.value}</strong>
+        </article>
+      ))}
+    </section>
+
+    <section class="section-stack prose-like">
+      <p>{current.summary}</p>
+      {current.sections.map((section) => (
+        <article>
+          <h2>{section.title}</h2>
+          {section.body.map((paragraph) => (
+            <p>{paragraph}</p>
+          ))}
+        </article>
+      ))}
+    </section>
+
+    <nav class="case-pager" aria-label="Case navigation">
+      <a href={`/${prev.slug}`}>Prev case: {prev.slug}</a>
+      <a href="/cases">All cases</a>
+      <a href={`/${next.slug}`}>Next case: {next.slug}</a>
+    </nav>
+  </main>
+  <SiteFooter />
+</BaseLayout>

@@ -1,0 +1,22 @@
+---
+import type { Case } from '../data/cases';
+
+interface Props {
+  item: Case;
+}
+
+const { item } = Astro.props;
+---
+
+<article class="case-card">
+  <img src={item.media[0]?.src} alt={item.media[0]?.alt ?? item.title} loading="lazy" />
+  <div class="case-card-content">
+    <ul class="chip-row" aria-label="Case tags">
+      {item.tags.map((tag) => (
+        <li>{tag}</li>
+      ))}
+    </ul>
+    <h3><a href={`/${item.slug}`}>{item.title}</a></h3>
+    <p>{item.subtitle}</p>
+  </div>
+</article>
