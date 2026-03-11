@@ -1,28 +1,114 @@
 ---
+import QuantizedWave from './QuantizedWave.astro';
+
 const links = [
-  { href: '/', label: 'home' },
-  { href: '/cases', label: 'cases' },
-  { href: '/gallery', label: 'gallery' },
+  { id: 'cases', href: '/cases', label: 'cases' },
+  { id: 'home', href: '/', label: 'vlad horovyy' },
+  { id: 'gallery', href: '/gallery', label: 'gallery' },
 ];
 
 const pathname = Astro.url.pathname;
+const normalizedPath =
+  pathname.length > 1 && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+const activeId = normalizedPath === '/cases' ? 'cases' : normalizedPath === '/gallery' ? 'gallery' : 'home';
 ---
 
 <header class="site-header">
-  <nav class="nav-shell" aria-label="Main navigation">
-    <a class="brand" href="/">vlad horovyy</a>
-    <ul>
-      {links.map((link) => (
-        <li>
-          <a
-            class:list={{ active: pathname === link.href }}
-            href={link.href}
-            aria-current={pathname === link.href ? 'page' : undefined}
-          >
-            {link.label}
-          </a>
-        </li>
-      ))}
-    </ul>
-  </nav>
+  <div class="site-header-inner">
+    <nav class="site-nav" aria-label="Main navigation">
+      <ul class="site-nav-list">
+        {links.map((link) => (
+          <li>
+            <a
+              class="header-button"
+              class:list={{ active: activeId === link.id }}
+              href={link.href}
+              aria-current={activeId === link.id ? 'page' : undefined}
+            >
+              <span class="header-button-content">
+                <span class="header-button-label-container">
+                  <span class="header-button-label">{link.label}</span>
+                </span>
+                {activeId === link.id && (
+                  <span class="header-button-wave-container" aria-hidden="true">
+                    <span class="header-button-wave">
+                      <QuantizedWave
+                        align="center"
+                        fit="cover"
+                        circleDiameter={8}
+                        strokeWidth={2}
+                        minCircles={1}
+                        phase="up"
+                      />
+                    </span>
+                  </span>
+                )}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </div>
 </header>
+
+<script>
+  import { animate } from 'motion';
+
+  (() => {
+    const activeButtons = Array.from(document.querySelectorAll('.header-button.active'));
+    if (!activeButtons.length) {
+      return;
+    }
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const controls = new WeakMap();
+
+    const setGap = (button, value) => {
+      button.style.setProperty('--header-button-gap', `${value}`);
+    };
+
+    const readGap = (button) => {
+      const value = getComputedStyle(button).getPropertyValue('--header-button-gap').trim();
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : 3;
+    };
+
+    const stop = (button) => {
+      const control = controls.get(button);
+      if (control) {
+        control.stop();
+      }
+    };
+
+    const animateGap = (button, target) => {
+      stop(button);
+      if (prefersReducedMotion.matches) {
+        setGap(button, target);
+        controls.delete(button);
+        return;
+      }
+
+      const from = readGap(button);
+      const control = animate(from, target, {
+        type: 'spring',
+        stiffness: 420,
+        damping: 30,
+        mass: 0.5,
+        onUpdate: (latest) => {
+          setGap(button, latest);
+        },
+      });
+
+      controls.set(button, control);
+    };
+
+    activeButtons.forEach((button) => {
+      setGap(button, 3);
+      button.addEventListener('pointerenter', () => animateGap(button, 8));
+      button.addEventListener('pointerleave', () => animateGap(button, 3));
+      button.addEventListener('focus', () => animateGap(button, 8));
+      button.addEventListener('blur', () => animateGap(button, 3));
+    });
+  })();
+</script>

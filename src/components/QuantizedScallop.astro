@@ -2,6 +2,7 @@
 interface Props {
   class?: string;
   shape?: 'rectangle' | 'circle';
+  rectangleEdges?: 'all' | 'top';
   step?: number;
   minCols?: number;
   minRows?: number;
@@ -15,6 +16,7 @@ interface Props {
 const {
   class: className = '',
   shape = 'rectangle',
+  rectangleEdges = 'all',
   step = 40,
   minCols = 12,
   minRows = 8,
@@ -24,12 +26,15 @@ const {
   bg = 'var(--surface-base)',
   pad = 'clamp(1.2rem, 4vw, 3rem)',
 } = Astro.props;
+
+const resolvedRectangleEdges = rectangleEdges === 'top' ? 'top' : 'all';
 ---
 
 <div
   class={`quantized-scallop ${className}`.trim()}
   data-quantized-scallop
   data-scallop-shape={shape}
+  data-scallop-rectangle-edges={resolvedRectangleEdges}
   data-scallop-step={String(step)}
   data-scallop-min-cols={String(minCols)}
   data-scallop-min-rows={String(minRows)}
@@ -62,26 +67,35 @@ const {
     const clampInt = (value, min) => Math.max(min, Math.floor(value));
     const round3 = (value) => Math.round(value * 1000) / 1000;
 
-    const renderRectangleSvg = (svg, width, height, step) => {
+    const renderRectangleSvg = (svg, width, height, step, edges) => {
       const cols = Math.max(1, Math.floor(width / step));
       const rows = Math.max(1, Math.floor(height / step));
       const radius = step / 2;
       const centerX = (index) => radius + index * step;
       const centerY = (index) => radius + index * step;
-      const rectWidth = Math.max(0, width - step);
-      const rectHeight = Math.max(0, height - step);
-      const pieces = [
-        `<rect x="${radius}" y="${radius}" width="${rectWidth}" height="${rectHeight}" fill="currentColor"></rect>`,
-      ];
+      const pieces = [];
 
-      for (let i = 0; i < cols; i += 1) {
-        pieces.push(`<circle cx="${centerX(i)}" cy="${radius}" r="${radius}" fill="currentColor"></circle>`);
-        pieces.push(`<circle cx="${centerX(i)}" cy="${height - radius}" r="${radius}" fill="currentColor"></circle>`);
-      }
+      if (edges === 'top') {
+        const rectHeight = Math.max(0, height - radius);
+        pieces.push(`<rect x="0" y="${radius}" width="${width}" height="${rectHeight}" fill="currentColor"></rect>`);
 
-      for (let j = 1; j < rows - 1; j += 1) {
-        pieces.push(`<circle cx="${radius}" cy="${centerY(j)}" r="${radius}" fill="currentColor"></circle>`);
-        pieces.push(`<circle cx="${width - radius}" cy="${centerY(j)}" r="${radius}" fill="currentColor"></circle>`);
+        for (let i = 0; i < cols; i += 1) {
+          pieces.push(`<circle cx="${centerX(i)}" cy="${radius}" r="${radius}" fill="currentColor"></circle>`);
+        }
+      } else {
+        const rectWidth = Math.max(0, width - step);
+        const rectHeight = Math.max(0, height - step);
+        pieces.push(`<rect x="${radius}" y="${radius}" width="${rectWidth}" height="${rectHeight}" fill="currentColor"></rect>`);
+
+        for (let i = 0; i < cols; i += 1) {
+          pieces.push(`<circle cx="${centerX(i)}" cy="${radius}" r="${radius}" fill="currentColor"></circle>`);
+          pieces.push(`<circle cx="${centerX(i)}" cy="${height - radius}" r="${radius}" fill="currentColor"></circle>`);
+        }
+
+        for (let j = 1; j < rows - 1; j += 1) {
+          pieces.push(`<circle cx="${radius}" cy="${centerY(j)}" r="${radius}" fill="currentColor"></circle>`);
+          pieces.push(`<circle cx="${width - radius}" cy="${centerY(j)}" r="${radius}" fill="currentColor"></circle>`);
+        }
       }
 
       svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
@@ -154,9 +168,10 @@ const {
       }
 
       const shape = root.dataset.scallopShape === 'circle' ? 'circle' : 'rectangle';
+      const rectangleEdges = root.dataset.scallopRectangleEdges === 'top' ? 'top' : 'all';
       const step = Math.max(4, readNumber(root.dataset.scallopStep, 40));
       const availableWidth = Math.max(step, Math.floor(parent.clientWidth));
-      let signature = `${shape}:${step}`;
+      let signature = `${shape}:${rectangleEdges}:${step}`;
 
       if (shape === 'circle') {
         const minLobes = clampInt(readNumber(root.dataset.scallopMinLobes, 8), 3);
@@ -204,7 +219,7 @@ const {
       root.dataset.ready = 'true';
 
       if (signature !== prevSignature) {
-        renderRectangleSvg(svg, snappedWidth, snappedHeight, step);
+        renderRectangleSvg(svg, snappedWidth, snappedHeight, step, rectangleEdges);
       }
     };
 

@@ -2,6 +2,7 @@
 type WaveAlign = 'left' | 'center' | 'right';
 type WavePhase = 'up' | 'down';
 type WaveEdge = 'equator';
+type WaveFit = 'contain' | 'cover';
 
 interface Props {
   class?: string;
@@ -12,6 +13,7 @@ interface Props {
   phase?: WavePhase;
   align?: WaveAlign;
   edge?: WaveEdge;
+  fit?: WaveFit;
   color?: string;
 }
 
@@ -24,6 +26,7 @@ const {
   phase = 'up',
   align = 'left',
   edge = 'equator',
+  fit = 'contain',
   color = 'var(--color-accent-green)',
 } = Astro.props;
 ---
@@ -39,6 +42,7 @@ const {
   data-wave-phase={phase}
   data-wave-align={align}
   data-wave-edge={edge}
+  data-wave-fit={fit}
   style={`--wave-color: ${color}; --wave-diameter: ${circleDiameter}px; --wave-stroke: ${strokeWidth}px;`}
   role="presentation"
   aria-hidden="true"
@@ -88,6 +92,13 @@ const {
       return 'up';
     };
 
+    const resolveFit = (value) => {
+      if (value === 'cover') {
+        return 'cover';
+      }
+      return 'contain';
+    };
+
     const applyAlignment = (root, align) => {
       if (align === 'center') {
         root.style.marginLeft = 'auto';
@@ -112,6 +123,14 @@ const {
       }
 
       const minCircles = clampInt(readNumber(root.dataset.waveMinCircles, 4), 1);
+
+      const fit = resolveFit(root.dataset.waveFit);
+      if (fit === 'cover') {
+        const ceilCount = Math.ceil(availableWidth / diameter);
+        const reducedCount = ceilCount - 1;
+        return Math.max(minCircles, Math.max(1, reducedCount));
+      }
+
       const floorCount = Math.floor(availableWidth / diameter);
       if (floorCount < 1) {
         return 1;
@@ -141,6 +160,25 @@ const {
       svg.innerHTML = `<path class="wave-path" d="${commands.join(' ')}" fill="none" stroke="currentColor" stroke-width="${round3(strokeWidth)}" stroke-linecap="butt"></path>`;
     };
 
+    const resolveAvailableWidth = (root, parent) => {
+      const directWidth = Math.floor(parent.clientWidth);
+      if (directWidth > 1) {
+        return directWidth;
+      }
+
+      let current = parent.parentElement;
+      while (current) {
+        const width = Math.floor(current.clientWidth);
+        if (width > 1) {
+          return width;
+        }
+        current = current.parentElement;
+      }
+
+      const ownWidth = Math.floor(root.clientWidth);
+      return ownWidth > 1 ? ownWidth : 1;
+    };
+
     const update = (root) => {
       const svg = root.querySelector('.wave-frame');
       const parent = root.parentElement;
@@ -150,7 +188,7 @@ const {
 
       const diameter = clampNumber(readNumber(root.dataset.waveDiameter, 8), 2, 512);
       const strokeWidth = clampNumber(readNumber(root.dataset.waveStroke, 2), 1, diameter);
-      const availableWidth = Math.max(1, Math.floor(parent.clientWidth));
+      const availableWidth = resolveAvailableWidth(root, parent);
       const count = resolveCircleCount(root, availableWidth, diameter);
       const quantizedWidth = round3(count * diameter);
       const phase = resolvePhase(root.dataset.wavePhase);

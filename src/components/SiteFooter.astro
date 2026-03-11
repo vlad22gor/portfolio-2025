@@ -1,4 +1,159 @@
+---
+import QuantizedScallop from './QuantizedScallop.astro';
+---
+
 <footer class="site-footer">
-  <p>Built with Astro, Tailwind and GitHub Pages-first deployment.</p>
-  <a href="https://linktr.ee/vladhorovyy" target="_blank" rel="noreferrer">message me</a>
+  <QuantizedScallop
+    class="site-footer-qscallop"
+    shape="rectangle"
+    rectangleEdges="top"
+    step={40}
+    bg="var(--color-accent-blue)"
+    pad="84px 0 72px"
+    label="Footer QScallop surface"
+  >
+    <div class="site-footer-track">
+      <div class="site-footer-side" aria-hidden="true">
+        <img
+          class="site-footer-motif h-163"
+          data-motif-profile="slow"
+          src="/media/motifs/motif-sunburst-rounded-12.svg"
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+        />
+        <img
+          class="site-footer-motif h-164"
+          data-motif-profile="slow"
+          src="/media/motifs/motif-scallop-disc-20.svg"
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+        />
+        <img
+          class="site-footer-motif h-162"
+          data-motif-profile="fast"
+          src="/media/motifs/motif-hourglass-totem.svg"
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+        />
+        <img
+          class="site-footer-motif h-162"
+          data-motif-profile="fast"
+          src="/media/motifs/motif-split-halfmoon.svg"
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+        />
+      </div>
+
+      <p class="site-footer-copy">a thing of beauty is a joy forever</p>
+
+      <div class="site-footer-side" aria-hidden="true">
+        <img
+          class="site-footer-motif h-163"
+          data-motif-profile="slow"
+          src="/media/motifs/motif-sunburst-rounded-12.svg"
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+        />
+        <img
+          class="site-footer-motif h-162"
+          data-motif-profile="fast"
+          src="/media/motifs/motif-stack-orb-3.svg"
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+        />
+        <img
+          class="site-footer-motif h-162"
+          data-motif-profile="fast"
+          src="/media/motifs/motif-rounded-cross.svg"
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+        />
+        <img
+          class="site-footer-motif h-163"
+          data-motif-profile="slow"
+          src="/media/motifs/motif-sunburst-rounded-12.svg"
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+        />
+      </div>
+    </div>
+  </QuantizedScallop>
 </footer>
+
+<script>
+  import { animate } from 'motion';
+
+  (() => {
+    const motifs = Array.from(document.querySelectorAll('.site-footer-motif[data-motif-profile]'));
+    if (!motifs.length) {
+      return;
+    }
+
+    const controls = new WeakMap();
+    const values = new WeakMap();
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    const getConfig = (motif) => {
+      const profile = motif.dataset.motifProfile === 'slow' ? 'slow' : 'fast';
+      return profile === 'slow'
+        ? { duration: 1.35, bounce: 0.25 }
+        : { duration: 1.05, bounce: 0.25 };
+    };
+
+    const stop = (motif) => {
+      const control = controls.get(motif);
+      if (control) {
+        control.stop();
+        controls.delete(motif);
+      }
+    };
+
+    const setRotation = (motif, value) => {
+      motif.style.transform = `rotate(${value}deg)`;
+      values.set(motif, value);
+    };
+
+    const getRotation = (motif) => {
+      const cached = values.get(motif);
+      if (typeof cached === 'number') {
+        return cached;
+      }
+      return 0;
+    };
+
+    const animateTo = (motif, target) => {
+      stop(motif);
+      if (prefersReducedMotion.matches) {
+        setRotation(motif, target);
+        return;
+      }
+
+      const from = getRotation(motif);
+      const config = getConfig(motif);
+      const control = animate(from, target, {
+        type: 'spring',
+        duration: config.duration,
+        bounce: config.bounce,
+        onUpdate: (latest) => {
+          setRotation(motif, latest);
+        },
+      });
+
+      controls.set(motif, control);
+    };
+
+    motifs.forEach((motif) => {
+      setRotation(motif, 0);
+      motif.addEventListener('pointerenter', () => animateTo(motif, 180));
+      motif.addEventListener('pointerleave', () => animateTo(motif, 0));
+    });
+  })();
+</script>
