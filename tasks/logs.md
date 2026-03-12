@@ -268,3 +268,33 @@
   Причина: убрать фликер fallback-шрифта/метрик при route-switch и исключить появление полной волны до/после пересчёта trim.
   Файлы: `src/components/SiteHeader.astro`, `src/styles/global.css`, `tasks/logs.md`.
   Проверки: `npm run build` — успешно.
+
+- 2026-03-12: Глобально подключён `Agentation MCP` для `Codex App` и добавлен runbook для рабочего процесса с аннотациями.
+  Причина: внедрить MCP-only сценарий для текущего Astro-стека (без React-toolbar) и зафиксировать повторяемую операционную инструкцию.
+  Файлы: `~/.codex/config.toml`, `~/.codex/config.toml.bak.20260312-181756`, `~/.codex/docs/agentation-codex.md`, `tasks/logs.md`.
+  Проверки: `npx -y add-mcp --agent codex --global --yes --name agentation "npx -y agentation-mcp server"` — успешно; `npx -y agentation-mcp doctor` — успешно; `rg -n "mcp_servers.agentation|agentation-mcp" ~/.codex/config.toml` — секция найдена; health-check `curl http://localhost:4747/health` — `{"status":"ok","mode":"local"}`; fallback-check `npx -y agentation-mcp server --port 8080` + `curl http://localhost:8080/health` — `{"status":"ok","mode":"local"}`.
+
+- 2026-03-12: Реализована интеграция Agentation для Astro в режиме `dev-only` через React island с сохранением текущего runtime (`ClientRouter`, wave/scallop scripts).
+  Причина: повысить полезность UX-итераций (visual annotations + MCP workflow), не затрагивая production-поведение и не ломая существующие route transitions.
+  Файлы: `package.json`, `package-lock.json`, `astro.config.mjs`, `src/components/dev/AgentationToolbar.tsx`, `src/layouts/BaseLayout.astro`, `src/styles/global.css`, `.env.example`, `README.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n 'id="agentation-dev-root"|/agentation' dist/*.html dist/*/index.html` — совпадений нет (toolbar отсутствует в prod HTML); `npm run dev -- --host 127.0.0.1 --port 4331` + `curl` — `id="agentation-dev-root"` отсутствует (toolbar выключен по умолчанию); `npm run dev:annotate -- --host 127.0.0.1 --port 4332` + `curl` — `id="agentation-dev-root"` присутствует и endpoint `http://localhost:4747` проброшен; Playwright (soft-nav через dispatch click по header links) на `http://127.0.0.1:4336` подтверждает `hasDevRoot=true` на `/`, `/cases`, `/gallery`; Agentation MCP E2E-check — создана тестовая annotation через `POST /sessions/:id/annotations`, подтверждён pending через `agentation_get_all_pending`, затем выполнены `agentation_acknowledge` и `agentation_resolve` (pending вернулся к `0`).
+
+- 2026-03-12: Добавлен dev-helper hotkey для Agentation: `Alt+Shift+B` переключает `Block page interactions`.
+  Причина: ускорить UX-проверки без ручного открытия настроек Agentation на каждом цикле.
+  Файлы: `src/components/dev/AgentationToolbar.tsx`, `README.md`, `tasks/logs.md`.
+  Проверки: Playwright на `http://127.0.0.1:4337` подтвердил переключение чекбокса `Block page interactions` (`checked: false -> true`) по `Alt+Shift+B`; в консоли появился лог `[Agentation] Block page interactions ...`; `npm run build` — успешно.
+
+- 2026-03-12: Зафиксирован постоянный runbook запуска Agentation для будущих сессий.
+  Причина: убрать неопределённость по командам запуска и разделить режимы `annotate`/обычный `dev`.
+  Файлы: `tasks/agentation-workflow.md`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `test -f tasks/agentation-workflow.md` — успешно; `rg -n "dev:annotate|agentation-mcp server|Alt \\+ Shift \\+ B" tasks/agentation-workflow.md tasks/lessons.md` — успешно.
+
+- 2026-03-12: Исправлен фон `scallop-content` в preview-блоке по аннотации Agentation.
+  Причина: пользователь запросил `bg default darkened` для `.scallop-preview-grid > .scallop-preview-slot > .quantized-scallop > .scallop-content`.
+  Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Playwright (`http://127.0.0.1:4321`) computed style для `.scallop-preview-grid .quantized-scallop .scallop-content` = `rgb(207, 206, 196)` (соответствует `--color-bg-darkened`).
+
+- 2026-03-12: Стабилизирован `wave-rail` при route-transition с приоритетом «stability first».
+  Причина: волна периодически пропадала после soft navigation из-за гонки между sticky-ready, trim-метриками и скрытым dash-path.
+  Файлы: `src/components/SiteHeader.astro`, `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `PUBLIC_HEADER_WAVE_VARIANT=classic npm run build` — успешно; `rg -n "stroke-dasharray:\\s*0 1|loadingdone|railTrimRetryWindowMs|scheduleRailTrimSync|shouldKeepOptimisticMotion" src/components/SiteHeader.astro src/styles/global.css` подтверждает: hidden-dash удалён, `loadingdone` переведён на лёгкий re-trim, retry сделан time-based (`1000ms`), optimistic reconcile теперь запускает `applyStateTrim + scheduleTrimRetry`; массовая runtime-проверка 50–100 переходов не выполнена из-за блокера Playwright MCP (`Opening in existing browser session`).

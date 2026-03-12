@@ -7,14 +7,19 @@
   },
   "scripts": {
     "dev": "astro dev",
+    "dev:annotate": "PUBLIC_AGENTATION_ENABLED=true PUBLIC_AGENTATION_ENDPOINT=http://localhost:4747 astro dev",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/react": "^5.0.0",
     "@tailwindcss/vite": "^4.2.1",
+    "agentation": "^2.3.2",
     "astro": "^6.0.3",
     "motion": "^12.35.2",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "tailwindcss": "^4.2.1"
   }
 }

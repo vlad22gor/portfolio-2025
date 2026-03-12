@@ -100,11 +100,13 @@ const headerWaveVariant = rawHeaderWaveVariant === 'wave-rail' ? 'wave-rail' : '
     const railSpringDuration = 1.05;
     const railSpringBounce = 0.24;
     const railReconcileEpsilon = 0.5;
+    const railTrimRetryWindowMs = 1000;
     const railHoverOffsetExpanded = 5;
     const gapControls = new WeakMap();
     const railStates = new WeakMap();
     const boundButtons = new WeakSet();
     let resizeRafId = 0;
+    let railTrimSyncRafId = 0;
 
     const normalizePath = (pathname) => {
       if (!pathname || pathname === '/') {
@@ -302,14 +304,18 @@ const headerWaveVariant = rawHeaderWaveVariant === 'wave-rail' ? 'wave-rail' : '
       return applied;
     };
 
-    const scheduleTrimRetry = (track, remainingAttempts = 8) => {
+    const scheduleTrimRetry = (track, retryUntilMs = window.performance.now() + railTrimRetryWindowMs) => {
       const state = getRailState(track);
       if (state.trimRafId !== 0) {
         window.cancelAnimationFrame(state.trimRafId);
       }
 
       const tick = () => {
-        if (!state.trimMetrics || track.dataset.waveRailReady !== 'true') {
+        const needsMetricsRefresh =
+          !state.trimMetrics ||
+          !state.trimMetrics.path?.isConnected ||
+          track.dataset.waveRailReady !== 'true';
+        if (needsMetricsRefresh) {
           refreshTrimMetrics(track);
         }
 
@@ -318,12 +324,11 @@ const headerWaveVariant = rawHeaderWaveVariant === 'wave-rail' ? 'wave-rail' : '
           return;
         }
 
-        if (remainingAttempts <= 0) {
+        if (window.performance.now() >= retryUntilMs) {
           state.trimRafId = 0;
           return;
         }
 
-        remainingAttempts -= 1;
         state.trimRafId = window.requestAnimationFrame(tick);
       };
 
@@ -490,6 +495,8 @@ const headerWaveVariant = rawHeaderWaveVariant === 'wave-rail' ? 'wave-rail' : '
         state.targetX = geometry.x;
         state.targetWidth = geometry.width;
         track.dataset.waveActiveId = activeId;
+        applyStateTrim(track);
+        scheduleTrimRetry(track);
         return;
       }
 
@@ -624,6 +631,25 @@ const headerWaveVariant = rawHeaderWaveVariant === 'wave-rail' ? 'wave-rail' : '
       });
     };
 
+    const scheduleRailTrimSync = () => {
+      if (railTrimSyncRafId !== 0) {
+        return;
+      }
+
+      railTrimSyncRafId = window.requestAnimationFrame(() => {
+        railTrimSyncRafId = 0;
+        const tracks = Array.from(document.querySelectorAll('.site-nav-track[data-wave-variant="wave-rail"]'));
+        tracks.forEach((track) => {
+          if (!isWaveRailTrack(track)) {
+            return;
+          }
+          refreshTrimMetrics(track);
+          applyStateTrim(track);
+          scheduleTrimRetry(track);
+        });
+      });
+    };
+
     const bindFontSync = () => {
       if (!document.fonts) {
         return;
@@ -638,7 +664,7 @@ const headerWaveVariant = rawHeaderWaveVariant === 'wave-rail' ? 'wave-rail' : '
         });
 
       if (typeof document.fonts.addEventListener === 'function') {
-        document.fonts.addEventListener('loadingdone', scheduleResizeSync);
+        document.fonts.addEventListener('loadingdone', scheduleRailTrimSync);
       }
     };
 

@@ -20,6 +20,22 @@ npm install
 npm run dev
 ```
 
+### Agentation (dev-only)
+```bash
+# 1) Start Agentation MCP server in another terminal
+npx -y agentation-mcp server
+
+# 2) Run Astro with Agentation toolbar enabled
+npm run dev:annotate
+```
+
+Env contract:
+- `PUBLIC_AGENTATION_ENABLED` (default `false`)
+- `PUBLIC_AGENTATION_ENDPOINT` (default `http://localhost:4747`)
+
+Dev helper:
+- `Alt + Shift + B` toggles Agentation `Block page interactions` for faster UX checks.
+
 ## Production build
 ```bash
 npm run build

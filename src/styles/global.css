@@ -293,6 +293,11 @@ html {
   top: 1rem;
 }
 
+#agentation-dev-root {
+  position: relative;
+  z-index: 1100;
+}
+
 .site-header-inner,
 .page-shell {
   width: min(var(--desktop-breakpoint), calc(100% - 2rem));
@@ -373,10 +378,6 @@ html {
 
 .site-nav-wave-rail .quantized-wave .wave-frame {
   height: var(--wave-rail-height);
-}
-
-.site-nav-wave-rail .wave-path {
-  stroke-dasharray: 0 1;
 }
 
 .header-button {
@@ -619,6 +620,10 @@ p {
 
 .scallop-preview-circle {
   width: min(100%, 720px);
+}
+
+.scallop-preview .scallop-content {
+  background: var(--color-bg-darkened);
 }
 
 .scallop-preview-rect .scallop-content {
