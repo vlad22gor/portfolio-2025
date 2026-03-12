@@ -22,7 +22,7 @@ const next = CASES[(index + 1) % CASES.length];
 
 <BaseLayout title={`${current.title} - Vlad Horovyy`} description={current.subtitle} canonicalPath={`/${current.slug}`}>
   <SiteHeader />
-  <main id="content" class="page-shell">
+  <main id="content" class="page-shell" transition:name="page-content">
     <section class="section-stack">
       <p class="kicker">Case Study</p>
       <h1>{current.title}</h1>

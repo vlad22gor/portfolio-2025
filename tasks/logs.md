@@ -178,3 +178,13 @@
   Причина: внедрить интеракцию по ховеру без изменения геометрии footer (top-only scallop, inside-fit, padding `84/72`).
   Файлы: `src/components/SiteFooter.astro`, `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
   Проверки: `npm run build` — успешно; в коде настроены профили `slow` (`duration: 1.35`, `bounce: 0.25`) для `motif-sunburst-rounded-12` и `motif-scallop-disc-20`, `fast` (`duration: 1.05`, `bounce: 0.25`) для остальных motif; добавлен `prefers-reduced-motion` fallback и остановка предыдущего animation control через `WeakMap`.
+
+- 2026-03-12: Реализован переход на Astro `ClientRouter` и стабилизация route-transition без микродёрганий хедера.
+  Причина: убрать full-reload jank при клике в fixed-header, сохранить стабильную геометрию active-wave и обеспечить корректный re-mount runtime-компонентов после soft navigation.
+  Файлы: `src/layouts/BaseLayout.astro`, `src/components/SiteHeader.astro`, `src/components/SiteFooter.astro`, `src/components/QuantizedWave.astro`, `src/components/QuantizedScallop.astro`, `src/pages/index.astro`, `src/pages/cases.astro`, `src/pages/gallery.astro`, `src/pages/[slug].astro`, `src/styles/global.css`, `public/fonts/GT-America-Regular.woff2`, `public/fonts/GT-America-Medium.woff2`, `public/fonts/Caveat-VariableFont_wght.woff2`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "ClientRouter|transition:persist|astro:page-load|data-astro-prefetch|woff2" src` подтверждает включённые переходы, idempotent runtime и загрузку `woff2`; `rg -n "transition:name=\"page-content\"" src/pages` подтверждает единый transition-anchor main-контента на всех маршрутах.
+
+- 2026-03-12: Добавлена документация подхода `Astro Client Router` для переиспользования в будущих проектах.
+  Причина: зафиксировать устойчивый шаблон устранения route-transition микродёрганий (переходы, idempotent runtime, preload/woff2, чеклист валидации).
+  Файлы: `docs/astro-client-router-stability.md`, `tasks/logs.md`.
+  Проверки: `test -f docs/astro-client-router-stability.md` — успешно; `rg -n \"ClientRouter|astro:page-load|transition:persist|CLS\" docs/astro-client-router-stability.md` — ключевые секции присутствуют.

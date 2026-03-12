@@ -50,14 +50,17 @@ const resolvedRectangleEdges = rectangleEdges === 'top' ? 'top' : 'all';
 
 <script>
   (() => {
-    const html = document.documentElement;
-
-    if (html.dataset.quantizedScallopRuntime === '1') {
+    const runtimeKey = '__quantizedScallopRuntime';
+    if (window[runtimeKey]) {
+      window[runtimeKey].mountNewRoots();
+      window[runtimeKey].scheduleAll();
       return;
     }
-    html.dataset.quantizedScallopRuntime = '1';
 
-    const states = new WeakMap();
+    const runtime = {
+      roots: new Set(),
+      states: new WeakMap(),
+    };
 
     const readNumber = (value, fallback) => {
       const parsed = Number.parseFloat(value);
@@ -224,7 +227,7 @@ const resolvedRectangleEdges = rectangleEdges === 'top' ? 'top' : 'all';
     };
 
     const schedule = (root) => {
-      const state = states.get(root);
+      const state = runtime.states.get(root);
       if (!state || state.rafId !== 0) {
         return;
       }
@@ -235,6 +238,11 @@ const resolvedRectangleEdges = rectangleEdges === 'top' ? 'top' : 'all';
     };
 
     const mount = (root) => {
+      if (runtime.roots.has(root)) {
+        schedule(root);
+        return;
+      }
+
       const content = root.querySelector('.scallop-content');
       const parent = root.parentElement;
 
@@ -246,30 +254,69 @@ const resolvedRectangleEdges = rectangleEdges === 'top' ? 'top' : 'all';
         schedule(root);
       });
 
-      states.set(root, { observer, rafId: 0 });
+      runtime.roots.add(root);
+      runtime.states.set(root, { observer, rafId: 0 });
       observer.observe(parent);
       observer.observe(content);
 
       update(root);
     };
 
-    const roots = document.querySelectorAll('[data-quantized-scallop]');
-    roots.forEach((root) => {
-      mount(root);
+    const unmount = (root) => {
+      const state = runtime.states.get(root);
+      if (state) {
+        if (state.rafId !== 0) {
+          window.cancelAnimationFrame(state.rafId);
+        }
+        state.observer.disconnect();
+        runtime.states.delete(root);
+      }
+      runtime.roots.delete(root);
+    };
+
+    const cleanupDisconnectedRoots = () => {
+      runtime.roots.forEach((root) => {
+        if (!root.isConnected) {
+          unmount(root);
+        }
+      });
+    };
+
+    const mountNewRoots = () => {
+      cleanupDisconnectedRoots();
+      const roots = document.querySelectorAll('[data-quantized-scallop]');
+      roots.forEach((root) => {
+        mount(root);
+      });
+    };
+
+    const scheduleAll = () => {
+      cleanupDisconnectedRoots();
+      runtime.roots.forEach((root) => {
+        schedule(root);
+      });
+    };
+
+    document.addEventListener('astro:page-load', () => {
+      mountNewRoots();
+      scheduleAll();
     });
 
     window.addEventListener('resize', () => {
-      roots.forEach((root) => {
-        schedule(root);
-      });
+      scheduleAll();
     });
 
     if (document.fonts?.ready) {
       document.fonts.ready.then(() => {
-        roots.forEach((root) => {
-          schedule(root);
-        });
+        scheduleAll();
       });
     }
+
+    window[runtimeKey] = {
+      mountNewRoots,
+      scheduleAll,
+    };
+
+    mountNewRoots();
   })();
 </script>

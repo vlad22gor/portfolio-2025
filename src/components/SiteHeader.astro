@@ -2,9 +2,9 @@
 import QuantizedWave from './QuantizedWave.astro';
 
 const links = [
-  { id: 'cases', href: '/cases', label: 'cases' },
-  { id: 'home', href: '/', label: 'vlad horovyy' },
-  { id: 'gallery', href: '/gallery', label: 'gallery' },
+  { id: 'cases', href: '/cases', label: 'cases', waveCount: 7 },
+  { id: 'home', href: '/', label: 'vlad horovyy', waveCount: 14 },
+  { id: 'gallery', href: '/gallery', label: 'gallery', waveCount: 8 },
 ];
 
 const pathname = Astro.url.pathname;
@@ -13,7 +13,7 @@ const normalizedPath =
 const activeId = normalizedPath === '/cases' ? 'cases' : normalizedPath === '/gallery' ? 'gallery' : 'home';
 ---
 
-<header class="site-header">
+<header class="site-header" transition:name="site-header" transition:persist>
   <div class="site-header-inner">
     <nav class="site-nav" aria-label="Main navigation">
       <ul class="site-nav-list">
@@ -23,26 +23,27 @@ const activeId = normalizedPath === '/cases' ? 'cases' : normalizedPath === '/ga
               class="header-button"
               class:list={{ active: activeId === link.id }}
               href={link.href}
+              data-nav-id={link.id}
+              data-astro-prefetch="hover"
               aria-current={activeId === link.id ? 'page' : undefined}
             >
               <span class="header-button-content">
                 <span class="header-button-label-container">
                   <span class="header-button-label">{link.label}</span>
                 </span>
-                {activeId === link.id && (
-                  <span class="header-button-wave-container" aria-hidden="true">
-                    <span class="header-button-wave">
-                      <QuantizedWave
-                        align="center"
-                        fit="cover"
-                        circleDiameter={8}
-                        strokeWidth={2}
-                        minCircles={1}
-                        phase="up"
-                      />
-                    </span>
+                <span class="header-button-wave-container" aria-hidden="true">
+                  <span class="header-button-wave">
+                    <QuantizedWave
+                      align="center"
+                      fit="cover"
+                      count={link.waveCount}
+                      circleDiameter={8}
+                      strokeWidth={2}
+                      minCircles={1}
+                      phase="up"
+                    />
                   </span>
-                )}
+                </span>
               </span>
             </a>
           </li>
@@ -56,13 +57,33 @@ const activeId = normalizedPath === '/cases' ? 'cases' : normalizedPath === '/ga
   import { animate } from 'motion';
 
   (() => {
-    const activeButtons = Array.from(document.querySelectorAll('.header-button.active'));
-    if (!activeButtons.length) {
+    const runtimeKey = '__siteHeaderRuntime';
+    if (window[runtimeKey]) {
+      window[runtimeKey].sync();
       return;
     }
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const controls = new WeakMap();
+    const boundButtons = new WeakSet();
+
+    const normalizePath = (pathname) => {
+      if (!pathname || pathname === '/') {
+        return '/';
+      }
+      return pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+    };
+
+    const resolveActiveId = (pathname) => {
+      const normalized = normalizePath(pathname);
+      if (normalized === '/cases') {
+        return 'cases';
+      }
+      if (normalized === '/gallery') {
+        return 'gallery';
+      }
+      return 'home';
+    };
 
     const setGap = (button, value) => {
       button.style.setProperty('--header-button-gap', `${value}`);
@@ -103,12 +124,62 @@ const activeId = normalizedPath === '/cases' ? 'cases' : normalizedPath === '/ga
       controls.set(button, control);
     };
 
-    activeButtons.forEach((button) => {
-      setGap(button, 3);
-      button.addEventListener('pointerenter', () => animateGap(button, 8));
-      button.addEventListener('pointerleave', () => animateGap(button, 3));
-      button.addEventListener('focus', () => animateGap(button, 8));
-      button.addEventListener('blur', () => animateGap(button, 3));
-    });
+    const bindButton = (button) => {
+      if (boundButtons.has(button)) {
+        return;
+      }
+      boundButtons.add(button);
+      button.addEventListener('pointerenter', () => {
+        if (button.classList.contains('active')) {
+          animateGap(button, 8);
+        }
+      });
+      button.addEventListener('pointerleave', () => {
+        if (button.classList.contains('active')) {
+          animateGap(button, 3);
+        }
+      });
+      button.addEventListener('focus', () => {
+        if (button.classList.contains('active')) {
+          animateGap(button, 8);
+        }
+      });
+      button.addEventListener('blur', () => {
+        if (button.classList.contains('active')) {
+          animateGap(button, 3);
+        }
+      });
+    };
+
+    const sync = () => {
+      const buttons = Array.from(document.querySelectorAll('.header-button[data-nav-id]'));
+      if (!buttons.length) {
+        return;
+      }
+
+      const activeId = resolveActiveId(window.location.pathname);
+
+      buttons.forEach((button) => {
+        bindButton(button);
+        const isActive = button.dataset.navId === activeId;
+        button.classList.toggle('active', isActive);
+        if (isActive) {
+          button.setAttribute('aria-current', 'page');
+          setGap(button, 3);
+        } else {
+          button.removeAttribute('aria-current');
+          stop(button);
+          setGap(button, 0);
+        }
+      });
+    };
+
+    document.addEventListener('astro:page-load', sync);
+
+    window[runtimeKey] = {
+      sync,
+    };
+
+    sync();
   })();
 </script>

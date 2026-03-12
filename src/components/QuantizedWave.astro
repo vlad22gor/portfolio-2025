@@ -29,31 +29,69 @@ const {
   fit = 'contain',
   color = 'var(--color-accent-green)',
 } = Astro.props;
+
+const round3 = (value: number) => Math.round(value * 1000) / 1000;
+const fixedCount =
+  typeof count === 'number' && Number.isFinite(count) ? Math.max(1, Math.floor(count)) : undefined;
+const initialWidth = fixedCount ? round3(fixedCount * circleDiameter) : 1;
+const initialHeight = fixedCount ? round3(circleDiameter + strokeWidth) : 1;
+const initialSignature = fixedCount
+  ? ['equator', initialWidth, round3(circleDiameter), round3(strokeWidth), fixedCount, phase].join(':')
+  : '';
+
+const buildPath = (resolvedCount: number, diameter: number, stroke: number, resolvedPhase: WavePhase) => {
+  const radius = diameter / 2;
+  const strokeHalf = stroke / 2;
+  const baseline = round3(radius + strokeHalf);
+  const commands = [`M 0 ${baseline}`];
+  let nextUp = resolvedPhase === 'up';
+
+  for (let index = 0; index < resolvedCount; index += 1) {
+    const endX = round3((index + 1) * diameter);
+    const sweep = nextUp ? 0 : 1;
+    commands.push(`A ${round3(radius)} ${round3(radius)} 0 0 ${sweep} ${endX} ${baseline}`);
+    nextUp = !nextUp;
+  }
+
+  return commands.join(' ');
+};
+
+const initialPath = fixedCount ? buildPath(fixedCount, circleDiameter, strokeWidth, phase) : 'M0 0L1 0';
+const initialStyle = `${
+  `--wave-color: ${color}; --wave-diameter: ${circleDiameter}px; --wave-stroke: ${strokeWidth}px;`
+}${fixedCount ? ` width: ${initialWidth}px; height: ${initialHeight}px;` : ''}`;
 ---
 
 <div
   class={`quantized-wave ${className}`.trim()}
   data-quantized-wave
-  data-ready="false"
+  data-ready={fixedCount ? 'true' : 'false'}
   data-wave-diameter={String(circleDiameter)}
   data-wave-stroke={String(strokeWidth)}
   data-wave-min-circles={String(minCircles)}
-  data-wave-count={typeof count === 'number' ? String(count) : ''}
+  data-wave-count={typeof fixedCount === 'number' ? String(fixedCount) : ''}
+  data-wave-count-resolved={typeof fixedCount === 'number' ? String(fixedCount) : ''}
+  data-wave-signature={initialSignature}
   data-wave-phase={phase}
   data-wave-align={align}
   data-wave-edge={edge}
   data-wave-fit={fit}
-  style={`--wave-color: ${color}; --wave-diameter: ${circleDiameter}px; --wave-stroke: ${strokeWidth}px;`}
+  style={initialStyle}
   role="presentation"
   aria-hidden="true"
 >
-  <svg class="wave-frame" viewBox="0 0 1 1" preserveAspectRatio="none" focusable="false">
+  <svg
+    class="wave-frame"
+    viewBox={fixedCount ? `0 0 ${initialWidth} ${initialHeight}` : '0 0 1 1'}
+    preserveAspectRatio="none"
+    focusable="false"
+  >
     <path
       class="wave-path"
-      d="M0 0L1 0"
+      d={initialPath}
       fill="none"
       stroke="currentColor"
-      stroke-width={String(strokeWidth)}
+      stroke-width={String(round3(strokeWidth))}
       stroke-linecap="butt"
     ></path>
   </svg>
@@ -61,13 +99,17 @@ const {
 
 <script>
   (() => {
-    const html = document.documentElement;
-    if (html.dataset.quantizedWaveRuntime === '1') {
+    const runtimeKey = '__quantizedWaveRuntime';
+    if (window[runtimeKey]) {
+      window[runtimeKey].mountNewRoots();
+      window[runtimeKey].scheduleAll();
       return;
     }
-    html.dataset.quantizedWaveRuntime = '1';
 
-    const states = new WeakMap();
+    const runtime = {
+      roots: new Set(),
+      states: new WeakMap(),
+    };
 
     const readNumber = (value, fallback) => {
       const parsed = Number.parseFloat(value ?? '');
@@ -117,14 +159,14 @@ const {
     };
 
     const resolveCircleCount = (root, availableWidth, diameter) => {
-      const fixedCount = clampInt(readNumber(root.dataset.waveCount, 0), 0);
-      if (fixedCount > 0) {
-        return fixedCount;
+      const explicitCount = clampInt(readNumber(root.dataset.waveCount, 0), 0);
+      if (explicitCount > 0) {
+        return explicitCount;
       }
 
       const minCircles = clampInt(readNumber(root.dataset.waveMinCircles, 4), 1);
-
       const fit = resolveFit(root.dataset.waveFit);
+
       if (fit === 'cover') {
         const ceilCount = Math.ceil(availableWidth / diameter);
         const reducedCount = ceilCount - 1;
@@ -211,7 +253,7 @@ const {
     };
 
     const schedule = (root) => {
-      const state = states.get(root);
+      const state = runtime.states.get(root);
       if (!state || state.rafId !== 0) {
         return;
       }
@@ -222,7 +264,32 @@ const {
       });
     };
 
+    const unmount = (root) => {
+      const state = runtime.states.get(root);
+      if (state) {
+        if (state.rafId !== 0) {
+          window.cancelAnimationFrame(state.rafId);
+        }
+        state.observer.disconnect();
+        runtime.states.delete(root);
+      }
+      runtime.roots.delete(root);
+    };
+
+    const cleanupDisconnectedRoots = () => {
+      runtime.roots.forEach((root) => {
+        if (!root.isConnected) {
+          unmount(root);
+        }
+      });
+    };
+
     const mount = (root) => {
+      if (runtime.roots.has(root)) {
+        schedule(root);
+        return;
+      }
+
       const parent = root.parentElement;
       if (!parent) {
         return;
@@ -232,20 +299,41 @@ const {
         schedule(root);
       });
 
-      states.set(root, { observer, rafId: 0 });
+      runtime.roots.add(root);
+      runtime.states.set(root, { observer, rafId: 0 });
       observer.observe(parent);
       update(root);
     };
 
-    const roots = document.querySelectorAll('[data-quantized-wave]');
-    roots.forEach((root) => {
-      mount(root);
+    const mountNewRoots = () => {
+      cleanupDisconnectedRoots();
+      const roots = document.querySelectorAll('[data-quantized-wave]');
+      roots.forEach((root) => {
+        mount(root);
+      });
+    };
+
+    const scheduleAll = () => {
+      cleanupDisconnectedRoots();
+      runtime.roots.forEach((root) => {
+        schedule(root);
+      });
+    };
+
+    document.addEventListener('astro:page-load', () => {
+      mountNewRoots();
+      scheduleAll();
     });
 
     window.addEventListener('resize', () => {
-      roots.forEach((root) => {
-        schedule(root);
-      });
+      scheduleAll();
     });
+
+    window[runtimeKey] = {
+      mountNewRoots,
+      scheduleAll,
+    };
+
+    mountNewRoots();
   })();
 </script>
