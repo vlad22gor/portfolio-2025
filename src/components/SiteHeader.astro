@@ -85,6 +85,7 @@ const headerWaveVariant = rawHeaderWaveVariant === 'wave-rail' ? 'wave-rail' : '
 </header>
 
 <script>
+  import { navigate } from 'astro:transitions/client';
   import { animate } from 'motion';
 
   (() => {
@@ -102,11 +103,14 @@ const headerWaveVariant = rawHeaderWaveVariant === 'wave-rail' ? 'wave-rail' : '
     const railReconcileEpsilon = 0.5;
     const railTrimRetryWindowMs = 1000;
     const railHoverOffsetExpanded = 5;
+    const navigationDelayMinMs = 120;
+    const navigationDelayMaxMs = 320;
     const gapControls = new WeakMap();
     const railStates = new WeakMap();
     const boundButtons = new WeakSet();
     let resizeRafId = 0;
     let railTrimSyncRafId = 0;
+    let pendingNavigation = null;
 
     const normalizePath = (pathname) => {
       if (!pathname || pathname === '/') {
@@ -114,6 +118,8 @@ const headerWaveVariant = rawHeaderWaveVariant === 'wave-rail' ? 'wave-rail' : '
       }
       return pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
     };
+
+    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
     const resolveActiveId = (pathname) => {
       const normalized = normalizePath(pathname);
@@ -124,6 +130,166 @@ const headerWaveVariant = rawHeaderWaveVariant === 'wave-rail' ? 'wave-rail' : '
         return 'gallery';
       }
       return 'home';
+    };
+
+    const cancelPendingNavigation = () => {
+      if (!pendingNavigation) {
+        return;
+      }
+
+      if (pendingNavigation.rafId1 !== 0) {
+        window.cancelAnimationFrame(pendingNavigation.rafId1);
+      }
+      if (pendingNavigation.rafId2 !== 0) {
+        window.cancelAnimationFrame(pendingNavigation.rafId2);
+      }
+      if (pendingNavigation.timeoutId !== 0) {
+        window.clearTimeout(pendingNavigation.timeoutId);
+      }
+      pendingNavigation = null;
+    };
+
+    const canUseDeferredNavigation = (button, event) => {
+      if (!button || event.defaultPrevented) {
+        return false;
+      }
+
+      if (event.detail === 0) {
+        return false;
+      }
+
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
+        return false;
+      }
+
+      if (button.hasAttribute('download')) {
+        return false;
+      }
+
+      if (button.dataset.astroReload !== undefined) {
+        return false;
+      }
+
+      if (button.target && button.target !== '_self') {
+        return false;
+      }
+
+      if (!button.href) {
+        return false;
+      }
+
+      let targetUrl;
+      try {
+        targetUrl = new URL(button.href, window.location.href);
+      } catch {
+        return false;
+      }
+
+      if (targetUrl.origin !== window.location.origin) {
+        return false;
+      }
+
+      return true;
+    };
+
+    const resolveAdaptiveNavigationDelayMs = (button) => {
+      const track = button?.closest('.site-nav-track');
+      if (!isWaveRailTrack(track)) {
+        return navigationDelayMinMs;
+      }
+
+      const targetGeometry = resolveButtonGeometry(track, button);
+      if (!targetGeometry) {
+        return navigationDelayMinMs;
+      }
+
+      const state = getRailState(track);
+      let currentX = Number.isFinite(state.currentX)
+        ? state.currentX
+        : readTrackVariable(track, '--wave-segment-x', targetGeometry.x);
+      let currentWidth =
+        Number.isFinite(state.currentWidth) && state.currentWidth > 0
+          ? state.currentWidth
+          : readTrackVariable(track, '--wave-segment-width', targetGeometry.width);
+
+      if (!(currentWidth > 0)) {
+        const activeId = track.dataset.waveActiveId || state.activeId || resolveActiveId(window.location.pathname);
+        const activeButton = track.querySelector(`.header-button[data-nav-id="${activeId}"]`);
+        const activeGeometry = resolveButtonGeometry(track, activeButton);
+        if (activeGeometry) {
+          currentX = activeGeometry.x;
+          currentWidth = activeGeometry.width;
+        } else {
+          currentX = targetGeometry.x;
+          currentWidth = targetGeometry.width;
+        }
+      }
+
+      const trackWidth = Math.max(1, Math.floor(track.clientWidth));
+      const currentCenter = currentX + currentWidth / 2;
+      const targetCenter = targetGeometry.x + targetGeometry.width / 2;
+      const ratio = clamp(Math.abs(targetCenter - currentCenter) / trackWidth, 0, 1);
+      const delay =
+        navigationDelayMinMs + ratio * (navigationDelayMaxMs - navigationDelayMinMs);
+      return Math.round(clamp(delay, navigationDelayMinMs, navigationDelayMaxMs));
+    };
+
+    const scheduleDeferredNavigation = (button) => {
+      if (!button?.href) {
+        return;
+      }
+
+      cancelPendingNavigation();
+
+      const href = button.href;
+      const delayMs = resolveAdaptiveNavigationDelayMs(button);
+      const history = button.dataset.astroHistory === 'replace' ? 'replace' : 'auto';
+      let settled = false;
+      let rafId1 = 0;
+      let rafId2 = 0;
+      let timeoutId = 0;
+
+      const finalize = () => {
+        if (settled) {
+          return;
+        }
+
+        settled = true;
+        if (rafId1 !== 0) {
+          window.cancelAnimationFrame(rafId1);
+        }
+        if (rafId2 !== 0) {
+          window.cancelAnimationFrame(rafId2);
+        }
+        if (timeoutId !== 0) {
+          window.clearTimeout(timeoutId);
+        }
+        pendingNavigation = null;
+
+        let targetUrl;
+        try {
+          targetUrl = new URL(href, window.location.href);
+        } catch {
+          return;
+        }
+
+        if (targetUrl.href === window.location.href) {
+          return;
+        }
+
+        navigate(href, {
+          history,
+          sourceElement: button,
+        });
+      };
+
+      rafId1 = window.requestAnimationFrame(() => {
+        rafId2 = window.requestAnimationFrame(() => {
+          // Warm up the next frame so navigation work does not start in the same click tick.
+        });
+      });
+      timeoutId = window.setTimeout(finalize, delayMs);
+      pendingNavigation = { rafId1, rafId2, timeoutId };
     };
 
     const isWaveRailTrack = (track) => track?.dataset.waveVariant === 'wave-rail';
@@ -570,6 +736,15 @@ const headerWaveVariant = rawHeaderWaveVariant === 'wave-rail' ? 'wave-rail' : '
         }
         moveSegmentToButton(button, { optimistic: true, animated: true });
       });
+      button.addEventListener('click', (event) => {
+        if (!canUseDeferredNavigation(button, event)) {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        scheduleDeferredNavigation(button);
+      });
     };
 
     const sync = (options = {}) => {
@@ -680,6 +855,8 @@ const headerWaveVariant = rawHeaderWaveVariant === 'wave-rail' ? 'wave-rail' : '
     });
     window.addEventListener('resize', scheduleResizeSync);
     bindFontSync();
+    window.addEventListener('beforeunload', cancelPendingNavigation);
+    window.addEventListener('pagehide', cancelPendingNavigation);
     window.addEventListener('blur', resetAllRailHoverOffsets);
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') {

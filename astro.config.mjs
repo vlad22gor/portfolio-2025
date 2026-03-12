@@ -5,6 +5,10 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   site: 'https://vladhorovyy.com',
+  prefetch: {
+    prefetchAll: true,
+    defaultStrategy: 'load',
+  },
   integrations: [react()],
   vite: {
     plugins: [tailwindcss()],

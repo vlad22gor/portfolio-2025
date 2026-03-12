@@ -298,3 +298,23 @@
   Причина: волна периодически пропадала после soft navigation из-за гонки между sticky-ready, trim-метриками и скрытым dash-path.
   Файлы: `src/components/SiteHeader.astro`, `src/styles/global.css`, `tasks/logs.md`.
   Проверки: `npm run build` — успешно; `PUBLIC_HEADER_WAVE_VARIANT=classic npm run build` — успешно; `rg -n "stroke-dasharray:\\s*0 1|loadingdone|railTrimRetryWindowMs|scheduleRailTrimSync|shouldKeepOptimisticMotion" src/components/SiteHeader.astro src/styles/global.css` подтверждает: hidden-dash удалён, `loadingdone` переведён на лёгкий re-trim, retry сделан time-based (`1000ms`), optimistic reconcile теперь запускает `applyStateTrim + scheduleTrimRetry`; массовая runtime-проверка 50–100 переходов не выполнена из-за блокера Playwright MCP (`Opening in existing browser session`).
+
+- 2026-03-12: В `SiteHeader` добавлена отложенная soft-navigation для внутренних кликов хедера (`2x RAF + fallback 120ms`) с отменой pending-перехода при повторном тапе.
+  Причина: развести по времени optimistic `wave-rail` анимацию и запуск `ClientRouter` навигации, чтобы снизить main-thread подлаг в момент тапа.
+  Файлы: `src/components/SiteHeader.astro`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; проверка diff подтверждает импорт `navigate` из `astro:transitions/client`, перехват internal click c `preventDefault/stopPropagation`, запуск `navigate()` через отложенный контроллер и очистку pending-таймеров на `beforeunload/pagehide`.
+
+- 2026-03-12: Исправлен проскок волны на длинных tab-hop: навигация переведена на адаптивный delay-gate (`120..260ms`) вместо раннего старта по `2x RAF`.
+  Причина: при длинном перемещении rail-сегмента подгруз страницы начиналась слишком рано (около пары кадров), из-за чего swap приходился на середину движения волны.
+  Файлы: `src/components/SiteHeader.astro`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; проверка diff подтверждает: расчет `ratio` по дистанции центров сегмента (`current` -> `target`) относительно ширины трека, задержка `delayMs = clamp(120..260)`, `navigate()` вызывается только по `setTimeout(delayMs)`, keyboard-click (`event.detail===0`) не задерживается, cleanup pending-навигации сохранен (`beforeunload/pagehide`).
+
+- 2026-03-12: Для сглаживания длинного tab-hop увеличен максимум adaptive delay до `320ms` и включён глобальный prefetch (`prefetchAll + defaultStrategy='load'`) с исключением кейс-деталок.
+  Причина: немного не хватало задержки для визуально цельного хода/баунса волны; дополнительно нужно снизить риск сетевой задержки на top-level переходах без prefetch `/fora` и `/kissa`.
+  Файлы: `src/components/SiteHeader.astro`, `astro.config.mjs`, `src/components/CaseCard.astro`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "let f=!0,h=\\\"load\\\"" dist/_astro/index*.js` подтверждает prefetch runtime (`prefetchAll=true`, `defaultStrategy='load'`); `rg -o 'href=\"/fora\"[^>]*>' dist/index.html dist/cases/index.html` и аналогично для `/kissa` подтверждают `data-astro-prefetch=\"false\"`; delay-limit в хедере поднят до `320ms`.
+
+- 2026-03-12: Обновлён `tasks/lessons.md` по новой устойчивой стратегии `wave-rail` (`120..320ms` + global prefetch `load` с opt-out для `/fora` и `/kissa`).
+  Причина: пользователь подтвердил корректировку требования по задержке, нужно закрепить новое правило без противоречий.
+  Файлы: `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: docs-only изменение; `rg -n \"120..320ms|prefetchAll|data-astro-prefetch='false'\" tasks/lessons.md` — успешно.
