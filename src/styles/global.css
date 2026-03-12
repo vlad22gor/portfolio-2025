@@ -1,21 +1,9 @@
 @import "tailwindcss";
 
 @font-face {
-  font-family: "GT America";
-  src:
-    url("/fonts/GT-America-Regular.woff2") format("woff2"),
-    url("/fonts/GT-America-Regular.OTF") format("opentype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "GT America";
-  src:
-    url("/fonts/GT-America-Medium.woff2") format("woff2"),
-    url("/fonts/GT-America-Medium.OTF") format("opentype");
-  font-weight: 500;
+  font-family: "DM Sans";
+  src: url("/fonts/DMSans-VariableFont_opsz,wght.ttf") format("truetype");
+  font-weight: 100 1000;
   font-style: normal;
   font-display: swap;
 }
@@ -43,45 +31,72 @@
   --color-accent-white: #ffffff;
   --color-border-soft: color-mix(in srgb, var(--color-bg-darkened) 80%, var(--color-text-default) 20%);
 
-  --font-family-sans: "GT America", "Inter", "Segoe UI", sans-serif;
+  --font-family-sans: "DM Sans", "Inter", "Segoe UI", sans-serif;
   --font-family-script: "Caveat", "Segoe Print", "Bradley Hand", cursive;
-  --tracking-tight-2pct: -0.02em;
+  --tracking-tight-3pct: -0.03em;
+
+  --axis-dm-t1-opsz: 40;
+  --axis-dm-t1-wght: 500;
+  --axis-dm-t1-compact-opsz: 40;
+  --axis-dm-t1-compact-wght: 500;
+  --axis-dm-t2-opsz: 40;
+  --axis-dm-t2-wght: 500;
+  --axis-dm-t3-opsz: 32;
+  --axis-dm-t3-wght: 500;
+  --axis-dm-t4-opsz: 28;
+  --axis-dm-t4-wght: 500;
+  --axis-dm-t5-opsz: 20;
+  --axis-dm-t5-wght: 500;
+  --axis-dm-body-opsz: 16;
+  --axis-dm-body-wght: 400;
+  --axis-dm-text-small-opsz: 14;
+  --axis-dm-text-small-wght: 400;
+  --axis-dm-label-large-opsz: 16;
+  --axis-dm-label-large-wght: 500;
+  --axis-dm-label-small-opsz: 10;
+  --axis-dm-label-small-wght: 400;
 
   --type-t1-family: var(--font-family-sans);
   --type-t1-size: 112px;
   --type-t1-line-height: 128px;
   --type-t1-weight: 500;
-  --type-t1-letter-spacing: var(--tracking-tight-2pct);
+  --type-t1-letter-spacing: var(--tracking-tight-3pct);
+  --type-t1-font-variation: "opsz" var(--axis-dm-t1-opsz), "wght" var(--axis-dm-t1-wght);
 
   --type-t1-compact-family: var(--font-family-sans);
   --type-t1-compact-size: 102px;
   --type-t1-compact-line-height: 128px;
   --type-t1-compact-weight: 500;
-  --type-t1-compact-letter-spacing: var(--tracking-tight-2pct);
+  --type-t1-compact-letter-spacing: var(--tracking-tight-3pct);
+  --type-t1-compact-font-variation: "opsz" var(--axis-dm-t1-compact-opsz), "wght" var(--axis-dm-t1-compact-wght);
 
   --type-t2-family: var(--font-family-sans);
   --type-t2-size: 56px;
   --type-t2-line-height: 62px;
   --type-t2-weight: 500;
   --type-t2-letter-spacing: 0;
+  --type-t2-font-variation: "opsz" var(--axis-dm-t2-opsz), "wght" var(--axis-dm-t2-wght);
 
   --type-t3-family: var(--font-family-sans);
   --type-t3-size: 32px;
   --type-t3-line-height: 35px;
   --type-t3-weight: 500;
   --type-t3-letter-spacing: 0;
+  --type-t3-font-variation: "opsz" var(--axis-dm-t3-opsz), "wght" var(--axis-dm-t3-wght);
 
   --type-t4-family: var(--font-family-sans);
   --type-t4-size: 28px;
   --type-t4-line-height: 31px;
   --type-t4-weight: 500;
   --type-t4-letter-spacing: 0;
+  --type-t4-font-variation: "opsz" var(--axis-dm-t4-opsz), "wght" var(--axis-dm-t4-wght);
 
   --type-t5-family: var(--font-family-sans);
   --type-t5-size: 20px;
   --type-t5-line-height: 24px;
   --type-t5-weight: 500;
   --type-t5-letter-spacing: 0;
+  --type-t5-font-variation: "opsz" var(--axis-dm-t5-opsz), "wght" var(--axis-dm-t5-wght);
 
   --type-description-family: var(--font-family-script);
   --type-description-size: 20px;
@@ -94,24 +109,28 @@
   --type-body-line-height: 22px;
   --type-body-weight: 400;
   --type-body-letter-spacing: 0;
+  --type-body-font-variation: "opsz" var(--axis-dm-body-opsz), "wght" var(--axis-dm-body-wght);
 
   --type-text-small-family: var(--font-family-sans);
   --type-text-small-size: 14px;
   --type-text-small-line-height: 18px;
   --type-text-small-weight: 400;
   --type-text-small-letter-spacing: 0;
+  --type-text-small-font-variation: "opsz" var(--axis-dm-text-small-opsz), "wght" var(--axis-dm-text-small-wght);
 
   --type-label-large-family: var(--font-family-sans);
   --type-label-large-size: 16px;
   --type-label-large-line-height: 22px;
   --type-label-large-weight: 500;
   --type-label-large-letter-spacing: 0;
+  --type-label-large-font-variation: "opsz" var(--axis-dm-label-large-opsz), "wght" var(--axis-dm-label-large-wght);
 
   --type-label-small-family: var(--font-family-sans);
   --type-label-small-size: 10px;
   --type-label-small-line-height: 14px;
   --type-label-small-weight: 400;
   --type-label-small-letter-spacing: 0;
+  --type-label-small-font-variation: "opsz" var(--axis-dm-label-small-opsz), "wght" var(--axis-dm-label-small-wght);
 
   --page-bg: var(--color-bg-default);
   --text-primary: var(--color-text-default);
@@ -131,6 +150,8 @@
   line-height: var(--type-t1-line-height);
   font-weight: var(--type-t1-weight);
   letter-spacing: var(--type-t1-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-t1-font-variation);
 }
 
 .type-t1-compact {
@@ -139,6 +160,8 @@
   line-height: var(--type-t1-compact-line-height);
   font-weight: var(--type-t1-compact-weight);
   letter-spacing: var(--type-t1-compact-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-t1-compact-font-variation);
 }
 
 .type-t2 {
@@ -147,6 +170,8 @@
   line-height: var(--type-t2-line-height);
   font-weight: var(--type-t2-weight);
   letter-spacing: var(--type-t2-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-t2-font-variation);
 }
 
 .type-t3 {
@@ -155,6 +180,8 @@
   line-height: var(--type-t3-line-height);
   font-weight: var(--type-t3-weight);
   letter-spacing: var(--type-t3-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-t3-font-variation);
 }
 
 .type-t4 {
@@ -163,6 +190,8 @@
   line-height: var(--type-t4-line-height);
   font-weight: var(--type-t4-weight);
   letter-spacing: var(--type-t4-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-t4-font-variation);
 }
 
 .type-t5 {
@@ -171,6 +200,8 @@
   line-height: var(--type-t5-line-height);
   font-weight: var(--type-t5-weight);
   letter-spacing: var(--type-t5-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-t5-font-variation);
 }
 
 .type-description {
@@ -187,6 +218,8 @@
   line-height: var(--type-body-line-height);
   font-weight: var(--type-body-weight);
   letter-spacing: var(--type-body-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-body-font-variation);
 }
 
 .type-text-small {
@@ -195,6 +228,8 @@
   line-height: var(--type-text-small-line-height);
   font-weight: var(--type-text-small-weight);
   letter-spacing: var(--type-text-small-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-text-small-font-variation);
 }
 
 .type-label-large {
@@ -203,6 +238,8 @@
   line-height: var(--type-label-large-line-height);
   font-weight: var(--type-label-large-weight);
   letter-spacing: var(--type-label-large-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-label-large-font-variation);
 }
 
 .type-label-small {
@@ -211,6 +248,8 @@
   line-height: var(--type-label-small-line-height);
   font-weight: var(--type-label-small-weight);
   letter-spacing: var(--type-label-small-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-label-small-font-variation);
 }
 
 body {
@@ -225,6 +264,8 @@ body {
   line-height: var(--type-body-line-height);
   font-weight: var(--type-body-weight);
   letter-spacing: var(--type-body-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-body-font-variation);
 }
 
 html {
@@ -334,6 +375,10 @@ html {
   height: var(--wave-rail-height);
 }
 
+.site-nav-wave-rail .wave-path {
+  stroke-dasharray: 0 1;
+}
+
 .header-button {
   --header-button-gap: 0;
   display: flex;
@@ -351,6 +396,8 @@ html {
   font-size: var(--type-label-large-size);
   line-height: 1.4;
   font-weight: 400;
+  font-optical-sizing: none;
+  font-variation-settings: "opsz" var(--axis-dm-label-large-opsz), "wght" 400;
   transition: color 0.2s ease;
 }
 
@@ -461,6 +508,8 @@ html {
   font-weight: var(--type-body-weight);
   font-size: clamp(1.02rem, 1.8vw, 1.2rem);
   line-height: var(--type-body-line-height);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-body-font-variation);
 }
 
 .kicker {
@@ -472,6 +521,8 @@ html {
   font-weight: var(--type-label-small-weight);
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-label-small-font-variation);
 }
 
 h1 {
@@ -481,6 +532,8 @@ h1 {
   line-height: clamp(2.25rem, 5.6vw, var(--type-t2-line-height));
   font-weight: var(--type-t2-weight);
   letter-spacing: var(--type-t2-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-t2-font-variation);
 }
 
 h2 {
@@ -490,6 +543,8 @@ h2 {
   line-height: clamp(1.45rem, 3.4vw, var(--type-t3-line-height));
   font-weight: var(--type-t3-weight);
   letter-spacing: var(--type-t3-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-t3-font-variation);
 }
 
 h3 {
@@ -499,6 +554,8 @@ h3 {
   line-height: clamp(1.35rem, 2.6vw, var(--type-t4-line-height));
   font-weight: var(--type-t4-weight);
   letter-spacing: var(--type-t4-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-t4-font-variation);
 }
 
 p {
@@ -509,6 +566,8 @@ p {
   line-height: var(--type-body-line-height);
   font-weight: var(--type-body-weight);
   letter-spacing: var(--type-body-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-body-font-variation);
 }
 
 .hero {
@@ -597,6 +656,8 @@ p {
   font-size: var(--type-label-large-size);
   line-height: var(--type-label-large-line-height);
   font-weight: var(--type-label-large-weight);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-label-large-font-variation);
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
@@ -692,6 +753,8 @@ p {
   font-size: var(--type-text-small-size);
   line-height: var(--type-text-small-line-height);
   font-weight: 500;
+  font-optical-sizing: none;
+  font-variation-settings: "opsz" var(--axis-dm-text-small-opsz), "wght" 500;
 }
 
 .metrics-grid {
@@ -716,6 +779,8 @@ p {
   font-weight: var(--type-t5-weight);
   letter-spacing: var(--type-t5-letter-spacing);
   color: var(--color-text-default);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-t5-font-variation);
 }
 
 .prose-like {
@@ -804,6 +869,8 @@ p {
   line-height: var(--type-t3-line-height);
   font-weight: var(--type-t3-weight);
   letter-spacing: var(--type-t3-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-t3-font-variation);
 }
 
 .site-footer-motif {

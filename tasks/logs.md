@@ -258,3 +258,13 @@
   Причина: зафиксировать принятый production-паттерн (ранний prefetch top-nav, mount-only на `astro:page-load`, разделение lazy/eager загрузки медиа) без распыления по новым md-файлам.
   Файлы: `docs/astro-client-router-stability.md`, `README.md`, `tasks/logs.md`.
   Проверки: docs-only изменение; верифицированы diff и структура секций (`prefetch`, `mountNewRoots`, `lazy/eager media`) в `docs/astro-client-router-stability.md`.
+
+- 2026-03-12: Выполнена миграция sans-типографики `GT America` -> variable `DM Sans` с axis-токенами (`opsz`, `wght`) и обновлённым отрицательным кернингом для `t1`/`t1-compact` до `-3%`.
+  Причина: перейти на бесплатный variable-шрифт и дать ручной контроль начертаний через axis для визуальной подстройки рендеринга.
+  Файлы: `src/styles/global.css`, `src/layouts/BaseLayout.astro`, `public/fonts/DMSans-VariableFont_opsz,wght.ttf`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `curl -I http://127.0.0.1:4321/fonts/DMSans-VariableFont_opsz,wght.ttf` — `200 OK`; `rg -n "GT America|GT-America" src public` — совпадений нет; `rg -n "tracking-tight-2pct" src/styles/global.css` — совпадений нет; Playwright computed-styles check не выполнен из-за блокера запуска браузера (`Opening in existing browser session`).
+
+- 2026-03-12: Стабилизирован `wave-rail` после догрузки шрифтов и добавлен защитный hidden-dash для rail-path.
+  Причина: убрать фликер fallback-шрифта/метрик при route-switch и исключить появление полной волны до/после пересчёта trim.
+  Файлы: `src/components/SiteHeader.astro`, `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно.

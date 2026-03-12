@@ -624,6 +624,24 @@ const headerWaveVariant = rawHeaderWaveVariant === 'wave-rail' ? 'wave-rail' : '
       });
     };
 
+    const bindFontSync = () => {
+      if (!document.fonts) {
+        return;
+      }
+
+      document.fonts.ready
+        .then(() => {
+          scheduleResizeSync();
+        })
+        .catch(() => {
+          // Ignore font loading promise errors and keep runtime responsive.
+        });
+
+      if (typeof document.fonts.addEventListener === 'function') {
+        document.fonts.addEventListener('loadingdone', scheduleResizeSync);
+      }
+    };
+
     const resetAllRailHoverOffsets = () => {
       const tracks = Array.from(document.querySelectorAll('.site-nav-track[data-wave-variant="wave-rail"]'));
       tracks.forEach((track) => {
@@ -635,6 +653,7 @@ const headerWaveVariant = rawHeaderWaveVariant === 'wave-rail' ? 'wave-rail' : '
       sync({ animated: true });
     });
     window.addEventListener('resize', scheduleResizeSync);
+    bindFontSync();
     window.addEventListener('blur', resetAllRailHoverOffsets);
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') {
