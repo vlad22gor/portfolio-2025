@@ -2,7 +2,7 @@
 type WaveAlign = 'left' | 'center' | 'right';
 type WavePhase = 'up' | 'down';
 type WaveEdge = 'equator';
-type WaveFit = 'contain' | 'cover';
+type WaveFit = 'contain' | 'cover' | 'cover-full' | 'cover-bleed';
 
 interface Props {
   class?: string;
@@ -14,6 +14,7 @@ interface Props {
   align?: WaveAlign;
   edge?: WaveEdge;
   fit?: WaveFit;
+  bleedCircles?: number;
   color?: string;
 }
 
@@ -27,6 +28,7 @@ const {
   align = 'left',
   edge = 'equator',
   fit = 'contain',
+  bleedCircles = 0,
   color = 'var(--color-accent-green)',
 } = Astro.props;
 
@@ -76,6 +78,7 @@ const initialStyle = `${
   data-wave-align={align}
   data-wave-edge={edge}
   data-wave-fit={fit}
+  data-wave-bleed-circles={String(Math.max(0, Math.floor(bleedCircles)))}
   style={initialStyle}
   role="presentation"
   aria-hidden="true"
@@ -135,13 +138,25 @@ const initialStyle = `${
     };
 
     const resolveFit = (value) => {
+      if (value === 'cover-bleed') {
+        return 'cover-bleed';
+      }
+      if (value === 'cover-full') {
+        return 'cover-full';
+      }
       if (value === 'cover') {
         return 'cover';
       }
       return 'contain';
     };
 
-    const applyAlignment = (root, align) => {
+    const applyAlignment = (root, align, bleedOffsetPx = 0) => {
+      if (bleedOffsetPx > 0) {
+        root.style.transform = `translateX(-${bleedOffsetPx}px)`;
+      } else {
+        root.style.transform = '';
+      }
+
       if (align === 'center') {
         root.style.marginLeft = 'auto';
         root.style.marginRight = 'auto';
@@ -166,6 +181,18 @@ const initialStyle = `${
 
       const minCircles = clampInt(readNumber(root.dataset.waveMinCircles, 4), 1);
       const fit = resolveFit(root.dataset.waveFit);
+      const bleedCircles = clampInt(readNumber(root.dataset.waveBleedCircles, 0), 0);
+
+      if (fit === 'cover-full') {
+        const ceilCount = Math.ceil(availableWidth / diameter);
+        return Math.max(minCircles, Math.max(1, ceilCount));
+      }
+
+      if (fit === 'cover-bleed') {
+        const ceilCount = Math.ceil(availableWidth / diameter);
+        const overscannedCount = ceilCount + bleedCircles * 2;
+        return Math.max(minCircles, Math.max(1, overscannedCount));
+      }
 
       if (fit === 'cover') {
         const ceilCount = Math.ceil(availableWidth / diameter);
@@ -235,6 +262,9 @@ const initialStyle = `${
       const quantizedWidth = round3(count * diameter);
       const phase = resolvePhase(root.dataset.wavePhase);
       const align = resolveAlign(root.dataset.waveAlign);
+      const fit = resolveFit(root.dataset.waveFit);
+      const bleedCircles = clampInt(readNumber(root.dataset.waveBleedCircles, 0), 0);
+      const bleedOffsetPx = fit === 'cover-bleed' ? bleedCircles * diameter : 0;
       const height = round3(diameter + strokeWidth);
 
       const signature = ['equator', quantizedWidth, diameter, strokeWidth, count, phase].join(':');
@@ -245,7 +275,7 @@ const initialStyle = `${
       root.dataset.waveCountResolved = String(count);
       root.dataset.waveSignature = signature;
       root.dataset.ready = 'true';
-      applyAlignment(root, align);
+      applyAlignment(root, align, bleedOffsetPx);
 
       if (signature !== prevSignature) {
         renderWave(svg, diameter, strokeWidth, count, phase);

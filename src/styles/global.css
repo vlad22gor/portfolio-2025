@@ -276,6 +276,18 @@ html {
   justify-content: center;
 }
 
+.site-nav-track {
+  --wave-rail-height: 10px;
+  --wave-segment-x: 0px;
+  --wave-segment-width: 0px;
+  --wave-rail-base-offset: -4;
+  --wave-rail-hover-offset: 0;
+  position: relative;
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+}
+
 .site-nav-list {
   display: flex;
   align-items: flex-start;
@@ -284,10 +296,42 @@ html {
   padding: 0;
   list-style: none;
   overflow: visible;
+  position: relative;
+  z-index: 2;
 }
 
 .site-nav-list > li {
   overflow: visible;
+}
+
+.site-nav-wave-rail {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: var(--wave-rail-height);
+  overflow: visible;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 1;
+  color: var(--color-accent-green);
+  transform: translateY(calc((var(--wave-rail-base-offset) + var(--wave-rail-hover-offset)) * 1px));
+  will-change: transform;
+  transition: opacity 0.16s ease;
+}
+
+.site-nav-track[data-wave-variant='wave-rail'][data-wave-rail-ready='true'] .site-nav-wave-rail {
+  opacity: 1;
+}
+
+.site-nav-wave-rail .quantized-wave {
+  width: 100%;
+  max-width: none;
+  height: var(--wave-rail-height);
+}
+
+.site-nav-wave-rail .quantized-wave .wave-frame {
+  height: var(--wave-rail-height);
 }
 
 .header-button {
@@ -380,6 +424,15 @@ html {
 
 .header-button-wave .quantized-wave .wave-frame {
   height: 10px;
+}
+
+.site-nav-track[data-wave-variant='wave-rail'][data-wave-rail-ready='true'] .header-button {
+  --header-button-gap: 0;
+}
+
+.site-nav-track[data-wave-variant='wave-rail'][data-wave-rail-ready='true'] .header-button-wave-container {
+  height: 0;
+  opacity: 0;
 }
 
 .page-shell {

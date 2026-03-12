@@ -1,6 +1,10 @@
 ---
 import QuantizedWave from './QuantizedWave.astro';
 
+interface Props {
+  headerWaveVariant?: 'classic' | 'wave-rail';
+}
+
 const links = [
   { id: 'cases', href: '/cases', label: 'cases', waveCount: 7 },
   { id: 'home', href: '/', label: 'vlad horovyy', waveCount: 14 },
@@ -11,44 +15,71 @@ const pathname = Astro.url.pathname;
 const normalizedPath =
   pathname.length > 1 && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
 const activeId = normalizedPath === '/cases' ? 'cases' : normalizedPath === '/gallery' ? 'gallery' : 'home';
+const rawHeaderWaveVariant =
+  Astro.props.headerWaveVariant ?? import.meta.env.PUBLIC_HEADER_WAVE_VARIANT ?? 'wave-rail';
+const headerWaveVariant = rawHeaderWaveVariant === 'wave-rail' ? 'wave-rail' : 'classic';
 ---
 
 <header class="site-header" transition:name="site-header" transition:persist>
   <div class="site-header-inner">
     <nav class="site-nav" aria-label="Main navigation">
-      <ul class="site-nav-list">
-        {links.map((link) => (
-          <li>
-            <a
-              class="header-button"
-              class:list={{ active: activeId === link.id }}
-              href={link.href}
-              data-nav-id={link.id}
-              data-astro-prefetch="hover"
-              aria-current={activeId === link.id ? 'page' : undefined}
-            >
-              <span class="header-button-content">
-                <span class="header-button-label-container">
-                  <span class="header-button-label">{link.label}</span>
-                </span>
-                <span class="header-button-wave-container" aria-hidden="true">
-                  <span class="header-button-wave">
-                    <QuantizedWave
-                      align="center"
-                      fit="cover"
-                      count={link.waveCount}
-                      circleDiameter={8}
-                      strokeWidth={2}
-                      minCircles={1}
-                      phase="up"
-                    />
+      <div
+        class="site-nav-track"
+        data-wave-variant={headerWaveVariant}
+        data-wave-rail-ready="false"
+        data-wave-active-id={activeId}
+        style="--wave-rail-height: 10px; --wave-segment-x: 0px; --wave-segment-width: 0px; --wave-rail-base-offset: -4; --wave-rail-hover-offset: 0;"
+      >
+        <ul class="site-nav-list">
+          {links.map((link) => (
+            <li>
+              <a
+                class="header-button"
+                class:list={{ active: activeId === link.id }}
+                href={link.href}
+                data-nav-id={link.id}
+                data-astro-prefetch="hover"
+                aria-current={activeId === link.id ? 'page' : undefined}
+              >
+                <span class="header-button-content">
+                  <span class="header-button-label-container">
+                    <span class="header-button-label">{link.label}</span>
+                  </span>
+                  <span class="header-button-wave-container" aria-hidden="true">
+                    <span class="header-button-wave">
+                      <QuantizedWave
+                        align="center"
+                        fit="cover"
+                        count={link.waveCount}
+                        circleDiameter={8}
+                        strokeWidth={2}
+                        minCircles={1}
+                        phase="up"
+                      />
+                    </span>
                   </span>
                 </span>
-              </span>
-            </a>
-          </li>
-        ))}
-      </ul>
+              </a>
+            </li>
+          ))}
+        </ul>
+
+        {
+          headerWaveVariant === 'wave-rail' && (
+            <div class="site-nav-wave-rail" data-wave-rail aria-hidden="true">
+              <QuantizedWave
+                align="left"
+                fit="cover-bleed"
+                bleedCircles={2}
+                circleDiameter={8}
+                strokeWidth={2}
+                minCircles={1}
+                phase="up"
+              />
+            </div>
+          )
+        }
+      </div>
     </nav>
   </div>
 </header>
@@ -59,13 +90,21 @@ const activeId = normalizedPath === '/cases' ? 'cases' : normalizedPath === '/ga
   (() => {
     const runtimeKey = '__siteHeaderRuntime';
     if (window[runtimeKey]) {
-      window[runtimeKey].sync();
+      window[runtimeKey].sync({ animated: false });
       return;
     }
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const controls = new WeakMap();
+    const waveDiameter = 8;
+    const waveMinCircles = 1;
+    const railSpringDuration = 1.05;
+    const railSpringBounce = 0.24;
+    const railReconcileEpsilon = 0.5;
+    const railHoverOffsetExpanded = 5;
+    const gapControls = new WeakMap();
+    const railStates = new WeakMap();
     const boundButtons = new WeakSet();
+    let resizeRafId = 0;
 
     const normalizePath = (pathname) => {
       if (!pathname || pathname === '/') {
@@ -85,6 +124,8 @@ const activeId = normalizedPath === '/cases' ? 'cases' : normalizedPath === '/ga
       return 'home';
     };
 
+    const isWaveRailTrack = (track) => track?.dataset.waveVariant === 'wave-rail';
+
     const setGap = (button, value) => {
       button.style.setProperty('--header-button-gap', `${value}`);
     };
@@ -95,18 +136,18 @@ const activeId = normalizedPath === '/cases' ? 'cases' : normalizedPath === '/ga
       return Number.isFinite(parsed) ? parsed : 3;
     };
 
-    const stop = (button) => {
-      const control = controls.get(button);
+    const stopGap = (button) => {
+      const control = gapControls.get(button);
       if (control) {
         control.stop();
       }
     };
 
     const animateGap = (button, target) => {
-      stop(button);
+      stopGap(button);
       if (prefersReducedMotion.matches) {
         setGap(button, target);
-        controls.delete(button);
+        gapControls.delete(button);
         return;
       }
 
@@ -121,65 +162,491 @@ const activeId = normalizedPath === '/cases' ? 'cases' : normalizedPath === '/ga
         },
       });
 
-      controls.set(button, control);
+      gapControls.set(button, control);
+    };
+
+    const readTrackVariable = (track, variableName, fallback) => {
+      const value = getComputedStyle(track).getPropertyValue(variableName).trim();
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    };
+
+    const applyRailHoverOffset = (track, value) => {
+      track.style.setProperty('--wave-rail-hover-offset', `${value}`);
+    };
+
+    const stopRailHover = (track) => {
+      const state = railStates.get(track);
+      if (!state) {
+        return;
+      }
+      if (state.hoverControl) {
+        state.hoverControl.stop();
+        state.hoverControl = null;
+      }
+    };
+
+    const animateRailHover = (track, target, options = {}) => {
+      if (!isWaveRailTrack(track)) {
+        return;
+      }
+
+      const state = getRailState(track);
+      const immediate = options.immediate === true || prefersReducedMotion.matches;
+      stopRailHover(track);
+      if (immediate) {
+        state.hoverOffset = target;
+        applyRailHoverOffset(track, target);
+        return;
+      }
+
+      const from = readTrackVariable(track, '--wave-rail-hover-offset', state.hoverOffset);
+      state.hoverOffset = from;
+      state.hoverControl = animate(from, target, {
+        type: 'spring',
+        stiffness: 420,
+        damping: 30,
+        mass: 0.5,
+        onUpdate: (latest) => {
+          state.hoverOffset = latest;
+          applyRailHoverOffset(track, latest);
+        },
+        onComplete: () => {
+          state.hoverOffset = target;
+          state.hoverControl = null;
+          applyRailHoverOffset(track, target);
+        },
+      });
+    };
+
+    const resolveRailPath = (track) => track?.querySelector('[data-wave-rail] .wave-path') ?? null;
+
+    const refreshTrimMetrics = (track) => {
+      const state = getRailState(track);
+      const rail = track?.querySelector('[data-wave-rail]');
+      const wave = rail?.querySelector('[data-quantized-wave]');
+      const path = resolveRailPath(track);
+      if (!rail || !wave || !path) {
+        state.trimMetrics = null;
+        return false;
+      }
+
+      const railRect = rail.getBoundingClientRect();
+      const waveRect = wave.getBoundingClientRect();
+      const waveWidth = waveRect.width;
+      const totalLength = path.getTotalLength();
+      if (waveWidth <= 0 || totalLength <= 0) {
+        state.trimMetrics = null;
+        return false;
+      }
+
+      state.trimMetrics = {
+        path,
+        totalLength,
+        waveOffset: waveRect.left - railRect.left,
+        ratio: totalLength / waveWidth,
+      };
+      return true;
+    };
+
+    const applyPathTrim = (track, segmentX, segmentWidth) => {
+      const state = getRailState(track);
+      const metrics = state.trimMetrics;
+      if (!metrics || !metrics.path?.isConnected || metrics.totalLength <= 0 || metrics.ratio <= 0) {
+        return false;
+      }
+
+      const { path, totalLength, waveOffset, ratio } = metrics;
+      const localX = segmentX - waveOffset;
+      const segmentLen = Math.min(totalLength, Math.max(0.001, segmentWidth * ratio));
+      const maxStartLen = Math.max(0, totalLength - segmentLen);
+      const startLen = Math.min(maxStartLen, Math.max(0, localX * ratio));
+      path.style.strokeDasharray = `${segmentLen} ${totalLength}`;
+      path.style.strokeDashoffset = `${-startLen}`;
+      return true;
+    };
+
+    const getRailState = (track) => {
+      let state = railStates.get(track);
+      if (!state) {
+        state = {
+          targetX: 0,
+          targetWidth: 0,
+          currentX: 0,
+          currentWidth: 0,
+          activeId: '',
+          isOptimistic: false,
+          segmentControl: null,
+          hoverControl: null,
+          hoverOffset: 0,
+          trimRafId: 0,
+          trimMetrics: null,
+        };
+        railStates.set(track, state);
+      }
+      return state;
+    };
+
+    const applySegmentGeometry = (track, x, width) => {
+      track.style.setProperty('--wave-segment-x', `${x}px`);
+      track.style.setProperty('--wave-segment-width', `${width}px`);
+    };
+
+    const applyStateTrim = (track) => {
+      const state = getRailState(track);
+      const applied = applyPathTrim(track, state.currentX, state.currentWidth);
+      const wasReady = track.dataset.waveRailReady === 'true';
+      if (applied || !wasReady) {
+        track.dataset.waveRailReady = applied ? 'true' : 'false';
+      }
+      return applied;
+    };
+
+    const scheduleTrimRetry = (track, remainingAttempts = 8) => {
+      const state = getRailState(track);
+      if (state.trimRafId !== 0) {
+        window.cancelAnimationFrame(state.trimRafId);
+      }
+
+      const tick = () => {
+        if (!state.trimMetrics || track.dataset.waveRailReady !== 'true') {
+          refreshTrimMetrics(track);
+        }
+
+        if (applyStateTrim(track)) {
+          state.trimRafId = 0;
+          return;
+        }
+
+        if (remainingAttempts <= 0) {
+          state.trimRafId = 0;
+          return;
+        }
+
+        remainingAttempts -= 1;
+        state.trimRafId = window.requestAnimationFrame(tick);
+      };
+
+      state.trimRafId = window.requestAnimationFrame(tick);
+    };
+
+    const stopRail = (track) => {
+      const state = railStates.get(track);
+      if (!state) {
+        return;
+      }
+
+      if (state.segmentControl) {
+        state.segmentControl.stop();
+        state.segmentControl = null;
+      }
+
+      stopRailHover(track);
+
+      if (state.trimRafId !== 0) {
+        window.cancelAnimationFrame(state.trimRafId);
+        state.trimRafId = 0;
+      }
+    };
+
+    const quantizeSegmentWidth = (labelWidth) => {
+      const safeWidth = Math.max(1, labelWidth);
+      const ceilCount = Math.ceil(safeWidth / waveDiameter);
+      const reducedCount = ceilCount - 1;
+      const circles = Math.max(waveMinCircles, Math.max(1, reducedCount));
+      return circles * waveDiameter;
+    };
+
+    const resolveButtonGeometry = (track, button) => {
+      if (!track || !button) {
+        return null;
+      }
+
+      const trackWidth = Math.floor(track.clientWidth);
+      if (trackWidth <= 1) {
+        return null;
+      }
+
+      const labelContainer = button.querySelector('.header-button-label-container') ?? button;
+      const trackRect = track.getBoundingClientRect();
+      const labelRect = labelContainer.getBoundingClientRect();
+      if (labelRect.width <= 0) {
+        return null;
+      }
+
+      const width = Math.min(trackWidth, quantizeSegmentWidth(labelRect.width));
+      const labelCenterX = labelRect.left - trackRect.left + labelRect.width / 2;
+      const maxX = Math.max(0, trackWidth - width);
+      const x = Math.min(maxX, Math.max(0, labelCenterX - width / 2));
+
+      return { x, width };
+    };
+
+    const moveSegment = (track, geometry, options = {}) => {
+      if (!track || !geometry) {
+        return;
+      }
+
+      const { activeId = '', optimistic = false, animated = true } = options;
+      const state = getRailState(track);
+      const targetX = geometry.x;
+      const targetWidth = geometry.width;
+
+      state.targetX = targetX;
+      state.targetWidth = targetWidth;
+      state.activeId = activeId;
+      state.isOptimistic = optimistic;
+      track.dataset.waveActiveId = activeId;
+      refreshTrimMetrics(track);
+
+      stopRail(track);
+      const shouldAnimate = animated && !prefersReducedMotion.matches;
+      if (!shouldAnimate) {
+        state.currentX = targetX;
+        state.currentWidth = targetWidth;
+        state.isOptimistic = false;
+        state.segmentControl = null;
+        applySegmentGeometry(track, targetX, targetWidth);
+        applyStateTrim(track);
+        scheduleTrimRetry(track);
+        return;
+      }
+
+      const fromX = readTrackVariable(track, '--wave-segment-x', targetX);
+      const fromWidth = readTrackVariable(track, '--wave-segment-width', targetWidth);
+      const deltaX = targetX - fromX;
+      const deltaWidth = targetWidth - fromWidth;
+      state.currentX = fromX;
+      state.currentWidth = fromWidth;
+      state.segmentControl = animate(0, 1, {
+        type: 'spring',
+        duration: railSpringDuration,
+        bounce: railSpringBounce,
+        onUpdate: (progress) => {
+          state.currentX = fromX + deltaX * progress;
+          state.currentWidth = fromWidth + deltaWidth * progress;
+          applySegmentGeometry(track, state.currentX, state.currentWidth);
+          applyStateTrim(track);
+        },
+        onComplete: () => {
+          state.currentX = targetX;
+          state.currentWidth = targetWidth;
+          state.isOptimistic = false;
+          state.segmentControl = null;
+          applySegmentGeometry(track, targetX, targetWidth);
+          applyStateTrim(track);
+        },
+      });
+      scheduleTrimRetry(track);
+    };
+
+    const moveSegmentToButton = (button, options = {}) => {
+      const track = button.closest('.site-nav-track');
+      if (!isWaveRailTrack(track)) {
+        return;
+      }
+
+      const activeId = button.dataset.navId ?? '';
+      const geometry = resolveButtonGeometry(track, button);
+      if (!geometry) {
+        return;
+      }
+
+      moveSegment(track, geometry, {
+        activeId,
+        optimistic: options.optimistic === true,
+        animated: options.animated !== false,
+      });
+    };
+
+    const syncRailToActive = (track, activeId, options = {}) => {
+      if (!isWaveRailTrack(track)) {
+        return;
+      }
+
+      const button = track.querySelector(`.header-button[data-nav-id="${activeId}"]`);
+      if (!button) {
+        if (track.dataset.waveRailReady !== 'true') {
+          track.dataset.waveRailReady = 'false';
+        }
+        return;
+      }
+
+      const geometry = resolveButtonGeometry(track, button);
+      if (!geometry) {
+        if (track.dataset.waveRailReady !== 'true') {
+          track.dataset.waveRailReady = 'false';
+        }
+        return;
+      }
+
+      const state = getRailState(track);
+      const shouldKeepOptimisticMotion =
+        state.isOptimistic &&
+        state.activeId === activeId &&
+        Math.abs(state.targetX - geometry.x) <= railReconcileEpsilon &&
+        Math.abs(state.targetWidth - geometry.width) <= railReconcileEpsilon;
+      if (shouldKeepOptimisticMotion) {
+        state.targetX = geometry.x;
+        state.targetWidth = geometry.width;
+        track.dataset.waveActiveId = activeId;
+        return;
+      }
+
+      const isFirstReady = track.dataset.waveRailReady !== 'true';
+      moveSegment(track, geometry, {
+        activeId,
+        optimistic: false,
+        animated: options.animated === true && !isFirstReady,
+      });
+    };
+
+    const isRouteActive = (button) => {
+      if (!button) {
+        return false;
+      }
+
+      if (button.getAttribute('aria-current') === 'page') {
+        return true;
+      }
+
+      return button.classList.contains('active');
     };
 
     const bindButton = (button) => {
       if (boundButtons.has(button)) {
         return;
       }
+
       boundButtons.add(button);
       button.addEventListener('pointerenter', () => {
-        if (button.classList.contains('active')) {
+        const track = button.closest('.site-nav-track');
+        if (isWaveRailTrack(track) && isRouteActive(button)) {
+          animateRailHover(track, railHoverOffsetExpanded);
+          return;
+        }
+        if (!isWaveRailTrack(track) && isRouteActive(button)) {
           animateGap(button, 8);
         }
       });
       button.addEventListener('pointerleave', () => {
-        if (button.classList.contains('active')) {
+        const track = button.closest('.site-nav-track');
+        if (isWaveRailTrack(track)) {
+          animateRailHover(track, 0);
+          return;
+        }
+        if (!isWaveRailTrack(track) && isRouteActive(button)) {
           animateGap(button, 3);
         }
       });
       button.addEventListener('focus', () => {
-        if (button.classList.contains('active')) {
+        const track = button.closest('.site-nav-track');
+        if (!isWaveRailTrack(track) && isRouteActive(button)) {
           animateGap(button, 8);
         }
       });
       button.addEventListener('blur', () => {
-        if (button.classList.contains('active')) {
+        const track = button.closest('.site-nav-track');
+        if (!isWaveRailTrack(track) && isRouteActive(button)) {
           animateGap(button, 3);
         }
       });
+      button.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
+          return;
+        }
+        moveSegmentToButton(button, { optimistic: true, animated: true });
+      });
+      button.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') {
+          return;
+        }
+        moveSegmentToButton(button, { optimistic: true, animated: true });
+      });
     };
 
-    const sync = () => {
+    const sync = (options = {}) => {
+      const { animated = true } = options;
       const buttons = Array.from(document.querySelectorAll('.header-button[data-nav-id]'));
       if (!buttons.length) {
         return;
       }
 
       const activeId = resolveActiveId(window.location.pathname);
+      const tracks = new Set();
 
       buttons.forEach((button) => {
         bindButton(button);
+        const track = button.closest('.site-nav-track');
+        if (track) {
+          tracks.add(track);
+        }
+
         const isActive = button.dataset.navId === activeId;
         button.classList.toggle('active', isActive);
         if (isActive) {
           button.setAttribute('aria-current', 'page');
-          setGap(button, 3);
+          if (isWaveRailTrack(track)) {
+            setGap(button, 0);
+          } else {
+            setGap(button, 3);
+          }
         } else {
           button.removeAttribute('aria-current');
-          stop(button);
+          stopGap(button);
           setGap(button, 0);
+        }
+      });
+
+      tracks.forEach((track) => {
+        if (isWaveRailTrack(track)) {
+          refreshTrimMetrics(track);
+          animateRailHover(track, 0, { immediate: true });
+          const state = getRailState(track);
+          syncRailToActive(track, activeId, {
+            animated: animated || state.isOptimistic,
+          });
+        } else {
+          track.dataset.waveRailReady = 'false';
+          track.dataset.waveActiveId = activeId;
+          stopRail(track);
         }
       });
     };
 
-    document.addEventListener('astro:page-load', sync);
+    const scheduleResizeSync = () => {
+      if (resizeRafId !== 0) {
+        return;
+      }
+      resizeRafId = window.requestAnimationFrame(() => {
+        resizeRafId = 0;
+        sync({ animated: false });
+      });
+    };
+
+    const resetAllRailHoverOffsets = () => {
+      const tracks = Array.from(document.querySelectorAll('.site-nav-track[data-wave-variant="wave-rail"]'));
+      tracks.forEach((track) => {
+        animateRailHover(track, 0, { immediate: true });
+      });
+    };
+
+    document.addEventListener('astro:page-load', () => {
+      sync({ animated: true });
+    });
+    window.addEventListener('resize', scheduleResizeSync);
+    window.addEventListener('blur', resetAllRailHoverOffsets);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        resetAllRailHoverOffsets();
+      }
+    });
+    window.addEventListener('pagehide', resetAllRailHoverOffsets);
 
     window[runtimeKey] = {
       sync,
     };
 
-    sync();
+    sync({ animated: false });
   })();
 </script>

@@ -188,3 +188,63 @@
   Причина: зафиксировать устойчивый шаблон устранения route-transition микродёрганий (переходы, idempotent runtime, preload/woff2, чеклист валидации).
   Файлы: `docs/astro-client-router-stability.md`, `tasks/logs.md`.
   Проверки: `test -f docs/astro-client-router-stability.md` — успешно; `rg -n \"ClientRouter|astro:page-load|transition:persist|CLS\" docs/astro-client-router-stability.md` — ключевые секции присутствуют.
+
+- 2026-03-12: Реализован альтернативный `header`-вариант `wave-rail` (цельная базовая волна + бегущий активный сегмент с spring-перемещением).
+  Причина: протестировать сценарий, где underline не телепортируется под новый таб, а пружинно перемещается по треку, включая optimistic start на `pointerdown`.
+  Файлы: `src/components/SiteHeader.astro`, `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; ручная проверка через Playwright + `PUBLIC_HEADER_WAVE_VARIANT=wave-rail` подтверждает `data-wave-variant=wave-rail`, `data-wave-rail-ready=true`, optimistic-сдвиг сегмента до смены URL на `pointerdown`, корректный reconcile `active`/`aria-current` после перехода на `/cases`.
+
+- 2026-03-12: `wave-rail` переключён в дефолтный режим `SiteHeader`.
+  Причина: по запросу включить новый альтернативный header как основной вариант без обязательного env-флага.
+  Файлы: `src/components/SiteHeader.astro`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно.
+
+- 2026-03-12: `wave-rail` переведён на модель одной волны с `path trim` вместо двух слоёв (`base + active`).
+  Причина: убрать дублирование/пересвет волны и получить ожидаемое поведение «одна большая волна, видим только сегмент под активным табом».
+  Файлы: `src/components/SiteHeader.astro`, `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Playwright (`http://127.0.0.1:4321`) подтверждает в rail ровно одну волну (`wavesInRail=1`), наличие trim-стилей у единственного `path` (`strokeDasharray`/`strokeDashoffset`), optimistic-сдвиг сегмента на `pointerdown` до смены URL и корректный `active`/`aria-current` после перехода на `/cases`.
+
+- 2026-03-12: Исправлена центровка trim-сегмента для `gallery` в `wave-rail` через full-span rail-wave и trim относительно реальной геометрии волны.
+  Причина: при короткой rail-волне (`cover` с `ceil-1`) правый таб визуально смещался влево, так как сегмент не помещался в доступную длину path.
+  Файлы: `src/components/QuantizedWave.astro`, `src/components/SiteHeader.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `PUBLIC_HEADER_WAVE_VARIANT=classic npm run build` — успешно; Playwright (`http://127.0.0.1:4321`) подтверждает `waveW=248 >= railW-1`, `centerDelta=0` для `/`, `/cases`, `/gallery`, optimistic trim-движение на `pointerdown` до смены URL.
+
+- 2026-03-12: Усилен bounce trim-анимации в `wave-rail` для заметного визуального переразгона.
+  Причина: при прежних spring-параметрах движение выглядело слишком затухшим и почти без видимого bounce.
+  Файлы: `src/components/SiteHeader.astro`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; для `x` и `width` trim установлены `stiffness: 300`, `damping: 18`, `mass: 0.75`.
+
+- 2026-03-12: Для trim-анимации `wave-rail` задана явная длительность `0.35s`.
+  Причина: требуется контролируемое время анимации вместо полностью физического расчёта spring-параметров.
+  Файлы: `src/components/SiteHeader.astro`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; для `x` и `width` используется `type: spring` + `duration: 0.35`.
+
+- 2026-03-12: Стабилизирована trim-анимация `wave-rail` при soft navigation (`Instant nav`) и увеличена длительность до `~1.05s`.
+  Причина: устранить ощущение слишком быстрой/жёсткой анимации и микродёрганье в середине пути при `ClientRouter` переходе.
+  Файлы: `src/components/SiteHeader.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `PUBLIC_HEADER_WAVE_VARIANT=classic npm run build` — успешно; Playwright (`http://127.0.0.1:4321`) подтверждает сокращение layout-чтений для trim за переход (`railRect/waveRect/pathLen: 54/54/54 -> 2/2/2`), settle-время pointerdown-only около `963ms`, и снижение скачка `--wave-segment-x` в навигационном сценарии (`maxJump: 91.474 -> 35.307`).
+
+- 2026-03-12: Добавлен симметричный overscan path для `wave-rail` (`cover-bleed`, `bleedCircles=2`) для корректного bounce на правом крае `gallery`.
+  Причина: при `gallery` trim-сегмент упирался в конец path, поэтому правый край визуально терял bounce.
+  Файлы: `src/components/QuantizedWave.astro`, `src/components/SiteHeader.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `PUBLIC_HEADER_WAVE_VARIANT=classic npm run build` — успешно; Playwright (`http://127.0.0.1:4321`) подтверждает `waveW=280` при `railW≈247.96`, `waveOffset=-16`, центрирование сегмента без дрейфа для `/`, `/cases`, `/gallery` (`centerDelta=0`), правый запас у `gallery` (`rightSlackLocal≈16.08`), сохранение low-cost trim-цикла (`railRect/waveRect/pathLen: 2/2/2`) и отсутствие клипа trim при движении к `gallery` (`stuckWhileXIncreases=0`).
+
+- 2026-03-12: Возвращён hover/focus-эффект для `wave-rail` через вертикальный offset общей rail-волны.
+  Причина: в текущей архитектуре `wave-rail` gap у кнопки всегда обнулялся, поэтому старая hover-анимация `gap` не могла срабатывать.
+  Файлы: `src/components/SiteHeader.astro`, `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `PUBLIC_HEADER_WAVE_VARIANT=classic npm run build` — успешно; Playwright (`http://127.0.0.1:4321`) подтверждает: на активной кнопке `--wave-rail-hover-offset` анимируется примерно `0 -> 4.9` по `pointerenter/focus` и возвращается к `~0` по `pointerleave/blur`, на неактивной кнопке offset не меняется (`0`), `astro:page-load` сбрасывает offset в `0`, `pointerdown` trim и hover-offset работают параллельно без конфликта.
+
+- 2026-03-12: Добавлена визуальная компенсация `wave-rail` — базовый сдвиг волны вверх на `4px` в idle и hover состояниях.
+  Причина: приблизить позиционирование rail-волны к дизайну без изменения trim-логики и без влияния на `classic`.
+  Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `PUBLIC_HEADER_WAVE_VARIANT=classic npm run build` — успешно; runtime-проверка через Playwright MCP не выполнена из-за ошибки запуска браузера (`Opening in existing browser session`).
+
+- 2026-03-12: Исправлен `wave-rail` после soft navigation: base-offset теперь стабилен, hover корректно определяется на активном табе, rail не мигает fallback-волной.
+  Причина: `wave-rail` терял визуальную консистентность из-за опоры на `active`-класс и сброса `data-wave-rail-ready` при временной неготовности trim-метрик.
+  Файлы: `src/components/SiteHeader.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `PUBLIC_HEADER_WAVE_VARIANT=classic npm run build` — успешно.
+
+- 2026-03-12: Для `wave-rail` убран ложный hover от `focus`/app-refocus: offset теперь активируется только pointer-наведением активного route-таба.
+  Причина: после кликов и `Command+Tab` hover-состояние включалось без реального наведения из-за связки `focus` + optimistic active-state.
+  Файлы: `src/components/SiteHeader.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `PUBLIC_HEADER_WAVE_VARIANT=classic npm run build` — успешно.
