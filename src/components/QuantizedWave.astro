@@ -104,8 +104,7 @@ const initialStyle = `${
   (() => {
     const runtimeKey = '__quantizedWaveRuntime';
     if (window[runtimeKey]) {
-      window[runtimeKey].mountNewRoots();
-      window[runtimeKey].scheduleAll();
+      window[runtimeKey].mountNewRoots({ scheduleExisting: false });
       return;
     }
 
@@ -314,15 +313,18 @@ const initialStyle = `${
       });
     };
 
-    const mount = (root) => {
+    const mount = (root, options = {}) => {
+      const { scheduleExisting = false } = options;
       if (runtime.roots.has(root)) {
-        schedule(root);
-        return;
+        if (scheduleExisting) {
+          schedule(root);
+        }
+        return false;
       }
 
       const parent = root.parentElement;
       if (!parent) {
-        return;
+        return false;
       }
 
       const observer = new ResizeObserver(() => {
@@ -333,13 +335,15 @@ const initialStyle = `${
       runtime.states.set(root, { observer, rafId: 0 });
       observer.observe(parent);
       update(root);
+      return true;
     };
 
-    const mountNewRoots = () => {
+    const mountNewRoots = (options = {}) => {
+      const { scheduleExisting = false } = options;
       cleanupDisconnectedRoots();
       const roots = document.querySelectorAll('[data-quantized-wave]');
       roots.forEach((root) => {
-        mount(root);
+        mount(root, { scheduleExisting });
       });
     };
 
@@ -351,8 +355,7 @@ const initialStyle = `${
     };
 
     document.addEventListener('astro:page-load', () => {
-      mountNewRoots();
-      scheduleAll();
+      mountNewRoots({ scheduleExisting: false });
     });
 
     window.addEventListener('resize', () => {
@@ -364,6 +367,6 @@ const initialStyle = `${
       scheduleAll,
     };
 
-    mountNewRoots();
+    mountNewRoots({ scheduleExisting: false });
   })();
 </script>

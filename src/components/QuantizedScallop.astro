@@ -52,8 +52,7 @@ const resolvedRectangleEdges = rectangleEdges === 'top' ? 'top' : 'all';
   (() => {
     const runtimeKey = '__quantizedScallopRuntime';
     if (window[runtimeKey]) {
-      window[runtimeKey].mountNewRoots();
-      window[runtimeKey].scheduleAll();
+      window[runtimeKey].mountNewRoots({ scheduleExisting: false });
       return;
     }
 
@@ -237,17 +236,20 @@ const resolvedRectangleEdges = rectangleEdges === 'top' ? 'top' : 'all';
       });
     };
 
-    const mount = (root) => {
+    const mount = (root, options = {}) => {
+      const { scheduleExisting = false } = options;
       if (runtime.roots.has(root)) {
-        schedule(root);
-        return;
+        if (scheduleExisting) {
+          schedule(root);
+        }
+        return false;
       }
 
       const content = root.querySelector('.scallop-content');
       const parent = root.parentElement;
 
       if (!content || !parent) {
-        return;
+        return false;
       }
 
       const observer = new ResizeObserver(() => {
@@ -260,6 +262,7 @@ const resolvedRectangleEdges = rectangleEdges === 'top' ? 'top' : 'all';
       observer.observe(content);
 
       update(root);
+      return true;
     };
 
     const unmount = (root) => {
@@ -282,11 +285,12 @@ const resolvedRectangleEdges = rectangleEdges === 'top' ? 'top' : 'all';
       });
     };
 
-    const mountNewRoots = () => {
+    const mountNewRoots = (options = {}) => {
+      const { scheduleExisting = false } = options;
       cleanupDisconnectedRoots();
       const roots = document.querySelectorAll('[data-quantized-scallop]');
       roots.forEach((root) => {
-        mount(root);
+        mount(root, { scheduleExisting });
       });
     };
 
@@ -298,8 +302,7 @@ const resolvedRectangleEdges = rectangleEdges === 'top' ? 'top' : 'all';
     };
 
     document.addEventListener('astro:page-load', () => {
-      mountNewRoots();
-      scheduleAll();
+      mountNewRoots({ scheduleExisting: false });
     });
 
     window.addEventListener('resize', () => {
@@ -317,6 +320,6 @@ const resolvedRectangleEdges = rectangleEdges === 'top' ? 'top' : 'all';
       scheduleAll,
     };
 
-    mountNewRoots();
+    mountNewRoots({ scheduleExisting: false });
   })();
 </script>

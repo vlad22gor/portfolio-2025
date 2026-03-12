@@ -27,7 +27,14 @@ const next = CASES[(index + 1) % CASES.length];
       <p class="kicker">Case Study</p>
       <h1>{current.title}</h1>
       <p class="lead-copy">{current.subtitle}</p>
-      <img class="hero-media" src={current.media[0]?.src} alt={current.media[0]?.alt ?? current.title} />
+      <img
+        class="hero-media"
+        src={current.media[0]?.src}
+        alt={current.media[0]?.alt ?? current.title}
+        loading="eager"
+        decoding="async"
+        fetchpriority="high"
+      />
     </section>
 
     <section class="metrics-grid" aria-label="Case metrics">

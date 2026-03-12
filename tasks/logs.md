@@ -248,3 +248,13 @@
   Причина: после кликов и `Command+Tab` hover-состояние включалось без реального наведения из-за связки `focus` + optimistic active-state.
   Файлы: `src/components/SiteHeader.astro`, `tasks/lessons.md`, `tasks/logs.md`.
   Проверки: `npm run build` — успешно; `PUBLIC_HEADER_WAVE_VARIANT=classic npm run build` — успешно.
+
+- 2026-03-12: Снижен подлаг `wave-rail` при route-transition без смены архитектуры (`Astro ClientRouter` сохранён).
+  Причина: при soft navigation на `astro:page-load` выполнялся массовый `scheduleAll()` для `QuantizedWave/QuantizedScallop`, что создавало лишнюю main-thread нагрузку параллельно анимации хедера.
+  Файлы: `src/components/SiteHeader.astro`, `src/components/QuantizedWave.astro`, `src/components/QuantizedScallop.astro`, `src/components/CaseCard.astro`, `src/pages/gallery.astro`, `src/pages/[slug].astro`, `src/components/SiteFooter.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; prefetch у хедера переключён на `data-astro-prefetch="viewport"`; для non-LCP изображений добавлен `decoding="async"`, для hero-кейса оставлен eager (`loading="eager"`, `fetchpriority="high"`).
+
+- 2026-03-12: Обновлена документация по стабильным переходам Astro Client Router с учётом последних оптимизаций wave-header.
+  Причина: зафиксировать принятый production-паттерн (ранний prefetch top-nav, mount-only на `astro:page-load`, разделение lazy/eager загрузки медиа) без распыления по новым md-файлам.
+  Файлы: `docs/astro-client-router-stability.md`, `README.md`, `tasks/logs.md`.
+  Проверки: docs-only изменение; верифицированы diff и структура секций (`prefetch`, `mountNewRoots`, `lazy/eager media`) в `docs/astro-client-router-stability.md`.

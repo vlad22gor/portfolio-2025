@@ -32,6 +32,10 @@ npm run preview
 - Artifact: `dist/`
 - Custom domain: `public/CNAME`
 
+## Engineering notes
+- Client Router stability playbook: `docs/astro-client-router-stability.md`
+- Scallop shape requirements: `docs/scallop-shape-requirements.md`
+
 ## Content model
 Case content is centralized in `src/data/cases.ts` and reused by:
 - case cards
