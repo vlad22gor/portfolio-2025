@@ -1,5 +1,15 @@
 # Logs
 
+- 2026-03-14: Для home зафиксирован вертикальный offset секции hero как `Y=240` через отдельный модификатор layout-контейнера.
+  Причина: закрепить согласованный контракт вертикального ритма по Figma для первого блока без влияния на другие страницы.
+  Файлы: `src/pages/index.astro`, `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно.
+
+- 2026-03-14: Зафиксирован контракт по вертикальному ритму секций через координату `Y` из Figma (для `home hero` — `Y=240`), без единого глобального `gap`.
+  Причина: в макете секции стоят по сетке ритма с разными интервалами, единый auto-layout gap приводит к расхождениям.
+  Файлы: `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: не запускались (docs-only изменение).
+
 - 2026-03-11: Инициализированы `tasks/lessons.md` и `tasks/logs.md` по локальным правилам репозитория. Проверки: не применимо.
 - 2026-03-11: Реализован базовый сетап портфолио на Astro + Tailwind под GitHub Pages.
   Причина: выполнить утверждённый план миграции с Framer на поддерживаемую Git-кодовую базу.
@@ -438,3 +448,23 @@
   Причина: разгрузить home и вынести demo-блоки в отдельное временное пространство для превью.
   Файлы: `src/pages/index.astro`, `src/pages/preview.astro`, `src/components/SiteHeader.astro`, `tasks/logs.md`.
   Проверки: `npm run build` — успешно; в output сгенерирован новый маршрут `/preview/index.html`, ошибок сборки нет.
+
+- 2026-03-14: Реализован новый `home hero` по Figma `27:2684` (текстовые ряды + абсолютные PNG + CTA).
+  Причина: заменить текущий плейсхолдерный первый блок на 1:1 desktop-композицию из Figma с сохранением текущего button API и маршрутов.
+  Файлы: `src/pages/index.astro`, `src/styles/global.css`, `public/media/home/coin-wheel.png`, `public/media/home/mockup-red.png`, `public/media/home/mockup-path.png`, `public/media/home/cube.png`, `public/media/home/ternimal.png`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `curl` по `http://127.0.0.1:4173/media/home/{coin-wheel,mockup-red,mockup-path,cube,ternimal}.png` — `200`; `curl http://127.0.0.1:4173/` — `200`; `rg -n "home-hero|/media/home" dist/index.html` подтверждает рендер hero и подключение новых ассетов; визуальный smoke-check через Playwright MCP не выполнен из-за ошибки запуска Chrome persistent context (`Opening in existing browser session`).
+
+- 2026-03-14: Исправлена формула масштабирования `home-hero` и восстановлен автоматический visual smoke-check через Playwright MCP.
+  Причина: после восстановления MCP выявилось схлопывание hero (неверная единица в `--home-hero-scale`), из-за чего блок рендерился сильно меньше макета.
+  Файлы: `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Playwright MCP `browser_navigate` снова работает (без `Transport closed`); при viewport `1512x1800` и `1360x1800` метрики `home-hero-media` = `816x720`, `hasHorizontalScroll=false`; скриншоты: `tmp/playwright-home-1512-final.png`, `tmp/playwright-home-1360-final.png`.
+
+- 2026-03-14: Исправлено позиционирование `coin wheel` в home hero по обновлённому Figma (без промежуточного контейнера).
+  Причина: после обновления макета `coin wheel` стал самостоятельным слоем; прежняя связка `coin container + inner offset` могла сбивать позицию/интерпретацию размера.
+  Файлы: `src/pages/index.astro`, `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Figma `27:2684` подтверждает `coin wheel x=578 y=-26 w=265 h=265`; Playwright на `http://127.0.0.1:4321/` подтверждает `coinOffsetFromHero {left: 578, top: -26}` и `hasHorizontalScroll=false`; скриншоты: `tmp/playwright-home-coin-fix-1512.png`, `tmp/playwright-home-coin-fix-1360.png`.
+
+- 2026-03-14: Устранён drift `coin wheel` при soft-navigation (`/ -> /cases -> /`) в dev с `ClientRouter`.
+  Причина: при HMR/prefetch в dev мог подхватываться stale CSS-снимок с устаревшей геометрией coin; позиция сбивалась после возврата на home.
+  Файлы: `src/pages/index.astro`, `src/components/SiteHeader.astro`, `src/styles/global.css`, `tasks/logs.md`, `tasks/lessons.md`.
+  Проверки: `npm run build` — успешно; Playwright dev (`http://127.0.0.1:4322/`) 5 циклов `home -> cases -> home` — `offsetLeft=578`, `offsetTop=-26`, `leftComputed=578px`, `hasHorizontalScroll=false` на каждом цикле; Playwright preview (`http://127.0.0.1:4173/`) до/после цикла `home -> cases -> home` — те же значения без регрессии.

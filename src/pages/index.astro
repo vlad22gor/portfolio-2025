@@ -8,6 +8,13 @@ import Button from '../components/Button.astro';
 import { CASES } from '../data/cases';
 
 const featured = CASES.slice(0, 2);
+const isDev = import.meta.env.DEV;
+const coinInlineStyle = [
+  'left: calc(578px * var(--home-hero-scale));',
+  'top: calc(-26px * var(--home-hero-scale));',
+  'width: calc(265px * var(--home-hero-scale));',
+  'height: calc(265px * var(--home-hero-scale));',
+].join(' ');
 ---
 
 <BaseLayout
@@ -16,19 +23,44 @@ const featured = CASES.slice(0, 2);
   canonicalPath="/"
 >
   <SiteHeader />
-  <main id="content" class="page-shell" transition:name="page-content">
-    <section class="hero scallop-surface">
-      <p class="kicker">Product Designer · Kyiv</p>
-      <h1>Design with care, ship with confidence.</h1>
-      <p>
-        I design digital products people enjoy returning to. This migration replaces a Framer runtime
-        with a maintainable Astro codebase and Git-first workflow.
-      </p>
-      <div class="hero-actions">
-        <Button href="/cases" variant="default">View cases</Button>
-        <Button href="https://linktr.ee/vladhorovyy" target="_blank" variant="bordered-icon" iconSide="right">
-          message me
-        </Button>
+  <main id="content" class="page-shell page-shell--home" transition:name="page-content">
+    <section class="home-hero" aria-labelledby="home-hero-title">
+      <div class="home-hero-media">
+        <h1 id="home-hero-title" class="home-hero-title">
+          <span class="home-hero-line home-hero-line--tertiary">i’m Vlad —</span>
+          <span class="home-hero-line home-hero-line--offset-184">product</span>
+          <span class="home-hero-line home-hero-line--end">designer</span>
+          <span class="home-hero-line home-hero-line--offset-206">crafting</span>
+          <span class="home-hero-line home-hero-line--tertiary">standout</span>
+          <span class="home-hero-line">mobile apps.</span>
+        </h1>
+
+        <div class="home-hero-asset home-hero-asset--coin" style={coinInlineStyle} aria-hidden="true">
+          <img src="/media/home/coin-wheel.png" alt="" loading="eager" decoding="async" fetchpriority="high" />
+        </div>
+
+        <div class="home-hero-asset home-hero-asset--mockup-red" aria-hidden="true">
+          <img src="/media/home/mockup-red.png" alt="" loading="eager" decoding="async" />
+        </div>
+
+        <div class="home-hero-asset home-hero-asset--mockup-path" aria-hidden="true">
+          <img src="/media/home/mockup-path.png" alt="" loading="lazy" decoding="async" />
+        </div>
+
+        <div class="home-hero-asset home-hero-asset--cube" aria-hidden="true">
+          <img src="/media/home/cube.png" alt="" loading="lazy" decoding="async" />
+        </div>
+
+        <div class="home-hero-asset home-hero-asset--ternimal" aria-hidden="true">
+          <img src="/media/home/ternimal.png" alt="" loading="lazy" decoding="async" />
+        </div>
+      </div>
+
+      <div class="home-hero-cta">
+        <p class="home-hero-cta-text">
+          I make apps people love return to. Shaped by product vision, fresh ideas, and an enjoyable teamwork
+        </p>
+        <Button href="https://linktr.ee/vladhorovyy" target="_blank" variant="default">message me</Button>
       </div>
     </section>
 
@@ -47,3 +79,51 @@ const featured = CASES.slice(0, 2);
   </main>
   <SiteFooter />
 </BaseLayout>
+
+{
+  isDev && (
+    <script is:inline>
+      {`
+        (() => {
+          const runtimeKey = '__homeHeroCoinGuard';
+          const expectedLeft = 578;
+          const expectedTop = -26;
+          const epsilon = 0.75;
+
+          const check = () => {
+            const media = document.querySelector('.home-hero-media');
+            const coin = document.querySelector('.home-hero-asset--coin');
+            if (!media || !coin) {
+              return;
+            }
+
+            const mediaRect = media.getBoundingClientRect();
+            const coinRect = coin.getBoundingClientRect();
+            const left = coinRect.left - mediaRect.left;
+            const top = coinRect.top - mediaRect.top;
+
+            if (Math.abs(left - expectedLeft) > epsilon || Math.abs(top - expectedTop) > epsilon) {
+              console.warn('[home-hero] coin offset mismatch', {
+                left,
+                top,
+                expectedLeft,
+                expectedTop,
+                href: window.location.pathname,
+              });
+            }
+          };
+
+          if (window[runtimeKey]) {
+            window[runtimeKey].check();
+            return;
+          }
+
+          window[runtimeKey] = { check };
+          check();
+          document.addEventListener('astro:page-load', check);
+          window.addEventListener('resize', check);
+        })();
+      `}
+    </script>
+  )
+}

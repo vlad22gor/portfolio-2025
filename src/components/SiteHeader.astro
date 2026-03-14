@@ -26,6 +26,7 @@ const activeId =
 const rawHeaderWaveVariant =
   Astro.props.headerWaveVariant ?? import.meta.env.PUBLIC_HEADER_WAVE_VARIANT ?? 'wave-rail';
 const headerWaveVariant = rawHeaderWaveVariant === 'wave-rail' ? 'wave-rail' : 'classic';
+const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
 ---
 
 <header class="site-header" transition:name="site-header" transition:persist>
@@ -46,7 +47,7 @@ const headerWaveVariant = rawHeaderWaveVariant === 'wave-rail' ? 'wave-rail' : '
                 class:list={{ active: activeId === link.id }}
                 href={link.href}
                 data-nav-id={link.id}
-                data-astro-prefetch="viewport"
+                data-astro-prefetch={navPrefetchStrategy}
                 aria-current={activeId === link.id ? 'page' : undefined}
               >
                 <span class="header-button-content">
