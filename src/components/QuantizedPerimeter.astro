@@ -15,6 +15,9 @@ interface Props {
   waveAmplitudeRatio?: number;
   waveTension?: number;
   hoverMorph?: boolean;
+  hoverMorphPreset?: 'default' | 'strong';
+  hoverWaveAmplitudeDelta?: number;
+  hoverWaveTensionDelta?: number;
   /** @deprecated kept for backward compatibility; ignored by single-type param animation */
   hoverMorphTo?: 'scallop' | 'totem';
   morphSpringDuration?: number;
@@ -37,6 +40,9 @@ const {
   waveAmplitudeRatio = 0.28,
   waveTension = 0.5,
   hoverMorph = false,
+  hoverMorphPreset = 'default',
+  hoverWaveAmplitudeDelta,
+  hoverWaveTensionDelta,
   hoverMorphTo = 'totem',
   morphSpringDuration = 1.05,
   morphSpringBounce = 0.24,
@@ -45,10 +51,11 @@ const {
 const resolvedShape = shape === 'circle' ? 'circle' : 'rectangle';
 const resolvedPattern = edgePattern === 'totem' ? 'totem' : 'scallop';
 const resolvedEdges = edges === 'top' ? 'top' : 'all';
+const resolvedHoverMorphPreset = hoverMorphPreset === 'strong' ? 'strong' : 'default';
 // Deprecated dataset for backward compatibility; runtime ignores target pattern now.
 const resolvedHoverMorphTo = hoverMorphTo === 'scallop' ? 'scallop' : 'totem';
 const resolvedHoverAnimationEnabled =
-  hoverMorph && resolvedShape === 'rectangle' && resolvedPattern === 'totem';
+  hoverMorph && resolvedShape === 'rectangle' && (resolvedPattern === 'totem' || resolvedPattern === 'scallop');
 const legacyRectangleEdges = resolvedEdges === 'top' ? 'top' : 'all';
 const styleParts = [`--scallop-line-clamp: ${clampLines};`];
 
@@ -76,6 +83,9 @@ const rootStyle = styleParts.join(' ');
   data-perimeter-wave-amplitude-ratio={String(waveAmplitudeRatio)}
   data-perimeter-wave-tension={String(waveTension)}
   data-perimeter-hover-morph={hoverMorph ? 'true' : 'false'}
+  data-perimeter-hover-morph-preset={resolvedHoverMorphPreset}
+  data-perimeter-hover-wave-amplitude-delta={typeof hoverWaveAmplitudeDelta === 'number' ? String(hoverWaveAmplitudeDelta) : undefined}
+  data-perimeter-hover-wave-tension-delta={typeof hoverWaveTensionDelta === 'number' ? String(hoverWaveTensionDelta) : undefined}
   data-perimeter-hover-morph-to={resolvedHoverMorphTo}
   data-perimeter-morph-spring-duration={String(morphSpringDuration)}
   data-perimeter-morph-spring-bounce={String(morphSpringBounce)}
@@ -159,12 +169,30 @@ const rootStyle = styleParts.join(' ');
       }
     };
 
-    const renderRectangleScallop = (svg, width, height, step, edges) => {
+    const resolveEvenCenter = (edgeLength, radius, count, index) => {
+      if (count <= 1) {
+        return edgeLength / 2;
+      }
+      const start = radius;
+      const end = edgeLength - radius;
+      return start + ((end - start) * index) / (count - 1);
+    };
+
+    const resolveScallopRadius = (width, height, baseRadius, edges, scallopRadiusScale) => {
+      const scale = Math.max(0.7, Math.min(1.45, scallopRadiusScale));
+      const maxByWidth = Math.max(1, width / 2 - 0.5);
+      const maxByHeight = edges === 'top' ? Math.max(1, height - 0.5) : Math.max(1, height / 2 - 0.5);
+      const maxRadius = Math.max(1, Math.min(maxByWidth, maxByHeight));
+      return Math.max(1, Math.min(baseRadius * scale, maxRadius));
+    };
+
+    const renderRectangleScallop = (svg, width, height, step, edges, scallopRadiusScale = 1) => {
       const cols = Math.max(1, Math.floor(width / step));
       const rows = Math.max(1, Math.floor(height / step));
-      const radius = step / 2;
-      const centerX = (index) => radius + index * step;
-      const centerY = (index) => radius + index * step;
+      const baseRadius = step / 2;
+      const radius = resolveScallopRadius(width, height, baseRadius, edges, scallopRadiusScale);
+      const centerX = (index) => resolveEvenCenter(width, radius, cols, index);
+      const centerY = (index) => resolveEvenCenter(height, radius, rows, index);
       const pieces = [];
 
       if (edges === 'top') {
@@ -175,8 +203,8 @@ const rootStyle = styleParts.join(' ');
           pieces.push(`<circle cx="${centerX(i)}" cy="${radius}" r="${radius}" fill="currentColor"></circle>`);
         }
       } else {
-        const rectWidth = Math.max(0, width - step);
-        const rectHeight = Math.max(0, height - step);
+        const rectWidth = Math.max(0, width - radius * 2);
+        const rectHeight = Math.max(0, height - radius * 2);
         pieces.push(`<rect x="${radius}" y="${radius}" width="${rectWidth}" height="${rectHeight}" fill="currentColor"></rect>`);
 
         for (let i = 0; i < cols; i += 1) {
@@ -341,6 +369,7 @@ const rootStyle = styleParts.join(' ');
     const defaultAnimatedParams = () => ({
       waveAmplitudeRatio: 0.28,
       waveTension: 0.5,
+      scallopRadiusScale: 1,
     });
 
     const clampTotemAmplitudeRatio = (value) => Math.max(0.08, Math.min(0.45, value));
@@ -354,16 +383,36 @@ const rootStyle = styleParts.join(' ');
           resolveBaseParams: (dataset) => ({
             waveAmplitudeRatio: clampTotemAmplitudeRatio(readNumber(dataset.perimeterWaveAmplitudeRatio, 0.28)),
             waveTension: clampTotemTension(readNumber(dataset.perimeterWaveTension, 0.5)),
+            scallopRadiusScale: 1,
           }),
-          resolveHoverParams: (baseParams) => ({
-            waveAmplitudeRatio: clampTotemAmplitudeRatio(baseParams.waveAmplitudeRatio + 0.1),
-            waveTension: clampTotemTension(baseParams.waveTension - 0.22),
-          }),
+          resolveHoverParams: (baseParams, dataset) => {
+            const preset = dataset.perimeterHoverMorphPreset === 'strong' ? 'strong' : 'default';
+            const presetDeltas =
+              preset === 'strong'
+                ? { amplitudeDelta: 0.16, tensionDelta: -0.38 }
+                : { amplitudeDelta: 0.1, tensionDelta: -0.22 };
+            const amplitudeDelta =
+              typeof dataset.perimeterHoverWaveAmplitudeDelta === 'string' &&
+              dataset.perimeterHoverWaveAmplitudeDelta.trim() !== ''
+                ? readNumber(dataset.perimeterHoverWaveAmplitudeDelta, presetDeltas.amplitudeDelta)
+                : presetDeltas.amplitudeDelta;
+            const tensionDelta =
+              typeof dataset.perimeterHoverWaveTensionDelta === 'string' &&
+              dataset.perimeterHoverWaveTensionDelta.trim() !== ''
+                ? readNumber(dataset.perimeterHoverWaveTensionDelta, presetDeltas.tensionDelta)
+                : presetDeltas.tensionDelta;
+            return {
+              waveAmplitudeRatio: clampTotemAmplitudeRatio(baseParams.waveAmplitudeRatio + amplitudeDelta),
+              waveTension: clampTotemTension(baseParams.waveTension + tensionDelta),
+              scallopRadiusScale: 1,
+            };
+          },
           interpolateParams: (fromParams, toParams, progress) => ({
             waveAmplitudeRatio: clampTotemAmplitudeRatio(
               lerp(fromParams.waveAmplitudeRatio, toParams.waveAmplitudeRatio, progress),
             ),
             waveTension: clampTotemTension(lerp(fromParams.waveTension, toParams.waveTension, progress)),
+            scallopRadiusScale: 1,
           }),
           render: (svg, box, params, edges) =>
             renderRectangleTotem(
@@ -374,6 +423,37 @@ const rootStyle = styleParts.join(' ');
               edges,
               params.waveAmplitudeRatio,
               params.waveTension,
+            ),
+        };
+      }
+
+      if (pattern === 'scallop') {
+        return {
+          supportsParamAnimation: true,
+          resolveBaseParams: () => ({
+            ...defaultAnimatedParams(),
+            scallopRadiusScale: 1,
+          }),
+          resolveHoverParams: (baseParams, dataset) => {
+            const preset = dataset.perimeterHoverMorphPreset === 'strong' ? 'strong' : 'default';
+            const targetScale = preset === 'strong' ? 1.28 : 1.14;
+            return {
+              ...baseParams,
+              scallopRadiusScale: targetScale,
+            };
+          },
+          interpolateParams: (fromParams, toParams, progress) => ({
+            ...fromParams,
+            scallopRadiusScale: lerp(fromParams.scallopRadiusScale, toParams.scallopRadiusScale, progress),
+          }),
+          render: (svg, box, params, edges) =>
+            renderRectangleScallop(
+              svg,
+              box.width,
+              box.height,
+              box.step,
+              edges,
+              params.scallopRadiusScale,
             ),
         };
       }
@@ -470,14 +550,14 @@ const rootStyle = styleParts.join(' ');
       const minLobes = clampInt(readNumber(root.dataset.perimeterMinLobes, 8), 3);
       const baseParams = animationAdapter.resolveBaseParams(root.dataset);
       const hoverParams = hoverMorphEnabled
-        ? animationAdapter.resolveHoverParams(baseParams)
+        ? animationAdapter.resolveHoverParams(baseParams, root.dataset)
         : baseParams;
       const activeParams = hoverMorphEnabled
         ? animationAdapter.interpolateParams(baseParams, hoverParams, animationProgress)
         : baseParams;
       let signature = `${shape}:${edgePattern}:${edges}:${effectiveStep}:${round3(
         activeParams.waveAmplitudeRatio,
-      )}:${round3(activeParams.waveTension)}:${round3(animationProgress)}`;
+      )}:${round3(activeParams.waveTension)}:${round3(activeParams.scallopRadiusScale)}:${round3(animationProgress)}`;
 
       root.dataset.perimeterEffectiveStep = String(effectiveStep);
       root.dataset.perimeterMorphProgress = String(round3(animationProgress));

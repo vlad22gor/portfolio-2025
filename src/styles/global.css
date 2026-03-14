@@ -626,17 +626,6 @@ p {
   cursor: pointer;
 }
 
-.scallop-preview-morph .scallop-content {
-  outline: 1px dashed color-mix(in srgb, var(--color-accent-green) 40%, transparent);
-  outline-offset: -0.35rem;
-  transition: outline-color 0.2s ease;
-}
-
-.scallop-preview-morph:hover .scallop-content,
-.scallop-preview-morph:focus-visible .scallop-content {
-  outline-color: var(--color-accent-green);
-}
-
 .scallop-preview-morph:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--color-accent-green) 70%, white);
   outline-offset: 0.35rem;
@@ -666,12 +655,6 @@ p {
   justify-items: center;
   text-align: center;
   height: 100%;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .scallop-preview-morph .scallop-content {
-    transition: none;
-  }
 }
 
 /* Legacy CTA styles; candidate for cleanup after full consumer audit. */
@@ -728,6 +711,31 @@ p {
 
 .panel li {
   list-style: disc;
+}
+
+.wave-size-preview-grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.wave-size-preview-item {
+  gap: 0.7rem;
+}
+
+.wave-size-preview-wave {
+  width: 100%;
+}
+
+.wave-size-preview-meta {
+  font-family: var(--type-text-small-family);
+  font-size: var(--type-text-small-size);
+  line-height: var(--type-text-small-line-height);
+  font-weight: var(--type-text-small-weight);
+  letter-spacing: var(--type-text-small-letter-spacing);
+  color: var(--text-secondary);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-text-small-font-variation);
 }
 
 .case-grid,

@@ -3,9 +3,13 @@ type WaveAlign = 'left' | 'center' | 'right';
 type WavePhase = 'up' | 'down';
 type WaveEdge = 'equator';
 type WaveFit = 'contain' | 'cover' | 'cover-full' | 'cover-bleed';
+type WaveSize = 'small' | 'medium' | 'large';
+type WaveTrimMode = 'none' | 'reveal';
+type WaveTrimDirection = 'start-to-end' | 'end-to-start';
 
 interface Props {
   class?: string;
+  size?: WaveSize;
   circleDiameter?: number;
   strokeWidth?: number;
   minCircles?: number;
@@ -16,12 +20,16 @@ interface Props {
   fit?: WaveFit;
   bleedCircles?: number;
   color?: string;
+  trimMode?: WaveTrimMode;
+  trimProgress?: number;
+  trimDirection?: WaveTrimDirection;
 }
 
 const {
   class: className = '',
-  circleDiameter = 8,
-  strokeWidth = 2,
+  size = 'small',
+  circleDiameter,
+  strokeWidth,
   minCircles = 4,
   count,
   phase = 'up',
@@ -30,15 +38,34 @@ const {
   fit = 'contain',
   bleedCircles = 0,
   color = 'var(--color-accent-green)',
+  trimMode = 'none',
+  trimProgress,
+  trimDirection = 'start-to-end',
 } = Astro.props;
 
 const round3 = (value: number) => Math.round(value * 1000) / 1000;
+const clampUnit = (value: number) => Math.min(1, Math.max(0, value));
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value);
+const waveSizeMap: Record<WaveSize, { diameter: number; stroke: number }> = {
+  small: { diameter: 8, stroke: 2 },
+  medium: { diameter: 14, stroke: 4 },
+  large: { diameter: 20, stroke: 10 },
+};
+const resolvedSize: WaveSize = size === 'medium' || size === 'large' ? size : 'small';
+const resolvedSizeConfig = waveSizeMap[resolvedSize];
+const resolvedDiameter = isFiniteNumber(circleDiameter) ? circleDiameter : resolvedSizeConfig.diameter;
+const resolvedStroke = isFiniteNumber(strokeWidth) ? strokeWidth : resolvedSizeConfig.stroke;
+const resolvedTrimMode: WaveTrimMode = trimMode === 'reveal' ? 'reveal' : 'none';
+const resolvedTrimDirection: WaveTrimDirection =
+  trimDirection === 'end-to-start' ? 'end-to-start' : 'start-to-end';
+const resolvedTrimProgress = clampUnit(isFiniteNumber(trimProgress) ? trimProgress : 1);
 const fixedCount =
   typeof count === 'number' && Number.isFinite(count) ? Math.max(1, Math.floor(count)) : undefined;
-const initialWidth = fixedCount ? round3(fixedCount * circleDiameter) : 1;
-const initialHeight = fixedCount ? round3(circleDiameter + strokeWidth) : 1;
+const initialWidth = fixedCount ? round3(fixedCount * resolvedDiameter) : 1;
+const initialHeight = fixedCount ? round3(resolvedDiameter + resolvedStroke) : 1;
 const initialSignature = fixedCount
-  ? ['equator', initialWidth, round3(circleDiameter), round3(strokeWidth), fixedCount, phase].join(':')
+  ? ['equator', initialWidth, round3(resolvedDiameter), round3(resolvedStroke), fixedCount, phase].join(':')
   : '';
 
 const buildPath = (resolvedCount: number, diameter: number, stroke: number, resolvedPhase: WavePhase) => {
@@ -58,9 +85,17 @@ const buildPath = (resolvedCount: number, diameter: number, stroke: number, reso
   return commands.join(' ');
 };
 
-const initialPath = fixedCount ? buildPath(fixedCount, circleDiameter, strokeWidth, phase) : 'M0 0L1 0';
+const initialPath = fixedCount ? buildPath(fixedCount, resolvedDiameter, resolvedStroke, phase) : 'M0 0L1 0';
+const initialTotalLength = fixedCount ? round3(fixedCount * Math.PI * (resolvedDiameter / 2)) : 0;
+const initialVisibleLength = round3(initialTotalLength * resolvedTrimProgress);
+const initialDashOffset =
+  resolvedTrimDirection === 'end-to-start' ? round3(-(initialTotalLength - initialVisibleLength)) : 0;
+const initialTrimStyle =
+  fixedCount && resolvedTrimMode === 'reveal'
+    ? `stroke-dasharray: ${initialVisibleLength} ${initialTotalLength}; stroke-dashoffset: ${initialDashOffset};`
+    : '';
 const initialStyle = `${
-  `--wave-color: ${color}; --wave-diameter: ${circleDiameter}px; --wave-stroke: ${strokeWidth}px;`
+  `--wave-color: ${color}; --wave-diameter: ${resolvedDiameter}px; --wave-stroke: ${resolvedStroke}px;`
 }${fixedCount ? ` width: ${initialWidth}px; height: ${initialHeight}px;` : ''}`;
 ---
 
@@ -68,8 +103,9 @@ const initialStyle = `${
   class={`quantized-wave ${className}`.trim()}
   data-quantized-wave
   data-ready={fixedCount ? 'true' : 'false'}
-  data-wave-diameter={String(circleDiameter)}
-  data-wave-stroke={String(strokeWidth)}
+  data-wave-size={resolvedSize}
+  data-wave-diameter={String(resolvedDiameter)}
+  data-wave-stroke={String(resolvedStroke)}
   data-wave-min-circles={String(minCircles)}
   data-wave-count={typeof fixedCount === 'number' ? String(fixedCount) : ''}
   data-wave-count-resolved={typeof fixedCount === 'number' ? String(fixedCount) : ''}
@@ -79,6 +115,9 @@ const initialStyle = `${
   data-wave-edge={edge}
   data-wave-fit={fit}
   data-wave-bleed-circles={String(Math.max(0, Math.floor(bleedCircles)))}
+  data-wave-trim-mode={resolvedTrimMode}
+  data-wave-trim-progress={String(resolvedTrimProgress)}
+  data-wave-trim-direction={resolvedTrimDirection}
   style={initialStyle}
   role="presentation"
   aria-hidden="true"
@@ -94,8 +133,9 @@ const initialStyle = `${
       d={initialPath}
       fill="none"
       stroke="currentColor"
-      stroke-width={String(round3(strokeWidth))}
+      stroke-width={String(round3(resolvedStroke))}
       stroke-linecap="butt"
+      style={initialTrimStyle || undefined}
     ></path>
   </svg>
 </div>
@@ -120,6 +160,7 @@ const initialStyle = `${
 
     const clampNumber = (value, min, max) => Math.min(max, Math.max(min, value));
     const clampInt = (value, min) => Math.max(min, Math.floor(value));
+    const clampUnit = (value) => Math.min(1, Math.max(0, value));
     const round3 = (value) => Math.round(value * 1000) / 1000;
 
     const resolveAlign = (value) => {
@@ -147,6 +188,36 @@ const initialStyle = `${
         return 'cover';
       }
       return 'contain';
+    };
+
+    const resolveTrimMode = (value) => {
+      if (value === 'reveal') {
+        return 'reveal';
+      }
+      return 'none';
+    };
+
+    const resolveTrimDirection = (value) => {
+      if (value === 'end-to-start') {
+        return 'end-to-start';
+      }
+      return 'start-to-end';
+    };
+
+    const applyTrimReveal = (path, mode, progress, direction) => {
+      if (!path || mode !== 'reveal') {
+        return;
+      }
+
+      const totalLength = path.getTotalLength();
+      if (!(totalLength > 0)) {
+        return;
+      }
+
+      const visibleLength = clampUnit(progress) * totalLength;
+      const dashOffset = direction === 'end-to-start' ? -(totalLength - visibleLength) : 0;
+      path.style.strokeDasharray = `${round3(visibleLength)} ${round3(totalLength)}`;
+      path.style.strokeDashoffset = `${round3(dashOffset)}`;
     };
 
     const applyAlignment = (root, align, bleedOffsetPx = 0) => {
@@ -264,6 +335,9 @@ const initialStyle = `${
       const fit = resolveFit(root.dataset.waveFit);
       const bleedCircles = clampInt(readNumber(root.dataset.waveBleedCircles, 0), 0);
       const bleedOffsetPx = fit === 'cover-bleed' ? bleedCircles * diameter : 0;
+      const trimMode = resolveTrimMode(root.dataset.waveTrimMode);
+      const trimProgress = clampUnit(readNumber(root.dataset.waveTrimProgress, 1));
+      const trimDirection = resolveTrimDirection(root.dataset.waveTrimDirection);
       const height = round3(diameter + strokeWidth);
 
       const signature = ['equator', quantizedWidth, diameter, strokeWidth, count, phase].join(':');
@@ -279,6 +353,9 @@ const initialStyle = `${
       if (signature !== prevSignature) {
         renderWave(svg, diameter, strokeWidth, count, phase);
       }
+
+      const path = svg.querySelector('.wave-path');
+      applyTrimReveal(path, trimMode, trimProgress, trimDirection);
     };
 
     const schedule = (root) => {

@@ -393,3 +393,33 @@
   Причина: межтиповой morph оставался визуально нестабильным и усложнял runtime; требовалась надёжная база для hover/focus-анимации параметров внутри одного паттерна.
   Файлы: `src/components/QuantizedPerimeter.astro`, `src/pages/index.astro`, `tasks/lessons.md`, `tasks/logs.md`.
   Проверки: `npm run build` — успешно; `rg -n "buildMorphPerimeterSegments|renderRectangleMorph|morphPatternAdapters|validateMorphModels|interpolatePathModels|perimeterMorphGate|data-perimeter-morph-gate" src/components/QuantizedPerimeter.astro src/pages/index.astro dist/index.html || true` — совпадений нет (inter-type ветка удалена); `rg -n "Totem param hover|Param animation test|hoverMorphTo=|True Scallop -> Totem|true scallop" src/pages/index.astro` подтверждает обновлённый demo-copy и отсутствие `hoverMorphTo` в вызове demo.
+
+- 2026-03-14: Добавлены 4 compare-preview варианта single-type hover-анимации `totem` (`Light/Medium/Radical/Negative`) и расширен API дельтами hover-параметров.
+  Причина: нужно сравнить силу и направление анимации в рамках одного типа, включая «отрицательный» сценарий (амплитуда вниз, tension вверх), без возврата к inter-type morph.
+  Файлы: `src/components/QuantizedPerimeter.astro`, `src/pages/index.astro`, `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "hoverWaveAmplitudeDelta|hoverWaveTensionDelta|resolveHoverParams: \(baseParams, dataset\)|Negative|Radical|Medium|Light" src/components/QuantizedPerimeter.astro src/pages/index.astro` подтверждает новый API и 4 preview-варианта; `rg -n "scallop-preview-morph \\.scallop-content|outline: 1px dashed|transition: outline-color" src/styles/global.css || true` — совпадений нет (пунктирная inner-обводка удалена).
+
+- 2026-03-14: Добавлены именованные пресеты hover-анимации `totem` (`default`, `strong`) и обновлён каталог preview до двух целевых вариантов.
+  Причина: зафиксировать понравившиеся сценарии (бывшие `medium` и `radical`) как стабильные пресеты и убрать лишние сравнения (`light/negative`) из главного каталога.
+  Файлы: `src/components/QuantizedPerimeter.astro`, `src/pages/index.astro`, `docs/quantized-shapes-and-animation-presets.md`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "hoverMorphPreset|data-perimeter-hover-morph-preset|perimeterHoverMorphPreset|default' \| 'strong|resolveHoverParams: \(baseParams, dataset\)" src/components/QuantizedPerimeter.astro` подтверждает пресетный API и runtime; `rg -n "<h2>Default</h2>|<h2>Strong</h2>|hoverMorphPreset=\"default\"|hoverMorphPreset=\"strong\"|Light|Radical|Negative|Medium" src/pages/index.astro` подтверждает 2 preview-карточки; `docs/quantized-shapes-and-animation-presets.md` добавлен с описанием shape-типов и правил пресетов.
+
+- 2026-03-14: Добавлена hover-анимация для `scallop` с пресетами `default` и `strong`, плюс новые preview-карточки на главной.
+  Причина: расширить single-type preset-модель на `scallop` по аналогии с `totem`, сохранив единый API `hoverMorphPreset` и baseline-демо без регрессий.
+  Файлы: `src/components/QuantizedPerimeter.astro`, `src/pages/index.astro`, `docs/quantized-shapes-and-animation-presets.md`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "supportsParamAnimation: true|scallopRadiusScale|renderRectangleScallop\(|hoverMorphPreset === 'strong'|Scallop hover default|Scallop hover strong" src/components/QuantizedPerimeter.astro src/pages/index.astro` подтверждает runtime/preset-поддержку scallop и новые preview; `rg -n "Scallop Hover Presets|scallopRadiusScale|Hover Presets By Pattern" docs/quantized-shapes-and-animation-presets.md` подтверждает документацию.
+
+- 2026-03-14: Расширен `QuantizedWave` новыми size-пресетами и trim-reveal API без изменения поведения header wave-rail.
+  Причина: нужен переиспользуемый контракт размеров (`small/medium/large`) и отдельный режим path-reveal для scroll-анимаций без конфликта с текущим trim-сегментом в хедере.
+  Файлы: `src/components/QuantizedWave.astro`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; в `QuantizedWave` добавлены пропсы `size`, `trimMode`, `trimProgress`, `trimDirection`, размерные пресеты (`small=8/2`, `medium=28/4`, `large=40/10`) и runtime-логика reveal (`stroke-dasharray/stroke-dashoffset`) только для `trimMode='reveal'` (в `none` dash-стили не трогаются).
+
+- 2026-03-14: Добавлен наглядный preview трёх размеров `QuantizedWave` на главной странице.
+  Причина: нужен быстрый визуальный референс для новых пресетов `small`, `medium`, `large` прямо в каталоге на `/`.
+  Файлы: `src/pages/index.astro`, `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; в `index` добавлен блок `Quantized wave sizes` с тремя карточками (`size='small'|'medium'|'large'`), в CSS добавлены стили `wave-size-preview-*` для равномерной сетки и читаемой подписи параметров.
+
+- 2026-03-14: Скорректированы size-пресеты `QuantizedWave` по диаметру (`d`) и обновлены подписи в preview.
+  Причина: исходно `medium/large` были заведены как радиусы по ошибке; требовалось зафиксировать значения как диаметры: `medium d=14`, `large d=20`.
+  Файлы: `src/components/QuantizedWave.astro`, `src/pages/index.astro`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; size map обновлён (`small=8/2`, `medium=14/4`, `large=20/10`), подписи в блоке `Quantized wave sizes` переведены в формат `d N, stroke M`.
