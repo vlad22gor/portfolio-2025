@@ -373,3 +373,23 @@
   Причина: у прямоугольного totem-периметра углы выглядели как «сосулька»; требовались симметричные и более круглые переходы между гранями без изменения API.
   Файлы: `src/components/QuantizedPerimeter.astro`, `tasks/lessons.md`, `tasks/logs.md`.
   Проверки: `npm run build` — успешно; геометрическая проверка `minCos` на смежных cubic-стыках для `edges='all'` и `edges='top'` даёт `1.0` (порог `>=0.95`); для `edges='all'` подтверждено отсутствие прохода path через точные вершины прямоугольника (`hasHardCornerAll=false`), что валидирует работу `cornerInset`; `rg -n "data-perimeter-edge-pattern=\"totem\"|data-perimeter-edges=\"top\"|data-scallop-shape=\"circle\"" dist/index.html dist/*/index.html` подтверждает сохранение dataset-контракта и отсутствие регрессий `circle`.
+
+- 2026-03-14: Добавлен тестовый hover-morph периметр на главной (`scallop -> totem`) и расширен runtime `QuantizedPerimeter` под геометрический spring-morph.
+  Причина: проверить интерактивный morph-переход между двумя типами квантации без дублирования компонентов и без локальных костылей на странице.
+  Файлы: `src/components/QuantizedPerimeter.astro`, `src/pages/index.astro`, `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "Morph test|Scallop -> Totem|data-perimeter-hover-morph|scallop-preview-morph" src/pages/index.astro src/components/QuantizedPerimeter.astro src/styles/global.css` подтверждает новый API/разметку/стили; `rg -n "Morph test|Scallop -> Totem|data-perimeter-hover-morph|data-perimeter-morph-progress" dist/index.html` подтверждает рендер и dataset-контракт в сборке.
+
+- 2026-03-14: Исправлен morph-пайплайн `QuantizedPerimeter` на реальный переход `true scallop -> totem` через совместимые cubic-сегменты.
+  Причина: предыдущая реализация визуально была похожа на анимацию параметров smooth-wave и не давала характерный scallop-cusp на старте.
+  Файлы: `src/components/QuantizedPerimeter.astro`, `src/pages/index.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "appendScallopWaveSegments|buildPerimeterSegments|interpolatePathModels|True Scallop -> Totem" src/components/QuantizedPerimeter.astro src/pages/index.astro` подтверждает новый сегментный morph-пайплайн и обновлённый demo-copy.
+
+- 2026-03-14: Выполнена финальная итерация morph-архитектуры `scallop -> totem` с изоляцией только для `hoverMorph` режима.
+  Причина: устранить эффект «анти-scallop» (вырез внутрь) и обеспечить масштабируемую основу под новые типы edge-pattern.
+  Файлы: `src/components/QuantizedPerimeter.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "morphPatternAdapters|buildMorphPerimeterSegments|validateMorphModels|perimeterMorphGate|renderRectangleTotem" src/components/QuantizedPerimeter.astro` подтверждает adapter-слой, канонический morph-пайплайн с наружными нормалями, quality-gate и fallback, а также сохранение отдельного standalone-рендера `renderRectangleTotem` вне morph-режима.
+
+- 2026-03-14: Демонтирован межтиповой morph (`scallop -> totem`) и внедрена инфраструктура single-type param animation в `QuantizedPerimeter` (v1: `totem-first`).
+  Причина: межтиповой morph оставался визуально нестабильным и усложнял runtime; требовалась надёжная база для hover/focus-анимации параметров внутри одного паттерна.
+  Файлы: `src/components/QuantizedPerimeter.astro`, `src/pages/index.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "buildMorphPerimeterSegments|renderRectangleMorph|morphPatternAdapters|validateMorphModels|interpolatePathModels|perimeterMorphGate|data-perimeter-morph-gate" src/components/QuantizedPerimeter.astro src/pages/index.astro dist/index.html || true` — совпадений нет (inter-type ветка удалена); `rg -n "Totem param hover|Param animation test|hoverMorphTo=|True Scallop -> Totem|true scallop" src/pages/index.astro` подтверждает обновлённый demo-copy и отсутствие `hoverMorphTo` в вызове demo.

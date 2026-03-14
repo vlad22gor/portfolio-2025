@@ -14,6 +14,11 @@ interface Props {
   pad?: string;
   waveAmplitudeRatio?: number;
   waveTension?: number;
+  hoverMorph?: boolean;
+  /** @deprecated kept for backward compatibility; ignored by single-type param animation */
+  hoverMorphTo?: 'scallop' | 'totem';
+  morphSpringDuration?: number;
+  morphSpringBounce?: number;
 }
 
 const {
@@ -31,11 +36,19 @@ const {
   pad,
   waveAmplitudeRatio = 0.28,
   waveTension = 0.5,
+  hoverMorph = false,
+  hoverMorphTo = 'totem',
+  morphSpringDuration = 1.05,
+  morphSpringBounce = 0.24,
 } = Astro.props;
 
 const resolvedShape = shape === 'circle' ? 'circle' : 'rectangle';
 const resolvedPattern = edgePattern === 'totem' ? 'totem' : 'scallop';
 const resolvedEdges = edges === 'top' ? 'top' : 'all';
+// Deprecated dataset for backward compatibility; runtime ignores target pattern now.
+const resolvedHoverMorphTo = hoverMorphTo === 'scallop' ? 'scallop' : 'totem';
+const resolvedHoverAnimationEnabled =
+  hoverMorph && resolvedShape === 'rectangle' && resolvedPattern === 'totem';
 const legacyRectangleEdges = resolvedEdges === 'top' ? 'top' : 'all';
 const styleParts = [`--scallop-line-clamp: ${clampLines};`];
 
@@ -62,6 +75,10 @@ const rootStyle = styleParts.join(' ');
   data-perimeter-min-lobes={String(minLobes)}
   data-perimeter-wave-amplitude-ratio={String(waveAmplitudeRatio)}
   data-perimeter-wave-tension={String(waveTension)}
+  data-perimeter-hover-morph={hoverMorph ? 'true' : 'false'}
+  data-perimeter-hover-morph-to={resolvedHoverMorphTo}
+  data-perimeter-morph-spring-duration={String(morphSpringDuration)}
+  data-perimeter-morph-spring-bounce={String(morphSpringBounce)}
   data-quantized-scallop
   data-scallop-shape={resolvedShape}
   data-scallop-rectangle-edges={legacyRectangleEdges}
@@ -71,6 +88,7 @@ const rootStyle = styleParts.join(' ');
   data-scallop-min-lobes={String(minLobes)}
   style={rootStyle}
   aria-label={label}
+  tabindex={resolvedHoverAnimationEnabled ? '0' : undefined}
 >
   <svg class="scallop-frame" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true" focusable="false"></svg>
   <div class="scallop-content">
@@ -79,6 +97,8 @@ const rootStyle = styleParts.join(' ');
 </div>
 
 <script>
+  import { animate } from 'motion';
+
   (() => {
     const runtimeKey = '__quantizedPerimeterRuntime';
     if (window[runtimeKey]) {
@@ -90,6 +110,7 @@ const rootStyle = styleParts.join(' ');
       roots: new Set(),
       states: new WeakMap(),
     };
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     const readNumber = (value, fallback) => {
       const parsed = Number.parseFloat(value);
@@ -99,6 +120,7 @@ const rootStyle = styleParts.join(' ');
     const clampInt = (value, min) => Math.max(min, Math.floor(value));
     const clamp01 = (value) => Math.max(0, Math.min(1, value));
     const round3 = (value) => Math.round(value * 1000) / 1000;
+    const lerp = (from, to, progress) => from + (to - from) * progress;
 
     const resolveAvailableSize = (root, parent, content, step) => {
       const fallbackWidth = Math.max(1, Math.floor(root.getBoundingClientRect().width), Math.floor(step));
@@ -172,7 +194,9 @@ const rootStyle = styleParts.join(' ');
       svg.innerHTML = pieces.join('');
     };
 
-    const appendTotemWave = (commands, config) => {
+    const SCALLOP_KAPPA = 0.5522847498;
+
+    const appendLegacyTotemWaveCommands = (commands, config) => {
       const { sx, sy, ex, ey, nx, ny, segments, amplitude, tension } = config;
       const count = Math.max(1, Math.floor(segments));
       const dx = (ex - sx) / count;
@@ -202,7 +226,6 @@ const rootStyle = styleParts.join(' ');
         const c3y = midY + ty * crestHandleLength;
         const c4x = endX - tx * edgeHandleLength;
         const c4y = endY - ty * edgeHandleLength;
-
         commands.push(
           `C ${round3(c1x)} ${round3(c1y)} ${round3(c2x)} ${round3(c2y)} ${round3(midX)} ${round3(midY)}`,
         );
@@ -210,17 +233,6 @@ const rootStyle = styleParts.join(' ');
           `C ${round3(c3x)} ${round3(c3y)} ${round3(c4x)} ${round3(c4y)} ${round3(endX)} ${round3(endY)}`,
         );
       }
-    };
-
-    const appendCornerBridge = (commands, config) => {
-      const { sx, sy, ex, ey, txStart, tyStart, txEnd, tyEnd, radius } = config;
-      const k = 0.5522847498;
-      const handle = Math.max(0.5, radius * k);
-      const c1x = sx + txStart * handle;
-      const c1y = sy + tyStart * handle;
-      const c2x = ex - txEnd * handle;
-      const c2y = ey - tyEnd * handle;
-      commands.push(`C ${round3(c1x)} ${round3(c1y)} ${round3(c2x)} ${round3(c2y)} ${round3(ex)} ${round3(ey)}`);
     };
 
     const resolveEdgeSegments = (length, step) => {
@@ -243,7 +255,7 @@ const rootStyle = styleParts.join(' ');
       const topSegments = resolveEdgeSegments(topWaveLength, step);
       const commands = [`M ${round3(topWaveStartX)} 0`];
 
-      appendTotemWave(commands, {
+      appendLegacyTotemWaveCommands(commands, {
         sx: topWaveStartX,
         sy: 0,
         ex: topWaveEndX,
@@ -255,17 +267,9 @@ const rootStyle = styleParts.join(' ');
         tension,
       });
 
-      appendCornerBridge(commands, {
-        sx: topWaveEndX,
-        sy: 0,
-        ex: width,
-        ey: cornerInset,
-        txStart: 1,
-        tyStart: 0,
-        txEnd: 0,
-        tyEnd: 1,
-        radius: cornerInset,
-      });
+      commands.push(
+        `C ${round3(topWaveEndX + cornerInset * SCALLOP_KAPPA)} 0 ${round3(width)} ${round3(cornerInset - cornerInset * SCALLOP_KAPPA)} ${round3(width)} ${round3(cornerInset)}`,
+      );
 
       if (edges === 'all') {
         const rightWaveStartY = cornerInset;
@@ -273,7 +277,7 @@ const rootStyle = styleParts.join(' ');
         const rightWaveLength = rightWaveEndY - rightWaveStartY;
         const rightSegments = resolveEdgeSegments(rightWaveLength, step);
 
-        appendTotemWave(commands, {
+        appendLegacyTotemWaveCommands(commands, {
           sx: width,
           sy: rightWaveStartY,
           ex: width,
@@ -285,19 +289,11 @@ const rootStyle = styleParts.join(' ');
           tension,
         });
 
-        appendCornerBridge(commands, {
-          sx: width,
-          sy: rightWaveEndY,
-          ex: width - cornerInset,
-          ey: height,
-          txStart: 0,
-          tyStart: 1,
-          txEnd: -1,
-          tyEnd: 0,
-          radius: cornerInset,
-        });
+        commands.push(
+          `C ${round3(width)} ${round3(rightWaveEndY + cornerInset * SCALLOP_KAPPA)} ${round3(width - cornerInset + cornerInset * SCALLOP_KAPPA)} ${round3(height)} ${round3(width - cornerInset)} ${round3(height)}`,
+        );
 
-        appendTotemWave(commands, {
+        appendLegacyTotemWaveCommands(commands, {
           sx: width - cornerInset,
           sy: height,
           ex: cornerInset,
@@ -309,19 +305,11 @@ const rootStyle = styleParts.join(' ');
           tension,
         });
 
-        appendCornerBridge(commands, {
-          sx: cornerInset,
-          sy: height,
-          ex: 0,
-          ey: height - cornerInset,
-          txStart: -1,
-          tyStart: 0,
-          txEnd: 0,
-          tyEnd: -1,
-          radius: cornerInset,
-        });
+        commands.push(
+          `C ${round3(cornerInset - cornerInset * SCALLOP_KAPPA)} ${round3(height)} 0 ${round3(height - cornerInset + cornerInset * SCALLOP_KAPPA)} 0 ${round3(height - cornerInset)}`,
+        );
 
-        appendTotemWave(commands, {
+        appendLegacyTotemWaveCommands(commands, {
           sx: 0,
           sy: height - cornerInset,
           ex: 0,
@@ -333,38 +321,70 @@ const rootStyle = styleParts.join(' ');
           tension,
         });
 
-        appendCornerBridge(commands, {
-          sx: 0,
-          sy: cornerInset,
-          ex: topWaveStartX,
-          ey: 0,
-          txStart: 0,
-          tyStart: -1,
-          txEnd: 1,
-          tyEnd: 0,
-          radius: cornerInset,
-        });
+        commands.push(
+          `C 0 ${round3(cornerInset - cornerInset * SCALLOP_KAPPA)} ${round3(cornerInset - cornerInset * SCALLOP_KAPPA)} 0 ${round3(topWaveStartX)} 0`,
+        );
       } else {
         commands.push(`L ${width} ${height}`);
         commands.push(`L 0 ${height}`);
         commands.push(`L 0 ${round3(cornerInset)}`);
-        appendCornerBridge(commands, {
-          sx: 0,
-          sy: cornerInset,
-          ex: topWaveStartX,
-          ey: 0,
-          txStart: 0,
-          tyStart: -1,
-          txEnd: 1,
-          tyEnd: 0,
-          radius: cornerInset,
-        });
+        commands.push(
+          `C 0 ${round3(cornerInset - cornerInset * SCALLOP_KAPPA)} ${round3(cornerInset - cornerInset * SCALLOP_KAPPA)} 0 ${round3(topWaveStartX)} 0`,
+        );
       }
 
       commands.push('Z');
-
       svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
       svg.innerHTML = `<path d="${commands.join(' ')}" fill="currentColor"></path>`;
+    };
+
+    const defaultAnimatedParams = () => ({
+      waveAmplitudeRatio: 0.28,
+      waveTension: 0.5,
+    });
+
+    const clampTotemAmplitudeRatio = (value) => Math.max(0.08, Math.min(0.45, value));
+
+    const clampTotemTension = (value) => clamp01(value);
+
+    const resolvePatternAnimationAdapter = (pattern) => {
+      if (pattern === 'totem') {
+        return {
+          supportsParamAnimation: true,
+          resolveBaseParams: (dataset) => ({
+            waveAmplitudeRatio: clampTotemAmplitudeRatio(readNumber(dataset.perimeterWaveAmplitudeRatio, 0.28)),
+            waveTension: clampTotemTension(readNumber(dataset.perimeterWaveTension, 0.5)),
+          }),
+          resolveHoverParams: (baseParams) => ({
+            waveAmplitudeRatio: clampTotemAmplitudeRatio(baseParams.waveAmplitudeRatio + 0.1),
+            waveTension: clampTotemTension(baseParams.waveTension - 0.22),
+          }),
+          interpolateParams: (fromParams, toParams, progress) => ({
+            waveAmplitudeRatio: clampTotemAmplitudeRatio(
+              lerp(fromParams.waveAmplitudeRatio, toParams.waveAmplitudeRatio, progress),
+            ),
+            waveTension: clampTotemTension(lerp(fromParams.waveTension, toParams.waveTension, progress)),
+          }),
+          render: (svg, box, params, edges) =>
+            renderRectangleTotem(
+              svg,
+              box.width,
+              box.height,
+              box.step,
+              edges,
+              params.waveAmplitudeRatio,
+              params.waveTension,
+            ),
+        };
+      }
+
+      return {
+        supportsParamAnimation: false,
+        resolveBaseParams: () => defaultAnimatedParams(),
+        resolveHoverParams: (baseParams) => baseParams,
+        interpolateParams: (fromParams) => fromParams,
+        render: (svg, box, _params, edges) => renderRectangleScallop(svg, box.width, box.height, box.step, edges),
+      };
     };
 
     const circleOuterDiameter = (step, lobes) => {
@@ -423,20 +443,6 @@ const rootStyle = styleParts.join(' ');
       svg.innerHTML = pieces.join('');
     };
 
-    const rectangleRenderers = {
-      scallop: (svg, box, params) => renderRectangleScallop(svg, box.width, box.height, box.step, params.edges),
-      totem: (svg, box, params) =>
-        renderRectangleTotem(
-          svg,
-          box.width,
-          box.height,
-          box.step,
-          params.edges,
-          params.waveAmplitudeRatio,
-          params.waveTension,
-        ),
-    };
-
     const update = (root) => {
       const svg = root.querySelector('.scallop-frame');
       const content = root.querySelector('.scallop-content');
@@ -450,17 +456,31 @@ const rootStyle = styleParts.join(' ');
       const shape = root.dataset.perimeterShape === 'circle' ? 'circle' : 'rectangle';
       const edgePattern = root.dataset.perimeterEdgePattern === 'totem' ? 'totem' : 'scallop';
       const edges = root.dataset.perimeterEdges === 'top' ? 'top' : 'all';
+      const animationAdapter = resolvePatternAnimationAdapter(edgePattern);
+      const hoverMorphEnabled =
+        shape === 'rectangle' &&
+        root.dataset.perimeterHoverMorph === 'true' &&
+        animationAdapter.supportsParamAnimation;
+      const animationProgress = hoverMorphEnabled ? clamp01(state.animProgress) : 0;
       const baseStep = Math.max(1, readNumber(root.dataset.perimeterStep, 40));
       const available = resolveAvailableSize(root, parent, content, baseStep);
       const effectiveStep = resolveEffectiveStep(baseStep, available.width, available.height);
       const minCols = clampInt(readNumber(root.dataset.perimeterMinCols, 12), 1);
       const minRows = clampInt(readNumber(root.dataset.perimeterMinRows, 8), 1);
       const minLobes = clampInt(readNumber(root.dataset.perimeterMinLobes, 8), 3);
-      const waveAmplitudeRatio = clamp01(readNumber(root.dataset.perimeterWaveAmplitudeRatio, 0.28));
-      const waveTension = clamp01(readNumber(root.dataset.perimeterWaveTension, 0.5));
-      let signature = `${shape}:${edgePattern}:${edges}:${effectiveStep}:${waveAmplitudeRatio}:${waveTension}`;
+      const baseParams = animationAdapter.resolveBaseParams(root.dataset);
+      const hoverParams = hoverMorphEnabled
+        ? animationAdapter.resolveHoverParams(baseParams)
+        : baseParams;
+      const activeParams = hoverMorphEnabled
+        ? animationAdapter.interpolateParams(baseParams, hoverParams, animationProgress)
+        : baseParams;
+      let signature = `${shape}:${edgePattern}:${edges}:${effectiveStep}:${round3(
+        activeParams.waveAmplitudeRatio,
+      )}:${round3(activeParams.waveTension)}:${round3(animationProgress)}`;
 
       root.dataset.perimeterEffectiveStep = String(effectiveStep);
+      root.dataset.perimeterMorphProgress = String(round3(animationProgress));
       root.dataset.ready = 'true';
 
       if (shape === 'circle') {
@@ -517,11 +537,11 @@ const rootStyle = styleParts.join(' ');
       root.dataset.scallopLobes = '';
 
       if (signature !== state.lastSignature) {
-        const renderer = rectangleRenderers[edgePattern] ?? rectangleRenderers.scallop;
-        renderer(
+        animationAdapter.render(
           svg,
           { width: snappedWidth, height: snappedHeight, step: effectiveStep },
-          { edges, waveAmplitudeRatio, waveTension },
+          activeParams,
+          edges,
         );
         state.lastSignature = signature;
       }
@@ -538,6 +558,50 @@ const rootStyle = styleParts.join(' ');
       state.rafId = window.requestAnimationFrame(() => {
         state.rafId = 0;
         update(root);
+      });
+    };
+
+    const stopAnimation = (state) => {
+      if (!state?.animControl) {
+        return;
+      }
+      state.animControl.stop();
+      state.animControl = null;
+    };
+
+    const animateHoverParams = (root, target) => {
+      const state = runtime.states.get(root);
+      if (!state) {
+        return;
+      }
+
+      const clampedTarget = clamp01(target);
+      stopAnimation(state);
+      state.animTarget = clampedTarget;
+
+      if (prefersReducedMotion.matches) {
+        state.animProgress = clampedTarget;
+        schedule(root);
+        return;
+      }
+
+      const from = clamp01(state.animProgress);
+      const duration = Math.max(0.2, readNumber(root.dataset.perimeterMorphSpringDuration, 1.05));
+      const bounce = clamp01(readNumber(root.dataset.perimeterMorphSpringBounce, 0.24));
+
+      state.animControl = animate(from, clampedTarget, {
+        type: 'spring',
+        duration,
+        bounce,
+        onUpdate: (latest) => {
+          state.animProgress = clamp01(latest);
+          schedule(root);
+        },
+        onComplete: () => {
+          state.animProgress = clampedTarget;
+          state.animControl = null;
+          schedule(root);
+        },
       });
     };
 
@@ -567,7 +631,32 @@ const rootStyle = styleParts.join(' ');
         lastWidth: -1,
         lastHeight: -1,
         lastSignature: '',
+        animProgress: 0,
+        animTarget: 0,
+        animControl: null,
+        unbindHoverHandlers: null,
       });
+
+      const state = runtime.states.get(root);
+      if (
+        state &&
+        root.dataset.perimeterHoverMorph === 'true' &&
+        root.dataset.perimeterShape === 'rectangle' &&
+        resolvePatternAnimationAdapter(root.dataset.perimeterEdgePattern).supportsParamAnimation
+      ) {
+        const activate = () => animateHoverParams(root, 1);
+        const deactivate = () => animateHoverParams(root, 0);
+        root.addEventListener('pointerenter', activate);
+        root.addEventListener('pointerleave', deactivate);
+        root.addEventListener('focus', activate);
+        root.addEventListener('blur', deactivate);
+        state.unbindHoverHandlers = () => {
+          root.removeEventListener('pointerenter', activate);
+          root.removeEventListener('pointerleave', deactivate);
+          root.removeEventListener('focus', activate);
+          root.removeEventListener('blur', deactivate);
+        };
+      }
 
       observer.observe(parent);
       observer.observe(content);
@@ -579,6 +668,10 @@ const rootStyle = styleParts.join(' ');
     const unmount = (root) => {
       const state = runtime.states.get(root);
       if (state) {
+        stopAnimation(state);
+        if (typeof state.unbindHoverHandlers === 'function') {
+          state.unbindHoverHandlers();
+        }
         if (state.rafId !== 0) {
           window.cancelAnimationFrame(state.rafId);
         }

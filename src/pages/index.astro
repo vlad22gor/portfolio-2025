@@ -100,6 +100,26 @@ const featured = CASES.slice(0, 2);
           </QuantizedPerimeter>
         </div>
 
+        <div class="scallop-preview-slot scallop-preview-slot-rect">
+          <QuantizedPerimeter
+            class="scallop-preview scallop-preview-rect scallop-preview-morph"
+            edgePattern="totem"
+            edges="all"
+            minCols={12}
+            minRows={8}
+            hoverMorph
+            morphSpringDuration={1.05}
+            morphSpringBounce={0.24}
+            waveAmplitudeRatio={0.28}
+            waveTension={0.5}
+            label="Totem param hover animation"
+          >
+            <p class="kicker">Param animation test</p>
+            <h2>Totem param hover</h2>
+            <p>Hover or focus this card to animate totem parameters with a spring transition.</p>
+          </QuantizedPerimeter>
+        </div>
+
         <div class="scallop-preview-slot scallop-preview-slot-circle">
           <QuantizedScallop
             class="scallop-preview scallop-preview-circle"
