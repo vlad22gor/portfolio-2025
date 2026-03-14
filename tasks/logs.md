@@ -423,3 +423,18 @@
   Причина: исходно `medium/large` были заведены как радиусы по ошибке; требовалось зафиксировать значения как диаметры: `medium d=14`, `large d=20`.
   Файлы: `src/components/QuantizedWave.astro`, `src/pages/index.astro`, `tasks/logs.md`.
   Проверки: `npm run build` — успешно; size map обновлён (`small=8/2`, `medium=14/4`, `large=20/10`), подписи в блоке `Quantized wave sizes` переведены в формат `d N, stroke M`.
+
+- 2026-03-14: Актуализированы color/typography токены по Figma (`2:5119`, `2:5278`) без изменения API имён токенов.
+  Причина: синхронизировать проектные design tokens с текущим token spec в Figma и убрать расхождения по размерам/весам/opsz/кернингу.
+  Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg`-проверка подтверждает наличие новых значений (`--color-accent-gray`, `t1=108/120/600`, `t1-compact=85/100/600`, `body line-height=24`, `label-large weight=600`, `opsz=14` для всех DM Sans) и отсутствие старых значений (`t1 112/128`, `t1-compact 102/128`, `t2 56`, `body 22`, старые `opsz`, `-0.03em`).
+
+- 2026-03-14: Актуализирована горизонтальная страничная сетка: `5-col` по умолчанию и `8-col` для `/gallery`.
+  Причина: привести ширину контентного контейнера `main.page-shell` к согласованному ритму (`816` для общих страниц, `1224` для gallery) без изменения header/footer и внутренних карточных сеток.
+  Файлы: `src/styles/global.css`, `src/pages/gallery.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `rg -n "layout-grid-5|layout-grid-8|page-shell--gallery" src/styles/global.css src/pages/gallery.astro` подтверждает токены `144/24/816`, `132/24/1224` и класс-модификатор; `npm run build` — успешно; Playwright (`http://127.0.0.1:4174`) при viewport `1360x1100` показывает `pageShellWidth=816` для `/`, `/cases`, `/fora` и `pageShellWidth=1224` для `/gallery` (без горизонтального скролла); при viewport `800x1000` горизонтального скролла нет на `/`, `/cases`, `/gallery`.
+
+- 2026-03-14: Перенесён preview-контент с `/` на новую временную страницу `/preview`, добавлена ссылка в хедер и active-state для нового роута.
+  Причина: разгрузить home и вынести demo-блоки в отдельное временное пространство для превью.
+  Файлы: `src/pages/index.astro`, `src/pages/preview.astro`, `src/components/SiteHeader.astro`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; в output сгенерирован новый маршрут `/preview/index.html`, ошибок сборки нет.

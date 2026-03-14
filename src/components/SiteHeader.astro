@@ -9,12 +9,20 @@ const links = [
   { id: 'cases', href: '/cases', label: 'cases', waveCount: 7 },
   { id: 'home', href: '/', label: 'vlad horovyy', waveCount: 14 },
   { id: 'gallery', href: '/gallery', label: 'gallery', waveCount: 8 },
+  { id: 'preview', href: '/preview', label: 'preview', waveCount: 8 },
 ];
 
 const pathname = Astro.url.pathname;
 const normalizedPath =
   pathname.length > 1 && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
-const activeId = normalizedPath === '/cases' ? 'cases' : normalizedPath === '/gallery' ? 'gallery' : 'home';
+const activeId =
+  normalizedPath === '/cases'
+    ? 'cases'
+    : normalizedPath === '/gallery'
+      ? 'gallery'
+      : normalizedPath === '/preview'
+        ? 'preview'
+        : 'home';
 const rawHeaderWaveVariant =
   Astro.props.headerWaveVariant ?? import.meta.env.PUBLIC_HEADER_WAVE_VARIANT ?? 'wave-rail';
 const headerWaveVariant = rawHeaderWaveVariant === 'wave-rail' ? 'wave-rail' : 'classic';
@@ -128,6 +136,9 @@ const headerWaveVariant = rawHeaderWaveVariant === 'wave-rail' ? 'wave-rail' : '
       }
       if (normalized === '/gallery') {
         return 'gallery';
+      }
+      if (normalized === '/preview') {
+        return 'preview';
       }
       return 'home';
     };
