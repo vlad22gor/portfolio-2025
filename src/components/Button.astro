@@ -1,0 +1,357 @@
+---
+interface Props {
+  variant?: 'default' | 'bordered' | 'bordered-icon';
+  iconSide?: 'right' | 'left';
+  href?: string;
+  target?: string;
+  rel?: string;
+  type?: 'button' | 'submit' | 'reset';
+  disabled?: boolean;
+  class?: string;
+}
+
+const {
+  variant = 'default',
+  iconSide = 'right',
+  href,
+  target,
+  rel,
+  type = 'button',
+  disabled = false,
+  class: className = '',
+} = Astro.props;
+
+const isLink = Boolean(href);
+const isIconVariant = variant === 'bordered-icon';
+const resolvedIconSide = iconSide === 'left' ? 'left' : 'right';
+const iconAssetPath =
+  resolvedIconSide === 'left'
+    ? '/media/icons/button/arrow-button-left.svg'
+    : '/media/icons/button/arrow-button-right.svg';
+const composedClassName = [
+  'ui-button',
+  `ui-button--${variant}`,
+  isIconVariant ? `ui-button--icon-${resolvedIconSide}` : '',
+  disabled ? 'is-disabled' : '',
+  className,
+]
+  .filter(Boolean)
+  .join(' ');
+const resolvedRel =
+  isLink && target === '_blank'
+    ? rel && rel.trim().length > 0
+      ? rel
+      : 'noreferrer noopener'
+    : rel;
+---
+
+{
+  isLink ? (
+    <a
+      class={composedClassName}
+      href={href}
+      target={target}
+      rel={resolvedRel}
+      aria-disabled={disabled ? 'true' : undefined}
+      tabindex={disabled ? '-1' : undefined}
+      data-ui-button
+    >
+      {isIconVariant && resolvedIconSide === 'left' && (
+        <span class="ui-button__icon-wrap" aria-hidden="true">
+          <span class="ui-button__icon" style={`--button-icon-mask: url('${iconAssetPath}');`}></span>
+        </span>
+      )}
+      <span class="ui-button__label">
+        <slot />
+      </span>
+      {isIconVariant && resolvedIconSide === 'right' && (
+        <span class="ui-button__icon-wrap" aria-hidden="true">
+          <span class="ui-button__icon" style={`--button-icon-mask: url('${iconAssetPath}');`}></span>
+        </span>
+      )}
+    </a>
+  ) : (
+    <button class={composedClassName} type={type} disabled={disabled} data-ui-button>
+      {isIconVariant && resolvedIconSide === 'left' && (
+        <span class="ui-button__icon-wrap" aria-hidden="true">
+          <span class="ui-button__icon" style={`--button-icon-mask: url('${iconAssetPath}');`}></span>
+        </span>
+      )}
+      <span class="ui-button__label">
+        <slot />
+      </span>
+      {isIconVariant && resolvedIconSide === 'right' && (
+        <span class="ui-button__icon-wrap" aria-hidden="true">
+          <span class="ui-button__icon" style={`--button-icon-mask: url('${iconAssetPath}');`}></span>
+        </span>
+      )}
+    </button>
+  )
+}
+
+<script>
+  import { animate } from 'motion';
+
+  (() => {
+    const runtimeKey = '__uiButtonRuntime';
+    if (window[runtimeKey]) {
+      window[runtimeKey].mount();
+      return;
+    }
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const boundButtons = new WeakSet();
+    const scaleControls = new WeakMap();
+
+    const setScale = (button, value) => {
+      button.style.setProperty('--button-scale', `${value}`);
+    };
+
+    const readScale = (button) => {
+      const value = getComputedStyle(button).getPropertyValue('--button-scale').trim();
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : 1;
+    };
+
+    const stopScale = (button) => {
+      const control = scaleControls.get(button);
+      if (!control) {
+        return;
+      }
+      control.stop();
+      scaleControls.delete(button);
+    };
+
+    const animateScale = (button, target) => {
+      stopScale(button);
+      if (prefersReducedMotion.matches) {
+        setScale(button, target);
+        return;
+      }
+
+      const from = readScale(button);
+      const control = animate(from, target, {
+        type: 'spring',
+        stiffness: 480,
+        damping: 30,
+        mass: 0.42,
+        onUpdate: (latest) => {
+          setScale(button, latest);
+        },
+        onComplete: () => {
+          scaleControls.delete(button);
+        },
+      });
+
+      scaleControls.set(button, control);
+    };
+
+    const isPressable = (button) => button.getAttribute('aria-disabled') !== 'true' && !button.disabled;
+
+    const pressIn = (button) => {
+      if (!isPressable(button)) {
+        return;
+      }
+      animateScale(button, 0.95);
+    };
+
+    const pressOut = (button) => {
+      animateScale(button, 1);
+    };
+
+    const bindButton = (button) => {
+      if (boundButtons.has(button)) {
+        return;
+      }
+
+      boundButtons.add(button);
+      setScale(button, 1);
+
+      button.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
+          return;
+        }
+        pressIn(button);
+      });
+
+      button.addEventListener('pointerup', () => {
+        pressOut(button);
+      });
+
+      button.addEventListener('pointercancel', () => {
+        pressOut(button);
+      });
+
+      button.addEventListener('pointerleave', () => {
+        pressOut(button);
+      });
+
+      button.addEventListener('blur', () => {
+        pressOut(button);
+      });
+
+      button.addEventListener('keydown', (event) => {
+        if (event.repeat) {
+          return;
+        }
+        if (event.key === 'Enter' || event.key === ' ') {
+          pressIn(button);
+        }
+      });
+
+      button.addEventListener('keyup', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          pressOut(button);
+        }
+      });
+    };
+
+    const mount = () => {
+      const buttons = Array.from(document.querySelectorAll('.ui-button[data-ui-button]'));
+      buttons.forEach((button) => bindButton(button));
+    };
+
+    mount();
+    document.addEventListener('astro:page-load', mount);
+    window[runtimeKey] = { mount };
+  })();
+</script>
+
+<style>
+  .ui-button {
+    --button-bg: var(--color-accent-green);
+    --button-fg: var(--color-text-default-highlighted);
+    --button-border-color: transparent;
+    --button-border-width: 0px;
+    --button-icon-color: var(--color-accent-green);
+    --button-scale: 1;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    height: 52px;
+    min-height: 52px;
+    border-radius: 9999px;
+    padding-inline: 40px;
+    border: var(--button-border-width) solid var(--button-border-color);
+    background: var(--button-bg);
+    color: var(--button-fg);
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transform: scale(var(--button-scale));
+    transform-origin: center;
+    font-family: var(--type-label-large-family);
+    font-size: 16px;
+    line-height: 22px;
+    font-weight: 600;
+    letter-spacing: 0;
+    font-optical-sizing: none;
+    font-variation-settings: "opsz" 14, "wght" 600;
+    transition:
+      opacity 0.2s ease,
+      background-color 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .ui-button:hover {
+    opacity: 0.9;
+  }
+
+  .ui-button:focus-visible {
+    outline: 2px solid var(--color-text-default-highlighted);
+    outline-offset: 2px;
+  }
+
+  .ui-button:disabled,
+  .ui-button.is-disabled {
+    cursor: not-allowed;
+    pointer-events: none;
+    opacity: 0.55;
+  }
+
+  .ui-button--default {
+    --button-bg: var(--color-accent-green);
+    --button-fg: var(--color-text-default-highlighted);
+    --button-border-color: transparent;
+    --button-border-width: 0px;
+  }
+
+  .ui-button--bordered {
+    --button-bg: transparent;
+    --button-fg: var(--color-text-default-highlighted);
+    --button-border-color: var(--color-accent-green);
+    --button-border-width: 2px;
+  }
+
+  .ui-button--bordered:hover {
+    --button-bg: var(--color-accent-green);
+    --button-border-color: var(--color-accent-green);
+  }
+
+  .ui-button--bordered-icon {
+    --button-bg: transparent;
+    --button-fg: var(--color-text-default-highlighted);
+    --button-border-color: var(--color-accent-green);
+    --button-border-width: 2px;
+    --button-icon-color: var(--color-accent-green);
+    gap: 10px;
+  }
+
+  .ui-button--bordered-icon:hover {
+    --button-bg: var(--color-accent-green);
+    --button-border-color: var(--color-accent-green);
+    --button-icon-color: var(--color-text-default-highlighted);
+  }
+
+  .ui-button--icon-right {
+    padding-left: 32px;
+    padding-right: 26px;
+  }
+
+  .ui-button--icon-left {
+    padding-left: 26px;
+    padding-right: 32px;
+  }
+
+  .ui-button__label {
+    position: relative;
+    z-index: 1;
+  }
+
+  .ui-button__icon-wrap {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 26px;
+    padding-top: 3px;
+    flex: 0 0 auto;
+  }
+
+  .ui-button__icon {
+    display: block;
+    width: 26px;
+    height: 13px;
+    background-color: var(--button-icon-color);
+    mask-image: var(--button-icon-mask);
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+    -webkit-mask-image: var(--button-icon-mask);
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: contain;
+    transition: background-color 0.2s ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ui-button,
+    .ui-button__icon {
+      transition: none;
+    }
+  }
+</style>

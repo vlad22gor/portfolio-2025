@@ -4,7 +4,9 @@ import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import CaseCard from '../components/CaseCard.astro';
 import QuantizedScallop from '../components/QuantizedScallop.astro';
+import QuantizedPerimeter from '../components/QuantizedPerimeter.astro';
 import QuantizedWave from '../components/QuantizedWave.astro';
+import Button from '../components/Button.astro';
 import { CASES } from '../data/cases';
 
 const featured = CASES.slice(0, 2);
@@ -25,24 +27,77 @@ const featured = CASES.slice(0, 2);
         with a maintainable Astro codebase and Git-first workflow.
       </p>
       <div class="hero-actions">
-        <a class="button" href="/cases">View cases</a>
-        <a class="button ghost" href="https://linktr.ee/vladhorovyy" target="_blank" rel="noreferrer">
-          Message me
-        </a>
+        <Button href="/cases" variant="default">View cases</Button>
+        <Button href="https://linktr.ee/vladhorovyy" target="_blank" variant="bordered-icon" iconSide="right">
+          message me
+        </Button>
       </div>
     </section>
 
     <section class="section-stack">
       <div class="section-head">
-        <h2>Quantized scallop demos</h2>
+        <h2>Quantized shape catalog</h2>
       </div>
       <div class="scallop-preview-grid">
         <div class="scallop-preview-slot scallop-preview-slot-rect">
-          <QuantizedScallop class="scallop-preview scallop-preview-rect" minCols={12} minRows={8} label="Scallop rectangle preview">
+          <QuantizedScallop
+            class="scallop-preview scallop-preview-rect"
+            minCols={12}
+            minRows={8}
+            label="Scallop rectangle all edges"
+          >
             <p class="kicker">Rectangle</p>
-            <h2>Container background test</h2>
-            <p>Width snaps by floor and height snaps by ceil to diameter step without edge clipping.</p>
+            <h2>Scallop · all edges</h2>
+            <p>Legacy-compatible all-edge scallop via wrapper over the new perimeter engine.</p>
           </QuantizedScallop>
+        </div>
+
+        <div class="scallop-preview-slot scallop-preview-slot-rect">
+          <QuantizedScallop
+            class="scallop-preview scallop-preview-rect"
+            rectangleEdges="top"
+            minCols={12}
+            minRows={8}
+            label="Scallop rectangle top edge"
+          >
+            <p class="kicker">Rectangle</p>
+            <h2>Scallop · top only</h2>
+            <p>Top-only scallop for parity with footer behavior and current production usage.</p>
+          </QuantizedScallop>
+        </div>
+
+        <div class="scallop-preview-slot scallop-preview-slot-rect">
+          <QuantizedPerimeter
+            class="scallop-preview scallop-preview-rect"
+            edgePattern="totem"
+            edges="all"
+            minCols={12}
+            minRows={8}
+            waveAmplitudeRatio={0.28}
+            waveTension={0.5}
+            label="Totem perimeter all edges"
+          >
+            <p class="kicker">Totem</p>
+            <h2>Perimeter · all edges</h2>
+            <p>New cubic inset-wave profile rendered on all rectangle sides.</p>
+          </QuantizedPerimeter>
+        </div>
+
+        <div class="scallop-preview-slot scallop-preview-slot-rect">
+          <QuantizedPerimeter
+            class="scallop-preview scallop-preview-rect"
+            edgePattern="totem"
+            edges="top"
+            minCols={12}
+            minRows={8}
+            waveAmplitudeRatio={0.28}
+            waveTension={0.5}
+            label="Totem perimeter top edge"
+          >
+            <p class="kicker">Totem</p>
+            <h2>Perimeter · top only</h2>
+            <p>Same profile limited to top edge for selective decoration without side waves.</p>
+          </QuantizedPerimeter>
         </div>
 
         <div class="scallop-preview-slot scallop-preview-slot-circle">

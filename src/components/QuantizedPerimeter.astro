@@ -1,0 +1,636 @@
+---
+interface Props {
+  class?: string;
+  shape?: 'rectangle' | 'circle';
+  edgePattern?: 'scallop' | 'totem';
+  edges?: 'all' | 'top';
+  step?: number;
+  minCols?: number;
+  minRows?: number;
+  minLobes?: number;
+  clampLines?: number;
+  label?: string;
+  bg?: string;
+  pad?: string;
+  waveAmplitudeRatio?: number;
+  waveTension?: number;
+}
+
+const {
+  class: className = '',
+  shape = 'rectangle',
+  edgePattern = 'scallop',
+  edges = 'all',
+  step = 40,
+  minCols = 12,
+  minRows = 8,
+  minLobes = 8,
+  clampLines = 4,
+  label = 'Quantized perimeter surface',
+  bg,
+  pad,
+  waveAmplitudeRatio = 0.28,
+  waveTension = 0.5,
+} = Astro.props;
+
+const resolvedShape = shape === 'circle' ? 'circle' : 'rectangle';
+const resolvedPattern = edgePattern === 'totem' ? 'totem' : 'scallop';
+const resolvedEdges = edges === 'top' ? 'top' : 'all';
+const legacyRectangleEdges = resolvedEdges === 'top' ? 'top' : 'all';
+const styleParts = [`--scallop-line-clamp: ${clampLines};`];
+
+if (typeof bg === 'string' && bg.trim()) {
+  styleParts.push(`--scallop-bg: ${bg};`);
+}
+
+if (typeof pad === 'string' && pad.trim()) {
+  styleParts.push(`--scallop-pad: ${pad};`);
+}
+
+const rootStyle = styleParts.join(' ');
+---
+
+<div
+  class={`quantized-perimeter quantized-scallop ${className}`.trim()}
+  data-quantized-perimeter
+  data-perimeter-shape={resolvedShape}
+  data-perimeter-edge-pattern={resolvedPattern}
+  data-perimeter-edges={resolvedEdges}
+  data-perimeter-step={String(step)}
+  data-perimeter-min-cols={String(minCols)}
+  data-perimeter-min-rows={String(minRows)}
+  data-perimeter-min-lobes={String(minLobes)}
+  data-perimeter-wave-amplitude-ratio={String(waveAmplitudeRatio)}
+  data-perimeter-wave-tension={String(waveTension)}
+  data-quantized-scallop
+  data-scallop-shape={resolvedShape}
+  data-scallop-rectangle-edges={legacyRectangleEdges}
+  data-scallop-step={String(step)}
+  data-scallop-min-cols={String(minCols)}
+  data-scallop-min-rows={String(minRows)}
+  data-scallop-min-lobes={String(minLobes)}
+  style={rootStyle}
+  aria-label={label}
+>
+  <svg class="scallop-frame" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true" focusable="false"></svg>
+  <div class="scallop-content">
+    <slot />
+  </div>
+</div>
+
+<script>
+  (() => {
+    const runtimeKey = '__quantizedPerimeterRuntime';
+    if (window[runtimeKey]) {
+      window[runtimeKey].mountNewRoots({ scheduleExisting: false });
+      return;
+    }
+
+    const runtime = {
+      roots: new Set(),
+      states: new WeakMap(),
+    };
+
+    const readNumber = (value, fallback) => {
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    };
+
+    const clampInt = (value, min) => Math.max(min, Math.floor(value));
+    const clamp01 = (value) => Math.max(0, Math.min(1, value));
+    const round3 = (value) => Math.round(value * 1000) / 1000;
+
+    const resolveAvailableSize = (root, parent, content, step) => {
+      const fallbackWidth = Math.max(1, Math.floor(root.getBoundingClientRect().width), Math.floor(step));
+      const fallbackHeight = Math.max(
+        1,
+        Math.floor(root.getBoundingClientRect().height),
+        Math.ceil(content.scrollHeight),
+        Math.floor(step),
+      );
+      const width = Math.max(1, Math.floor(parent.clientWidth) || fallbackWidth);
+      const height = Math.max(1, Math.floor(parent.clientHeight) || fallbackHeight);
+      return { width, height };
+    };
+
+    const resolveEffectiveStep = (baseStep, availableWidth, availableHeight) => {
+      const safeStep = Math.max(1, Math.floor(baseStep));
+      const minAxis = Math.floor(Math.min(availableWidth, availableHeight));
+      if (minAxis <= 0) {
+        return safeStep;
+      }
+      const bounded = Math.min(safeStep, minAxis);
+      if (minAxis < 4) {
+        return Math.max(1, bounded);
+      }
+      return Math.max(4, bounded);
+    };
+
+    const applyBoxSize = (root, state, width, height) => {
+      if (state.lastWidth !== width) {
+        root.style.width = `${width}px`;
+        state.lastWidth = width;
+      }
+      if (state.lastHeight !== height) {
+        root.style.height = `${height}px`;
+        state.lastHeight = height;
+      }
+    };
+
+    const renderRectangleScallop = (svg, width, height, step, edges) => {
+      const cols = Math.max(1, Math.floor(width / step));
+      const rows = Math.max(1, Math.floor(height / step));
+      const radius = step / 2;
+      const centerX = (index) => radius + index * step;
+      const centerY = (index) => radius + index * step;
+      const pieces = [];
+
+      if (edges === 'top') {
+        const rectHeight = Math.max(0, height - radius);
+        pieces.push(`<rect x="0" y="${radius}" width="${width}" height="${rectHeight}" fill="currentColor"></rect>`);
+
+        for (let i = 0; i < cols; i += 1) {
+          pieces.push(`<circle cx="${centerX(i)}" cy="${radius}" r="${radius}" fill="currentColor"></circle>`);
+        }
+      } else {
+        const rectWidth = Math.max(0, width - step);
+        const rectHeight = Math.max(0, height - step);
+        pieces.push(`<rect x="${radius}" y="${radius}" width="${rectWidth}" height="${rectHeight}" fill="currentColor"></rect>`);
+
+        for (let i = 0; i < cols; i += 1) {
+          pieces.push(`<circle cx="${centerX(i)}" cy="${radius}" r="${radius}" fill="currentColor"></circle>`);
+          pieces.push(`<circle cx="${centerX(i)}" cy="${height - radius}" r="${radius}" fill="currentColor"></circle>`);
+        }
+
+        for (let j = 1; j < rows - 1; j += 1) {
+          pieces.push(`<circle cx="${radius}" cy="${centerY(j)}" r="${radius}" fill="currentColor"></circle>`);
+          pieces.push(`<circle cx="${width - radius}" cy="${centerY(j)}" r="${radius}" fill="currentColor"></circle>`);
+        }
+      }
+
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      svg.innerHTML = pieces.join('');
+    };
+
+    const appendTotemWave = (commands, config) => {
+      const { sx, sy, ex, ey, nx, ny, segments, amplitude, tension } = config;
+      const count = Math.max(1, Math.floor(segments));
+      const dx = (ex - sx) / count;
+      const dy = (ey - sy) / count;
+      const normalizedTension = clamp01(tension);
+      const depth = amplitude * (0.9 + 0.2 * normalizedTension);
+      const lobeLength = Math.hypot(dx, dy) || 1;
+      const tx = dx / lobeLength;
+      const ty = dy / lobeLength;
+      const edgeHandleRatio = 0.15 + (1 - normalizedTension) * 0.12;
+      const crestHandleRatio = 0.2 + (1 - normalizedTension) * 0.1;
+      const edgeHandleLength = lobeLength * edgeHandleRatio;
+      const crestHandleLength = lobeLength * crestHandleRatio;
+
+      for (let i = 0; i < count; i += 1) {
+        const startX = sx + dx * i;
+        const startY = sy + dy * i;
+        const endX = startX + dx;
+        const endY = startY + dy;
+        const midX = startX + dx * 0.5 + nx * depth;
+        const midY = startY + dy * 0.5 + ny * depth;
+        const c1x = startX + tx * edgeHandleLength;
+        const c1y = startY + ty * edgeHandleLength;
+        const c2x = midX - tx * crestHandleLength;
+        const c2y = midY - ty * crestHandleLength;
+        const c3x = midX + tx * crestHandleLength;
+        const c3y = midY + ty * crestHandleLength;
+        const c4x = endX - tx * edgeHandleLength;
+        const c4y = endY - ty * edgeHandleLength;
+
+        commands.push(
+          `C ${round3(c1x)} ${round3(c1y)} ${round3(c2x)} ${round3(c2y)} ${round3(midX)} ${round3(midY)}`,
+        );
+        commands.push(
+          `C ${round3(c3x)} ${round3(c3y)} ${round3(c4x)} ${round3(c4y)} ${round3(endX)} ${round3(endY)}`,
+        );
+      }
+    };
+
+    const appendCornerBridge = (commands, config) => {
+      const { sx, sy, ex, ey, txStart, tyStart, txEnd, tyEnd, radius } = config;
+      const k = 0.5522847498;
+      const handle = Math.max(0.5, radius * k);
+      const c1x = sx + txStart * handle;
+      const c1y = sy + tyStart * handle;
+      const c2x = ex - txEnd * handle;
+      const c2y = ey - tyEnd * handle;
+      commands.push(`C ${round3(c1x)} ${round3(c1y)} ${round3(c2x)} ${round3(c2y)} ${round3(ex)} ${round3(ey)}`);
+    };
+
+    const resolveEdgeSegments = (length, step) => {
+      const safeLength = Math.max(1, length);
+      return Math.max(1, Math.floor(safeLength / step));
+    };
+
+    const renderRectangleTotem = (svg, width, height, step, edges, waveAmplitudeRatio, waveTension) => {
+      const amplitude = Math.max(
+        1,
+        Math.min(step * 0.48, step * Math.max(0.08, Math.min(0.45, waveAmplitudeRatio))),
+      );
+      const tension = clamp01(waveTension);
+      const maxCornerInset = Math.max(1, Math.min(width, height) / 2 - 1);
+      const desiredCornerInset = Math.max(step * 0.18, amplitude * 0.85);
+      const cornerInset = Math.max(1, Math.min(maxCornerInset, desiredCornerInset));
+      const topWaveStartX = cornerInset;
+      const topWaveEndX = Math.max(topWaveStartX + 1, width - cornerInset);
+      const topWaveLength = topWaveEndX - topWaveStartX;
+      const topSegments = resolveEdgeSegments(topWaveLength, step);
+      const commands = [`M ${round3(topWaveStartX)} 0`];
+
+      appendTotemWave(commands, {
+        sx: topWaveStartX,
+        sy: 0,
+        ex: topWaveEndX,
+        ey: 0,
+        nx: 0,
+        ny: 1,
+        segments: topSegments,
+        amplitude,
+        tension,
+      });
+
+      appendCornerBridge(commands, {
+        sx: topWaveEndX,
+        sy: 0,
+        ex: width,
+        ey: cornerInset,
+        txStart: 1,
+        tyStart: 0,
+        txEnd: 0,
+        tyEnd: 1,
+        radius: cornerInset,
+      });
+
+      if (edges === 'all') {
+        const rightWaveStartY = cornerInset;
+        const rightWaveEndY = Math.max(rightWaveStartY + 1, height - cornerInset);
+        const rightWaveLength = rightWaveEndY - rightWaveStartY;
+        const rightSegments = resolveEdgeSegments(rightWaveLength, step);
+
+        appendTotemWave(commands, {
+          sx: width,
+          sy: rightWaveStartY,
+          ex: width,
+          ey: rightWaveEndY,
+          nx: -1,
+          ny: 0,
+          segments: rightSegments,
+          amplitude,
+          tension,
+        });
+
+        appendCornerBridge(commands, {
+          sx: width,
+          sy: rightWaveEndY,
+          ex: width - cornerInset,
+          ey: height,
+          txStart: 0,
+          tyStart: 1,
+          txEnd: -1,
+          tyEnd: 0,
+          radius: cornerInset,
+        });
+
+        appendTotemWave(commands, {
+          sx: width - cornerInset,
+          sy: height,
+          ex: cornerInset,
+          ey: height,
+          nx: 0,
+          ny: -1,
+          segments: topSegments,
+          amplitude,
+          tension,
+        });
+
+        appendCornerBridge(commands, {
+          sx: cornerInset,
+          sy: height,
+          ex: 0,
+          ey: height - cornerInset,
+          txStart: -1,
+          tyStart: 0,
+          txEnd: 0,
+          tyEnd: -1,
+          radius: cornerInset,
+        });
+
+        appendTotemWave(commands, {
+          sx: 0,
+          sy: height - cornerInset,
+          ex: 0,
+          ey: cornerInset,
+          nx: 1,
+          ny: 0,
+          segments: rightSegments,
+          amplitude,
+          tension,
+        });
+
+        appendCornerBridge(commands, {
+          sx: 0,
+          sy: cornerInset,
+          ex: topWaveStartX,
+          ey: 0,
+          txStart: 0,
+          tyStart: -1,
+          txEnd: 1,
+          tyEnd: 0,
+          radius: cornerInset,
+        });
+      } else {
+        commands.push(`L ${width} ${height}`);
+        commands.push(`L 0 ${height}`);
+        commands.push(`L 0 ${round3(cornerInset)}`);
+        appendCornerBridge(commands, {
+          sx: 0,
+          sy: cornerInset,
+          ex: topWaveStartX,
+          ey: 0,
+          txStart: 0,
+          tyStart: -1,
+          txEnd: 1,
+          tyEnd: 0,
+          radius: cornerInset,
+        });
+      }
+
+      commands.push('Z');
+
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      svg.innerHTML = `<path d="${commands.join(' ')}" fill="currentColor"></path>`;
+    };
+
+    const circleOuterDiameter = (step, lobes) => {
+      if (lobes < 3) {
+        return step;
+      }
+      return step * (1 + 1 / Math.sin(Math.PI / lobes));
+    };
+
+    const findCircleLobes = (availableDiameter, step, minLobes) => {
+      let bestLobes = 0;
+      for (let lobes = 3; lobes <= 128; lobes += 1) {
+        const diameter = circleOuterDiameter(step, lobes);
+        if (diameter <= availableDiameter + 0.01) {
+          bestLobes = lobes;
+          continue;
+        }
+        break;
+      }
+
+      if (bestLobes === 0) {
+        return { lobes: 0, diameter: Math.max(step, Math.floor(availableDiameter)) };
+      }
+
+      const target = Math.max(3, minLobes);
+      const resolvedLobes = bestLobes >= target ? bestLobes : bestLobes;
+      return {
+        lobes: resolvedLobes,
+        diameter: circleOuterDiameter(step, resolvedLobes),
+      };
+    };
+
+    const renderCircleSvg = (svg, diameter, step, lobes) => {
+      const center = diameter / 2;
+      const radius = step / 2;
+
+      if (lobes < 3) {
+        svg.setAttribute('viewBox', `0 0 ${diameter} ${diameter}`);
+        svg.innerHTML = `<circle cx="${center}" cy="${center}" r="${center}" fill="currentColor"></circle>`;
+        return;
+      }
+
+      const ringRadius = step / (2 * Math.sin(Math.PI / lobes));
+      const pieces = [
+        `<circle cx="${round3(center)}" cy="${round3(center)}" r="${round3(ringRadius)}" fill="currentColor"></circle>`,
+      ];
+
+      for (let index = 0; index < lobes; index += 1) {
+        const angle = (Math.PI * 2 * index) / lobes - Math.PI / 2;
+        const cx = round3(center + ringRadius * Math.cos(angle));
+        const cy = round3(center + ringRadius * Math.sin(angle));
+        pieces.push(`<circle cx="${cx}" cy="${cy}" r="${round3(radius)}" fill="currentColor"></circle>`);
+      }
+
+      svg.setAttribute('viewBox', `0 0 ${round3(diameter)} ${round3(diameter)}`);
+      svg.innerHTML = pieces.join('');
+    };
+
+    const rectangleRenderers = {
+      scallop: (svg, box, params) => renderRectangleScallop(svg, box.width, box.height, box.step, params.edges),
+      totem: (svg, box, params) =>
+        renderRectangleTotem(
+          svg,
+          box.width,
+          box.height,
+          box.step,
+          params.edges,
+          params.waveAmplitudeRatio,
+          params.waveTension,
+        ),
+    };
+
+    const update = (root) => {
+      const svg = root.querySelector('.scallop-frame');
+      const content = root.querySelector('.scallop-content');
+      const parent = root.parentElement;
+      const state = runtime.states.get(root);
+
+      if (!svg || !content || !parent || !state) {
+        return;
+      }
+
+      const shape = root.dataset.perimeterShape === 'circle' ? 'circle' : 'rectangle';
+      const edgePattern = root.dataset.perimeterEdgePattern === 'totem' ? 'totem' : 'scallop';
+      const edges = root.dataset.perimeterEdges === 'top' ? 'top' : 'all';
+      const baseStep = Math.max(1, readNumber(root.dataset.perimeterStep, 40));
+      const available = resolveAvailableSize(root, parent, content, baseStep);
+      const effectiveStep = resolveEffectiveStep(baseStep, available.width, available.height);
+      const minCols = clampInt(readNumber(root.dataset.perimeterMinCols, 12), 1);
+      const minRows = clampInt(readNumber(root.dataset.perimeterMinRows, 8), 1);
+      const minLobes = clampInt(readNumber(root.dataset.perimeterMinLobes, 8), 3);
+      const waveAmplitudeRatio = clamp01(readNumber(root.dataset.perimeterWaveAmplitudeRatio, 0.28));
+      const waveTension = clamp01(readNumber(root.dataset.perimeterWaveTension, 0.5));
+      let signature = `${shape}:${edgePattern}:${edges}:${effectiveStep}:${waveAmplitudeRatio}:${waveTension}`;
+
+      root.dataset.perimeterEffectiveStep = String(effectiveStep);
+      root.dataset.ready = 'true';
+
+      if (shape === 'circle') {
+        const availableDiameter = Math.max(1, Math.min(available.width, available.height));
+        const circle = findCircleLobes(availableDiameter, effectiveStep, minLobes);
+        const snappedDiameter = round3(circle.diameter);
+        signature = `${signature}:${snappedDiameter}:${circle.lobes}`;
+
+        applyBoxSize(root, state, snappedDiameter, snappedDiameter);
+        root.dataset.perimeterLobes = String(circle.lobes);
+        root.dataset.perimeterCols = '';
+        root.dataset.perimeterRows = '';
+        root.dataset.perimeterOverflowed = content.scrollHeight > snappedDiameter ? 'true' : 'false';
+        root.dataset.scallopLobes = String(circle.lobes);
+        root.dataset.scallopCols = '';
+        root.dataset.scallopRows = '';
+
+        if (signature !== state.lastSignature) {
+          renderCircleSvg(svg, snappedDiameter, effectiveStep, circle.lobes);
+          state.lastSignature = signature;
+        }
+        root.dataset.perimeterSignature = signature;
+        root.dataset.scallopSignature = signature;
+        return;
+      }
+
+      const parentWidth = Math.floor(parent.clientWidth);
+      const parentHeight = Math.floor(parent.clientHeight);
+      const widthBudget =
+        parentWidth > 0
+          ? available.width
+          : Math.max(available.width, minCols * effectiveStep, Math.ceil(content.scrollWidth));
+      const heightBudget =
+        parentHeight > 0
+          ? available.height
+          : Math.max(available.height, minRows * effectiveStep, Math.ceil(content.scrollHeight));
+
+      const floorCols = Math.max(1, Math.floor(widthBudget / effectiveStep));
+      const floorRows = Math.max(1, Math.floor(heightBudget / effectiveStep));
+      const cols = minCols * effectiveStep <= widthBudget ? Math.max(minCols, floorCols) : floorCols;
+      const rows = minRows * effectiveStep <= heightBudget ? Math.max(minRows, floorRows) : floorRows;
+      const snappedWidth = cols * effectiveStep;
+      const snappedHeight = rows * effectiveStep;
+      const requiredContentHeight = Math.ceil(content.scrollHeight);
+      signature = `${signature}:${snappedWidth}:${snappedHeight}:${cols}:${rows}`;
+
+      applyBoxSize(root, state, snappedWidth, snappedHeight);
+      root.dataset.perimeterCols = String(cols);
+      root.dataset.perimeterRows = String(rows);
+      root.dataset.perimeterLobes = '';
+      root.dataset.perimeterOverflowed = requiredContentHeight > snappedHeight ? 'true' : 'false';
+      root.dataset.scallopCols = String(cols);
+      root.dataset.scallopRows = String(rows);
+      root.dataset.scallopLobes = '';
+
+      if (signature !== state.lastSignature) {
+        const renderer = rectangleRenderers[edgePattern] ?? rectangleRenderers.scallop;
+        renderer(
+          svg,
+          { width: snappedWidth, height: snappedHeight, step: effectiveStep },
+          { edges, waveAmplitudeRatio, waveTension },
+        );
+        state.lastSignature = signature;
+      }
+
+      root.dataset.perimeterSignature = signature;
+      root.dataset.scallopSignature = signature;
+    };
+
+    const schedule = (root) => {
+      const state = runtime.states.get(root);
+      if (!state || state.rafId !== 0) {
+        return;
+      }
+      state.rafId = window.requestAnimationFrame(() => {
+        state.rafId = 0;
+        update(root);
+      });
+    };
+
+    const mount = (root, options = {}) => {
+      const { scheduleExisting = false } = options;
+      if (runtime.roots.has(root)) {
+        if (scheduleExisting) {
+          schedule(root);
+        }
+        return false;
+      }
+
+      const content = root.querySelector('.scallop-content');
+      const parent = root.parentElement;
+      if (!content || !parent) {
+        return false;
+      }
+
+      const observer = new ResizeObserver(() => {
+        schedule(root);
+      });
+
+      runtime.roots.add(root);
+      runtime.states.set(root, {
+        observer,
+        rafId: 0,
+        lastWidth: -1,
+        lastHeight: -1,
+        lastSignature: '',
+      });
+
+      observer.observe(parent);
+      observer.observe(content);
+
+      update(root);
+      return true;
+    };
+
+    const unmount = (root) => {
+      const state = runtime.states.get(root);
+      if (state) {
+        if (state.rafId !== 0) {
+          window.cancelAnimationFrame(state.rafId);
+        }
+        state.observer.disconnect();
+        runtime.states.delete(root);
+      }
+      runtime.roots.delete(root);
+    };
+
+    const cleanupDisconnectedRoots = () => {
+      runtime.roots.forEach((root) => {
+        if (!root.isConnected) {
+          unmount(root);
+        }
+      });
+    };
+
+    const mountNewRoots = (options = {}) => {
+      const { scheduleExisting = false } = options;
+      cleanupDisconnectedRoots();
+      const roots = document.querySelectorAll('[data-quantized-perimeter]');
+      roots.forEach((root) => {
+        mount(root, { scheduleExisting });
+      });
+    };
+
+    const scheduleAll = () => {
+      cleanupDisconnectedRoots();
+      runtime.roots.forEach((root) => {
+        schedule(root);
+      });
+    };
+
+    document.addEventListener('astro:page-load', () => {
+      mountNewRoots({ scheduleExisting: false });
+    });
+
+    window.addEventListener('resize', () => {
+      scheduleAll();
+    });
+
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        scheduleAll();
+      });
+    }
+
+    window[runtimeKey] = {
+      mountNewRoots,
+      scheduleAll,
+    };
+
+    mountNewRoots({ scheduleExisting: false });
+  })();
+</script>

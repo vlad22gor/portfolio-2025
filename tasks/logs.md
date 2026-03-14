@@ -318,3 +318,58 @@
   Причина: пользователь подтвердил корректировку требования по задержке, нужно закрепить новое правило без противоречий.
   Файлы: `tasks/lessons.md`, `tasks/logs.md`.
   Проверки: docs-only изменение; `rg -n \"120..320ms|prefetchAll|data-astro-prefetch='false'\" tasks/lessons.md` — успешно.
+
+- 2026-03-13: Добавлен reusable `Button` из Figma `12:1029` с поддержкой `icon-left/right`, hover `opacity: 0.9` и pressed spring `scale: 0.9`; интегрирован в hero секцию.
+  Причина: реализовать компонентный контракт кнопок по актуальному Figma-handoff, включая `bordered-icon-left` и токенизированное окрашивание SVG-стрелок без отдельных hover-ассетов.
+  Файлы: `src/components/Button.astro`, `src/pages/index.astro`, `public/media/icons/button/arrow-button-left.svg`, `public/media/icons/button/arrow-button-right.svg`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно.
+
+- 2026-03-13: Скорректирован `pressed` scale у `Button` с `0.9` до `0.95`.
+  Причина: пользователь уточнил более мягкую амплитуду нажатия.
+  Файлы: `src/components/Button.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно.
+
+- 2026-03-13: Исправлен показ полной `wave-rail` после route-transition.
+  Причина: при re-render в `QuantizedWave` path пересоздавался через `svg.innerHTML`, из-за чего inline trim стили терялись и временами показывалась вся волна.
+  Файлы: `src/components/QuantizedWave.astro`, `src/components/SiteHeader.astro`, `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `PUBLIC_HEADER_WAVE_VARIANT=classic npm run build` — успешно; `rg -n "quantized-wave:rendered|emitWaveRendered|handleWaveRendered|stroke-dasharray:\\s*0 1|waveRailReady = 'false'" src/components/QuantizedWave.astro src/components/SiteHeader.astro src/styles/global.css` подтверждает: добавлен event после реального re-render path, `SiteHeader` подписан на event и запускает immediate re-trim/retry, hidden-dash для rail-path восстановлен, при истечении retry-окна rail переводится в `data-wave-rail-ready='false'` (controlled fallback).
+
+- 2026-03-13: Зафиксирован контракт `wave-rail = rail-only` и устранён дрейф центровки на крайних табах.
+  Причина: повторяемость бага возникала из-за переключения между rail и button-fallback, плюс trim по start-координате давал визуальный перекос на `gallery`.
+  Файлы: `src/components/SiteHeader.astro`, `src/components/QuantizedWave.astro`, `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `PUBLIC_HEADER_WAVE_VARIANT=classic npm run build` — успешно; `rg -n "lastGoodTrim|hasEverReady|applyCachedTrim|windowsLeft|centerLen|quantized-wave:rendered|site-nav-track\\[data-wave-variant='wave-rail'\\] \\.header-button-wave-container" src/components/SiteHeader.astro src/components/QuantizedWave.astro src/styles/global.css` подтверждает: добавлены `lastGoodTrim/hasEverReady`, timeout-recovery через cached trim, trim считает `startLen` от `centerLen`, fallback-подкнопочная волна отключена для `wave-rail` независимо от `ready`.
+
+- 2026-03-14: Выполнен rollback неполной perimeter-ветки на главной и восстановлена стабильная сборка.
+  Причина: `src/pages/index.astro` содержал orphan-import `QuantizedPerimeter` при отсутствии `src/components/QuantizedPerimeter.astro`, что ломало `astro build` после кросс-девайс синхронизации незакомиченных правок.
+  Файлы: `src/pages/index.astro`, `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "QuantizedPerimeter" src` — совпадений нет; `.astro.bak.1773417960/` удалена (в `git status` отсутствует).
+
+- 2026-03-14: Реализован `QuantizedPerimeter v1` с новым edge-pattern `totem`, а `QuantizedScallop` переведён в backward-compatible wrapper.
+  Причина: расширить систему квантованных форм новыми краевыми паттернами без регрессии существующих `rectangle/circle` сценариев и закрепить масштабируемую архитектуру.
+  Файлы: `src/components/QuantizedPerimeter.astro`, `src/components/QuantizedScallop.astro`, `src/pages/index.astro`, `src/styles/global.css`, `tasks/scallop-shape-requirements.md`, `tasks/figma-scallop-mapping.md`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "data-quantized-perimeter|data-perimeter-edge-pattern=\"totem\"|data-perimeter-edges=\"top\"|data-scallop-rectangle-edges=\"top\"|data-scallop-shape=\"circle\"" dist/index.html dist/*/index.html` подтверждает рендер `scallop(all/top)`, `totem(all/top)` и совместимость `data-scallop-*`; `rg -n "QuantizedPerimeter|edgePattern=\"totem\"|rectangleEdges=\"top\"|shape=\"circle\"" src/pages/index.astro src/components/SiteFooter.astro src/components/QuantizedScallop.astro` подтверждает API-контракт и сохранение footer top-only.
+
+- 2026-03-14: Исправлена невидимость краевых шейпов в demo-каталоге (`scallop`/`totem`) на localhost.
+  Причина: `.scallop-preview .scallop-content` имел сплошной фон, который перекрывал SVG-подложку edge-shape и визуально давал прямоугольник.
+  Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "\.scallop-preview \.scallop-content\s*\{|background:\s*transparent" src/styles/global.css` подтверждает прозрачный фон контентного слоя; правило в lessons обновлено под root-слой `--scallop-bg`.
+
+- 2026-03-14: Возвращена заливка demo-карточек с сохранением edge-shape через системный фикс CSS-переменных.
+  Причина: `--scallop-bg` и `--scallop-pad` задавались inline-дефолтом в `QuantizedPerimeter/QuantizedScallop`, из-за чего класс `.scallop-preview` не мог переопределить цвет поверхности; после прозрачного `.scallop-content` форма визуально сливалась с фоном страницы.
+  Файлы: `src/components/QuantizedPerimeter.astro`, `src/components/QuantizedScallop.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; проверка `dist/index.html` через `node` подтверждает для preview-карточек inline-style только с `--scallop-line-clamp` (без `--scallop-bg`), а у footer сохранены явные `--scallop-bg: var(--color-accent-blue)` и `--scallop-pad: 84px 0 72px`.
+
+- 2026-03-14: Смягчён `totem`-периметр: убраны острые стыки между соседними волнами через C1-гладкую геометрию.
+  Причина: в текущем `totem`-профиле стыки строились как независимые cubic-сегменты и давали визуальные «иголки»; требовалась мягкая волна, ближе к референсу.
+  Файлы: `src/components/QuantizedPerimeter.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; численная проверка join-касательных для top-edge (дефолт `step=40`, `waveAmplitudeRatio=0.28`, `waveTension=0.5`) даёт `minCos=1` при целевом пороге `>=0.95`; `rg -n "data-quantized-perimeter|data-perimeter-edge-pattern=\"totem\"|data-perimeter-edges=\"top\"|data-scallop-rectangle-edges=\"top\"|data-scallop-shape=\"circle\"" dist/index.html dist/*/index.html` подтверждает сохранение runtime/dataset-контракта для `totem`, `top-only` и `circle`.
+
+- 2026-03-14: Выполнен `totem v2` тюнинг под более геометричный профиль: выше волна и уже «талия» при мягких скруглениях.
+  Причина: по фидбеку нужно усилить высоту волны и сузить форму относительно предыдущей мягкой версии без изменения API.
+  Файлы: `src/components/QuantizedPerimeter.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; численная проверка стыков даёт `minCos=1.0` (цель `>=0.95`); сравнение baseline/new по дефолту (`step=40`, `waveAmplitudeRatio=0.28`, `waveTension=0.5`) подтверждает направление тюнинга: `depth` увеличен (`9.632 -> 11.2`), эффективная ширина по edge-handles уменьшена (`12.4 -> 8.4`); `rg -n "data-perimeter-edge-pattern=\"totem\"|data-perimeter-edges=\"top\"|data-scallop-shape=\"circle\"" dist/index.html dist/*/index.html` подтверждает сохранение dataset-контракта.
+
+- 2026-03-14: Реализован `totem v3` corner-aware рендер для округлых углов без вытяжки (`cornerInset + corner-bridge`).
+  Причина: у прямоугольного totem-периметра углы выглядели как «сосулька»; требовались симметричные и более круглые переходы между гранями без изменения API.
+  Файлы: `src/components/QuantizedPerimeter.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; геометрическая проверка `minCos` на смежных cubic-стыках для `edges='all'` и `edges='top'` даёт `1.0` (порог `>=0.95`); для `edges='all'` подтверждено отсутствие прохода path через точные вершины прямоугольника (`hasHardCornerAll=false`), что валидирует работу `cornerInset`; `rg -n "data-perimeter-edge-pattern=\"totem\"|data-perimeter-edges=\"top\"|data-scallop-shape=\"circle\"" dist/index.html dist/*/index.html` подтверждает сохранение dataset-контракта и отсутствие регрессий `circle`.

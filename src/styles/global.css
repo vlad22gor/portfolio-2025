@@ -598,7 +598,7 @@ p {
 .scallop-preview-grid {
   display: grid;
   gap: 1.5rem;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .scallop-preview-slot {
@@ -623,7 +623,7 @@ p {
 }
 
 .scallop-preview .scallop-content {
-  background: var(--color-bg-darkened);
+  background: transparent;
 }
 
 .scallop-preview-rect .scallop-content {
@@ -648,6 +648,7 @@ p {
   height: 100%;
 }
 
+/* Legacy CTA styles; candidate for cleanup after full consumer audit. */
 .button {
   display: inline-flex;
   align-items: center;
@@ -899,7 +900,7 @@ p {
   height: 164px;
 }
 
-.quantized-scallop {
+:is(.quantized-scallop, .quantized-perimeter) {
   position: relative;
   width: 100%;
   max-width: 100%;
@@ -908,7 +909,7 @@ p {
   border-radius: 1.2rem;
 }
 
-.quantized-scallop .scallop-frame {
+:is(.quantized-scallop, .quantized-perimeter) .scallop-frame {
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -919,27 +920,27 @@ p {
   pointer-events: none;
 }
 
-.quantized-scallop[data-ready="true"] {
+:is(.quantized-scallop, .quantized-perimeter)[data-ready="true"] {
   border-radius: 0;
   background: transparent;
 }
 
-.quantized-scallop[data-ready="true"] .scallop-frame {
+:is(.quantized-scallop, .quantized-perimeter)[data-ready="true"] .scallop-frame {
   display: block;
 }
 
-.quantized-scallop .scallop-content {
+:is(.quantized-scallop, .quantized-perimeter) .scallop-content {
   position: relative;
   z-index: 1;
   padding: var(--scallop-pad, 1rem);
 }
 
-.quantized-scallop[data-scallop-shape="circle"] {
+:is(.quantized-scallop, .quantized-perimeter)[data-scallop-shape="circle"] {
   aspect-ratio: 1 / 1;
   border-radius: 999px;
 }
 
-.quantized-scallop[data-scallop-shape="circle"][data-ready="true"] .scallop-content {
+:is(.quantized-scallop, .quantized-perimeter)[data-scallop-shape="circle"][data-ready="true"] .scallop-content {
   overflow: hidden;
   border-radius: 999px;
 }
