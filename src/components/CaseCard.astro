@@ -1,22 +1,391 @@
 ---
 import type { Case } from '../data/cases';
+import Badge from './Badge.astro';
+import QuantizedScallop from './QuantizedScallop.astro';
 
 interface Props {
   item: Case;
 }
 
 const { item } = Astro.props;
+const visibleTags = item.tags.slice(0, 2);
+const isCoverRight = item.coverSide === 'right';
+const assetStackOrder = new Map<number, number>();
+item.cardHover.assets
+  .map((asset, index) => ({ index, targetY: asset.targetY }))
+  .sort((left, right) => left.targetY - right.targetY)
+  .forEach((entry, order) => {
+    assetStackOrder.set(entry.index, order + 1);
+  });
+const arrowAssetPath =
+  item.cardHover.arrowDirection === 'left'
+    ? '/media/icons/cases/case-card-arrow-left.svg'
+    : '/media/icons/cases/case-card-arrow-right.svg';
 ---
 
-<article class="case-card scallop-surface">
-  <img src={item.media[0]?.src} alt={item.media[0]?.alt ?? item.title} loading="lazy" decoding="async" />
-  <div class="case-card-content">
-    <ul class="chip-row" aria-label="Case tags">
-      {item.tags.map((tag) => (
-        <li>{tag}</li>
-      ))}
-    </ul>
-    <h3><a href={`/${item.slug}`} data-astro-prefetch="false">{item.title}</a></h3>
-    <p>{item.subtitle}</p>
+<a
+  class={`case-card${isCoverRight ? ' case-card--cover-right' : ''}`}
+  href={`/${item.slug}`}
+  data-astro-prefetch="false"
+  data-case-card
+  data-hover-active="false"
+  data-cover-side={item.coverSide}
+  data-case-card-design-width={String(item.cardHover.designWidth ?? 874)}
+  style={`--case-card-hover-border: ${item.cardHover.borderColor};`}
+>
+  {!isCoverRight && (
+    <div class="case-card-cover-shell" data-case-card-cover>
+      <QuantizedScallop
+        class="case-card-cover"
+        pad="0"
+        bg="var(--surface-base)"
+        clipContentToShape={false}
+        exportShapeMask
+        outlineEnabled
+        outlineMode="geometric"
+        outlinePlacement="outside"
+        outlineWidth={5}
+        outlineColor={item.cardHover.borderColor}
+        label={`${item.title} case cover`}
+      >
+        <img
+          class="case-card-cover-image"
+          src={item.cardCover.src}
+          alt={item.cardCover.alt}
+          loading="lazy"
+          decoding="async"
+        />
+      </QuantizedScallop>
+    </div>
+  )}
+
+  <div class="case-card-content" data-case-card-content>
+    {visibleTags.length > 0 && (
+      <ul class="case-badge-row" aria-label="Case tags">
+        {visibleTags.map((tag, index) => (
+          <li>
+            <Badge label={tag} tone={index === 0 ? 'blue' : 'gray'} />
+          </li>
+        ))}
+      </ul>
+    )}
+
+    <h3 class="case-card-title">{item.title}</h3>
+    <p class="case-card-subtitle">{item.subtitle}</p>
+
+    <img class="case-card-arrow" src={arrowAssetPath} alt="" loading="lazy" decoding="async" aria-hidden="true" />
   </div>
-</article>
+
+  {isCoverRight && (
+    <div class="case-card-cover-shell" data-case-card-cover>
+      <QuantizedScallop
+        class="case-card-cover"
+        pad="0"
+        bg="var(--surface-base)"
+        clipContentToShape={false}
+        exportShapeMask
+        outlineEnabled
+        outlineMode="geometric"
+        outlinePlacement="outside"
+        outlineWidth={5}
+        outlineColor={item.cardHover.borderColor}
+        label={`${item.title} case cover`}
+      >
+        <img
+          class="case-card-cover-image"
+          src={item.cardCover.src}
+          alt={item.cardCover.alt}
+          loading="lazy"
+          decoding="async"
+        />
+      </QuantizedScallop>
+    </div>
+  )}
+
+  {item.cardHover.assets.map((asset, index) => (
+    <span
+      class="case-card-hover-asset"
+      data-case-card-hover-asset
+      data-target-x={String(asset.targetX)}
+      data-target-y={String(asset.targetY)}
+      data-target-width={String(asset.width)}
+      data-target-height={String(asset.height)}
+      style={`left: ${asset.targetX}px; top: ${asset.targetY}px; width: ${asset.width}px; height: ${asset.height}px; --case-card-asset-z: ${assetStackOrder.get(index) ?? 1};`}
+    >
+      <span class="case-card-hover-asset-inner" style={`--case-card-asset-rotation: ${asset.rotationDeg}deg;`}>
+        <img src={asset.src} alt={asset.alt} loading="lazy" decoding="async" />
+      </span>
+    </span>
+  ))}
+</a>
+
+<script>
+  import { animate } from 'motion';
+
+  (() => {
+    const runtimeKey = '__caseCardHoverRuntime';
+    if (window[runtimeKey]) {
+      window[runtimeKey].mountNewCards();
+      return;
+    }
+
+    const runtime = {
+      cards: new Set(),
+      states: new WeakMap(),
+    };
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const hoverSpringIn = { type: 'spring', duration: 0.4, bounce: 0.2 };
+    const hoverSpringOut = { type: 'spring', duration: 0.6, bounce: 0.2 };
+    const assetStaggerStep = 0.08;
+    const designWidthFallback = 874;
+    const supportsHoverPointer = () => window.matchMedia('(pointer: fine)').matches;
+
+    const readNumber = (value, fallback) => {
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    };
+
+    const setTransform = (asset, x, y, scale) => {
+      asset.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
+    };
+
+    const showAssetInstant = (asset) => {
+      asset.style.opacity = '1';
+      asset.style.pointerEvents = 'auto';
+      setTransform(asset, 0, 0, 1);
+    };
+
+    const hideAssetInstant = (asset) => {
+      asset.style.opacity = '0';
+      asset.style.pointerEvents = 'none';
+      setTransform(asset, 0, 0, 0);
+    };
+
+    const stopAnimations = (state) => {
+      state.controls.forEach((control) => {
+        control.stop();
+      });
+      state.controls.clear();
+    };
+
+    const applyAssetDelays = (assets) => {
+      const ordered = [...assets].sort((left, right) => {
+        const leftY = readNumber(left.dataset.targetY, 0);
+        const rightY = readNumber(right.dataset.targetY, 0);
+        return leftY - rightY;
+      });
+      ordered.forEach((asset, index) => {
+        asset.dataset.hoverDelay = String(index * assetStaggerStep);
+      });
+    };
+
+    const resolveCardWidthDelta = (card) => {
+      if (card.dataset.coverSide !== 'right') {
+        return 0;
+      }
+      const designWidth = readNumber(card.dataset.caseCardDesignWidth, designWidthFallback);
+      const runtimeCardWidth = card.getBoundingClientRect().width;
+      return Math.max(0, designWidth - runtimeCardWidth);
+    };
+
+    const applyEffectiveAssetPositions = (card, state) => {
+      const widthDelta = resolveCardWidthDelta(card);
+      card.dataset.caseCardWidthDelta = String(widthDelta);
+      state.assets.forEach((asset) => {
+        const rawTargetX = readNumber(asset.dataset.targetX, 0);
+        const effectiveTargetX = card.dataset.coverSide === 'right' ? rawTargetX - widthDelta : rawTargetX;
+        asset.dataset.effectiveTargetX = String(effectiveTargetX);
+        asset.style.left = `${effectiveTargetX}px`;
+      });
+    };
+
+    const resolveFromCenter = (card, cover, asset) => {
+      const cardRect = card.getBoundingClientRect();
+      const coverRect = cover.getBoundingClientRect();
+      const centerX = coverRect.left - cardRect.left + coverRect.width / 2;
+      const centerY = coverRect.top - cardRect.top + coverRect.height / 2;
+      const targetX = readNumber(asset.dataset.effectiveTargetX ?? asset.dataset.targetX, 0);
+      const targetY = readNumber(asset.dataset.targetY, 0);
+      const targetWidth = readNumber(asset.dataset.targetWidth, 0);
+      const targetHeight = readNumber(asset.dataset.targetHeight, 0);
+
+      return {
+        fromX: centerX - (targetX + targetWidth / 2),
+        fromY: centerY - (targetY + targetHeight / 2),
+      };
+    };
+
+    const activate = (card, state, immediate = false) => {
+      if (state.active && !immediate) {
+        return;
+      }
+      stopAnimations(state);
+      state.active = true;
+      card.dataset.hoverActive = 'true';
+
+      const shouldAnimate = !immediate && !prefersReducedMotion.matches;
+      state.assets.forEach((asset) => {
+        if (!shouldAnimate) {
+          showAssetInstant(asset);
+          return;
+        }
+
+        const { fromX, fromY } = resolveFromCenter(card, state.cover, asset);
+        const delay = readNumber(asset.dataset.hoverDelay, 0);
+        asset.style.opacity = '1';
+        asset.style.pointerEvents = 'auto';
+        setTransform(asset, fromX, fromY, 0);
+        const control = animate(
+          asset,
+          {
+            transform: [`translate3d(${fromX}px, ${fromY}px, 0) scale(0)`, 'translate3d(0px, 0px, 0) scale(1)'],
+            opacity: [1, 1],
+          },
+          { ...hoverSpringIn, delay },
+        );
+        state.controls.add(control);
+        Promise.resolve(control.finished).finally(() => {
+          state.controls.delete(control);
+        });
+      });
+    };
+
+    const deactivate = (card, state, immediate = false) => {
+      if (!state.active && !immediate) {
+        return;
+      }
+      stopAnimations(state);
+      state.active = false;
+      card.dataset.hoverActive = 'false';
+
+      const shouldAnimate = !immediate && !prefersReducedMotion.matches;
+      state.assets.forEach((asset) => {
+        if (!shouldAnimate) {
+          hideAssetInstant(asset);
+          return;
+        }
+
+        const { fromX, fromY } = resolveFromCenter(card, state.cover, asset);
+        const delay = readNumber(asset.dataset.hoverDelay, 0);
+        const control = animate(
+          asset,
+          {
+            transform: ['translate3d(0px, 0px, 0) scale(1)', `translate3d(${fromX}px, ${fromY}px, 0) scale(0)`],
+            opacity: [1, 0],
+          },
+          { ...hoverSpringOut, delay },
+        );
+        state.controls.add(control);
+        Promise.resolve(control.finished).finally(() => {
+          state.controls.delete(control);
+          if (!state.active) {
+            hideAssetInstant(asset);
+          }
+        });
+      });
+    };
+
+    const mountCard = (card) => {
+      if (runtime.cards.has(card)) {
+        return;
+      }
+
+      const cover = card.querySelector('[data-case-card-cover]');
+      const assets = Array.from(card.querySelectorAll('[data-case-card-hover-asset]'));
+      if (!cover || assets.length === 0) {
+        return;
+      }
+
+      const state = {
+        cover,
+        assets,
+        controls: new Set(),
+        active: false,
+        pointerInside: false,
+        focusInside: false,
+      };
+
+      runtime.cards.add(card);
+      runtime.states.set(card, state);
+      applyAssetDelays(state.assets);
+      applyEffectiveAssetPositions(card, state);
+      state.assets.forEach((asset) => {
+        hideAssetInstant(asset);
+      });
+
+      const syncInteractionState = (immediate = false) => {
+        applyEffectiveAssetPositions(card, state);
+        const shouldBeActive = state.pointerInside || state.focusInside;
+        if (shouldBeActive) {
+          activate(card, state, immediate);
+        } else {
+          deactivate(card, state, immediate);
+        }
+      };
+
+      const onPointerEnter = () => {
+        state.pointerInside = true;
+        syncInteractionState();
+      };
+      const onPointerLeave = () => {
+        state.pointerInside = false;
+        syncInteractionState();
+      };
+      const onFocusIn = () => {
+        state.focusInside = true;
+        syncInteractionState();
+      };
+      const onFocusOut = (event) => {
+        const nextTarget = event.relatedTarget;
+        if (nextTarget instanceof Node && card.contains(nextTarget)) {
+          return;
+        }
+        state.focusInside = false;
+        syncInteractionState();
+      };
+      const onResize = () => {
+        applyEffectiveAssetPositions(card, state);
+        if (state.active) {
+          syncInteractionState(true);
+        }
+      };
+
+      if (supportsHoverPointer()) {
+        card.addEventListener('pointerenter', onPointerEnter);
+        card.addEventListener('pointerleave', onPointerLeave);
+      }
+      card.addEventListener('focusin', onFocusIn);
+      card.addEventListener('focusout', onFocusOut);
+      window.addEventListener('resize', onResize);
+
+      state.unbind = () => {
+        card.removeEventListener('pointerenter', onPointerEnter);
+        card.removeEventListener('pointerleave', onPointerLeave);
+        card.removeEventListener('focusin', onFocusIn);
+        card.removeEventListener('focusout', onFocusOut);
+        window.removeEventListener('resize', onResize);
+      };
+    };
+
+    runtime.mountNewCards = () => {
+      document.querySelectorAll('[data-case-card]').forEach((card) => {
+        mountCard(card);
+      });
+    };
+
+    runtime.mountNewCards();
+    document.addEventListener('astro:page-load', runtime.mountNewCards);
+    window.addEventListener('pagehide', () => {
+      runtime.cards.forEach((card) => {
+        const state = runtime.states.get(card);
+        if (!state) {
+          return;
+        }
+        deactivate(card, state, true);
+      });
+    });
+
+    window[runtimeKey] = runtime;
+  })();
+</script>

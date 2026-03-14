@@ -2,12 +2,9 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
-import CaseCard from '../components/CaseCard.astro';
-import QuantizedWave from '../components/QuantizedWave.astro';
+import CasesCardsSection from '../components/CasesCardsSection.astro';
 import Button from '../components/Button.astro';
-import { CASES } from '../data/cases';
 
-const featured = CASES.slice(0, 2);
 const isDev = import.meta.env.DEV;
 const coinInlineStyle = [
   'left: calc(578px * var(--home-hero-scale));',
@@ -64,18 +61,7 @@ const coinInlineStyle = [
       </div>
     </section>
 
-    <section class="section-stack">
-      <div class="section-head">
-        <h2>Featured cases</h2>
-        <a href="/cases">See all</a>
-      </div>
-      <QuantizedWave class="wave-divider" circleDiameter={8} strokeWidth={2} minCircles={4} phase="up" />
-      <div class="case-grid">
-        {featured.map((item) => (
-          <CaseCard item={item} />
-        ))}
-      </div>
-    </section>
+    <CasesCardsSection />
   </main>
   <SiteFooter />
 </BaseLayout>

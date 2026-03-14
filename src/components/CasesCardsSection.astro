@@ -1,0 +1,116 @@
+---
+import CaseCard from './CaseCard.astro';
+import Badge from './Badge.astro';
+import QuantizedPerimeter from './QuantizedPerimeter.astro';
+import { CASES } from '../data/cases';
+
+const foraCase = CASES.find((item) => item.slug === 'fora');
+const kissaCase = CASES.find((item) => item.slug === 'kissa');
+---
+
+<section class="cases-cards-section" aria-label="Cases cards section">
+  <div class="cases-cards-list">
+    {foraCase && <CaseCard item={foraCase} />}
+
+    <div class="cases-cards-description">
+      <p class="cases-cards-description-label type-description">Click on cases to learn more about the projects</p>
+      <img
+        class="cases-cards-description-arrow cases-cards-description-arrow--left"
+        src="/media/cases/section/cases-cards-arrow-left.svg"
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+      />
+      <img
+        class="cases-cards-description-arrow cases-cards-description-arrow--right"
+        src="/media/cases/section/cases-cards-arrow-right.svg"
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
+
+    {kissaCase && <CaseCard item={kissaCase} />}
+  </div>
+
+  <QuantizedPerimeter
+    class="cases-more-card"
+    shape="rectangle"
+    edgePattern="scallop"
+    step={48}
+    bg="var(--color-bg-darkened)"
+    pad="0"
+    label="More cases card"
+  >
+    <div class="cases-more-card-content">
+      <div class="cases-more-card-cube-wrap" aria-hidden="true">
+        <video
+          class="cases-more-card-cube"
+          data-more-cases-loader
+          autoplay
+          loop
+          muted
+          playsinline
+          preload="metadata"
+          poster="/media/cases/section/more-cases-cube.png"
+          aria-hidden="true"
+          tabindex="-1"
+        >
+          <source src="/media/cases/section/loader_light.webm" type="video/webm" />
+          <img
+            class="cases-more-card-cube-fallback"
+            src="/media/cases/section/more-cases-cube.png"
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            decoding="async"
+          />
+        </video>
+      </div>
+
+      <div class="cases-more-card-text">
+        <div class="cases-more-card-badges">
+          <Badge label="0 -> 1" tone="orange" />
+          <Badge label="Design System" tone="green" />
+        </div>
+        <p class="cases-more-card-title">more cases are coming...</p>
+        <p class="cases-more-card-body">
+          Inner platform 0->1 design,
+          <br aria-hidden="true" />
+          Design System with 1000+ tokens
+          <br aria-hidden="true" />
+          and 50+ components
+        </p>
+      </div>
+    </div>
+  </QuantizedPerimeter>
+</section>
+
+<script>
+  (() => {
+    const runtimeKey = '__moreCasesLoaderRuntime';
+    const playAll = () => {
+      document.querySelectorAll('[data-more-cases-loader]').forEach((node) => {
+        if (!(node instanceof HTMLVideoElement)) {
+          return;
+        }
+        node.muted = true;
+        const playPromise = node.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(() => {});
+        }
+      });
+    };
+
+    if (window[runtimeKey]) {
+      window[runtimeKey].playAll();
+      return;
+    }
+
+    window[runtimeKey] = { playAll };
+    playAll();
+    document.addEventListener('astro:page-load', playAll);
+  })();
+</script>

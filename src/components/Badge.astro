@@ -1,0 +1,21 @@
+---
+interface Props {
+  label: string;
+  tone?: 'blue' | 'gray' | 'orange' | 'green';
+  as?: 'span' | 'li' | 'div';
+}
+
+const { label, tone = 'blue', as = 'span' } = Astro.props;
+const Element = as;
+const toneClassMap = {
+  blue: 'case-badge--blue',
+  gray: 'case-badge--gray',
+  orange: 'case-badge--orange',
+  green: 'case-badge--green',
+} as const;
+const toneClass = toneClassMap[tone] ?? toneClassMap.blue;
+---
+
+<Element class={`case-badge ${toneClass}`}>
+  {label}
+</Element>

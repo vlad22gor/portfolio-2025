@@ -9,6 +9,29 @@ export type CaseMedia = {
   alt: string;
 };
 
+export type CaseCardCover = {
+  src: string;
+  alt: string;
+};
+
+export type CaseCardHoverAsset = {
+  src: string;
+  alt: string;
+  targetX: number;
+  targetY: number;
+  rotationDeg: number;
+  width: number;
+  height: number;
+  zIndex: number;
+};
+
+export type CaseCardHover = {
+  designWidth?: number;
+  borderColor: string;
+  arrowDirection: 'left' | 'right';
+  assets: CaseCardHoverAsset[];
+};
+
 export type CaseSection = {
   title: string;
   body: string[];
@@ -19,6 +42,9 @@ export type Case = {
   title: string;
   subtitle: string;
   tags: string[];
+  coverSide: 'left' | 'right';
+  cardCover: CaseCardCover;
+  cardHover: CaseCardHover;
   metrics: CaseMetric[];
   summary: string;
   sections: CaseSection[];
@@ -32,6 +58,38 @@ export const CASES: Case[] = [
     subtitle:
       'Driving 5% revenue increase and boosting app ratings from 3.0 to 4.6 over nine months.',
     tags: ['Redesign', 'Mobile App', 'Product Design'],
+    coverSide: 'left',
+    cardCover: {
+      src: '/media/cases/fora-cover.png',
+      alt: 'Fora case card cover',
+    },
+    cardHover: {
+      designWidth: 874,
+      borderColor: '#7AAA5C',
+      arrowDirection: 'right',
+      assets: [
+        {
+          src: '/media/cases/fora-delivery-time.png',
+          alt: 'Fora delivery time preview',
+          targetX: -149,
+          targetY: -75,
+          rotationDeg: -13,
+          width: 288,
+          height: 257,
+          zIndex: 3,
+        },
+        {
+          src: '/media/cases/fora-summary.png',
+          alt: 'Fora summary preview',
+          targetX: -148,
+          targetY: 143,
+          rotationDeg: 10,
+          width: 252,
+          height: 340,
+          zIndex: 2,
+        },
+      ],
+    },
     metrics: [
       { label: 'Revenue uplift', value: '+5%' },
       { label: 'App rating', value: '3.0 -> 4.6' },
@@ -76,6 +134,38 @@ export const CASES: Case[] = [
     subtitle:
       'Making complex self-checkout technology easy and engaging for everyday users.',
     tags: ['Redesign', 'Startup', 'AI'],
+    coverSide: 'right',
+    cardCover: {
+      src: '/media/cases/kissa-cover.png',
+      alt: 'Kissa case card cover',
+    },
+    cardHover: {
+      designWidth: 874,
+      borderColor: '#8D88B5',
+      arrowDirection: 'left',
+      assets: [
+        {
+          src: '/media/cases/kissa-terminal.png',
+          alt: 'Kissa terminal detail',
+          targetX: 704.1,
+          targetY: -110,
+          rotationDeg: 0,
+          width: 348,
+          height: 348,
+          zIndex: 3,
+        },
+        {
+          src: '/media/cases/kissa-coin-wheel.png',
+          alt: 'Kissa coin wheel detail',
+          targetX: 666,
+          targetY: 139.14,
+          rotationDeg: 0,
+          width: 359,
+          height: 359,
+          zIndex: 2,
+        },
+      ],
+    },
     metrics: [
       { label: 'Project type', value: '0 -> 1' },
       { label: 'Scope', value: 'Terminal UX + Flow' },

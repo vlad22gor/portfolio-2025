@@ -22,6 +22,14 @@ interface Props {
   hoverMorphTo?: 'scallop' | 'totem';
   morphSpringDuration?: number;
   morphSpringBounce?: number;
+  clipContentToShape?: boolean;
+  exportShapeMask?: boolean;
+  outlineEnabled?: boolean;
+  outlineMode?: 'alpha' | 'geometric';
+  outlinePlacement?: 'center' | 'outside';
+  outlineWidth?: number;
+  outlineColor?: string;
+  outlineOpacity?: number;
 }
 
 const {
@@ -29,7 +37,7 @@ const {
   shape = 'rectangle',
   edgePattern = 'scallop',
   edges = 'all',
-  step = 40,
+  step = 48,
   minCols = 12,
   minRows = 8,
   minLobes = 8,
@@ -46,12 +54,22 @@ const {
   hoverMorphTo = 'totem',
   morphSpringDuration = 1.05,
   morphSpringBounce = 0.24,
+  clipContentToShape = false,
+  exportShapeMask = false,
+  outlineEnabled = false,
+  outlineMode = 'alpha',
+  outlinePlacement = 'center',
+  outlineWidth,
+  outlineColor,
+  outlineOpacity,
 } = Astro.props;
 
 const resolvedShape = shape === 'circle' ? 'circle' : 'rectangle';
 const resolvedPattern = edgePattern === 'totem' ? 'totem' : 'scallop';
 const resolvedEdges = edges === 'top' ? 'top' : 'all';
 const resolvedHoverMorphPreset = hoverMorphPreset === 'strong' ? 'strong' : 'default';
+const resolvedOutlineMode = outlineMode === 'geometric' ? 'geometric' : 'alpha';
+const resolvedOutlinePlacement = outlinePlacement === 'outside' ? 'outside' : 'center';
 // Deprecated dataset for backward compatibility; runtime ignores target pattern now.
 const resolvedHoverMorphTo = hoverMorphTo === 'scallop' ? 'scallop' : 'totem';
 const resolvedHoverAnimationEnabled =
@@ -65,6 +83,18 @@ if (typeof bg === 'string' && bg.trim()) {
 
 if (typeof pad === 'string' && pad.trim()) {
   styleParts.push(`--scallop-pad: ${pad};`);
+}
+
+if (typeof outlineWidth === 'number' && Number.isFinite(outlineWidth) && outlineWidth >= 0) {
+  styleParts.push(`--perimeter-outline-width: ${outlineWidth}px;`);
+}
+
+if (typeof outlineColor === 'string' && outlineColor.trim()) {
+  styleParts.push(`--perimeter-outline-color: ${outlineColor};`);
+}
+
+if (typeof outlineOpacity === 'number' && Number.isFinite(outlineOpacity)) {
+  styleParts.push(`--perimeter-outline-opacity: ${outlineOpacity};`);
 }
 
 const rootStyle = styleParts.join(' ');
@@ -89,6 +119,11 @@ const rootStyle = styleParts.join(' ');
   data-perimeter-hover-morph-to={resolvedHoverMorphTo}
   data-perimeter-morph-spring-duration={String(morphSpringDuration)}
   data-perimeter-morph-spring-bounce={String(morphSpringBounce)}
+  data-perimeter-clip-content-to-shape={clipContentToShape ? 'true' : 'false'}
+  data-perimeter-export-shape-mask={exportShapeMask ? 'true' : 'false'}
+  data-perimeter-outline-enabled={outlineEnabled ? 'true' : 'false'}
+  data-perimeter-outline-mode={resolvedOutlineMode}
+  data-perimeter-outline-placement={resolvedOutlinePlacement}
   data-quantized-scallop
   data-scallop-shape={resolvedShape}
   data-scallop-rectangle-edges={legacyRectangleEdges}
@@ -101,6 +136,13 @@ const rootStyle = styleParts.join(' ');
   tabindex={resolvedHoverAnimationEnabled ? '0' : undefined}
 >
   <svg class="scallop-frame" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true" focusable="false"></svg>
+  <svg
+    class="scallop-outline-frame"
+    viewBox="0 0 1 1"
+    preserveAspectRatio="none"
+    aria-hidden="true"
+    focusable="false"
+  ></svg>
   <div class="scallop-content">
     <slot />
   </div>
@@ -120,6 +162,7 @@ const rootStyle = styleParts.join(' ');
       roots: new Set(),
       states: new WeakMap(),
     };
+    let outlineIdCounter = 0;
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     const readNumber = (value, fallback) => {
@@ -132,16 +175,15 @@ const rootStyle = styleParts.join(' ');
     const round3 = (value) => Math.round(value * 1000) / 1000;
     const lerp = (from, to, progress) => from + (to - from) * progress;
 
-    const resolveAvailableSize = (root, parent, content, step) => {
-      const fallbackWidth = Math.max(1, Math.floor(root.getBoundingClientRect().width), Math.floor(step));
-      const fallbackHeight = Math.max(
-        1,
-        Math.floor(root.getBoundingClientRect().height),
-        Math.ceil(content.scrollHeight),
-        Math.floor(step),
-      );
-      const width = Math.max(1, Math.floor(parent.clientWidth) || fallbackWidth);
-      const height = Math.max(1, Math.floor(parent.clientHeight) || fallbackHeight);
+    const resolveAvailableSize = (root, parent, step) => {
+      const safeStep = Math.max(1, Math.floor(step));
+      const rootRect = root.getBoundingClientRect();
+      const rootWidth = Math.floor(rootRect.width);
+      const rootHeight = Math.floor(rootRect.height);
+      const parentWidth = Math.floor(parent.clientWidth);
+      const parentHeight = Math.floor(parent.clientHeight);
+      const width = Math.max(1, rootWidth || parentWidth || safeStep);
+      const height = Math.max(1, rootHeight || parentHeight || safeStep);
       return { width, height };
     };
 
@@ -223,6 +265,136 @@ const rootStyle = styleParts.join(' ');
     };
 
     const SCALLOP_KAPPA = 0.5522847498;
+
+    const appendArcSegment = (commands, cx, cy, radius, fromAngle, toAngle) => {
+      const delta = toAngle - fromAngle;
+      if (!Number.isFinite(delta) || Math.abs(delta) < 1e-6 || radius <= 0) {
+        return;
+      }
+
+      const segments = Math.max(1, Math.ceil(Math.abs(delta) / (Math.PI / 2)));
+      const segmentAngle = delta / segments;
+
+      for (let segment = 0; segment < segments; segment += 1) {
+        const t0 = fromAngle + segmentAngle * segment;
+        const t1 = t0 + segmentAngle;
+        const k = (4 / 3) * Math.tan((t1 - t0) / 4);
+
+        const p0x = cx + radius * Math.cos(t0);
+        const p0y = cy + radius * Math.sin(t0);
+        const p1x = cx + radius * Math.cos(t1);
+        const p1y = cy + radius * Math.sin(t1);
+        const d0x = -radius * Math.sin(t0);
+        const d0y = radius * Math.cos(t0);
+        const d1x = -radius * Math.sin(t1);
+        const d1y = radius * Math.cos(t1);
+
+        const c1x = p0x + d0x * k;
+        const c1y = p0y + d0y * k;
+        const c2x = p1x - d1x * k;
+        const c2y = p1y - d1y * k;
+
+        commands.push(
+          `C ${round3(c1x)} ${round3(c1y)} ${round3(c2x)} ${round3(c2y)} ${round3(p1x)} ${round3(p1y)}`,
+        );
+      }
+    };
+
+    const buildRectangleScallopOutlinePath = (width, height, step, edges, scallopRadiusScale = 1) => {
+      const cols = Math.max(1, Math.floor(width / step));
+      const rows = Math.max(1, Math.floor(height / step));
+      const baseRadius = step / 2;
+      const radius = resolveScallopRadius(width, height, baseRadius, edges, scallopRadiusScale);
+      const centerX = (index) => resolveEvenCenter(width, radius, cols, index);
+      const centerY = (index) => resolveEvenCenter(height, radius, rows, index);
+      const commands = [`M ${round3(0)} ${round3(radius)}`];
+      let currentX = 0;
+      let currentY = radius;
+
+      for (let i = 0; i < cols; i += 1) {
+        const cx = centerX(i);
+        const lobeStartX = cx - radius;
+        if (Math.abs(lobeStartX - currentX) > 1e-6) {
+          commands.push(`L ${round3(lobeStartX)} ${round3(radius)}`);
+          currentX = lobeStartX;
+        }
+        appendArcSegment(commands, cx, radius, radius, Math.PI, Math.PI * 2);
+        currentX = cx + radius;
+      }
+
+      if (edges === 'top') {
+        if (Math.abs(width - currentX) > 1e-6 || Math.abs(radius - currentY) > 1e-6) {
+          commands.push(`L ${round3(width)} ${round3(radius)}`);
+          currentX = width;
+          currentY = radius;
+        }
+        commands.push(`L ${round3(width)} ${round3(height)}`);
+        commands.push(`L ${round3(0)} ${round3(height)}`);
+        commands.push('Z');
+        return commands.join(' ');
+      }
+
+      const rightCenterX = width - radius;
+      appendArcSegment(commands, rightCenterX, radius, radius, 0, Math.PI / 2);
+      currentX = rightCenterX;
+      currentY = radius * 2;
+
+      for (let j = 1; j < rows - 1; j += 1) {
+        const cy = centerY(j);
+        const lobeStartY = cy - radius;
+        if (Math.abs(lobeStartY - currentY) > 1e-6) {
+          commands.push(`L ${round3(rightCenterX)} ${round3(lobeStartY)}`);
+          currentY = lobeStartY;
+        }
+        appendArcSegment(commands, rightCenterX, cy, radius, Math.PI * 1.5, Math.PI * 2.5);
+        currentY = cy + radius;
+      }
+
+      const bottomCenterY = height - radius;
+      const bottomRightArcStartY = height - radius * 2;
+      if (Math.abs(bottomRightArcStartY - currentY) > 1e-6) {
+        commands.push(`L ${round3(rightCenterX)} ${round3(bottomRightArcStartY)}`);
+        currentY = bottomRightArcStartY;
+      }
+      appendArcSegment(commands, rightCenterX, bottomCenterY, radius, Math.PI * 1.5, Math.PI * 2);
+      currentX = width;
+      currentY = bottomCenterY;
+
+      for (let i = cols - 1; i >= 0; i -= 1) {
+        const cx = centerX(i);
+        const lobeStartX = cx + radius;
+        if (Math.abs(lobeStartX - currentX) > 1e-6) {
+          commands.push(`L ${round3(lobeStartX)} ${round3(bottomCenterY)}`);
+          currentX = lobeStartX;
+        }
+        appendArcSegment(commands, cx, bottomCenterY, radius, 0, Math.PI);
+        currentX = cx - radius;
+      }
+
+      const leftCenterX = radius;
+      appendArcSegment(commands, leftCenterX, bottomCenterY, radius, Math.PI, Math.PI * 1.5);
+      currentX = leftCenterX;
+      currentY = height - radius * 2;
+
+      for (let j = rows - 2; j >= 1; j -= 1) {
+        const cy = centerY(j);
+        const lobeStartY = cy + radius;
+        if (Math.abs(lobeStartY - currentY) > 1e-6) {
+          commands.push(`L ${round3(leftCenterX)} ${round3(lobeStartY)}`);
+          currentY = lobeStartY;
+        }
+        appendArcSegment(commands, leftCenterX, cy, radius, Math.PI / 2, Math.PI * 1.5);
+        currentY = cy - radius;
+      }
+
+      const topLeftArcStartY = radius * 2;
+      if (Math.abs(topLeftArcStartY - currentY) > 1e-6) {
+        commands.push(`L ${round3(leftCenterX)} ${round3(topLeftArcStartY)}`);
+      }
+      appendArcSegment(commands, leftCenterX, radius, radius, Math.PI / 2, Math.PI);
+      commands.push('Z');
+      return commands.join(' ');
+    };
 
     const appendLegacyTotemWaveCommands = (commands, config) => {
       const { sx, sy, ex, ey, nx, ny, segments, amplitude, tension } = config;
@@ -523,8 +695,118 @@ const rootStyle = styleParts.join(' ');
       svg.innerHTML = pieces.join('');
     };
 
+    const clearContentMask = (root) => {
+      root.style.removeProperty('--perimeter-content-mask');
+    };
+
+    const serializeMaskSvg = (svg) => {
+      const viewBox = svg.getAttribute('viewBox');
+      if (!viewBox) {
+        return null;
+      }
+      const normalizedShape = svg.innerHTML.replace(/currentColor/g, '#000');
+      const markup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" preserveAspectRatio="none">${normalizedShape}</svg>`;
+      return `url("data:image/svg+xml,${encodeURIComponent(markup)}")`;
+    };
+
+    const applyContentMask = (root, svg) => {
+      const serialized = serializeMaskSvg(svg);
+      if (!serialized) {
+        clearContentMask(root);
+        return;
+      }
+      root.style.setProperty('--perimeter-content-mask', serialized);
+    };
+
+    const clearOutlineFrame = (outlineSvg) => {
+      if (!outlineSvg) {
+        return;
+      }
+      outlineSvg.innerHTML = '';
+    };
+
+    const renderAlphaOutlineFrame = (outlineSvg, shapeSvg, outlineWidth, outlineFilterId) => {
+      if (!outlineSvg || !shapeSvg) {
+        return;
+      }
+
+      const viewBox = shapeSvg.getAttribute('viewBox');
+      const shapeMarkup = shapeSvg.innerHTML.trim();
+      if (!viewBox || !shapeMarkup || outlineWidth <= 0) {
+        clearOutlineFrame(outlineSvg);
+        return;
+      }
+
+      outlineSvg.setAttribute('viewBox', viewBox);
+      outlineSvg.innerHTML = [
+        '<defs>',
+        `<filter id="${outlineFilterId}" color-interpolation-filters="sRGB">`,
+        `<feMorphology in="SourceAlpha" operator="erode" radius="${round3(outlineWidth)}" result="inner"></feMorphology>`,
+        '<feComposite in="SourceGraphic" in2="inner" operator="out"></feComposite>',
+        '</filter>',
+        '</defs>',
+        `<g filter="url(#${outlineFilterId})">${shapeMarkup}</g>`,
+      ].join('');
+    };
+
+    const parseViewBox = (value) => {
+      if (typeof value !== 'string') {
+        return null;
+      }
+      const parts = value
+        .trim()
+        .split(/\s+/)
+        .map((part) => Number.parseFloat(part));
+      if (parts.length !== 4 || parts.some((part) => !Number.isFinite(part))) {
+        return null;
+      }
+      return { x: parts[0], y: parts[1], width: parts[2], height: parts[3] };
+    };
+
+    const renderGeometricOutlineFrame = (outlineSvg, shapeSvg, pathData, outlineWidth, placement, outlineMaskId) => {
+      if (!outlineSvg || !shapeSvg || !pathData || outlineWidth <= 0) {
+        clearOutlineFrame(outlineSvg);
+        return;
+      }
+      const viewBox = shapeSvg.getAttribute('viewBox');
+      if (!viewBox) {
+        clearOutlineFrame(outlineSvg);
+        return;
+      }
+      outlineSvg.setAttribute('viewBox', viewBox);
+      if (placement === 'outside' && outlineMaskId) {
+        const parsedViewBox = parseViewBox(viewBox);
+        if (!parsedViewBox) {
+          clearOutlineFrame(outlineSvg);
+          return;
+        }
+        const expandedStrokeWidth = Math.max(0.001, outlineWidth * 2);
+        const spread = Math.max(1, expandedStrokeWidth * 2 + 2);
+        const maskX = parsedViewBox.x - spread;
+        const maskY = parsedViewBox.y - spread;
+        const maskWidth = parsedViewBox.width + spread * 2;
+        const maskHeight = parsedViewBox.height + spread * 2;
+        outlineSvg.innerHTML = [
+          '<defs>',
+          `<mask id="${outlineMaskId}" maskUnits="userSpaceOnUse" x="${round3(maskX)}" y="${round3(maskY)}" width="${round3(maskWidth)}" height="${round3(maskHeight)}">`,
+          `<rect x="${round3(maskX)}" y="${round3(maskY)}" width="${round3(maskWidth)}" height="${round3(maskHeight)}" fill="#fff"></rect>`,
+          `<path d="${pathData}" fill="#000"></path>`,
+          '</mask>',
+          '</defs>',
+          `<path d="${pathData}" fill="none" stroke="currentColor" stroke-width="${round3(
+            expandedStrokeWidth,
+          )}" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" shape-rendering="geometricPrecision" mask="url(#${outlineMaskId})"></path>`,
+        ].join('');
+        return;
+      }
+      outlineSvg.innerHTML = `<path d="${pathData}" fill="none" stroke="currentColor" stroke-width="${round3(
+        outlineWidth,
+      )}" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" shape-rendering="geometricPrecision"></path>`;
+    };
+
     const update = (root) => {
       const svg = root.querySelector('.scallop-frame');
+      const outlineSvg = root.querySelector('.scallop-outline-frame');
       const content = root.querySelector('.scallop-content');
       const parent = root.parentElement;
       const state = runtime.states.get(root);
@@ -534,6 +816,33 @@ const rootStyle = styleParts.join(' ');
       }
 
       const shape = root.dataset.perimeterShape === 'circle' ? 'circle' : 'rectangle';
+      const shouldClipContent = root.dataset.perimeterClipContentToShape === 'true';
+      const shouldExportShapeMask = root.dataset.perimeterExportShapeMask === 'true';
+      const shouldExposeMask = shouldClipContent || shouldExportShapeMask;
+      if (!shouldExposeMask) {
+        clearContentMask(root);
+      }
+      const outlineEnabled = root.dataset.perimeterOutlineEnabled === 'true';
+      if (!outlineEnabled) {
+        clearOutlineFrame(outlineSvg);
+      }
+      const rootStyles = outlineEnabled ? window.getComputedStyle(root) : null;
+      const requestedOutlineMode = root.dataset.perimeterOutlineMode === 'geometric' ? 'geometric' : 'alpha';
+      const requestedOutlinePlacement = root.dataset.perimeterOutlinePlacement === 'outside' ? 'outside' : 'center';
+      const outlineWidth = outlineEnabled
+        ? Math.max(0, readNumber(rootStyles?.getPropertyValue('--perimeter-outline-width'), 0))
+        : 0;
+      const outlineColor = outlineEnabled
+        ? rootStyles?.getPropertyValue('--perimeter-outline-color').trim() || 'transparent'
+        : 'transparent';
+      const geometricOutlineSupported =
+        requestedOutlineMode === 'geometric' && shape === 'rectangle' && root.dataset.perimeterEdgePattern === 'scallop';
+      const outlineMode = geometricOutlineSupported ? 'geometric' : 'alpha';
+      const outlinePlacement = geometricOutlineSupported ? requestedOutlinePlacement : 'center';
+      const shouldRenderOutline = outlineEnabled && outlineWidth > 0 && outlineColor !== 'transparent';
+      if (outlineSvg) {
+        outlineSvg.style.color = outlineColor;
+      }
       const edgePattern = root.dataset.perimeterEdgePattern === 'totem' ? 'totem' : 'scallop';
       const edges = root.dataset.perimeterEdges === 'top' ? 'top' : 'all';
       const animationAdapter = resolvePatternAnimationAdapter(edgePattern);
@@ -543,7 +852,7 @@ const rootStyle = styleParts.join(' ');
         animationAdapter.supportsParamAnimation;
       const animationProgress = hoverMorphEnabled ? clamp01(state.animProgress) : 0;
       const baseStep = Math.max(1, readNumber(root.dataset.perimeterStep, 40));
-      const available = resolveAvailableSize(root, parent, content, baseStep);
+      const available = resolveAvailableSize(root, parent, baseStep);
       const effectiveStep = resolveEffectiveStep(baseStep, available.width, available.height);
       const minCols = clampInt(readNumber(root.dataset.perimeterMinCols, 12), 1);
       const minRows = clampInt(readNumber(root.dataset.perimeterMinRows, 8), 1);
@@ -557,7 +866,11 @@ const rootStyle = styleParts.join(' ');
         : baseParams;
       let signature = `${shape}:${edgePattern}:${edges}:${effectiveStep}:${round3(
         activeParams.waveAmplitudeRatio,
-      )}:${round3(activeParams.waveTension)}:${round3(activeParams.scallopRadiusScale)}:${round3(animationProgress)}`;
+      )}:${round3(activeParams.waveTension)}:${round3(activeParams.scallopRadiusScale)}:${round3(animationProgress)}:${
+        shouldRenderOutline
+          ? `outline:${outlineMode}:${outlinePlacement}:${round3(outlineWidth)}:${outlineColor}`
+          : 'outline:none'
+      }`;
 
       root.dataset.perimeterEffectiveStep = String(effectiveStep);
       root.dataset.perimeterMorphProgress = String(round3(animationProgress));
@@ -580,6 +893,16 @@ const rootStyle = styleParts.join(' ');
 
         if (signature !== state.lastSignature) {
           renderCircleSvg(svg, snappedDiameter, effectiveStep, circle.lobes);
+          if (shouldExposeMask) {
+            applyContentMask(root, svg);
+          } else {
+            clearContentMask(root);
+          }
+          if (shouldRenderOutline) {
+            renderAlphaOutlineFrame(outlineSvg, svg, outlineWidth, state.outlineFilterId);
+          } else {
+            clearOutlineFrame(outlineSvg);
+          }
           state.lastSignature = signature;
         }
         root.dataset.perimeterSignature = signature;
@@ -587,16 +910,8 @@ const rootStyle = styleParts.join(' ');
         return;
       }
 
-      const parentWidth = Math.floor(parent.clientWidth);
-      const parentHeight = Math.floor(parent.clientHeight);
-      const widthBudget =
-        parentWidth > 0
-          ? available.width
-          : Math.max(available.width, minCols * effectiveStep, Math.ceil(content.scrollWidth));
-      const heightBudget =
-        parentHeight > 0
-          ? available.height
-          : Math.max(available.height, minRows * effectiveStep, Math.ceil(content.scrollHeight));
+      const widthBudget = Math.max(1, Math.floor(available.width));
+      const heightBudget = Math.max(1, Math.floor(available.height));
 
       const floorCols = Math.max(1, Math.floor(widthBudget / effectiveStep));
       const floorRows = Math.max(1, Math.floor(heightBudget / effectiveStep));
@@ -616,15 +931,43 @@ const rootStyle = styleParts.join(' ');
       root.dataset.scallopRows = String(rows);
       root.dataset.scallopLobes = '';
 
-      if (signature !== state.lastSignature) {
-        animationAdapter.render(
-          svg,
-          { width: snappedWidth, height: snappedHeight, step: effectiveStep },
-          activeParams,
-          edges,
-        );
-        state.lastSignature = signature;
-      }
+        if (signature !== state.lastSignature) {
+          animationAdapter.render(
+            svg,
+            { width: snappedWidth, height: snappedHeight, step: effectiveStep },
+            activeParams,
+            edges,
+          );
+          if (shouldExposeMask) {
+            applyContentMask(root, svg);
+          } else {
+            clearContentMask(root);
+          }
+          if (shouldRenderOutline) {
+            if (outlineMode === 'geometric') {
+              const outlinePath = buildRectangleScallopOutlinePath(
+                snappedWidth,
+                snappedHeight,
+                effectiveStep,
+                edges,
+                activeParams.scallopRadiusScale,
+              );
+              renderGeometricOutlineFrame(
+                outlineSvg,
+                svg,
+                outlinePath,
+                outlineWidth,
+                outlinePlacement,
+                state.outlineMaskId,
+              );
+            } else {
+              renderAlphaOutlineFrame(outlineSvg, svg, outlineWidth, state.outlineFilterId);
+            }
+          } else {
+            clearOutlineFrame(outlineSvg);
+          }
+          state.lastSignature = signature;
+        }
 
       root.dataset.perimeterSignature = signature;
       root.dataset.scallopSignature = signature;
@@ -711,6 +1054,8 @@ const rootStyle = styleParts.join(' ');
         lastWidth: -1,
         lastHeight: -1,
         lastSignature: '',
+        outlineFilterId: `perimeter-outline-${++outlineIdCounter}`,
+        outlineMaskId: `perimeter-outline-mask-${outlineIdCounter}`,
         animProgress: 0,
         animTarget: 0,
         animControl: null,

@@ -1,5 +1,100 @@
 # Logs
 
+- 2026-03-15: Разделены длительности hover-анимации `CaseCard`: mouse-in `0.4`, mouse-out `0.6`.
+  Причина: требовалось сохранить более быстрый вход и оставить более мягкий выход.
+  Файлы: `src/components/CaseCard.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно.
+
+- 2026-03-15: Увеличен delay второго hover-ассета в `CaseCard` до `0.5s`.
+  Причина: требуется более выраженный stagger между первым и вторым ассетом.
+  Файлы: `src/components/CaseCard.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно.
+
+- 2026-03-15: Замедлена hover-анимация `CaseCard` (включая mouse-out): `duration` увеличен до `0.6`.
+  Причина: выход из hover воспринимался слишком резким при `duration: 0.4`.
+  Файлы: `src/components/CaseCard.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно.
+
+- 2026-03-15: Доработана `cases cards section` по последней Figma-правке: обновлены оффсеты description-стрелок, зафиксирован `Y=1320` на `/`, и добавлен `loader_light.webm` для кубика в `more is coming`.
+  Причина: синхронизация с актуальным макетом (`26:2056` / `26:1898`) и требование анимированного кубика с сохранением статичного cover.
+  Файлы: `src/components/CasesCardsSection.astro`, `src/styles/global.css`, `public/media/cases/section/loader_light.webm`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Playwright (`http://127.0.0.1:4173/`, `1360x2200`) подтверждает `cases-cards-section y=1320`, стрелки `left(155,-12)` и `right(604,32)`, `cases-more-card=816x432`, `step=48`, `rows=9`, `cols=17`, `data-ready=true`, `noHorizontalScroll=true`; `video` на кубике: `source=/media/cases/section/loader_light.webm`, `poster=/media/cases/section/more-cases-cube.png`, `autoplay/loop/muted/playsInline=true`, `paused=false`, `currentTime>0`; regressions ok: footer `edges=top step=40 ready=true`, `CaseCard` hover `false->true->false`.
+
+- 2026-03-15: `CaseCard` сделан полностью кликабельным — root переведён на ссылку кейса.
+  Причина: требование UX — переход по кейсу должен срабатывать по всей карточке, не только по title.
+  Файлы: `src/components/CaseCard.astro`, `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `dist`-проверка (`rg` по `dist/cases/index.html`, `dist/index.html`, `dist/preview/index.html`) подтверждает root-разметку `<a class=\"case-card\" href=\"/fora|/kissa\">` и отсутствие вложенного title-link; интерактивная Playwright-проверка не выполнена из-за launcher-конфликта Chrome (`Opening in existing browser session`).
+
+- 2026-03-15: Повторно синхронизированы `kissa` hover-ассеты с последней коррекцией в Figma `20:1323`.
+  Причина: пользователь обновил размеры и положения ассетов; требовалась повторная актуализация raw-данных без изменения runtime-компенсации.
+  Файлы: `src/data/cases.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Playwright (`http://127.0.0.1:4175/cases`) подтверждает raw `kissa`: `704.1,-110,348x348` и `666,139.14,359x359`; при `delta=58` effective X: `646.1` и `608`.
+
+- 2026-03-15: Синхронизированы `kissa` hover-ассеты с обновлёнными значениями из Figma `20:1323`.
+  Причина: пользователь актуализировал положение и размеры ассетов; требовалось обновить данные карточки без изменения runtime-контрактов.
+  Файлы: `src/data/cases.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Playwright (`http://127.0.0.1:4175/cases`) подтверждает raw `kissa` `targetX/Y/size`: `705,-116.68,358x358` и `671,141.32,369x369`, а также effective X после нормализации (`delta=58`): `647` и `613`.
+
+- 2026-03-14: По запросу увеличена высота блока `more is coming (QScallop)` до `432px`.
+  Причина: требуется новый фиксированный вертикальный размер секции без регрессии scallop-периметра.
+  Файлы: `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Playwright (`http://127.0.0.1:4173/`, `1360x2200`) подтверждает `cases-more-card=816x432`, `data-perimeter-step=48`, `rows=9`, `cols=17`, `computedHeight=432px`, `data-ready=true`, `noHorizontalScroll=true`; offsets стрелок сохранены (`left(155,-14)`, `right(604,34)`); footer-regression ok (`edges=top`, `step=40`, `ready=true`); `CaseCard` hover-regression ok (`data-hover-active false->true->false`, arrow opacity `0->1->0`).
+
+- 2026-03-14: Исправлено системное смещение `kissa` hover-ассетов вправо (~58-60px) через runtime-нормализацию `targetX` для `coverSide='right'`.
+  Причина: координаты ассетов были сняты из Figma-фрейма шириной `874`, тогда как фактическая карточка в рантайме имеет `816`, из-за чего правые ассеты уезжали вправо на дельту ширин.
+  Файлы: `src/components/CaseCard.astro`, `src/data/cases.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Playwright (`http://127.0.0.1:4175/cases`) подтверждает `data-case-card-width-delta=58` у `kissa` и эффективные X `720->662`, `710->652` (для `fora` delta `0`, позиции без изменений).
+
+- 2026-03-14: Доработан `CaseCard` под актуальный Figma `20:1323`: статичная высота карточки `432px` и обновлённые hover-ассеты по pre-rotation размерам.
+  Причина: синхронизация с последними правками дизайна (новая высота карточки + точные позиции/размеры ассетов на hover).
+  Файлы: `src/styles/global.css`, `src/data/cases.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Playwright (`http://127.0.0.1:4174/cases`) подтверждает `case-card`/`cover-shell`/`content` высоту `432px` и новые `data-target-*` у ассетов (`fora`: `-149,-75,288x257` и `-148,143,252x340`; `kissa`: `720,-124,327x327` и `710,243,300x300`).
+
+- 2026-03-14: Реализован `CaseCard v2.2` — внешний scallop-outline и перенос маски с контейнера на `cover-image`.
+  Причина: контур обводки подрезался при container-clip и визуально уходил внутрь периметра; требовался внешний геометрический контур без blur.
+  Файлы: `src/components/QuantizedPerimeter.astro`, `src/components/QuantizedScallop.astro`, `src/components/CaseCard.astro`, `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Playwright (`http://127.0.0.1:4174/cases`) подтверждает для cover: `data-perimeter-clip-content-to-shape=false`, `data-perimeter-export-shape-mask=true`, `data-perimeter-outline-mode=geometric`, `data-perimeter-outline-placement=outside`, у `.scallop-content` `mask-image=none/overflow=visible`, у `.case-card-cover-image` `mask-image!=none`, в outline-слое есть `path[stroke]` с `stroke-width=10` и `mask=url(#perimeter-outline-mask-*)`, без `feMorphology/feComposite`; hover-state по-прежнему активирует outline/arrow/assets (`data-hover-active false->true`).
+
+- 2026-03-14: Исправлен «поплывший» scallop-периметр в `more card` через системную стабилизацию sizing в runtime `QuantizedPerimeter` (rectangle).
+  Причина: budget геометрии зависел от `content.scroll*` и мог уходить в feedback-loop при auto-height родителе, что давало чрезмерно плотный/мелкий периметр.
+  Файлы: `src/components/QuantizedPerimeter.astro`, `src/components/CasesCardsSection.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Playwright (`http://127.0.0.1:4173/`, viewport `1360x2200`) подтверждает `more card`: `data-perimeter-edge-pattern=scallop`, `step=48`, `rows=8`, `cols=17`, `data-ready=true`, размер `816x408`; секция `cases-cards-section=816x1416`; `noHorizontalScroll=true`; offsets description-стрелок `left(155,-14)` и `right(604,34)`; footer-regression ok (`edges=top`, `step=40`, `ready=true`); `CaseCard` hover/mask ok (`data-hover-active false->true->false`, arrow/asset opacity 0->1->0, `clipContentToShape=true`, mask присутствует).
+
+- 2026-03-14: Исправлен runaway-height у `more card` в `cases cards section`: контейнер `QuantizedPerimeter` зафиксирован по высоте `408px`.
+  Причина: browser-check на desktop (`1360`) показал некорректную квантизацию высоты (`~570k px`) при `min-height` без фиксированной высоты, что растягивало секцию целиком.
+  Файлы: `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Playwright (`http://127.0.0.1:4173/`) подтверждает `cases-cards-section 816x1416`, `cases-more-card 816x408`, `description` стрелки `left(155,-14)` и `right(604,34)`, `gap`-контракты `24/72`, `noHorizontalScroll=true`, `data-perimeter-edge-pattern=scallop`, hover-контракт `CaseCard` (`data-hover-active false -> true -> false`, arrow/asset opacity корректны).
+
+- 2026-03-14: На главной странице внедрён новый `cases cards section` по Figma `26:1898` (2 `CaseCard`, description с absolute-стрелками, и статичный `more cases are coming` на `QuantizedPerimeter`).
+  Причина: заменить прежний `Featured cases` блок на согласованную структуру 1:1 с переиспользованием существующих компонентов и QScallop-периметра.
+  Файлы: `src/components/CasesCardsSection.astro`, `src/components/Badge.astro`, `src/pages/index.astro`, `src/styles/global.css`, `public/media/cases/section/*`.
+  Проверки: `npm run build` — успешно; `rg -n "cases-cards-section|cases-cards-description|cases-more-card|data-perimeter-edge-pattern=\"scallop\"" dist/index.html` подтверждает новый DOM-контракт и scallop-perimeter у `more card`; браузерная проверка Playwright не выполнена из-за локального launcher-конфликта (`Opening in existing browser session`).
+
+- 2026-03-14: Для `CaseCard` внедрён opt-in clip по scallop-форме (`clipContentToShape`) с генерацией runtime mask из фактического SVG-периметра.
+  Причина: обложка кейса должна рендериться в границах scallop-контейнера, без подмены формы обычным прямоугольным `border-radius`.
+  Файлы: `src/components/QuantizedPerimeter.astro`, `src/components/QuantizedScallop.astro`, `src/components/CaseCard.astro`, `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Playwright (`http://127.0.0.1:4174`) подтверждает для `CaseCard`: `data-perimeter-clip-content-to-shape=true`, наличие `--perimeter-content-mask`, `mask-image != none` у `.scallop-content`; для footer: `clip=false`, `mask-image=none`; при hover у cover `::after` — `opacity=1`, `maskImage!=none`, цвет обводки совпадает с case-токеном.
+
+- 2026-03-14: В `/preview` добавлены новые компоненты `CaseCard` и `Badge` для живой проверки текущей реализации карточек кейсов.
+  Причина: нужен отдельный playground-блок с уже внедрённым `CaseCard`/`Badge`, чтобы быстро проверять визуал и интеракции без перехода на `/` и `/cases`.
+  Файлы: `src/pages/preview.astro`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Playwright (`http://127.0.0.1:4174`) подтверждает наличие секции `Case Card components`, рендер `Badge` (`Redesign`, `Startup`) и `CaseCard` для `fora/kissa`.
+
+- 2026-03-14: Повторно выполнены браузерные интерактивные тесты `CaseCard` после закрытия блокирующей Chrome-сессии.
+  Причина: ранее Playwright не запускался из-за открытого браузерного профиля, требовалась повторная верификация hover/focus поведения.
+  Файлы: без изменений кода (runtime-проверка), `tasks/logs.md`.
+  Проверки: Playwright (`http://127.0.0.1:4174`) на `/` и `/preview` — `hoverActive: false -> true -> false`, `case-card-arrow opacity: 0 -> 1 -> 0`, `hover asset opacity: 0 -> 1 -> 0`; keyboard focus на ссылке внутри карточки активирует `hoverActive: true`.
+
+- 2026-03-14: Реализован новый `CaseCard` по Figma для `fora/kissa` с reusable `Badge`, hover-ассетами на spring-анимации и instant-переключением обводки/стрелки; карточки переведены в layout "одна в строке".
+  Причина: внедрить согласованный дизайн карточек и унифицировать hover-логику для существующих кейсов с разными ассетами/позициями/цветом обводки.
+  Файлы: `src/components/Badge.astro`, `src/components/CaseCard.astro`, `src/data/cases.ts`, `src/styles/global.css`, `public/media/cases/*`, `public/media/icons/cases/*`.
+  Проверки: `npm run build` — успешно; `rg -n "step = 48|step={40}|cardHover|data-hover-active"` подтверждает глобальный дефолт `step=48` в `Quantized*`, явный override `footer step={40}` и подключение нового hover-контракта карточек.
+
+- 2026-03-14: Обновлён глобальный дефолт scallop-диаметра (`step`) с `40` на `48` в runtime-компонентах.
+  Причина: новые сетки и кейс-карточки собраны под `d=48`; явные локальные значения сохранены без изменений.
+  Файлы: `src/components/QuantizedPerimeter.astro`, `src/components/QuantizedScallop.astro`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "step = 48|step={40}" src/components` — подтверждено.
+
 - 2026-03-14: Для home зафиксирован вертикальный offset секции hero как `Y=240` через отдельный модификатор layout-контейнера.
   Причина: закрепить согласованный контракт вертикального ритма по Figma для первого блока без влияния на другие страницы.
   Файлы: `src/pages/index.astro`, `src/styles/global.css`, `tasks/logs.md`.
@@ -468,3 +563,23 @@
   Причина: при HMR/prefetch в dev мог подхватываться stale CSS-снимок с устаревшей геометрией coin; позиция сбивалась после возврата на home.
   Файлы: `src/pages/index.astro`, `src/components/SiteHeader.astro`, `src/styles/global.css`, `tasks/logs.md`, `tasks/lessons.md`.
   Проверки: `npm run build` — успешно; Playwright dev (`http://127.0.0.1:4322/`) 5 циклов `home -> cases -> home` — `offsetLeft=578`, `offsetTop=-26`, `leftComputed=578px`, `hasHorizontalScroll=false` на каждом цикле; Playwright preview (`http://127.0.0.1:4173/`) до/после цикла `home -> cases -> home` — те же значения без регрессии.
+
+- 2026-03-14: Доработан `CaseCard` по hover/layering-контракту: `kissa` с правой обложкой, ассеты за карточкой, stagger-delay и масочная обводка по scallop-периметру.
+  Причина: исправить рассинхрон с Figma в геометрии/слоях карточки и удержать единый hover-механизм без slug-хардкода.
+  Файлы: `src/data/cases.ts`, `src/components/CaseCard.astro`, `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; в `dist/index.html` и `dist/cases/index.html` подтверждены `data-cover-side="right"` для `kissa`, правый порядок `text -> cover`, и `--case-card-asset-z` для hover-ассетов.
+
+- 2026-03-14: Внедрён `CaseCard v2.1`: нижний hover-ассет выше верхнего, spring `0.4/0.2`, и новая scallop-обводка через opt-in outline API `QuantizedPerimeter`.
+  Причина: устранить оставшийся дефект обводки и синхронизировать stacking/motion-контракт с актуальным Figma.
+  Файлы: `src/components/QuantizedPerimeter.astro`, `src/components/QuantizedScallop.astro`, `src/components/CaseCard.astro`, `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Playwright (`http://127.0.0.1:4174/cases`) подтвердил `data-perimeter-outline-enabled=true`, `outline opacity 0 -> 1` при hover, z-order ассетов `top=1 / bottom=2`, delay `0 / 0.15`; скриншоты `tmp/case-fora-hover-v21.png`, `tmp/case-kissa-hover-v21.png`.
+
+- 2026-03-14: Переведена scallop-обводка `CaseCard` на геометричный контур без blur (`outlineMode='geometric'`), с fallback `alpha` для других форм/паттернов.
+  Причина: filter-based ring давал мягкие/неровные края; требовалась ровная векторная обводка по периметру scallop.
+  Файлы: `src/components/QuantizedPerimeter.astro`, `src/components/QuantizedScallop.astro`, `src/components/CaseCard.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Playwright (`http://127.0.0.1:4174/cases`) подтвердил для cover `data-perimeter-outline-mode='geometric'`, наличие `path` с `vector-effect='non-scaling-stroke'` и отсутствие `feMorphology/feComposite` в outline-слое; screenshot 100%: `tmp/case-fora-outline-geometric-100.png`; дополнительный zoom-стресс скрин через CSS-scale (approx 200%): `tmp/case-fora-outline-geometric-200-sim.png`.
+
+- 2026-03-14: Для типографического токена `description` добавлен lowercase-трансформ.
+  Причина: по уточнению пользователя `description` должен рендериться в нижнем регистре на уровне токена, а не локальных переопределений.
+  Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "type-description-text-transform|text-transform: var\(--type-description-text-transform\)" src/styles/global.css` подтверждает токен и его применение в `.type-description`.

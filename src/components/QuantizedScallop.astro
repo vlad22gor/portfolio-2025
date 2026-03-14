@@ -13,13 +13,21 @@ interface Props {
   label?: string;
   bg?: string;
   pad?: string;
+  clipContentToShape?: boolean;
+  exportShapeMask?: boolean;
+  outlineEnabled?: boolean;
+  outlineMode?: 'alpha' | 'geometric';
+  outlinePlacement?: 'center' | 'outside';
+  outlineWidth?: number;
+  outlineColor?: string;
+  outlineOpacity?: number;
 }
 
 const {
   class: className = '',
   shape = 'rectangle',
   rectangleEdges = 'all',
-  step = 40,
+  step = 48,
   minCols = 12,
   minRows = 8,
   minLobes = 8,
@@ -27,6 +35,14 @@ const {
   label = 'Quantized scallop surface',
   bg,
   pad,
+  clipContentToShape = false,
+  exportShapeMask = false,
+  outlineEnabled = false,
+  outlineMode = 'alpha',
+  outlinePlacement = 'center',
+  outlineWidth,
+  outlineColor,
+  outlineOpacity,
 } = Astro.props;
 
 const resolvedEdges = rectangleEdges === 'top' ? 'top' : 'all';
@@ -45,6 +61,14 @@ const resolvedEdges = rectangleEdges === 'top' ? 'top' : 'all';
   label={label}
   bg={bg}
   pad={pad}
+  clipContentToShape={clipContentToShape}
+  exportShapeMask={exportShapeMask}
+  outlineEnabled={outlineEnabled}
+  outlineMode={outlineMode}
+  outlinePlacement={outlinePlacement}
+  outlineWidth={outlineWidth}
+  outlineColor={outlineColor}
+  outlineOpacity={outlineOpacity}
 >
   <slot />
 </QuantizedPerimeter>
