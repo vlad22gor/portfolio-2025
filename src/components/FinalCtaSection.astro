@@ -1,0 +1,41 @@
+---
+import QuantizedWave from './QuantizedWave.astro';
+import Button from './Button.astro';
+---
+
+<section class="final-cta-section" aria-labelledby="final-cta-title">
+  <div class="final-cta-divider-bleed" aria-hidden="true">
+    <QuantizedWave size="large" fit="cover-full" class="final-cta-wave" />
+  </div>
+
+  <div class="final-cta-content">
+    <p class="final-cta-subtitle type-t2">match the vibe?</p>
+
+    <div class="final-cta-title-wrap">
+      <img
+        class="final-cta-orb"
+        src="/media/motifs/motif-stack-orb-3-blue.svg"
+        alt=""
+        loading="lazy"
+        decoding="async"
+      />
+      <h2 id="final-cta-title" class="final-cta-title type-t1">
+        <span>creating</span>
+        <span>together</span>
+      </h2>
+    </div>
+
+    <div class="final-cta-actions">
+      <p class="final-cta-copy type-body">
+        I'd love to become a part of a kind, like-minded crew and build together something meaningful we can be proud
+        of
+      </p>
+      <div class="final-cta-buttons">
+        <Button href="https://linktr.ee/vladhorovyy" target="_blank">message me</Button>
+        <Button href="https://www.linkedin.com/in/vladhorovyy/" target="_blank" variant="bordered">
+          my linkedin
+        </Button>
+      </div>
+    </div>
+  </div>
+</section>

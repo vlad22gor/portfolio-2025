@@ -1,5 +1,15 @@
 # Logs
 
+- 2026-03-15: По пользовательским правкам донастроен `final CTA`: divider сделан full-width, фон секции убран, motif переведён в синий asset.
+  Причина: требовалась визуальная правка блока под референс — full-width divider без фоновой плашки и синим мотивом при сохранении Y-контрактов.
+  Файлы: `src/components/FinalCtaSection.astro`, `src/styles/global.css`, `public/media/motifs/motif-stack-orb-3-blue.svg`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Playwright (`http://127.0.0.1:4173/`, `1360x2200`) подтверждает `hero=240`, `cases=1320`, `design=3024`, `about=3744`, `quotes=5112`, `finalCTA=6000`, `footer=7080`, `finalCTAHeight=894`, `data-wave-size=large`, `dividerRect=0..1360`, `ctaBg=transparent`, `motifSrc=/media/motifs/motif-stack-orb-3-blue.svg`, `horizontalOverflow=false`.
+
+- 2026-03-15: Реализована секция `final cta section` на главной по Figma `29:1636` с divider `QuantizedWave large`; сохранён контракт `footer Y=7080`.
+  Причина: добавить финальный CTA-блок перед футером и зафиксировать вертикальные контракты (`quotes=5112`, `final cta=6000`, `footer=7080`) без изменения визуала footer.
+  Файлы: `src/components/FinalCtaSection.astro`, `src/pages/index.astro`, `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Playwright (`http://127.0.0.1:4173/`, `1360x2200`) подтверждает `hero=240`, `cases=1320`, `design=3024`, `about=3744`, `quotes=5112`, `finalCTA=6000`, `footer=7080`, `finalCTAHeight=894`, `data-wave-size=large`, `horizontalOverflow=false`. Для full-width внутри `main` использован breakout через внутренний `.final-cta-surface`; grid-track `main` остался `816px`.
+
 - 2026-03-15: Divider-волны в `design tools` выровнены по правому краю, как текстовые лейблы.
   Причина: требовалось, чтобы волна в каждом span «заканчивалась справа», а не начиналась слева.
   Файлы: `src/components/DesignToolsSection.astro`, `tasks/lessons.md`, `tasks/logs.md`.

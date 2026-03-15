@@ -1212,6 +1212,123 @@ img.home-hero-asset {
   height: 12px;
 }
 
+.final-cta-section {
+  width: 100%;
+  min-width: 0;
+  justify-self: center;
+  height: 894px;
+  min-height: 894px;
+  max-height: 894px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 186px;
+}
+
+.page-shell--home > .final-cta-section {
+  margin-top: 202px;
+  margin-bottom: 138px;
+}
+
+.final-cta-divider-bleed {
+  position: relative;
+  left: 50%;
+  width: 100vw;
+  height: 30px;
+  transform: translateX(-50%);
+}
+
+.final-cta-divider-bleed .quantized-wave {
+  width: 100%;
+  max-width: none;
+  height: 30px;
+  color: var(--color-accent-green);
+  opacity: 0.75;
+}
+
+.final-cta-divider-bleed .quantized-wave .wave-frame {
+  height: 30px;
+}
+
+.final-cta-content {
+  width: min(100%, var(--desktop-breakpoint));
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 96px;
+}
+
+.final-cta-subtitle {
+  width: 100%;
+  margin: 0;
+  color: var(--color-text-default);
+  text-align: center;
+}
+
+.final-cta-title-wrap {
+  position: relative;
+  width: 100%;
+  height: 300px;
+}
+
+.final-cta-orb {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 300px;
+  height: 300px;
+  transform: translateX(-50%);
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+.final-cta-title {
+  position: absolute;
+  top: 74px;
+  left: 50%;
+  width: 874px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  color: var(--color-text-default);
+  text-align: center;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.final-cta-title > span {
+  display: block;
+}
+
+.final-cta-title > span:last-child {
+  text-align: right;
+}
+
+.final-cta-actions {
+  width: 479px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.final-cta-copy {
+  width: 100%;
+  margin: 0;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.final-cta-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .design-tools-top {
   width: 100%;
   min-height: 124px;
