@@ -1,0 +1,41 @@
+---
+import QuantizedPerimeter from './QuantizedPerimeter.astro';
+---
+
+<QuantizedPerimeter
+  class="about-me-section"
+  shape="rectangle"
+  edgePattern="scallop"
+  step={48}
+  bg="var(--color-bg-darkened)"
+  pad="72px"
+  label="About me QScallop section"
+>
+  <div class="about-me-top">
+    <p class="about-me-top-text about-me-top-text--left type-t4">design with care</p>
+    <p class="about-me-top-text about-me-top-text--center type-t4">kindness</p>
+    <p class="about-me-top-text about-me-top-text--right type-t4">meaningful visuals</p>
+  </div>
+
+  <div class="about-me-bottom">
+    <div class="about-me-hero" aria-hidden="true">
+      <img class="about-me-arch" src="/media/home/about-arch.svg" alt="" loading="lazy" decoding="async" />
+      <img class="about-me-photo" src="/media/home/about-photo.jpg" alt="" loading="lazy" decoding="async" />
+    </div>
+
+    <div class="about-me-copy">
+      <h2 class="about-me-title type-t1-compact">good people first</h2>
+
+      <div class="about-me-body">
+        <div class="about-me-column type-body">
+          <p>I build systems that turn complex features into simple, engaging interactions. By helping people create useful routines, I make products feel natural in their daily lives.</p>
+          <p>Since 2021 I've been deep into visual design, 3D, and micro-animation - small, purposeful moments that make products feel alive at first glance</p>
+        </div>
+        <div class="about-me-column type-body">
+          <p>I care a lot about who I build with. I value kind, curious teammates and try to keep collaboration light, focused, and a little fun.</p>
+          <p>Outside of work I'm into cognitive typology (ISFP here), play piano, tend a bonsai, and can disappear for hours into a good strategy game</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</QuantizedPerimeter>

@@ -299,7 +299,45 @@ const initialStyle = `${
       svg.innerHTML = `<path class="wave-path" d="${commands.join(' ')}" fill="none" stroke="currentColor" stroke-width="${round3(strokeWidth)}" stroke-linecap="butt"></path>`;
     };
 
+    const resolveGridSlotWidth = (root, parent) => {
+      const parentStyle = window.getComputedStyle(parent);
+      if (parentStyle.display !== 'grid' && parentStyle.display !== 'inline-grid') {
+        return 0;
+      }
+
+      const rootStyle = window.getComputedStyle(root);
+      const columnStart = Number.parseInt(rootStyle.gridColumnStart, 10);
+      const columnEnd = Number.parseInt(rootStyle.gridColumnEnd, 10);
+      if (!Number.isFinite(columnStart) || !Number.isFinite(columnEnd) || columnEnd <= columnStart) {
+        return 0;
+      }
+
+      const trackSizes = parentStyle.gridTemplateColumns
+        .split(' ')
+        .map((token) => Number.parseFloat(token))
+        .filter((value) => Number.isFinite(value) && value > 0);
+      if (!trackSizes.length || columnEnd - 1 > trackSizes.length) {
+        return 0;
+      }
+
+      const spannedTracks = trackSizes.slice(columnStart - 1, columnEnd - 1);
+      if (!spannedTracks.length) {
+        return 0;
+      }
+
+      const trackWidth = spannedTracks.reduce((sum, value) => sum + value, 0);
+      const internalGaps = Math.max(0, columnEnd - columnStart - 1);
+      const columnGap = Number.parseFloat(parentStyle.columnGap);
+      const gapWidth = Number.isFinite(columnGap) ? columnGap : 0;
+      return Math.floor(trackWidth + internalGaps * gapWidth);
+    };
+
     const resolveAvailableWidth = (root, parent) => {
+      const gridSlotWidth = resolveGridSlotWidth(root, parent);
+      if (gridSlotWidth > 1) {
+        return gridSlotWidth;
+      }
+
       const directWidth = Math.floor(parent.clientWidth);
       if (directWidth > 1) {
         return directWidth;
@@ -314,7 +352,7 @@ const initialStyle = `${
         current = current.parentElement;
       }
 
-      const ownWidth = Math.floor(root.clientWidth);
+      const ownWidth = Math.floor(root.clientWidth || root.getBoundingClientRect().width);
       return ownWidth > 1 ? ownWidth : 1;
     };
 

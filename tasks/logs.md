@@ -1,5 +1,60 @@
 # Logs
 
+- 2026-03-15: Divider-волны в `design tools` выровнены по правому краю, как текстовые лейблы.
+  Причина: требовалось, чтобы волна в каждом span «заканчивалась справа», а не начиналась слева.
+  Файлы: `src/components/DesignToolsSection.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "design-tools-wave-span-[1-5]|data-wave-fit=\"cover\"|data-wave-align=\"right\"" dist/index.html` подтверждает 5 span-классов, `fit=\"cover\"` и `align=\"right\"`; browser-check (`1360px`) подтверждает привязку правого края каждой волны к правой границе своего span, без деформации (`width = count * 8`).
+
+- 2026-03-15: Усилена центровка заголовка `good people first` в секции `about me`.
+  Причина: требовалось явно гарантировать центровку заголовка относительно секции и центральное выравнивание текста.
+  Файлы: `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно.
+
+- 2026-03-15: Исправлена геометрия divider-волн в `design tools` без деформации path: расчёт count привязан к ширине конкретного grid-span, а не к общей строке.
+  Причина: при вычислении от ширины `816` меньшие span-волны визуально ужимались по X; требовалась «хедерная» квантизация длины через удаление лишних кружков.
+  Файлы: `src/components/QuantizedWave.astro`, `src/components/DesignToolsSection.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "design-tools-wave-span-[1-5]|Perplexity|data-wave-fit=\"cover\"" dist/index.html` подтверждает `fit=\"cover\"`, 5 span-классов и замену лейбла; Playwright (`http://127.0.0.1:4174/`, `1360x2200`) подтверждает для 5 divider-волн `data-wave-count-resolved = 17/38/59/80/101`, slot-width `144/312/480/648/816`, `waveWidth = count * 8`, `geometryScale=1` (без горизонтального растяжения path); регрессия header wave-rail не выявлена (`rail fit=cover-bleed`, fallback active fit=cover).
+
+- 2026-03-15: Исправлено вертикальное выравнивание колонок `about me`: удалено глобальное смещение `.type-body + .type-body`, добавлен явный top-align сетки.
+  Причина: правило для соседних `type-body` контейнеров опускало вторую колонку на `10px`; требовался старт обеих колонок по верхнему краю родителя.
+  Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "\\.type-body \\+ \\.type-body|\\.type-body p \\+ p|about-me-body|align-items: start|align-content: start" src/styles/global.css` подтверждает удаление проблемного правила, сохранение `p + p` и top-align в `about`.
+
+- 2026-03-15: В правой колонке `about me` восстановлены два абзаца для визуализации глобального `type-body` paragraph spacing.
+  Причина: при одном абзаце spacing `10px` не проявлялся визуально; требовалось показать интервал между параграфами по токену.
+  Файлы: `src/components/AboutMeQScallopSection.astro`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно.
+
+- 2026-03-15: Добавлен глобальный paragraph spacing для токена `type-body` (`10px`) и подключён в `about`/`quotes` без локальных дублей.
+  Причина: в Figma style `body` зафиксирован `Paragraph spacing = 10`, которого не было в глобальной типографике.
+  Файлы: `src/styles/global.css`, `src/components/AboutMeQScallopSection.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "type-body-paragraph-spacing|\\.type-body p \\+ p|\\.type-body \\+ \\.type-body" src/styles/global.css` подтверждает токен и глобальные правила; `rg -n "quotes-copy p \\+ p" src/styles/global.css` — совпадений нет.
+
+- 2026-03-15: Исправлены divider-волны в `design tools section`: убрано сжатие, заданы span по колонкам `1->5` справа налево, и заменён лейбл `v0 ⁕ Lovable` на `Perplexity`.
+  Причина: divider-волны использовали `design-tools-col-*` (только старт колонки), из-за чего все рендерились шириной одной колонки вместо `1/2/3/4/5`.
+  Файлы: `src/components/DesignToolsSection.astro`, `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -o "design-tools-wave-span-[1-5]" dist/index.html | sort | uniq -c` подтверждает по одному экземпляру каждого span-класса; `rg -n "Perplexity|design-tools-wave-span-[1-5]" dist/index.html` подтверждает замену лейбла и подключение новых классов волн; `rg -n "design-tools-wave-span-[1-5]" src/styles/global.css` подтверждает mapping `5/6`, `4/6`, `3/6`, `2/6`, `1/6`. Браузерная проверка Playwright на `1360px` не выполнена из-за локального launcher-конфликта Chrome (`Opening in existing browser session`).
+
+- 2026-03-15: Реализована секция `quotes` на главной по Figma `26:2185` и синхронизирован порядок секций `/` под макет (`hero -> cases -> design -> about -> quotes`).
+  Причина: добавить блок отзывов 1:1 по desktop-контракту (`816x654`, `Y=5112`) и устранить рассинхрон порядка секций относительно Figma.
+  Файлы: `src/components/QuotesSection.astro`, `src/pages/index.astro`, `src/styles/global.css`, `public/media/home/quotes/quote-open-large.svg`, `public/media/home/quotes/quote-close-large.svg`, `public/media/home/quotes/quote-open-small.svg`, `public/media/home/quotes/quote-close-small.svg`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "quotes-section|Eugenia Vyshnytska|Egor Privalov|Ivan Shevchenko|more on linkedin|linkedin.com/in/vladhorovyy" dist/index.html` подтверждает DOM/контент/ссылку; Playwright (`http://127.0.0.1:4173/`, `1360x2200`) подтверждает Y-контракты в координатах `main`: `hero=240`, `cases=1320`, `design=3024`, `about=3744`, `quotes=5112`, `quotesHeight=654`, `horizontalOverflow=false`. Для точного попадания в Y скорректированы offsets с учётом `page-shell` `grid gap: 32px` (`about margin-top: 190px`, `quotes margin-top: 185px`).
+
+- 2026-03-15: Убран лишний абзац в правой колонке текста секции `about me (QScallop)` — оставлен один объединённый абзац.
+  Причина: пользователь подтвердил, что в блоке должен быть только один абзац вместо двух.
+  Файлы: `src/components/AboutMeQScallopSection.astro`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно.
+
+- 2026-03-15: Реализована секция `about me (QScallop)` на главной по Figma `28:3272` и подключена после `cases cards section`.
+  Причина: добавить новый блок `About Me` с периметром `QuantizedPerimeter` и зафиксировать desktop-контракт по вертикали (`Y=3744`) в текущем layout.
+  Файлы: `src/components/AboutMeQScallopSection.astro`, `src/pages/index.astro`, `src/styles/global.css`, `public/media/home/about-arch.svg`, `public/media/home/about-photo.jpg`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "about-me-section|meaningful visuals|data-perimeter-edge-pattern=\"scallop\"|data-perimeter-step=\"48\"" dist/index.html` подтверждает рендер секции, текстовый контракт и perimeter-атрибуты; `rg -n "about-arch.svg|about-photo.jpg" dist/index.html` подтверждает подключение ассетов из `public/media/home`; browser-проверка геометрии (`1360px`, фактический `Y`) не выполнена из-за локального launcher-конфликта Playwright/Chrome (`Opening in existing browser session`).
+
+- 2026-03-15: Реализован `design tools section` на главной по Figma `28:3110` (desktop) с правым выравниванием label-ов по 5-колоночной сетке и divider-ами `QuantizedWave small`.
+  Причина: добавить новый блок после `cases cards section` с упрощённой колонной моделью divider-ов и сохранить вертикальный контракт `Y≈3024` через локальный offset.
+  Файлы: `src/components/DesignToolsSection.astro`, `src/pages/index.astro`, `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -o "design-tools-label-row" dist/index.html | wc -l` => `5`; `rg -o "design-tools-divider-row" dist/index.html | wc -l` => `5`; `rg -n "design-tools-section|data-wave-size=\"small\"|v0 ⁕ Lovable" dist/index.html` подтверждает секцию, small-divider-рендер и текстовый контракт.
+
 - 2026-03-15: Разделены длительности hover-анимации `CaseCard`: mouse-in `0.4`, mouse-out `0.6`.
   Причина: требовалось сохранить более быстрый вход и оставить более мягкий выход.
   Файлы: `src/components/CaseCard.astro`, `tasks/lessons.md`, `tasks/logs.md`.
@@ -583,3 +638,33 @@
   Причина: по уточнению пользователя `description` должен рендериться в нижнем регистре на уровне токена, а не локальных переопределений.
   Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
   Проверки: `npm run build` — успешно; `rg -n "type-description-text-transform|text-transform: var\(--type-description-text-transform\)" src/styles/global.css` подтверждает токен и его применение в `.type-description`.
+
+- 2026-03-15: Обновлён stagger-delay второго hover-ассета в `CaseCard` до `0.08s`.
+  Причина: синхронизировать скорость появления второго ассета с актуальным motion-контрактом карточек.
+  Файлы: `src/components/CaseCard.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; сборка маршрутов `/`, `/cases`, `/preview`, `/gallery`, `/fora`, `/kissa` выполнена без ошибок.
+
+- 2026-03-15: Откреплён `SiteHeader` от viewport и убрана компенсация fixed-хедера в основном контейнере.
+  Причина: хедер должен прокручиваться вместе со страницей (как футер), без лишней пустой полосы перед контентом.
+  Файлы: `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `npm run astro -- check` в текущем окружении зависал без вывода (несколько запусков), процесс остановлен через `pkill -f "astro check"`; Playwright smoke (`http://127.0.0.1:4325`) для `/`, `/cases`, `/gallery`, `/preview` подтвердил `position: static`, `headerMovedWithScroll=true`, `mainPaddingTop=36px` на `/cases|/gallery|/preview` и `240px` на `/` (контракт `page-shell--home`), soft-nav `/ -> /cases -> /gallery` сохраняет `aria-current` (`activeId=gallery`) и `wave-rail`.
+
+- 2026-03-15: Убрана лишняя верхняя дистанция у `home hero` после открепления хедера.
+  Причина: при `SiteHeader position: static` высота хедера стала участвовать в потоке, и `page-shell--home: 240px` давал визуально завышенный `Y` (`header + 240`).
+  Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg` подтверждает формулу `page-shell--home { padding-top: calc(240px - var(--site-header-height)); }` и токены `--site-header-top-padding=56`, `--site-header-button-height=40`, `--site-header-height=calc(...)`; `rg` по `src/pages/index.astro` подтверждает порядок `<SiteHeader />` перед `<main class="page-shell page-shell--home">` (источник дополнительного вертикального сдвига при статичном хедере).
+
+- 2026-03-15: Убран скачок `home hero` на reload за счёт стабилизации layout-контракта `wave-rail` fallback в хедере.
+  Причина: при `data-wave-rail-ready=false` активная кнопка временно меняла вертикальную геометрию (`--header-button-gap` и `height` fallback-контейнера), что с `SiteHeader position: static` сдвигало весь контент.
+  Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "data-wave-variant='wave-rail'.*header-button|header-button-wave-container" src/styles/global.css` подтверждает новые селекторы: gap=0 для `wave-rail` независимо от `ready`, `height:0` для active fallback-контейнера в `wave-rail`, и `ready=true`-правило только с `opacity:0`; Playwright smoke не выполнен из-за локального launcher-конфликта Chrome (`Opening in existing browser session`).
+
+- 2026-03-15: Зафиксирован размер `Badge` и сохранена визуальная Y-компенсация по лейблу.
+  Причина: `min-height: 22px` не гарантировал строгое внешнее `22px`; требовался детерминированный размер с оптическим смещением текста вниз на `1px`.
+  Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "case-badge|box-sizing: border-box|height: 22px|padding: 1px 8px 0" src/styles/global.css` подтверждает контракт (`height=22`, `box-sizing=border-box`, `padding-top=1`, `padding-bottom=0`).
+
+- 2026-03-15: Убрано наложение «второй волны» в `Header` после reload для `wave-rail`.
+  Причина: конфликт специфичности CSS — правило показа fallback-волны активной кнопки перекрывало скрытие при `data-wave-rail-ready='true'`, из-за чего fallback оставался видимым вместе с rail-волной.
+  Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg` подтверждает новые фазовые селекторы: fallback-показ только для `:not([data-wave-rail-ready='true'])`, а в `ready=true` fallback скрывается с `opacity: 0` и `visibility: hidden` (включая `.header-button.active .header-button-wave-container` для равной/большей специфичности).
