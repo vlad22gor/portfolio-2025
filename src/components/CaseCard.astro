@@ -5,9 +5,11 @@ import QuantizedScallop from './QuantizedScallop.astro';
 
 interface Props {
   item: Case;
+  inViewPreset?: 'appear-v1';
 }
 
-const { item } = Astro.props;
+const { item, inViewPreset } = Astro.props;
+const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefined;
 const visibleTags = item.tags.slice(0, 2);
 const isCoverRight = item.coverSide === 'right';
 const assetStackOrder = new Map<number, number>();
@@ -31,6 +33,7 @@ const arrowAssetPath =
   data-hover-active="false"
   data-cover-side={item.coverSide}
   data-case-card-design-width={String(item.cardHover.designWidth ?? 874)}
+  data-motion-inview={resolvedInViewPreset}
   style={`--case-card-hover-border: ${item.cardHover.borderColor};`}
 >
   {!isCoverRight && (

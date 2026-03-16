@@ -4,6 +4,7 @@ import QuantizedPerimeter from './QuantizedPerimeter.astro';
 
 <QuantizedPerimeter
   class="about-me-section"
+  inViewPreset="appear-v1"
   shape="rectangle"
   edgePattern="scallop"
   step={48}
@@ -19,7 +20,22 @@ import QuantizedPerimeter from './QuantizedPerimeter.astro';
 
   <div class="about-me-bottom">
     <div class="about-me-hero" aria-hidden="true">
-      <img class="about-me-arch" src="/media/home/about-arch.svg" alt="" loading="lazy" decoding="async" />
+      <svg
+        class="about-me-arch"
+        data-motion-inview="about-arch-trim-v1"
+        viewBox="0 0 536 268"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path
+          data-motion-trim-path
+          d="M40 268C40 142.079 142.079 40 268 40C393.921 40 496 142.079 496 268"
+          stroke="#CDA476"
+          stroke-width="80"
+        ></path>
+      </svg>
       <img class="about-me-photo" src="/media/home/about-photo.jpg" alt="" loading="lazy" decoding="async" />
     </div>
 

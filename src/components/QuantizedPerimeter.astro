@@ -30,6 +30,7 @@ interface Props {
   outlineWidth?: number;
   outlineColor?: string;
   outlineOpacity?: number;
+  inViewPreset?: 'appear-v1';
 }
 
 const {
@@ -62,6 +63,7 @@ const {
   outlineWidth,
   outlineColor,
   outlineOpacity,
+  inViewPreset,
 } = Astro.props;
 
 const resolvedShape = shape === 'circle' ? 'circle' : 'rectangle';
@@ -98,6 +100,7 @@ if (typeof outlineOpacity === 'number' && Number.isFinite(outlineOpacity)) {
 }
 
 const rootStyle = styleParts.join(' ');
+const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefined;
 ---
 
 <div
@@ -131,6 +134,7 @@ const rootStyle = styleParts.join(' ');
   data-scallop-min-cols={String(minCols)}
   data-scallop-min-rows={String(minRows)}
   data-scallop-min-lobes={String(minLobes)}
+  data-motion-inview={resolvedInViewPreset}
   style={rootStyle}
   aria-label={label}
   tabindex={resolvedHoverAnimationEnabled ? '0' : undefined}

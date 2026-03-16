@@ -10,12 +10,13 @@ const kissaCase = CASES.find((item) => item.slug === 'kissa');
 
 <section class="cases-cards-section" aria-label="Cases cards section">
   <div class="cases-cards-list">
-    {foraCase && <CaseCard item={foraCase} />}
+    {foraCase && <CaseCard item={foraCase} inViewPreset="appear-v1" />}
 
-    <div class="cases-cards-description">
+    <div class="cases-cards-description" data-motion-inview="appear-v1">
       <p class="cases-cards-description-label type-description">Click on cases to learn more about the projects</p>
       <img
         class="cases-cards-description-arrow cases-cards-description-arrow--left"
+        data-motion-inview="cases-arrow-left-v1"
         src="/media/cases/section/cases-cards-arrow-left.svg"
         alt=""
         aria-hidden="true"
@@ -24,6 +25,7 @@ const kissaCase = CASES.find((item) => item.slug === 'kissa');
       />
       <img
         class="cases-cards-description-arrow cases-cards-description-arrow--right"
+        data-motion-inview="cases-arrow-right-v1"
         src="/media/cases/section/cases-cards-arrow-right.svg"
         alt=""
         aria-hidden="true"
@@ -32,11 +34,12 @@ const kissaCase = CASES.find((item) => item.slug === 'kissa');
       />
     </div>
 
-    {kissaCase && <CaseCard item={kissaCase} />}
+    {kissaCase && <CaseCard item={kissaCase} inViewPreset="appear-v1" />}
   </div>
 
   <QuantizedPerimeter
     class="cases-more-card"
+    inViewPreset="appear-v1"
     shape="rectangle"
     edgePattern="scallop"
     step={48}

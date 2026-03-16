@@ -1,0 +1,740 @@
+<script>
+  import { animate, inView } from 'motion';
+
+  (() => {
+    const runtimeKey = '__inViewAppearRuntime';
+    if (window[runtimeKey]) {
+      window[runtimeKey].mount();
+      return;
+    }
+
+    const selector = '[data-motion-inview]';
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const observers = new Map();
+    const completedSequences = new Set();
+    const sequenceEventName = 'motion:sequence-complete';
+    const baseTransition = { duration: 0.4, ease: [0.44, 0, 0.56, 1] };
+    const charSegmenter =
+      typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function'
+        ? new Intl.Segmenter(undefined, { granularity: 'grapheme' })
+        : null;
+    const wordSegmenter =
+      typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function'
+        ? new Intl.Segmenter(undefined, { granularity: 'word' })
+        : null;
+    const presets = {
+      'appear-v1': {
+        mode: 'element',
+        initialTransform: 'translate3d(0px, 50px, 0px)',
+        finalTransform: 'translate3d(0px, 0px, 0px)',
+        transition: baseTransition,
+      },
+      'cases-arrow-left-v1': {
+        mode: 'element',
+        initialTransform: 'translate3d(0px, 25px, 0px) scale(0.5)',
+        finalTransform: 'translate3d(0px, 0px, 0px) scale(1)',
+        transition: { ...baseTransition, delay: 0.3 },
+      },
+      'cases-arrow-right-v1': {
+        mode: 'element',
+        initialTransform: 'translate3d(0px, -25px, 0px) scale(0.5)',
+        finalTransform: 'translate3d(0px, 0px, 0px) scale(1)',
+        transition: { ...baseTransition, delay: 0.4 },
+      },
+      'design-tools-label-char-v1': {
+        mode: 'per-char',
+        initialTransform: 'rotate(45deg)',
+        finalTransform: 'rotate(0deg)',
+        transition: { duration: 0.45, bounce: 0.25 },
+        charDelay: 0.06,
+        rowDelayStep: 0.1,
+      },
+      'about-arch-trim-v1': {
+        mode: 'path-trim',
+        amount: 0.3,
+        transition: { duration: 0.6, bounce: 0.3 },
+      },
+      'quotes-main-word-v1': {
+        mode: 'per-word',
+        initialTransform: 'translate3d(0px, 10px, 0px)',
+        finalTransform: 'translate3d(0px, 0px, 0px)',
+        transition: { duration: 0.4, bounce: 0 },
+        wordDelay: 0.075,
+      },
+      'quotes-main-close-after-v1': {
+        mode: 'element-sequenced',
+        initialTransform: 'translate3d(0px, 10px, 0px)',
+        finalTransform: 'translate3d(0px, 0px, 0px)',
+        transition: { duration: 0.4, bounce: 0 },
+      },
+      'final-cta-morph-v1': {
+        mode: 'element-repeat',
+        amount: 0.7,
+        transition: { type: 'spring', duration: 0.6, bounce: 0.1, delay: 0 },
+        initialVariables: {
+          '--final-cta-title-gap': '350px',
+          '--final-cta-title-shift-x': '4px',
+          '--final-cta-orb-offset-y': '-10px',
+          '--final-cta-orb-rotate': '90deg',
+        },
+        finalVariables: {
+          '--final-cta-title-gap': '22px',
+          '--final-cta-title-shift-x': '0px',
+          '--final-cta-orb-offset-y': '0px',
+          '--final-cta-orb-rotate': '0deg',
+        },
+      },
+    };
+
+    const resolveBaseTransform = (element) => {
+      const inlineTransform = element.style.transform?.trim();
+      if (inlineTransform && inlineTransform !== 'none') {
+        return inlineTransform;
+      }
+      const computedTransform = window.getComputedStyle(element).transform;
+      if (!computedTransform || computedTransform === 'none') {
+        return '';
+      }
+      return computedTransform;
+    };
+
+    const composeTransform = (baseTransform, motionTransform) => {
+      if (!baseTransform) {
+        return motionTransform;
+      }
+      return `${baseTransform} ${motionTransform}`;
+    };
+
+    const isMotionNode = (value) => value instanceof HTMLElement || value instanceof SVGElement;
+
+    const parseNumericValue = (value) => {
+      if (typeof value !== 'string') {
+        return null;
+      }
+      const match = value.trim().match(/^(-?\d*\.?\d+)([a-z%]*)$/i);
+      if (!match) {
+        return null;
+      }
+      return { number: Number.parseFloat(match[1]), unit: match[2] ?? '' };
+    };
+
+    const interpolateNumericValue = (fromValue, toValue, progress) => {
+      const from = parseNumericValue(fromValue);
+      const to = parseNumericValue(toValue);
+      if (!from || !to || from.unit !== to.unit) {
+        return progress < 1 ? fromValue : toValue;
+      }
+      const value = from.number + (to.number - from.number) * progress;
+      return `${value}${from.unit}`;
+    };
+
+    const setCssVariables = (element, variables) => {
+      Object.entries(variables).forEach(([name, value]) => {
+        element.style.setProperty(name, value);
+      });
+    };
+
+    const emitSequenceComplete = (sequenceId) => {
+      if (!sequenceId) {
+        return;
+      }
+      if (completedSequences.has(sequenceId)) {
+        return;
+      }
+      completedSequences.add(sequenceId);
+      window.dispatchEvent(new CustomEvent(sequenceEventName, { detail: { id: sequenceId } }));
+    };
+
+    const onSequenceComplete = (sequenceId, callback) => {
+      const handler = (event) => {
+        if (!(event instanceof CustomEvent)) {
+          return;
+        }
+        if (event.detail?.id !== sequenceId) {
+          return;
+        }
+        callback();
+      };
+      window.addEventListener(sequenceEventName, handler);
+      return () => {
+        window.removeEventListener(sequenceEventName, handler);
+      };
+    };
+
+    const setInitial = (element, initialTransform) => {
+      element.style.opacity = '0';
+      element.style.transform = initialTransform;
+    };
+
+    const setFinal = (element, finalTransform) => {
+      element.style.opacity = '1';
+      element.style.transform = finalTransform;
+    };
+
+    const splitIntoGraphemes = (text) => {
+      if (!text) {
+        return [];
+      }
+      if (charSegmenter) {
+        return Array.from(charSegmenter.segment(text), (segment) => segment.segment);
+      }
+      return Array.from(text);
+    };
+
+    const splitIntoWordTokens = (text) => {
+      if (!text) {
+        return [];
+      }
+      if (wordSegmenter) {
+        return Array.from(wordSegmenter.segment(text), (segment) => segment.segment);
+      }
+      return text.split(/(\s+)/);
+    };
+
+    const ensurePerCharNodes = (element) => {
+      if (element.dataset.motionPerCharPrepared === 'true') {
+        return Array.from(element.querySelectorAll('[data-motion-char]'));
+      }
+
+      const rawText = element.textContent ?? '';
+      const sourceText = rawText.replace(/\s+/g, ' ').trim();
+      if (!sourceText) {
+        element.dataset.motionPerCharPrepared = 'true';
+        return [];
+      }
+      const graphemes = splitIntoGraphemes(sourceText);
+      const fragment = document.createDocumentFragment();
+      let charIndex = 0;
+
+      for (const grapheme of graphemes) {
+        if (!grapheme.trim()) {
+          fragment.append(document.createTextNode(grapheme));
+          continue;
+        }
+        const charNode = document.createElement('span');
+        charNode.dataset.motionChar = 'true';
+        charNode.dataset.motionCharIndex = String(charIndex);
+        charNode.textContent = grapheme;
+        charNode.style.display = 'inline-block';
+        charNode.style.transformOrigin = '50% 50%';
+        fragment.append(charNode);
+        charIndex += 1;
+      }
+
+      element.setAttribute('aria-label', sourceText);
+      element.textContent = '';
+      element.append(fragment);
+      element.dataset.motionPerCharPrepared = 'true';
+      return Array.from(element.querySelectorAll('[data-motion-char]'));
+    };
+
+    const setPerCharInitial = (charNodes, preset) => {
+      charNodes.forEach((charNode) => {
+        charNode.style.opacity = '0';
+        charNode.style.transform = preset.initialTransform;
+      });
+    };
+
+    const setPerCharFinal = (charNodes, preset) => {
+      charNodes.forEach((charNode) => {
+        charNode.style.opacity = '1';
+        charNode.style.transform = preset.finalTransform;
+      });
+    };
+
+    const ensurePerWordNodes = (element) => {
+      if (element.dataset.motionPerWordPrepared === 'true') {
+        return Array.from(element.querySelectorAll('[data-motion-word]'));
+      }
+
+      const rawText = element.textContent ?? '';
+      const sourceText = rawText.replace(/\s+/g, ' ').trim();
+      if (!sourceText) {
+        element.dataset.motionPerWordPrepared = 'true';
+        return [];
+      }
+
+      const tokens = splitIntoWordTokens(sourceText);
+      const fragment = document.createDocumentFragment();
+      let wordIndex = 0;
+
+      for (const token of tokens) {
+        if (!token) {
+          continue;
+        }
+        if (!token.trim()) {
+          fragment.append(document.createTextNode(token));
+          continue;
+        }
+        const wordNode = document.createElement('span');
+        wordNode.dataset.motionWord = 'true';
+        wordNode.dataset.motionWordIndex = String(wordIndex);
+        wordNode.textContent = token;
+        wordNode.style.display = 'inline-block';
+        fragment.append(wordNode);
+        wordIndex += 1;
+      }
+
+      element.setAttribute('aria-label', sourceText);
+      element.textContent = '';
+      element.append(fragment);
+      element.dataset.motionPerWordPrepared = 'true';
+      return Array.from(element.querySelectorAll('[data-motion-word]'));
+    };
+
+    const setPerWordInitial = (wordNodes, preset) => {
+      wordNodes.forEach((wordNode) => {
+        wordNode.style.opacity = '0';
+        wordNode.style.transform = preset.initialTransform;
+      });
+    };
+
+    const setPerWordFinal = (wordNodes, preset) => {
+      wordNodes.forEach((wordNode) => {
+        wordNode.style.opacity = '1';
+        wordNode.style.transform = preset.finalTransform;
+      });
+    };
+
+    const mountPerCharElement = (element, preset) => {
+      const charNodes = ensurePerCharNodes(element);
+      if (prefersReducedMotion.matches) {
+        element.dataset.motionInviewAnimated = 'true';
+        setPerCharFinal(charNodes, preset);
+        return;
+      }
+
+      setPerCharInitial(charNodes, preset);
+      const rowIndex = Number.parseInt(element.dataset.motionRowIndex ?? '0', 10);
+      const rowDelay = Number.isFinite(rowIndex) && rowIndex > 0 ? rowIndex * preset.rowDelayStep : 0;
+
+      const stop = inView(
+        element,
+        (target) => {
+          if (!(target instanceof HTMLElement)) {
+            return;
+          }
+          if (target.dataset.motionInviewAnimated === 'true') {
+            return;
+          }
+
+          target.dataset.motionInviewAnimated = 'true';
+          const targetChars = Array.from(target.querySelectorAll('[data-motion-char]'));
+          targetChars.forEach((charNode, index) => {
+            animate(
+              charNode,
+              {
+                opacity: [0, 1],
+                transform: [preset.initialTransform, preset.finalTransform],
+              },
+              {
+                ...preset.transition,
+                delay: rowDelay + index * preset.charDelay,
+              },
+            );
+          });
+        },
+        { amount: 0 },
+      );
+      observers.set(element, stop);
+    };
+
+    const mountPerWordElement = (element, preset) => {
+      const wordNodes = ensurePerWordNodes(element);
+      const sequenceId = element.dataset.motionSequenceSource ?? '';
+      if (prefersReducedMotion.matches) {
+        element.dataset.motionInviewAnimated = 'true';
+        setPerWordFinal(wordNodes, preset);
+        emitSequenceComplete(sequenceId);
+        return;
+      }
+
+      setPerWordInitial(wordNodes, preset);
+      const stop = inView(
+        element,
+        (target) => {
+          if (!(target instanceof HTMLElement)) {
+            return;
+          }
+          if (target.dataset.motionInviewAnimated === 'true') {
+            return;
+          }
+
+          target.dataset.motionInviewAnimated = 'true';
+          const targetWords = Array.from(target.querySelectorAll('[data-motion-word]'));
+          let pending = targetWords.length;
+          if (pending === 0) {
+            emitSequenceComplete(sequenceId);
+            return;
+          }
+          targetWords.forEach((wordNode, index) => {
+            animate(
+              wordNode,
+              {
+                opacity: [0, 1],
+                transform: [preset.initialTransform, preset.finalTransform],
+              },
+              {
+                ...preset.transition,
+                delay: index * preset.wordDelay,
+                onComplete: () => {
+                  pending -= 1;
+                  if (pending === 0) {
+                    emitSequenceComplete(sequenceId);
+                  }
+                },
+              },
+            );
+          });
+        },
+        { amount: 0 },
+      );
+      observers.set(element, stop);
+    };
+
+    const ensureTrimPath = (element) => {
+      const path = element.querySelector('[data-motion-trim-path]');
+      if (!(path instanceof SVGPathElement)) {
+        return null;
+      }
+      const totalLength = path.getTotalLength();
+      return { path, totalLength };
+    };
+
+    const setTrimInitial = (trimState) => {
+      trimState.path.style.strokeDasharray = `${trimState.totalLength}`;
+      trimState.path.style.strokeDashoffset = `${trimState.totalLength}`;
+    };
+
+    const setTrimFinal = (trimState) => {
+      trimState.path.style.strokeDasharray = `${trimState.totalLength}`;
+      trimState.path.style.strokeDashoffset = '0';
+    };
+
+    const mountPathTrimElement = (element, preset) => {
+      const trimState = ensureTrimPath(element);
+      if (!trimState) {
+        return;
+      }
+      if (prefersReducedMotion.matches) {
+        element.dataset.motionInviewAnimated = 'true';
+        setTrimFinal(trimState);
+        return;
+      }
+
+      setTrimInitial(trimState);
+      const stop = inView(
+        element,
+        (target) => {
+          if (!isMotionNode(target)) {
+            return;
+          }
+          if (target.dataset.motionInviewAnimated === 'true') {
+            return;
+          }
+
+          target.dataset.motionInviewAnimated = 'true';
+          const targetState = ensureTrimPath(target);
+          if (!targetState) {
+            return;
+          }
+          animate(
+            targetState.totalLength,
+            0,
+            {
+              ...preset.transition,
+              onUpdate: (latest) => {
+                targetState.path.style.strokeDashoffset = `${latest}`;
+              },
+            },
+          );
+        },
+        { amount: preset.amount ?? 0 },
+      );
+      observers.set(element, stop);
+    };
+
+    const mountElementPreset = (element, preset) => {
+      const baseTransform = resolveBaseTransform(element);
+      const initialTransform = composeTransform(baseTransform, preset.initialTransform);
+      const finalTransform = composeTransform(baseTransform, preset.finalTransform);
+
+      if (prefersReducedMotion.matches) {
+        element.dataset.motionInviewAnimated = 'true';
+        setFinal(element, finalTransform);
+        return;
+      }
+
+      setInitial(element, initialTransform);
+      const stop = inView(
+        element,
+        (target) => {
+          if (!isMotionNode(target)) {
+            return;
+          }
+          if (target.dataset.motionInviewAnimated === 'true') {
+            return;
+          }
+          target.dataset.motionInviewAnimated = 'true';
+          animate(
+            target,
+            {
+              opacity: [0, 1],
+              transform: [initialTransform, finalTransform],
+            },
+            preset.transition,
+          );
+        },
+        { amount: 0 },
+      );
+      observers.set(element, stop);
+    };
+
+    const mountSequencedElement = (element, preset) => {
+      const baseTransform = resolveBaseTransform(element);
+      const initialTransform = composeTransform(baseTransform, preset.initialTransform);
+      const finalTransform = composeTransform(baseTransform, preset.finalTransform);
+      const sequenceId = element.dataset.motionSequenceAfter ?? '';
+
+      if (prefersReducedMotion.matches) {
+        element.dataset.motionInviewAnimated = 'true';
+        setFinal(element, finalTransform);
+        return;
+      }
+
+      setInitial(element, initialTransform);
+      let removeSequenceListener = null;
+
+      const start = (target) => {
+        if (!isMotionNode(target)) {
+          return;
+        }
+        if (target.dataset.motionInviewAnimated === 'true') {
+          return;
+        }
+        target.dataset.motionInviewAnimated = 'true';
+        animate(
+          target,
+          {
+            opacity: [0, 1],
+            transform: [initialTransform, finalTransform],
+          },
+          preset.transition,
+        );
+        if (removeSequenceListener) {
+          removeSequenceListener();
+          removeSequenceListener = null;
+        }
+      };
+
+      const stopInView = inView(
+        element,
+        (target) => {
+          if (!isMotionNode(target)) {
+            return;
+          }
+          if (target.dataset.motionInviewAnimated === 'true') {
+            return;
+          }
+          if (!sequenceId || completedSequences.has(sequenceId)) {
+            start(target);
+            return;
+          }
+          if (!removeSequenceListener) {
+            removeSequenceListener = onSequenceComplete(sequenceId, () => {
+              start(target);
+            });
+          }
+        },
+        { amount: 0 },
+      );
+
+      observers.set(element, () => {
+        stopInView();
+        if (removeSequenceListener) {
+          removeSequenceListener();
+          removeSequenceListener = null;
+        }
+      });
+    };
+
+    const mountRepeatElement = (element, preset) => {
+      const initialVariables = preset.initialVariables ?? {};
+      const finalVariables = preset.finalVariables ?? {};
+      const variableNames = Array.from(new Set([...Object.keys(initialVariables), ...Object.keys(finalVariables)]));
+      const triggerRatio = preset.amount ?? 0;
+      let activeAnimation = null;
+      let currentState = 'initial';
+      let lastTop = 0;
+      let frameId = 0;
+
+      const stopActiveAnimation = () => {
+        if (!activeAnimation || typeof activeAnimation.stop !== 'function') {
+          activeAnimation = null;
+          return;
+        }
+        activeAnimation.stop();
+        activeAnimation = null;
+      };
+
+      const animateVariables = (fromVariables, toVariables) => {
+        stopActiveAnimation();
+        activeAnimation = animate(0, 1, {
+          ...preset.transition,
+          onUpdate: (latest) => {
+            variableNames.forEach((name) => {
+              const fromValue = fromVariables[name] ?? toVariables[name] ?? '';
+              const toValue = toVariables[name] ?? fromVariables[name] ?? '';
+              const interpolated = interpolateNumericValue(fromValue, toValue, latest);
+              element.style.setProperty(name, interpolated);
+            });
+          },
+          onComplete: () => {
+            setCssVariables(element, toVariables);
+            activeAnimation = null;
+          },
+        });
+      };
+
+      const animateToState = (nextState) => {
+        if (nextState === currentState) {
+          return;
+        }
+        const fromVariables = currentState === 'initial' ? initialVariables : finalVariables;
+        const toVariables = nextState === 'initial' ? initialVariables : finalVariables;
+        currentState = nextState;
+        animateVariables(fromVariables, toVariables);
+      };
+
+      const getTriggerLineY = () => window.innerHeight * (1 - triggerRatio);
+
+      const syncImmediateState = () => {
+        const triggerLineY = getTriggerLineY();
+        const top = element.getBoundingClientRect().top;
+        lastTop = top;
+        if (top <= triggerLineY) {
+          currentState = 'final';
+          setCssVariables(element, finalVariables);
+          return;
+        }
+        currentState = 'initial';
+        setCssVariables(element, initialVariables);
+      };
+
+      const evaluateCrossing = () => {
+        frameId = 0;
+        const triggerLineY = getTriggerLineY();
+        const nextTop = element.getBoundingClientRect().top;
+
+        const crossedDown = lastTop > triggerLineY && nextTop <= triggerLineY;
+        if (crossedDown) {
+          animateToState('final');
+          lastTop = nextTop;
+          return;
+        }
+
+        const crossedUp = lastTop <= triggerLineY && nextTop > triggerLineY;
+        if (crossedUp) {
+          animateToState('initial');
+        }
+        lastTop = nextTop;
+      };
+
+      const queueEvaluateCrossing = () => {
+        if (frameId) {
+          return;
+        }
+        frameId = window.requestAnimationFrame(evaluateCrossing);
+      };
+
+      if (prefersReducedMotion.matches) {
+        currentState = 'final';
+        setCssVariables(element, finalVariables);
+        return;
+      }
+
+      syncImmediateState();
+      window.addEventListener('scroll', queueEvaluateCrossing, { passive: true });
+      window.addEventListener('resize', syncImmediateState);
+
+      observers.set(element, () => {
+        window.removeEventListener('scroll', queueEvaluateCrossing);
+        window.removeEventListener('resize', syncImmediateState);
+        if (frameId) {
+          window.cancelAnimationFrame(frameId);
+          frameId = 0;
+        }
+        stopActiveAnimation();
+      });
+    };
+
+    const cleanupStaleObservers = () => {
+      for (const [element, stop] of observers.entries()) {
+        if (document.contains(element)) {
+          continue;
+        }
+        stop();
+        observers.delete(element);
+      }
+    };
+
+    const mountElement = (element) => {
+      if (!isMotionNode(element)) {
+        return;
+      }
+      const presetName = element.dataset.motionInview;
+      const preset = presetName ? presets[presetName] : undefined;
+      if (!preset) {
+        return;
+      }
+      if (element.dataset.motionInviewBound === 'true') {
+        return;
+      }
+      element.dataset.motionInviewBound = 'true';
+      if (preset.mode === 'per-char') {
+        if (!(element instanceof HTMLElement)) {
+          return;
+        }
+        mountPerCharElement(element, preset);
+        return;
+      }
+      if (preset.mode === 'per-word') {
+        if (!(element instanceof HTMLElement)) {
+          return;
+        }
+        mountPerWordElement(element, preset);
+        return;
+      }
+      if (preset.mode === 'path-trim') {
+        mountPathTrimElement(element, preset);
+        return;
+      }
+      if (preset.mode === 'element-sequenced') {
+        mountSequencedElement(element, preset);
+        return;
+      }
+      if (preset.mode === 'element-repeat') {
+        mountRepeatElement(element, preset);
+        return;
+      }
+      mountElementPreset(element, preset);
+    };
+
+    const mount = () => {
+      cleanupStaleObservers();
+      document.querySelectorAll(selector).forEach((element) => {
+        mountElement(element);
+      });
+    };
+
+    const stopAll = () => {
+      observers.forEach((stop) => stop());
+      observers.clear();
+    };
+
+    mount();
+    document.addEventListener('astro:page-load', mount);
+    window.addEventListener('pagehide', stopAll);
+    window[runtimeKey] = { mount };
+  })();
+</script>

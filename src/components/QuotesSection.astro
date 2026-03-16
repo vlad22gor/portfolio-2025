@@ -2,11 +2,15 @@
 import Button from './Button.astro';
 ---
 
-<section class="quotes-section" aria-label="Quotes section">
+<section class="quotes-section" aria-label="Quotes section" data-motion-inview="appear-v1">
   <div class="quotes-section-text">
     <div class="quotes-main-quote">
       <p class="quotes-author type-body">Eugenia Vyshnytska ⁕ Senior UX Writer</p>
-      <p class="quotes-main-quote-text type-t2">
+      <p
+        class="quotes-main-quote-text type-t2"
+        data-motion-inview="quotes-main-word-v1"
+        data-motion-sequence-source="quotes-main-text-sequence-v1"
+      >
         Vladyslav brings clarity to complex problems, is proactive, empathetic, and a natural collaborator
       </p>
       <img
@@ -19,6 +23,8 @@ import Button from './Button.astro';
       />
       <img
         class="quotes-mark quotes-mark--main-close"
+        data-motion-inview="quotes-main-close-after-v1"
+        data-motion-sequence-after="quotes-main-text-sequence-v1"
         src="/media/home/quotes/quote-close-large.svg"
         alt=""
         loading="lazy"

@@ -57,7 +57,7 @@ const coinInlineStyle = [
         </div>
       </div>
 
-      <div class="home-hero-cta">
+      <div class="home-hero-cta" data-motion-inview="appear-v1">
         <p class="home-hero-cta-text">
           I make apps people love return to. Shaped by product vision, fresh ideas, and an enjoyable teamwork
         </p>
@@ -73,6 +73,156 @@ const coinInlineStyle = [
   </main>
   <SiteFooter />
 </BaseLayout>
+
+<script>
+  import { animate } from 'motion';
+
+  (() => {
+    const runtimeKey = '__homeHeroAppearRuntime';
+    if (window[runtimeKey]) {
+      window[runtimeKey].mount();
+      return;
+    }
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    const labelSpring = { type: 'spring', duration: 0.4, bounce: 0.2 };
+    const assetSpring = { type: 'spring', duration: 0.4, bounce: 0.2 };
+    const coinSpring = { type: 'spring', duration: 1.2, bounce: 0.2 };
+    const assetDelayByModifier = {
+      'home-hero-asset--mockup-red': 0.05,
+      'home-hero-asset--cube': 0.1,
+      'home-hero-asset--ternimal': 0.2,
+      'home-hero-asset--mockup-path': 0.3,
+    };
+
+    const setLabelInitial = (line) => {
+      line.style.opacity = '0';
+      line.style.transform = 'translate3d(0px, 25px, 0px)';
+    };
+
+    const setLabelFinal = (line) => {
+      line.style.opacity = '1';
+      line.style.transform = 'translate3d(0px, 0px, 0px)';
+    };
+
+    const setAssetInitial = (asset, isCoin) => {
+      asset.style.opacity = '0';
+      asset.style.transform = isCoin
+        ? 'translate3d(0px, 25px, 0px) scale(0.5) rotate(0deg)'
+        : 'translate3d(0px, 25px, 0px) scale(0.5)';
+    };
+
+    const setAssetFinal = (asset, isCoin) => {
+      asset.style.opacity = '1';
+      asset.style.transform = isCoin
+        ? 'translate3d(0px, 0px, 0px) scale(1) rotate(360deg)'
+        : 'translate3d(0px, 0px, 0px) scale(1)';
+    };
+
+    const animateLabels = (hero) => {
+      const labels = Array.from(hero.querySelectorAll('.home-hero-line'));
+      labels.forEach((line, index) => {
+        if (!(line instanceof HTMLElement)) {
+          return;
+        }
+        setLabelInitial(line);
+        animate(
+          line,
+          {
+            opacity: [0, 1],
+            transform: ['translate3d(0px, 25px, 0px)', 'translate3d(0px, 0px, 0px)'],
+          },
+          { ...labelSpring, delay: index * 0.1 },
+        );
+      });
+    };
+
+    const resolveAssetDelay = (asset) => {
+      for (const [className, delay] of Object.entries(assetDelayByModifier)) {
+        if (asset.classList.contains(className)) {
+          return delay;
+        }
+      }
+      return 0;
+    };
+
+    const animateAssets = (hero) => {
+      const assets = Array.from(hero.querySelectorAll('.home-hero-asset'));
+      assets.forEach((asset) => {
+        if (!(asset instanceof HTMLElement)) {
+          return;
+        }
+
+        const isCoin = asset.classList.contains('home-hero-asset--coin');
+        const delay = isCoin ? 0 : resolveAssetDelay(asset);
+        setAssetInitial(asset, isCoin);
+
+        if (isCoin) {
+          animate(
+            asset,
+            {
+              opacity: [0, 1],
+              transform: [
+                'translate3d(0px, 25px, 0px) scale(0.5) rotate(0deg)',
+                'translate3d(0px, 0px, 0px) scale(1) rotate(360deg)',
+              ],
+            },
+            { ...coinSpring, delay },
+          );
+          return;
+        }
+
+        animate(
+          asset,
+          {
+            opacity: [0, 1],
+            transform: ['translate3d(0px, 25px, 0px) scale(0.5)', 'translate3d(0px, 0px, 0px) scale(1)'],
+          },
+          { ...assetSpring, delay },
+        );
+      });
+    };
+
+    const mountHero = (hero) => {
+      if (!(hero instanceof HTMLElement)) {
+        return;
+      }
+      if (hero.dataset.homeHeroAppearMounted === 'true') {
+        return;
+      }
+      hero.dataset.homeHeroAppearMounted = 'true';
+
+      if (prefersReducedMotion.matches) {
+        hero.querySelectorAll('.home-hero-line').forEach((line) => {
+          if (line instanceof HTMLElement) {
+            setLabelFinal(line);
+          }
+        });
+        hero.querySelectorAll('.home-hero-asset').forEach((asset) => {
+          if (asset instanceof HTMLElement) {
+            const isCoin = asset.classList.contains('home-hero-asset--coin');
+            setAssetFinal(asset, isCoin);
+          }
+        });
+        return;
+      }
+
+      animateLabels(hero);
+      animateAssets(hero);
+    };
+
+    const mount = () => {
+      document.querySelectorAll('.home-hero').forEach((hero) => {
+        mountHero(hero);
+      });
+    };
+
+    mount();
+    document.addEventListener('astro:page-load', mount);
+    window[runtimeKey] = { mount };
+  })();
+</script>
 
 {
   isDev && (

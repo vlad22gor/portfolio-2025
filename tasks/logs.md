@@ -1,5 +1,45 @@
 # Logs
 
+- 2026-03-16: Для `final-cta-morph-v1` подтверждён spring-профиль и поднят порог repeat-триггера с `30%` до `50%`.
+  Причина: параметры должны строго соответствовать Framer (`spring`, `0.6`, `0.1`), а при `amount: 0.3` реверс часто запускался слишком поздно и визуально терялся.
+  Файлы: `src/components/InViewMotionRuntime.astro`, `docs/inview-appear-v1.md`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg` подтверждает `final-cta-morph-v1` с `amount:0.5` и `transition: { type:'spring', duration:0.6, bounce:0.1, delay:0 }`; Playwright подтверждает enter/leave repeat-морф и reduced-motion финал.
+
+- 2026-03-16: Добавлен repeatable `inView` morph для `final cta` (`final-cta-morph-v1`) с порогом `30%`.
+  Причина: требовалась отдельная двусторонняя анимация `title + motif` (`initial <-> final`) при пересечении viewport-порога, при сохранении существующего `appear-v1` на `divider/content`.
+  Файлы: `src/components/InViewMotionRuntime.astro`, `src/components/FinalCtaSection.astro`, `src/styles/global.css`, `docs/inview-appear-v1.md`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg` подтверждает новый preset `final-cta-morph-v1` (`mode='element-repeat'`, `amount:0.3`, `duration:0.6`, `bounce:0.1`) и `data-motion-inview='final-cta-morph-v1'` на root `final-cta-section`; Playwright подтверждает enter/leave morph по CSS vars и реверс, а также сохранение `appear-v1` на `divider/content`.
+
+- 2026-03-16: Добавлена inView-анимация main quote по словам и последовательный reveal закрывающей кавычки.
+  Причина: требовалась Framer-like word-appear анимация для `.quotes-main-quote-text` и запуск `.quotes-mark--main-close` только после завершения текста.
+  Файлы: `src/components/InViewMotionRuntime.astro`, `src/components/QuotesSection.astro`, `docs/inview-appear-v1.md`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg` подтверждает новые пресеты `quotes-main-word-v1` (`mode='per-word'`, `wordDelay:0.075`) и `quotes-main-close-after-v1` (`mode='element-sequenced'`), а также связку `data-motion-sequence-source/data-motion-sequence-after` в `QuotesSection`; Playwright (`http://127.0.0.1:4321`) подтверждает sequence (`closeAfterTextMs ≈ 1520ms`, `wordsCount=16`) и reduced-motion финал (`allWordsVisible=true`, `closeOpacity=1`, `closeTransform=matrix(..., 0, 0)`).
+
+- 2026-03-16: Для `about-arch-trim-v1` увеличен порог старта `inView` с `20%` до `30%`.
+  Причина: по фидбеку требовался более поздний и читаемый старт trim-анимации арки.
+  Файлы: `src/components/InViewMotionRuntime.astro`, `docs/inview-appear-v1.md`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg` подтверждает `amount: 0.3` в runtime и обновлённые значения `~30%` в docs/lessons.
+
+- 2026-03-16: Исправлено направление trim-анимации `about` arch на визуальное `left -> right`.
+  Причина: path был задан в обратном порядке точек (start справа), из-за чего при корректном `start -> end` эффект выглядел как `end -> start`.
+  Файлы: `src/components/AboutMeQScallopSection.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg` подтверждает обновлённый path `M40 ... C ... 496 268` (start слева, end справа) при неизменном runtime-пресете `about-arch-trim-v1`.
+
+- 2026-03-16: Добавлена `inView` trim-анимация для `about` arch (`start -> end`) со spring `0.6/0.3`.
+  Причина: требовалось анимировать вектор арки в секции `about` через path-trim при входе в viewport.
+  Файлы: `src/components/AboutMeQScallopSection.astro`, `src/components/InViewMotionRuntime.astro`, `docs/inview-appear-v1.md`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg` по исходникам подтверждает preset `about-arch-trim-v1` (`mode='path-trim'`, `duration:0.6`, `bounce:0.3`) и разметку `data-motion-inview='about-arch-trim-v1'` + `data-motion-trim-path`; `rg` по `dist` подтверждает inline `<svg class='about-me-arch'>` и компиляцию runtime trim-анимации `strokeDashoffset: [totalLength, 0]`.
+
+- 2026-03-15: Добавлена побуквенная `inView`-анимация для `design tools` bottom labels с row-stagger.
+  Причина: требовался Framer-профиль `Rotate+Fade` для лейблов снизу в секции `design tools`, с шагом задержки между лейблами в строке слева направо.
+  Файлы: `src/components/InViewMotionRuntime.astro`, `src/components/DesignToolsSection.astro`, `docs/inview-appear-v1.md`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Playwright (`http://127.0.0.1:4326/`) подтверждает `9` label targets с `data-motion-inview='design-tools-label-char-v1'`, корректные `data-motion-row-index` и initial per-char state (`opacity:0`, `rotate(45deg)`) на split-символах; `dist`-проверка (`rg`) подтверждает presence нового preset/runtime-параметров (`mode='per-char'`, `charDelay=0.06`, `rowDelayStep=0.1`). Browser-проверка one-shot после scroll не выполнена из-за локального Playwright/Chrome launcher-конфликта (`Opening in existing browser session`).
+
+- 2026-03-15: Исправлен сдвиг вправо у `final cta` divider после подключения глобального `inView`.
+  Причина: `InViewMotionRuntime` перезаписывал `transform` inline и стирал базовый `translateX(-50%)`, который центрирует `.final-cta-divider-bleed`.
+  Файлы: `src/components/InViewMotionRuntime.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Playwright (`http://127.0.0.1:4325/`) подтверждает композицию transform у divider (`matrix(...,-600,0) + translate3d(...)`) и центрирование `centeredDelta=0` до/после inView; `prefers-reduced-motion: reduce` — `animated=true`, финальный transform сохранён, `centeredDelta=0`.
+
 - 2026-03-15: По пользовательским правкам донастроен `final CTA`: divider сделан full-width, фон секции убран, motif переведён в синий asset.
   Причина: требовалась визуальная правка блока под референс — full-width divider без фоновой плашки и синим мотивом при сохранении Y-контрактов.
   Файлы: `src/components/FinalCtaSection.astro`, `src/styles/global.css`, `public/media/motifs/motif-stack-orb-3-blue.svg`, `tasks/lessons.md`, `tasks/logs.md`.
@@ -678,3 +718,43 @@
   Причина: конфликт специфичности CSS — правило показа fallback-волны активной кнопки перекрывало скрытие при `data-wave-rail-ready='true'`, из-за чего fallback оставался видимым вместе с rail-волной.
   Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
   Проверки: `npm run build` — успешно; `rg` подтверждает новые фазовые селекторы: fallback-показ только для `:not([data-wave-rail-ready='true'])`, а в `ready=true` fallback скрывается с `opacity: 0` и `visibility: hidden` (включая `.header-button.active .header-button-wave-container` для равной/большей специфичности).
+
+- 2026-03-15: Добавлены appear-анимации для `home hero` (labels, assets, coin rotate, CTA inView one-shot).
+  Причина: реализовать motion-контракт hero из Figma/ТЗ: stagger для 6 строк, индивидуальные задержки ассетов, `coin wheel` с `rotate 360`, и `text+button` по триггеру `Layer in View` без replay.
+  Файлы: `src/pages/index.astro`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `git diff -- src/pages/index.astro` подтверждает runtime `__homeHeroAppearRuntime` с `animate + inView`, параметры `duration/bounce/ease`, stagger `index * 0.1`, asset-delays (`red 0.05`, `cube 0.1`, `ternimal 0.2`, `path 0.3`) и `amount: 0` для CTA; `rg -n "__homeHeroAppearRuntime|homeHeroCtaAnimated|amount:0|rotate\\(360deg\\)|home-hero-asset--mockup-red" dist/_astro -g"*.js"` подтверждает, что runtime и ключевые параметры попали в собранный бандл; browser smoke-check через Playwright MCP не выполнен из-за launcher-конфликта Chrome (`Opening in existing browser session`).
+
+- 2026-03-15: Вынесен глобальный `inView`-паттерн `appear-v1` и подключён через `BaseLayout`.
+  Причина: унифицировать scroll-enter анимации секций/блоков по проекту через фиксированный data-attribute контракт без локальных override.
+  Файлы: `src/components/InViewMotionRuntime.astro`, `src/layouts/BaseLayout.astro`, `src/pages/index.astro`, `docs/inview-appear-v1.md`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "data-motion-inview=\\\"appear-v1\\\"|import \\{ animate \\} from 'motion'|import \\{ animate, inView \\} from 'motion'" src/pages/index.astro` подтверждает перевод CTA на data-attribute и удаление локального `inView` из hero runtime; `rg -n "__inViewAppearRuntime|data-motion-inview=\\\"appear-v1\\\"|amount:0|\\[0\\.44,0,0\\.56,1\\]|duration:\\.4" dist/_astro -g"*.js"` подтверждает глобальный preset-runtime в собранном бандле.
+
+- 2026-03-15: Расширено применение `appear-v1` на 9 целевых блоков home и добавлен интерфейсный opt-in для reusable компонентов.
+  Причина: закрепить единый scroll-enter паттерн на секциях/блоках home без локальных override и без побочных эффектов на `/cases` и `/preview`.
+  Файлы: `src/components/CaseCard.astro`, `src/components/QuantizedPerimeter.astro`, `src/components/CasesCardsSection.astro`, `src/components/DesignToolsSection.astro`, `src/components/AboutMeQScallopSection.astro`, `src/components/QuotesSection.astro`, `src/components/FinalCtaSection.astro`, `docs/inview-appear-v1.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -o "data-motion-inview=\\\"appear-v1\\\"" dist/index.html | wc -l` = `10` (9 новых целей + hero CTA); `rg -o "<a class=\\\"case-card[^\\\"]*\\\"[^>]*data-motion-inview=\\\"appear-v1\\\"" dist/index.html | wc -l` = `2`; `rg -o "<a class=\\\"case-card[^\\\"]*\\\"[^>]*data-motion-inview=\\\"appear-v1\\\"" dist/cases/index.html dist/preview/index.html | wc -l` = `0` (регрессии reusable карточек нет).
+
+- 2026-03-15: Добавлены отдельные `inView`-пресеты для стрелок `cases-cards-description` (left/right) с фиксированными offset/scale/delay.
+  Причина: нужны отдельные motion-профили стрелок при сохранении текущего `appear-v1` на parent `cases-cards-description`.
+  Файлы: `src/components/InViewMotionRuntime.astro`, `src/components/CasesCardsSection.astro`, `docs/inview-appear-v1.md`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n "cases-arrow-left-v1|cases-arrow-right-v1|delay: 0.3|delay: 0.4|translate3d\\(0px, -25px, 0px\\)|translate3d\\(0px, 25px, 0px\\)" src/components/InViewMotionRuntime.astro` подтверждает параметры пресетов; `rg -n "data-motion-inview=\\\"cases-arrow-left-v1\\\"|data-motion-inview=\\\"cases-arrow-right-v1\\\"|data-motion-inview=\\\"appear-v1\\\"" dist/index.html` подтверждает атрибуты у стрелок и parent description на `/`.
+
+- 2026-03-16: Убран лишний нижний trigger реверса у `final-cta-morph-v1` (repeat только при возврате вверх).
+  Причина: в `element-repeat` реверс был привязан к `leave` cleanup и срабатывал на любом выходе из порога, включая прокрутку вниз к футеру.
+  Файлы: `src/components/InViewMotionRuntime.astro`, `docs/inview-appear-v1.md`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; в runtime подтверждены `amount: 0.7`, `transition.type: 'spring'`, `duration: 0.6`, `bounce: 0.1`; на `leave` добавлен guard `scrollDirection === 'up'`, поэтому нижний `leave` при скролле вниз игнорируется.
+
+- 2026-03-16: Для `final-cta-morph-v1` убрана «вторая верхняя граница» при скролле вверх через direction-aware threshold state machine.
+  Причина: cleanup-based `inView`-реверс на `leave` давал лишний откат/повтор при проходе верхней границы viewport.
+  Файлы: `src/components/InViewMotionRuntime.astro`, `docs/inview-appear-v1.md`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; runtime переведён на `IntersectionObserver` c `intersectionRatio`, реверс/прямой ход триггерятся только на `cross-up(0.7)` (`down -> final`, `up -> initial`), все `cross-down` игнорируются.
+
+- 2026-03-16: Для `final-cta-morph-v1` заменён ratio-based trigger на single viewport-line trigger (70%).
+  Причина: `intersectionRatio` создавал две физические точки срабатывания порога и давал ранний `final -> initial` при подъёме от футера.
+  Файлы: `src/components/InViewMotionRuntime.astro`, `docs/inview-appear-v1.md`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; runtime теперь использует line-cross detector по `element.getBoundingClientRect().top` относительно `window.innerHeight * 0.7`: вниз (`top > line -> top <= line`) -> `initial -> final`, вверх (`top <= line -> top > line`) -> `final -> initial`; лишних `intersectionRatio leave`-триггеров нет.
+
+- 2026-03-16: Скорректирована семантика `amount` для line-trigger в `final-cta-morph-v1` (entry progress вместо абсолютной Y-линии).
+  Причина: формула `line = window.innerHeight * amount` при `amount=0.7` давала визуальный триггер около 30% входа секции; ожидание — около 70% входа.
+  Файлы: `src/components/InViewMotionRuntime.astro`, `docs/inview-appear-v1.md`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; trigger line считается как `window.innerHeight * (1 - amount)` (для `0.7` это `30vh` сверху), логика single-boundary down/up сохранена.
