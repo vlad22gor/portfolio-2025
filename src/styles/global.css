@@ -1943,13 +1943,82 @@ img.home-hero-asset {
   margin: 0;
 }
 
-.fora-section-skeleton {
+.fora-intro-screens-section {
   width: 100%;
+  height: 432px;
+  min-height: 432px;
+  max-height: 432px;
+  margin-top: 168px;
 }
 
-.fora-section-skeleton--intro-screens {
-  margin-top: 168px;
-  height: 432px;
+.fora-intro-screens-section .scallop-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: visible;
+}
+
+.fora-intro-screens-track {
+  position: relative;
+}
+
+.fora-intro-screens-track--phone {
+  width: 672px;
+  height: 501px;
+  display: flex;
+  align-items: flex-start;
+  gap: 40px;
+}
+
+.fora-intro-screens-phone-item {
+  flex: 0 0 auto;
+}
+
+.fora-intro-screens-phone-item--left,
+.fora-intro-screens-phone-item--right {
+  margin-top: 72px;
+}
+
+.fora-intro-screens-phone-item--left .device-mockup.fora-intro-screens-device,
+.fora-intro-screens-phone-item--right .device-mockup.fora-intro-screens-device {
+  --device-scale: 0.7131147541;
+}
+
+.fora-intro-screens-track--tablet {
+  width: 602px;
+  height: 508px;
+}
+
+.fora-intro-screens-tablet-item {
+  position: absolute;
+}
+
+.fora-intro-screens-tablet-item--left {
+  top: 73px;
+  left: 0;
+}
+
+.fora-intro-screens-tablet-item--center {
+  top: 0;
+  left: 153px;
+}
+
+.fora-intro-screens-tablet-item--right {
+  top: 73px;
+  left: 391px;
+}
+
+.fora-intro-screens-tablet-item--left .device-mockup.fora-intro-screens-device,
+.fora-intro-screens-tablet-item--right .device-mockup.fora-intro-screens-device {
+  --device-scale: 0.7128378378;
+}
+
+.fora-section-skeleton {
+  width: 100%;
 }
 
 .fora-section-skeleton--challenge {

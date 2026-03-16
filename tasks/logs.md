@@ -1,5 +1,15 @@
 # Logs
 
+- 2026-03-16: Исправлена геометрия `intro screens` на `/fora`: секция зафиксирована по высоте, контент центрирован, боковые mockup остаются меньше центрального.
+  Причина: требовалось убрать runaway/infinite height у `QuantizedPerimeter`-секции и синхронизировать композицию `38:4410` (центрирование + явный размерный контраст `left/right < center`).
+  Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `dist/fora/index.html` подтверждает `fora-intro-screens-section--phone` и 3 `device-mockup`; CSS-контракт фиксированной высоты подтверждён (`height/min-height/max-height = 432px`), центрирование через `.scallop-content { display:flex; justify-content:center; align-items:center; }`; Playwright (`http://127.0.0.1:4174/fora`, `1360x2200`) подтверждает `section=816x432`, `trackCenterOffset={x:0,y:0}`, `left/center/right=174x357 / 244x501 / 174x357`, `--device-scale=.713115/1/.713115`, `horizontalOverflow=false`.
+
+- 2026-03-16: Реализована секция `intro screens (QuantizedPerimeter)` для `/fora` с reusable-вариациями `phone` и `tablet`.
+  Причина: заменить `intro-screens` skeleton на рабочую секцию по Figma (`38:4410` для `phone`) и заранее заложить вторую вариацию (`50:2761`) через prop `variant`.
+  Файлы: `src/components/IntroScreensQuantizedPerimeterSection.astro`, `src/pages/[slug].astro`, `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `dist/fora/index.html` подтверждает рендер `QuantizedPerimeter` секции (`class="fora-intro-screens-section fora-intro-screens-section--phone"`), наличие `3` `DeviceMockup` в `phone`-композиции и использование ассетов `/fora-intro-delivery|category|map`; `rg` по компоненту/стилям подтверждает `tablet`-вариацию (`track 602x508`, позиции `x:0/153/391`, `y:73/0/73`, scale для боковых mockup) и ассеты `kissa-terminal|kissa-welcome|kissa-tray`; browser-проверка Playwright на `1360px` не выполнена из-за локального launcher-конфликта Chrome (`Opening in existing browser session`).
+
 - 2026-03-16: Исправлено вертикальное выравнивание `results` в `/fora intro` через top-align всего нижнего контейнера.
   Причина: при `align-items: center` у `.fora-intro-bottom` правая колонка (`results`) центрировалась по высоте и визуально «уезжала» вниз.
   Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.

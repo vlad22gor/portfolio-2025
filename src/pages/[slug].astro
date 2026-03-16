@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import QuantizedWave from '../components/QuantizedWave.astro';
+import IntroScreensQuantizedPerimeterSection from '../components/IntroScreensQuantizedPerimeterSection.astro';
 import { CASES, getCaseBySlug } from '../data/cases';
 
 export function getStaticPaths() {
@@ -99,7 +100,7 @@ const isFora = current.slug === 'fora';
             </div>
           </section>
 
-          <section class="fora-section-skeleton fora-section-skeleton--intro-screens" aria-hidden="true"></section>
+          <IntroScreensQuantizedPerimeterSection variant="phone" />
           <section class="fora-section-skeleton fora-section-skeleton--challenge" aria-hidden="true"></section>
           <section class="fora-section-skeleton fora-section-skeleton--process" aria-hidden="true"></section>
           <section class="fora-section-skeleton fora-section-skeleton--feature-cards" aria-hidden="true"></section>
