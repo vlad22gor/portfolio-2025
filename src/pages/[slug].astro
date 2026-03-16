@@ -4,6 +4,8 @@ import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import QuantizedWave from '../components/QuantizedWave.astro';
 import IntroScreensQuantizedPerimeterSection from '../components/IntroScreensQuantizedPerimeterSection.astro';
+import CaseChallengeSection from '../components/CaseChallengeSection.astro';
+import foraChallengeScreenSrc from '../../assets/images/fora/fora-challenge-mock.png';
 import { CASES, getCaseBySlug } from '../data/cases';
 
 export function getStaticPaths() {
@@ -21,6 +23,72 @@ const index = CASES.findIndex((item) => item.slug === current.slug);
 const prev = CASES[(index - 1 + CASES.length) % CASES.length];
 const next = CASES[(index + 1) % CASES.length];
 const isFora = current.slug === 'fora';
+
+const foraChallengeColumns: [string, string] = [
+  "The Ukrainian food retail market is highly competitive, so refreshing the app's design was essential. Outdated visuals and clunky flows made it difficult to attract and retain users",
+  'My challenge was to redesign the app to boost ratings in the stores (and increase installs), streamline ordering to grow average order value and the total number of orders',
+];
+
+const foraChallengeScreen = {
+  src: foraChallengeScreenSrc.src,
+  alt: 'Fora app challenge screen',
+};
+
+const foraChallengeArrowTopLeftSrc = '/media/cases/fora/challenge/arrow-top-left.svg';
+const foraChallengeArrowTopRightSrc = '/media/cases/fora/challenge/arrow-top-right.svg';
+const foraChallengeArrowBottomLeftSrc = '/media/cases/fora/challenge/arrow-bottom-left.svg';
+const foraChallengeArrowBottomRightSrc = '/media/cases/fora/challenge/arrow-bottom-right.svg';
+
+const foraChallengeNotes = [
+  {
+    id: 'cart-access',
+    text: 'the cart was hard to spot and access',
+    left: 564,
+    top: 146,
+    width: 184,
+    arrowSrc: foraChallengeArrowTopRightSrc,
+    arrowLeft: 536,
+    arrowTop: 51,
+    arrowWidth: 67,
+    arrowHeight: 85,
+  },
+  {
+    id: 'address-time-controls',
+    text: "Address and time weren't clearly recognized as controls",
+    left: 17,
+    top: 182,
+    width: 184,
+    arrowSrc: foraChallengeArrowTopLeftSrc,
+    arrowLeft: 187,
+    arrowTop: 118,
+    arrowWidth: 94,
+    arrowHeight: 102,
+  },
+  {
+    id: 'icons-shadows',
+    text: 'inconsistent icons and outdated shadows',
+    left: 72,
+    top: 389,
+    width: 184,
+    arrowSrc: foraChallengeArrowBottomLeftSrc,
+    arrowLeft: 149,
+    arrowTop: 446,
+    arrowWidth: 129,
+    arrowHeight: 32,
+  },
+  {
+    id: 'categories-graphics',
+    text: 'Categories lacked graphics, forcing users to read labels',
+    left: 621,
+    top: 325,
+    width: 184,
+    arrowSrc: foraChallengeArrowBottomRightSrc,
+    arrowLeft: 540,
+    arrowTop: 340,
+    arrowWidth: 67,
+    arrowHeight: 40,
+  },
+];
 ---
 
 <BaseLayout title={`${current.title} - Vlad Horovyy`} description={current.subtitle} canonicalPath={`/${current.slug}`}>
@@ -101,7 +169,13 @@ const isFora = current.slug === 'fora';
           </section>
 
           <IntroScreensQuantizedPerimeterSection variant="phone" />
-          <section class="fora-section-skeleton fora-section-skeleton--challenge" aria-hidden="true"></section>
+          <CaseChallengeSection
+            class="fora-case-challenge"
+            title="challenge"
+            columns={foraChallengeColumns}
+            screen={foraChallengeScreen}
+            notes={foraChallengeNotes}
+          />
           <section class="fora-section-skeleton fora-section-skeleton--process" aria-hidden="true"></section>
           <section class="fora-section-skeleton fora-section-skeleton--feature-cards" aria-hidden="true"></section>
           <section class="fora-section-skeleton fora-section-skeleton--design-system" aria-hidden="true"></section>
