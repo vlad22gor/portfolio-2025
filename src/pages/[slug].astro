@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
+import QuantizedWave from '../components/QuantizedWave.astro';
 import { CASES, getCaseBySlug } from '../data/cases';
 
 export function getStaticPaths() {
@@ -18,51 +19,139 @@ if (!current) {
 const index = CASES.findIndex((item) => item.slug === current.slug);
 const prev = CASES[(index - 1 + CASES.length) % CASES.length];
 const next = CASES[(index + 1) % CASES.length];
+const isFora = current.slug === 'fora';
 ---
 
 <BaseLayout title={`${current.title} - Vlad Horovyy`} description={current.subtitle} canonicalPath={`/${current.slug}`}>
   <SiteHeader />
-  <main id="content" class="page-shell" transition:name="page-content">
-    <section class="section-stack">
-      <p class="kicker">Case Study</p>
-      <h1>{current.title}</h1>
-      <p class="lead-copy">{current.subtitle}</p>
-      <img
-        class="hero-media"
-        src={current.media[0]?.src}
-        alt={current.media[0]?.alt ?? current.title}
-        loading="eager"
-        decoding="async"
-        fetchpriority="high"
-      />
-    </section>
+  <main
+    id="content"
+    class:list={['page-shell', isFora && 'page-shell--case-detail', isFora && 'page-shell--fora']}
+    transition:name="page-content"
+  >
+    {
+      isFora ? (
+        <>
+          <section class="fora-intro-section" aria-labelledby="fora-intro-title">
+            <div class="fora-intro-top">
+              <h1 id="fora-intro-title" class="type-t2 fora-intro-title">
+                Fora app: driving 5% revenue increase and boosting app ratings from 3.0 to 4.6 over nine months
+              </h1>
+              <p class="type-body fora-intro-subtitle">
+                Fora is one of Ukraine’s largest grocery retailers, with 300+ stores. The company focuses on
+                convenient, friendly shopping experiences, both offline and online
+              </p>
+            </div>
 
-    <section class="metrics-grid" aria-label="Case metrics">
-      {current.metrics.map((metric) => (
-        <article>
-          <p>{metric.label}</p>
-          <strong>{metric.value}</strong>
-        </article>
-      ))}
-    </section>
+            <div class="fora-intro-bottom">
+              <div class="fora-intro-bottom-left">
+                <article class="fora-intro-column fora-intro-column--overview" aria-label="Overview">
+                  <div class="fora-intro-divider-wrap" aria-hidden="true">
+                    <QuantizedWave class="fora-intro-divider" size="medium" count={22} align="left" minCircles={1} />
+                  </div>
+                  <div class="fora-intro-text-group">
+                    <p class="type-description-large fora-intro-script">overview</p>
+                    <div class="fora-intro-rows">
+                      <p class="type-body fora-intro-row">
+                        <span class="fora-intro-row-label">role:</span>
+                        <span class="fora-intro-row-value">product designer</span>
+                      </p>
+                      <p class="type-body fora-intro-row">
+                        <span class="fora-intro-row-label">team:</span>
+                        <span class="fora-intro-row-value">4 front, 2 back, po, pm, ba, 2 qa</span>
+                      </p>
+                      <p class="type-body fora-intro-row">
+                        <span class="fora-intro-row-label">platform:</span>
+                        <span class="fora-intro-row-value">iOS and Android</span>
+                      </p>
+                    </div>
+                  </div>
+                </article>
 
-    <section class="section-stack prose-like">
-      <p>{current.summary}</p>
-      {current.sections.map((section) => (
-        <article>
-          <h2>{section.title}</h2>
-          {section.body.map((paragraph) => (
-            <p>{paragraph}</p>
-          ))}
-        </article>
-      ))}
-    </section>
+                <article class="fora-intro-column fora-intro-column--scope" aria-label="What I worked on">
+                  <div class="fora-intro-divider-wrap" aria-hidden="true">
+                    <QuantizedWave class="fora-intro-divider" size="medium" count={10} align="left" minCircles={1} />
+                  </div>
+                  <div class="fora-intro-text-group">
+                    <p class="type-description-large fora-intro-script">what I worked on</p>
+                    <div class="fora-intro-lines">
+                      <p class="type-body fora-intro-line">app redesign</p>
+                      <p class="type-body fora-intro-line">3d graphics and animations</p>
+                      <p class="type-body fora-intro-line">design system development</p>
+                    </div>
+                  </div>
+                </article>
+              </div>
 
-    <nav class="case-pager" aria-label="Case navigation">
-      <a href={`/${prev.slug}`}>Prev case: {prev.slug}</a>
-      <a href="/cases">All cases</a>
-      <a href={`/${next.slug}`}>Next case: {next.slug}</a>
-    </nav>
+              <article class="fora-intro-column fora-intro-column--results" aria-label="Results">
+                <div class="fora-intro-divider-wrap" aria-hidden="true">
+                  <QuantizedWave class="fora-intro-divider" size="medium" count={22} align="left" minCircles={1} />
+                </div>
+                <div class="fora-intro-text-group">
+                  <p class="type-description-large fora-intro-script">results</p>
+                  <div class="fora-intro-lines">
+                    <p class="type-body fora-intro-line">increased the App Store and Google Play rating from 3.0 to 4.6</p>
+                    <p class="type-body fora-intro-line">increased company revenue by 5%</p>
+                    <p class="type-body fora-intro-line">increased orders by 15%</p>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section class="fora-section-skeleton fora-section-skeleton--intro-screens" aria-hidden="true"></section>
+          <section class="fora-section-skeleton fora-section-skeleton--challenge" aria-hidden="true"></section>
+          <section class="fora-section-skeleton fora-section-skeleton--process" aria-hidden="true"></section>
+          <section class="fora-section-skeleton fora-section-skeleton--feature-cards" aria-hidden="true"></section>
+          <section class="fora-section-skeleton fora-section-skeleton--design-system" aria-hidden="true"></section>
+          <section class="fora-section-skeleton fora-section-skeleton--team-photo" aria-hidden="true"></section>
+          <section class="fora-section-skeleton fora-section-skeleton--case-switcher" aria-hidden="true"></section>
+        </>
+      ) : (
+        <>
+          <section class="section-stack">
+            <p class="kicker">Case Study</p>
+            <h1>{current.title}</h1>
+            <p class="lead-copy">{current.subtitle}</p>
+            <img
+              class="hero-media"
+              src={current.media[0]?.src}
+              alt={current.media[0]?.alt ?? current.title}
+              loading="eager"
+              decoding="async"
+              fetchpriority="high"
+            />
+          </section>
+
+          <section class="metrics-grid" aria-label="Case metrics">
+            {current.metrics.map((metric) => (
+              <article>
+                <p>{metric.label}</p>
+                <strong>{metric.value}</strong>
+              </article>
+            ))}
+          </section>
+
+          <section class="section-stack prose-like">
+            <p>{current.summary}</p>
+            {current.sections.map((section) => (
+              <article>
+                <h2>{section.title}</h2>
+                {section.body.map((paragraph) => (
+                  <p>{paragraph}</p>
+                ))}
+              </article>
+            ))}
+          </section>
+
+          <nav class="case-pager" aria-label="Case navigation">
+            <a href={`/${prev.slug}`}>Prev case: {prev.slug}</a>
+            <a href="/cases">All cases</a>
+            <a href={`/${next.slug}`}>Next case: {next.slug}</a>
+          </nav>
+        </>
+      )
+    }
   </main>
   <SiteFooter />
 </BaseLayout>

@@ -1,0 +1,154 @@
+---
+import type { ImageMetadata } from 'astro';
+import shellPhoneSrc from '../../assets/devices/Shell-phone.png';
+import shellTabletSrc from '../../assets/devices/Shell-tablet.png';
+
+type DeviceKind = 'phone' | 'tablet';
+type ScreenKind = 'image' | 'video';
+
+interface DevicePreset {
+  width: number;
+  height: number;
+  shellSrc: ImageMetadata;
+  screen: {
+    top: string;
+    right: string;
+    bottom: string;
+    left: string;
+    radius: string;
+  };
+}
+
+interface Props {
+  device?: DeviceKind;
+  screenKind: ScreenKind;
+  screenSrc: string;
+  screenAlt?: string;
+  screenPoster?: string;
+  class?: string;
+}
+
+const {
+  device = 'phone',
+  screenKind,
+  screenSrc,
+  screenAlt,
+  screenPoster,
+  class: className = '',
+} = Astro.props;
+
+const presets: Record<DeviceKind, DevicePreset> = {
+  phone: {
+    width: 244,
+    height: 501,
+    shellSrc: shellPhoneSrc,
+    screen: {
+      top: '2.18%',
+      right: '4.97%',
+      bottom: '2.19%',
+      left: '5.2%',
+      radius: '0px',
+    },
+  },
+  tablet: {
+    width: 296,
+    height: 508,
+    shellSrc: shellTabletSrc,
+    screen: {
+      top: '11.5px',
+      right: '11.5px',
+      bottom: '11.5px',
+      left: '11.5px',
+      radius: '17.524px',
+    },
+  },
+};
+
+const resolvedDevice: DeviceKind = device === 'tablet' ? 'tablet' : 'phone';
+const preset = presets[resolvedDevice];
+const composedClassName = ['device-mockup', `device-mockup--${resolvedDevice}`, className].filter(Boolean).join(' ');
+const styleVars = [
+  `--device-width: ${preset.width}px`,
+  `--device-height: ${preset.height}px`,
+  `--screen-top: ${preset.screen.top}`,
+  `--screen-right: ${preset.screen.right}`,
+  `--screen-bottom: ${preset.screen.bottom}`,
+  `--screen-left: ${preset.screen.left}`,
+  `--screen-radius: ${preset.screen.radius}`,
+].join('; ');
+---
+
+<div class={composedClassName} style={styleVars}>
+  <div class="device-mockup__screen" data-layer="screen">
+    {
+      screenKind === 'video' ? (
+        <video
+          class="device-mockup__media"
+          src={screenSrc}
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          poster={screenPoster}
+          aria-hidden="true"
+        />
+      ) : (
+        <img
+          class="device-mockup__media"
+          src={screenSrc}
+          alt={screenAlt ?? ''}
+          loading="lazy"
+          decoding="async"
+        />
+      )
+    }
+  </div>
+
+  <img
+    class="device-mockup__shell"
+    src={preset.shellSrc.src}
+    alt=""
+    aria-hidden="true"
+    loading="lazy"
+    decoding="async"
+  />
+</div>
+
+<style>
+  .device-mockup {
+    --device-scale: 1;
+    position: relative;
+    width: calc(var(--device-width) * var(--device-scale));
+    height: calc(var(--device-height) * var(--device-scale));
+    max-width: 100%;
+  }
+
+  .device-mockup__screen {
+    position: absolute;
+    top: var(--screen-top);
+    right: var(--screen-right);
+    bottom: var(--screen-bottom);
+    left: var(--screen-left);
+    overflow: hidden;
+    border-radius: var(--screen-radius);
+  }
+
+  .device-mockup__media {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .device-mockup__shell {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    user-select: none;
+  }
+</style>

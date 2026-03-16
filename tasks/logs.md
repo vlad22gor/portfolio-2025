@@ -1,5 +1,30 @@
 # Logs
 
+- 2026-03-16: Исправлено вертикальное выравнивание `results` в `/fora intro` через top-align всего нижнего контейнера.
+  Причина: при `align-items: center` у `.fora-intro-bottom` правая колонка (`results`) центрировалась по высоте и визуально «уезжала» вниз.
+  Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; runtime-проверка `/fora` подтверждает одинаковый `top` у `.fora-intro-bottom-left` и `.fora-intro-column--results`.
+
+- 2026-03-16: Актуализированы тексты `intro section` для `/fora` по Figma `37:4182` с исправлением переносных текстовых неточностей.
+  Причина: требовалось синхронизировать фактический контент секции (`overview/scope/results`) с макетом и убрать устаревшие формулировки.
+  Файлы: `src/pages/[slug].astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Figma MCP (`get_design_context` + `get_screenshot`) подтверждает источник текста `37:4182`.
+
+- 2026-03-16: Исправлен расчёт budget в `QuantizedPerimeter` для fixed-size scallop-блоков (при `min==max` размер берётся из `root`, а не из `parent`).
+  Причина: в `about` и `more cases` runtime брал завышенную `parent.clientHeight`, из-за чего ломалась квантизация периметра (`rows` уезжали в `145/31`) и визуально деформировались scallop-края.
+  Файлы: `src/components/QuantizedPerimeter.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Playwright (`http://127.0.0.1:4322/`) подтверждает `about` (`step=48`, `rows=24`, `cols=17`, `mismatch=false`) и `more cases` (`rows=9`, `cols=17`, `mismatch=false`), `footer` без регрессии (`rows=8`, `cols=30`, `mismatch=false`).
+
+- 2026-03-16: Для `/fora` intro-divider переведён с clip-подгонки на сегментную длину (`count`), а в `QuantizedPerimeter` добавлена диагностика snap-mismatch; дополнительно стабилизирована геометрия `about me` под `step=48`.
+  Причина: по фидбеку нельзя ограничивать divider через `overflow:hidden`; также scallop деформировался при фиксированной высоте `1151` (не кратна `48`) и требовалась защита от повторения таких кейсов.
+  Файлы: `src/pages/[slug].astro`, `src/styles/global.css`, `src/components/QuantizedPerimeter.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg` подтверждает `count={22/10/22}` в `/fora` intro и отсутствие clip в `.fora-intro-divider-wrap`; `dist/fora/index.html` содержит `data-wave-count="22"` (2 шт) и `data-wave-count="10"` (1 шт), `case-pager` отсутствует (`0`), `dist/kissa/index.html` сохраняет `case-pager` (`1`); `src/styles/global.css` подтверждает `about-me-section` `1152px` и компенсацию `quotes margin-top: 184px`; `QuantizedPerimeter` содержит `data-perimeter-snap-mismatch` + dev-warn `snap mismatch on fixed-height element`.
+
+- 2026-03-16: Для `/fora` внедрён новый секционный layout: полностью сверстан `intro section` по Figma `37:4182` + добавлен пустой каркас следующих секций; `case-pager` удалён только для `/fora`, `/kissa` оставлен без изменений.
+  Причина: начать посекционную вёрстку `cases/fora` с первого блока и сразу зафиксировать геометрию всей страницы под дальнейшее поэтапное наполнение.
+  Файлы: `src/pages/[slug].astro`, `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg` по `dist/fora/index.html` подтверждает `page-shell--case-detail page-shell--fora`, `fora-intro-section`, `3` divider-а `QuantizedWave medium` (`class="quantized-wave fora-intro-divider"`), `3` script-заголовка `type-description-large`, отсутствие `case-pager`; `rg` по `dist/kissa/index.html` подтверждает сохранение legacy-страницы и наличие `case-pager` (`1` вхождение).
+
 - 2026-03-16: Для `final-cta-morph-v1` подтверждён spring-профиль и поднят порог repeat-триггера с `30%` до `50%`.
   Причина: параметры должны строго соответствовать Framer (`spring`, `0.6`, `0.1`), а при `amount: 0.3` реверс часто запускался слишком поздно и визуально терялся.
   Файлы: `src/components/InViewMotionRuntime.astro`, `docs/inview-appear-v1.md`, `tasks/lessons.md`, `tasks/logs.md`.
@@ -776,3 +801,13 @@
   `1234px -> footer/scallop/frame = 1234/1234/1234, cols=31, leftGap=0, rightGap=0`,
   `1281px -> 1281/1281/1281, cols=33, leftGap=0, rightGap=0`,
   `1367px -> 1367/1367/1367, cols=35, leftGap=0, rightGap=0`.
+
+- 2026-03-16: Реализован `DeviceMockup v1` как отдельный reusable-компонент (без интеграции в страницы/данные).
+  Причина: нужен стабильный контракт для слоя `Screen`, чтобы передавать только `png`/`video`-контент при двух типах девайсов.
+  Файлы: `src/components/DeviceMockup.astro`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `npm run astro -- check` — не пройдено из-за уже существующих ошибок типизации в проекте (`Result (26 files): 378 errors, 0 warnings, 2 hints`); `npm run astro -- check 2>&1 | rg -n "DeviceMockup|Result \\("` показывает только summary-строку без диагностик по `DeviceMockup`; `rg -n "assets/devices|device\\?:|screenKind:|phone:|tablet:|screenKind === 'video'|autoplay|muted|loop|playsinline|poster=" src/components/DeviceMockup.astro` подтверждает импорт shell из `assets/devices`, оба device-пресета и video-атрибуты.
+
+- 2026-03-16: Актуализированы color/type токены по Figma `2:5119` и `2:5278` с жёсткой миграцией классов без legacy-алиасов.
+  Причина: синхронизировать дизайн-токены проекта с новым token spec (`ticket/bg`, `t1-tight`, новый `t5`, `t6`, `description-medium/large`) и убрать использование устаревших `type-t5`/`type-description` в разметке.
+  Файлы: `src/styles/global.css`, `src/components/DesignToolsSection.astro`, `src/components/CasesCardsSection.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `rg -n -- "--color-ticket-bg-(orange|blue)-(critical|high|medium|low|muted)" src/styles/global.css` подтверждает 10 новых color tokens; `rg -n -P -- "\btype-t5\b(?!-)" src/components src/pages src/layouts` и `rg -n -P -- "\btype-description\b(?!-)" ...` — совпадений нет; `rg -n -- "\.type-t1-tight\s*\{|\.type-t6\s*\{|\.type-description-medium\s*\{|\.type-description-large\s*\{" src/styles/global.css` подтверждает новые utility-классы; `metrics-grid strong` переведён на `--type-t6-*`; Playwright smoke-check (`http://127.0.0.1:4178/`) прошёл: computed styles `design-tools-label type-t6 => 20/24/600`, `cases-cards-description-label type-description-medium => 20/22/450/lowercase`, скриншоты `tmp/smoke-home-tokens-2026-03-16.png`, `tmp/smoke-cases-description-2026-03-16.png`, `tmp/smoke-design-tools-2026-03-16.png`.
