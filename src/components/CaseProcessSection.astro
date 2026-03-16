@@ -1,0 +1,103 @@
+---
+import QuantizedPerimeter from './QuantizedPerimeter.astro';
+
+import type {
+  CaseProcessSectionData,
+  CaseProcessStep,
+  CaseProcessTicketTone,
+} from '../data/case-process/types';
+
+interface Props extends CaseProcessSectionData {
+  class?: string;
+  id?: string;
+}
+
+const {
+  title,
+  caption,
+  steps,
+  ticketsRows,
+  variant,
+  ticketColorFamily = 'orange',
+  class: className = '',
+  id,
+} = Astro.props as Props;
+
+const safeVariant = variant?.trim() ? variant.trim() : undefined;
+const headingId = id ?? (safeVariant ? `case-process-${safeVariant}-title` : 'case-process-title');
+const composedClassName = ['case-process-section', safeVariant && `case-process-section--${safeVariant}`, className]
+  .filter(Boolean)
+  .join(' ');
+
+const resolveTicketBackground = (tone: CaseProcessTicketTone) =>
+  `var(--color-ticket-bg-${ticketColorFamily === 'blue' ? 'blue' : 'orange'}-${tone})`;
+
+const resolveStepRowStyle = (step: CaseProcessStep) =>
+  `--case-process-row-offset:${step.offsetX}px; --case-process-row-height:${step.rowHeight}px;`;
+
+const resolveIconStyle = (step: CaseProcessStep) =>
+  `--case-process-icon-mask:url("${step.iconSrc}"); --case-process-icon-color:var(${step.iconColorToken});`;
+---
+
+<section class={composedClassName} aria-labelledby={headingId}>
+  <h2 id={headingId} class="type-t3 case-process-section__title">{title}</h2>
+
+  <div class="case-process-section__content">
+    <div class="case-process-section__steps">
+      {
+        steps.map((step) => (
+          <div class="case-process-section__step-row" style={resolveStepRowStyle(step)}>
+            <article class="case-process-step">
+              <div class="case-process-step__icon-wrap" aria-hidden="true">
+                <span class="case-process-step__icon" style={resolveIconStyle(step)}></span>
+              </div>
+              <p class="type-body case-process-step__text">{step.text}</p>
+            </article>
+
+            {step.arrow && (
+              <img
+                class="case-process-step__arrow"
+                src={step.arrow.src}
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+                decoding="async"
+                width={step.arrow.width}
+                height={step.arrow.height}
+                style={`left:${step.arrow.left}px; top:${step.arrow.top}px; width:${step.arrow.width}px; height:${step.arrow.height}px;`}
+              />
+            )}
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="case-process-section__tickets" aria-label="Prioritised CJM tickets">
+      <div class="case-process-section__tickets-rows">
+        {
+          ticketsRows.map((row) => (
+            <div class="case-process-section__tickets-row">
+              {row.tickets.map((ticket) => (
+                <QuantizedPerimeter
+                  class="case-process-ticket"
+                  shape="rectangle"
+                  edgePattern="scallop"
+                  step={36}
+                  minCols={1}
+                  minRows={1}
+                  pad="0"
+                  bg={resolveTicketBackground(ticket.tone)}
+                  label={`Process ticket ${ticket.tone}`}
+                >
+                  <p class="type-text-small case-process-ticket__text">{ticket.text}</p>
+                </QuantizedPerimeter>
+              ))}
+            </div>
+          ))
+        }
+      </div>
+
+      <p class="type-description-medium case-process-section__caption">{caption}</p>
+    </div>
+  </div>
+</section>

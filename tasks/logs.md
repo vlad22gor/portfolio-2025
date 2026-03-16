@@ -1,5 +1,20 @@
 # Logs
 
+- 2026-03-16: Для `/fora process` устранено дополнительное “расталкивание” карточек в рядах — зафиксирован точный межкарточный gap `24px`.
+  Причина: базовый стиль `:is(.quantized-scallop, .quantized-perimeter)` задаёт `margin-inline: auto`, что влияло на flex-раскладку ticket rows.
+  Файлы: `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; runtime `/fora` (`1360px`) подтверждает `rowStyleGaps = 24px/24px` и измеренные bbox-gap `24/24/24/24` (1-й ряд) и `24/24/24` (2-й ряд), `allGapsAre24=true`.
+
+- 2026-03-16: Для `/fora process` выровнены по центру оба ticket rows и обновлены ticket color tokens на непрозрачные значения из Figma `2:5119`.
+  Причина: второй ряд визуально был смещён вправо из-за ручного offset, а в дизайн-системе обновились оттенки `components/colors` без transparency.
+  Файлы: `src/components/CaseProcessSection.astro`, `src/data/case-process/types.ts`, `src/data/case-process/fora.ts`, `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `dist/fora/index.html` подтверждает `case-process-section` (без `fora-section-skeleton--process`), `6` steps, `5` arrows, `9` tickets и `9` `data-perimeter-step="36"`; runtime `/fora` (`1360px`) подтверждает центрирование обоих рядов (`center delta <= 1px`), размеры тикетов `144x144`, caption centered; регрессия `/kissa`: `case-process-section` отсутствует, `case-pager` сохранён.
+
+- 2026-03-16: Реализована универсальная `process`-секция для `/fora` (`CaseProcessSection`) и вынесен отдельный data-конфиг `fora`.
+  Причина: заменить `fora-section-skeleton--process` на рабочий блок по Figma `38:5218` с контрактом тикетов `QuantizedPerimeter step=36` и переиспользуемой структурой для других кейсов.
+  Файлы: `src/components/CaseProcessSection.astro`, `src/data/case-process/types.ts`, `src/data/case-process/fora.ts`, `src/pages/[slug].astro`, `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `dist/fora/index.html` подтверждает замену skeleton (`case-process-section` присутствует, `fora-section-skeleton--process` отсутствует), а также `6` шагов, `5` стрелок, `9` тикетов и `9` вхождений `data-perimeter-step="36"`; Playwright (`http://127.0.0.1:4176/fora`, `1360px`) подтверждает `section=816x1159`, offsets шагов `0/168/336/504/336/168`, row heights `48/72/96/72/72/72`, тикеты `144x144`, second-row offset `84`, caption `320px` и centered, icon colors по токенам (`green/blue/orange`), `data-perimeter-snap-mismatch` у process-тикетов `0`; регрессия `kissa` — `case-process-section` отсутствует, `case-pager` сохранён.
+
 - 2026-03-16: Исправлена геометрия `intro screens` на `/fora`: секция зафиксирована по высоте, контент центрирован, боковые mockup остаются меньше центрального.
   Причина: требовалось убрать runaway/infinite height у `QuantizedPerimeter`-секции и синхронизировать композицию `38:4410` (центрирование + явный размерный контраст `left/right < center`).
   Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.

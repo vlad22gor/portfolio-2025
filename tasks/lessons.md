@@ -13,6 +13,7 @@
 - Для `/fora intro` divider `QuantizedWave size='medium'` длину ограничивать count-сегментами (`312 -> 22`, `144 -> 10`, `312 -> 22`), не через `overflow: hidden`/clip.
 - Для `/fora intro` тексты (`overview/scope/results`) синхронизировать 1:1 с Figma `37:4182`; при переносе исправлять только явные опечатки/регистровые неточности без изменения смысла.
 - Для `/fora intro` колонки в нижнем ряду держать с top-align на уровне контейнера (`.fora-intro-bottom { align-items: flex-start; }`), чтобы `results` не смещался вниз при разной высоте контента.
+- Для `/fora process` тикеты рендерить через `QuantizedPerimeter` с `edgePattern='scallop'`, `step=36`, `pad=0` и фиксированным размером `144x144`; ширину тикета задавать селектором с большей специфичностью, чем базовый `:is(.quantized-scallop,.quantized-perimeter){width:100%}`.
 - Для `/` держать порядок секций и Y-контракты как в Figma: `hero(240) -> cases(1320) -> design tools(3024) -> about me(3744) -> quotes(5112) -> final cta(6000)`, затем `footer(7080)`; при расчёте `margin-top` учитывать `main.page-shell` `grid gap` (`32px`).
 - Для `final cta` на `/`: divider рендерить full-bleed на ширину viewport (`left=0/right=viewport`) отдельным слоем, не задавать собственный фон секции, а motif использовать в синем варианте (`/media/motifs/motif-stack-orb-3-blue.svg`).
 - Для desktop-навигации при route-transition резервировать scrollbar gutter на root (`scrollbar-gutter: stable both-edges`, fallback `overflow-y: scroll`), чтобы избежать горизонтального layout shift fixed-header и контента.

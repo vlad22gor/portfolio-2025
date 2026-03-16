@@ -5,8 +5,10 @@ import SiteFooter from '../components/SiteFooter.astro';
 import QuantizedWave from '../components/QuantizedWave.astro';
 import IntroScreensQuantizedPerimeterSection from '../components/IntroScreensQuantizedPerimeterSection.astro';
 import CaseChallengeSection from '../components/CaseChallengeSection.astro';
+import CaseProcessSection from '../components/CaseProcessSection.astro';
 import foraChallengeScreenSrc from '../../assets/images/fora/fora-challenge-mock.png';
 import { CASES, getCaseBySlug } from '../data/cases';
+import { FORA_PROCESS_SECTION } from '../data/case-process/fora';
 
 export function getStaticPaths() {
   return CASES.map((item) => ({ params: { slug: item.slug } }));
@@ -176,7 +178,7 @@ const foraChallengeNotes = [
             screen={foraChallengeScreen}
             notes={foraChallengeNotes}
           />
-          <section class="fora-section-skeleton fora-section-skeleton--process" aria-hidden="true"></section>
+          <CaseProcessSection {...FORA_PROCESS_SECTION} />
           <section class="fora-section-skeleton fora-section-skeleton--feature-cards" aria-hidden="true"></section>
           <section class="fora-section-skeleton fora-section-skeleton--design-system" aria-hidden="true"></section>
           <section class="fora-section-skeleton fora-section-skeleton--team-photo" aria-hidden="true"></section>
