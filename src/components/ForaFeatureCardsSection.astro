@@ -1,0 +1,73 @@
+---
+import FeatureCard from './FeatureCard.astro';
+
+type BadgeTone = 'blue' | 'gray' | 'orange' | 'green';
+
+interface FeatureCardItem {
+  mockSide: 'left' | 'right';
+  device: 'phone' | 'tablet';
+  badges: Array<{ label: string; tone: BadgeTone }>;
+  title: string;
+  description: string;
+  mock: {
+    kind: 'video';
+    src: string;
+    poster: string;
+  };
+}
+
+const featureCards: FeatureCardItem[] = [
+  {
+    mockSide: 'left',
+    device: 'phone',
+    badges: [
+      { label: 'Delivery', tone: 'blue' },
+      { label: 'Address and Time Selection', tone: 'gray' },
+    ],
+    title: 'Visual categories and smart selection',
+    description:
+      'Images on category cards made discovery instant. Recent address selection and quick time slots reduced selection time by 50%',
+    mock: {
+      kind: 'video',
+      src: '/media/fora/feature-cards/flows/Fora-Delivery.webm',
+      poster: '/media/fora/feature-cards/posters/Fora-Delivery.png',
+    },
+  },
+  {
+    mockSide: 'right',
+    device: 'phone',
+    badges: [
+      { label: 'Catalogue', tone: 'orange' },
+      { label: 'Navigation', tone: 'gray' },
+    ],
+    title: 'Two-level categories navigation',
+    description:
+      'Subcategory and sub-subcategory filters let users narrow down instantly which cut product search time by 30%',
+    mock: {
+      kind: 'video',
+      src: '/media/fora/feature-cards/flows/Fora-Catalogue.webm',
+      poster: '/media/fora/feature-cards/posters/Fora-Catalogue.png',
+    },
+  },
+  {
+    mockSide: 'left',
+    device: 'phone',
+    badges: [
+      { label: 'Cart', tone: 'green' },
+      { label: 'Delivety Method', tone: 'gray' },
+    ],
+    title: 'Free delivery progress and payment options',
+    description:
+      'Free delivery progress bar increased average order value by 10%. Apple and Google Pay integrations lifted order volume by 15%',
+    mock: {
+      kind: 'video',
+      src: '/media/fora/feature-cards/flows/Fora-Cart.webm',
+      poster: '/media/fora/feature-cards/posters/Fora-Cart.png',
+    },
+  },
+];
+---
+
+<section class="fora-feature-cards-section" aria-label="Fora feature cards">
+  {featureCards.map((card) => <FeatureCard {...card} />)}
+</section>

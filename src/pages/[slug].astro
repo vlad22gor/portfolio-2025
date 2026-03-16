@@ -6,6 +6,7 @@ import QuantizedWave from '../components/QuantizedWave.astro';
 import IntroScreensQuantizedPerimeterSection from '../components/IntroScreensQuantizedPerimeterSection.astro';
 import CaseChallengeSection from '../components/CaseChallengeSection.astro';
 import CaseProcessSection from '../components/CaseProcessSection.astro';
+import ForaFeatureCardsSection from '../components/ForaFeatureCardsSection.astro';
 import foraChallengeScreenSrc from '../../assets/images/fora/fora-challenge-mock.png';
 import { CASES, getCaseBySlug } from '../data/cases';
 import { FORA_PROCESS_SECTION } from '../data/case-process/fora';
@@ -179,7 +180,7 @@ const foraChallengeNotes = [
             notes={foraChallengeNotes}
           />
           <CaseProcessSection {...FORA_PROCESS_SECTION} />
-          <section class="fora-section-skeleton fora-section-skeleton--feature-cards" aria-hidden="true"></section>
+          <ForaFeatureCardsSection />
           <section class="fora-section-skeleton fora-section-skeleton--design-system" aria-hidden="true"></section>
           <section class="fora-section-skeleton fora-section-skeleton--team-photo" aria-hidden="true"></section>
           <section class="fora-section-skeleton fora-section-skeleton--case-switcher" aria-hidden="true"></section>

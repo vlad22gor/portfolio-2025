@@ -1,5 +1,10 @@
 # Logs
 
+- 2026-03-16: Реализована секция `feature cards` для `/fora` по Figma `42:1730` и добавлен reusable-компонент `FeatureCard` с API `mockSide + device`.
+  Причина: заменить skeleton-блок `feature cards` на рабочую 1:1 секцию, переиспользовать `DeviceMockup`/`QuantizedPerimeter` и подготовить универсальный компонент под варианты `mock side`/`device`.
+  Файлы: `src/components/FeatureCard.astro`, `src/components/ForaFeatureCardsSection.astro`, `src/pages/[slug].astro`, `src/styles/global.css`, `public/media/fora/feature-cards/flows/Fora-Delivery.webm`, `public/media/fora/feature-cards/flows/Fora-Catalogue.webm`, `public/media/fora/feature-cards/flows/Fora-Cart.webm`, `public/media/fora/feature-cards/posters/Fora-Delivery.png`, `public/media/fora/feature-cards/posters/Fora-Catalogue.png`, `public/media/fora/feature-cards/posters/Fora-Cart.png`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `dist/fora/index.html` подтверждает рендер `<section class="fora-feature-cards-section">` и 3 карточек `fora-feature-card`; `rg -o '<video class="device-mockup__media"' dist/fora/index.html | wc -l` => `3`; `rg -o 'poster="/media/fora/feature-cards/posters/[^"]+"' dist/fora/index.html | wc -l` => `3`; все видео-пути указывают на `/media/fora/feature-cards/flows/{Fora-Delivery,Fora-Catalogue,Fora-Cart}.webm`.
+
 - 2026-03-16: Для `/fora process` устранено дополнительное “расталкивание” карточек в рядах — зафиксирован точный межкарточный gap `24px`.
   Причина: базовый стиль `:is(.quantized-scallop, .quantized-perimeter)` задаёт `margin-inline: auto`, что влияло на flex-раскладку ticket rows.
   Файлы: `src/styles/global.css`, `tasks/logs.md`.

@@ -1,0 +1,128 @@
+---
+import Badge from './Badge.astro';
+import DeviceMockup from './DeviceMockup.astro';
+import QuantizedPerimeter from './QuantizedPerimeter.astro';
+
+type MockSide = 'left' | 'right';
+type DeviceKind = 'phone' | 'tablet';
+type BadgeTone = 'blue' | 'gray' | 'orange' | 'green';
+
+interface FeatureCardBadge {
+  label: string;
+  tone: BadgeTone;
+}
+
+interface FeatureCardMock {
+  kind: 'video';
+  src: string;
+  poster?: string;
+}
+
+interface Props {
+  mockSide?: MockSide;
+  device?: DeviceKind;
+  badges: FeatureCardBadge[];
+  title: string;
+  description: string;
+  mock: FeatureCardMock;
+  class?: string;
+}
+
+const {
+  mockSide = 'left',
+  device = 'phone',
+  badges,
+  title,
+  description,
+  mock,
+  class: className = '',
+} = Astro.props;
+
+const resolvedMockSide: MockSide = mockSide === 'right' ? 'right' : 'left';
+const resolvedDevice: DeviceKind = device === 'tablet' ? 'tablet' : 'phone';
+const rootClassName = [
+  'fora-feature-card',
+  resolvedMockSide === 'right' ? 'fora-feature-card--mock-right' : 'fora-feature-card--mock-left',
+  className,
+]
+  .filter(Boolean)
+  .join(' ');
+---
+
+<article class={rootClassName}>
+  {
+    resolvedMockSide === 'left' ? (
+      <>
+        <div class="fora-feature-card__mock">
+          <QuantizedPerimeter
+            class="fora-feature-card__mock-perimeter"
+            shape="rectangle"
+            edgePattern="scallop"
+            step={48}
+            bg="var(--color-bg-darkened)"
+            pad="0"
+            label={`Feature card mockup: ${title}`}
+          >
+            <DeviceMockup
+              class="fora-feature-card__device"
+              device={resolvedDevice}
+              screenKind={mock.kind}
+              screenSrc={mock.src}
+              screenPoster={mock.poster}
+              screenAlt=""
+            />
+          </QuantizedPerimeter>
+        </div>
+
+        <div class="fora-feature-card__text">
+          <ul class="fora-feature-card__badges" aria-label="Feature tags">
+            {badges.map((badge) => (
+              <li>
+                <Badge label={badge.label} tone={badge.tone} />
+              </li>
+            ))}
+          </ul>
+
+          <p class="type-t3 fora-feature-card__title">{title}</p>
+          <p class="type-body fora-feature-card__description">{description}</p>
+        </div>
+      </>
+    ) : (
+      <>
+        <div class="fora-feature-card__text">
+          <ul class="fora-feature-card__badges" aria-label="Feature tags">
+            {badges.map((badge) => (
+              <li>
+                <Badge label={badge.label} tone={badge.tone} />
+              </li>
+            ))}
+          </ul>
+
+          <p class="type-t3 fora-feature-card__title">{title}</p>
+          <p class="type-body fora-feature-card__description">{description}</p>
+        </div>
+
+        <div class="fora-feature-card__mock">
+          <QuantizedPerimeter
+            class="fora-feature-card__mock-perimeter"
+            shape="rectangle"
+            edgePattern="scallop"
+            step={48}
+            bg="var(--color-bg-darkened)"
+            pad="0"
+            label={`Feature card mockup: ${title}`}
+          >
+            <DeviceMockup
+              class="fora-feature-card__device"
+              device={resolvedDevice}
+              screenKind={mock.kind}
+              screenSrc={mock.src}
+              screenPoster={mock.poster}
+              screenAlt=""
+            />
+          </QuantizedPerimeter>
+        </div>
+      </>
+    )
+  }
+</article>
