@@ -758,3 +758,21 @@
   Причина: формула `line = window.innerHeight * amount` при `amount=0.7` давала визуальный триггер около 30% входа секции; ожидание — около 70% входа.
   Файлы: `src/components/InViewMotionRuntime.astro`, `docs/inview-appear-v1.md`, `tasks/lessons.md`, `tasks/logs.md`.
   Проверки: `npm run build` — успешно; trigger line считается как `window.innerHeight * (1 - amount)` (для `0.7` это `30vh` сверху), логика single-boundary down/up сохранена.
+
+- 2026-03-16: Реализована страница `/cases` как 1:1 композиция секций из home (`cases cards` + `final cta`) с сохранением текущих анимаций.
+  Причина: по макету Figma `37:2302` страница `cases` должна переиспользовать эти же секции и motion runtime без дублирования верстки.
+  Файлы: `src/pages/cases.astro`, `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `src/components/SiteHeader.astro` проверен без изменений (`href: '/cases'` и активное состояние по `pathname === '/cases'` уже реализованы); для `/cases` добавлен `page-shell--cases` и page-specific отступы только на уровне страницы (`.page-shell--cases`, `.page-shell--cases > .final-cta-section`), секции и их `data-motion-*` пресеты не менялись.
+
+- 2026-03-16: Исправлены full-bleed артефакты краёв у `final cta` divider и футера через нативный viewport clipping.
+  Причина: большая волна и футер визуально оставляли боковые артефакты (в т.ч. 1–2px полосы у футера) из-за отсутствия явного viewport-клипа/bleed-контракта при `scrollbar-gutter`.
+  Файлы: `src/components/FinalCtaSection.astro`, `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `final cta` переключён на `QuantizedWave fit='cover-bleed' bleedCircles={2}` без изменений runtime; для `.final-cta-divider-bleed` и `.site-footer` добавлен `overflow-x: clip` с fallback `overflow-x: hidden`, а футер переведён на viewport-bleed (`left: 50%`, `width: 100vw`, `translateX(-50%)`) с сохранением текущей `QScallop`-геометрии и `::before` fill-слоя.
+
+- 2026-03-16: Добавлен системный режим `fit='cover'` для rectangle в `QuantizedPerimeter` и включён в футере.
+  Причина: при ширинах viewport, не кратных `step`, rectangle-периметр в inside-fit (`floor(width/step)`) оставлял боковые зазоры и визуально выглядел как «срез по квантизации», а не по viewport clipping.
+  Файлы: `src/components/QuantizedPerimeter.astro`, `src/components/QuantizedScallop.astro`, `src/components/SiteFooter.astro`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; Playwright-метрики на `/cases` после фикса:
+  `1234px -> footer/scallop/frame = 1234/1234/1234, cols=31, leftGap=0, rightGap=0`,
+  `1281px -> 1281/1281/1281, cols=33, leftGap=0, rightGap=0`,
+  `1367px -> 1367/1367/1367, cols=35, leftGap=0, rightGap=0`.

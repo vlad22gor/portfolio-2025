@@ -519,6 +519,10 @@ html {
   padding-top: calc(240px - var(--site-header-height));
 }
 
+.page-shell--cases {
+  padding-top: calc(240px - var(--site-header-height));
+}
+
 .section-stack {
   display: grid;
   gap: 1.25rem;
@@ -1230,12 +1234,32 @@ img.home-hero-asset {
   margin-bottom: 138px;
 }
 
+.page-shell--cases>.final-cta-section {
+  margin-top: 184px;
+  margin-bottom: 138px;
+}
+
 .final-cta-divider-bleed {
   position: relative;
   left: 50%;
   width: 100vw;
+  max-width: none;
   height: 30px;
   transform: translateX(-50%);
+  isolation: isolate;
+}
+
+.final-cta-divider-bleed,
+.site-footer {
+  overflow-x: clip;
+}
+
+@supports not (overflow: clip) {
+
+  .final-cta-divider-bleed,
+  .site-footer {
+    overflow-x: hidden;
+  }
 }
 
 .final-cta-divider-bleed .quantized-wave {
@@ -1786,9 +1810,13 @@ img.home-hero-asset {
   position: relative;
   display: flex;
   justify-content: center;
-  width: 100%;
+  left: 50%;
+  width: 100vw;
+  max-width: none;
   margin-top: auto;
-  overflow: hidden;
+  transform: translateX(-50%);
+  isolation: isolate;
+  overflow-y: hidden;
 }
 
 .site-footer::before {

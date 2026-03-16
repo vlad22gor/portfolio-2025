@@ -5,6 +5,7 @@ interface Props {
   class?: string;
   shape?: 'rectangle' | 'circle';
   rectangleEdges?: 'all' | 'top';
+  fit?: 'contain' | 'cover';
   step?: number;
   minCols?: number;
   minRows?: number;
@@ -27,6 +28,7 @@ const {
   class: className = '',
   shape = 'rectangle',
   rectangleEdges = 'all',
+  fit = 'contain',
   step = 48,
   minCols = 12,
   minRows = 8,
@@ -53,6 +55,7 @@ const resolvedEdges = rectangleEdges === 'top' ? 'top' : 'all';
   shape={shape}
   edgePattern="scallop"
   edges={resolvedEdges}
+  fit={fit}
   step={step}
   minCols={minCols}
   minRows={minRows}

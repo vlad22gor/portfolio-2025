@@ -4,6 +4,7 @@ interface Props {
   shape?: 'rectangle' | 'circle';
   edgePattern?: 'scallop' | 'totem';
   edges?: 'all' | 'top';
+  fit?: 'contain' | 'cover';
   step?: number;
   minCols?: number;
   minRows?: number;
@@ -38,6 +39,7 @@ const {
   shape = 'rectangle',
   edgePattern = 'scallop',
   edges = 'all',
+  fit = 'contain',
   step = 48,
   minCols = 12,
   minRows = 8,
@@ -69,6 +71,7 @@ const {
 const resolvedShape = shape === 'circle' ? 'circle' : 'rectangle';
 const resolvedPattern = edgePattern === 'totem' ? 'totem' : 'scallop';
 const resolvedEdges = edges === 'top' ? 'top' : 'all';
+const resolvedFit = fit === 'cover' ? 'cover' : 'contain';
 const resolvedHoverMorphPreset = hoverMorphPreset === 'strong' ? 'strong' : 'default';
 const resolvedOutlineMode = outlineMode === 'geometric' ? 'geometric' : 'alpha';
 const resolvedOutlinePlacement = outlinePlacement === 'outside' ? 'outside' : 'center';
@@ -109,6 +112,7 @@ const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefi
   data-perimeter-shape={resolvedShape}
   data-perimeter-edge-pattern={resolvedPattern}
   data-perimeter-edges={resolvedEdges}
+  data-perimeter-fit={resolvedFit}
   data-perimeter-step={String(step)}
   data-perimeter-min-cols={String(minCols)}
   data-perimeter-min-rows={String(minRows)}
@@ -186,8 +190,9 @@ const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefi
       const rootHeight = Math.floor(rootRect.height);
       const parentWidth = Math.floor(parent.clientWidth);
       const parentHeight = Math.floor(parent.clientHeight);
-      const width = Math.max(1, rootWidth || parentWidth || safeStep);
-      const height = Math.max(1, rootHeight || parentHeight || safeStep);
+      // Use parent box as primary sizing budget; root size may contain previous quantized snap.
+      const width = Math.max(1, parentWidth || rootWidth || safeStep);
+      const height = Math.max(1, parentHeight || rootHeight || safeStep);
       return { width, height };
     };
 
@@ -202,6 +207,13 @@ const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefi
         return Math.max(1, bounded);
       }
       return Math.max(4, bounded);
+    };
+
+    const resolveFitMode = (value) => {
+      if (value === 'cover') {
+        return 'cover';
+      }
+      return 'contain';
     };
 
     const applyBoxSize = (root, state, width, height) => {
@@ -917,9 +929,12 @@ const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefi
       const widthBudget = Math.max(1, Math.floor(available.width));
       const heightBudget = Math.max(1, Math.floor(available.height));
 
+      const fitMode = resolveFitMode(root.dataset.perimeterFit);
       const floorCols = Math.max(1, Math.floor(widthBudget / effectiveStep));
+      const ceilCols = Math.max(1, Math.ceil(widthBudget / effectiveStep));
       const floorRows = Math.max(1, Math.floor(heightBudget / effectiveStep));
-      const cols = minCols * effectiveStep <= widthBudget ? Math.max(minCols, floorCols) : floorCols;
+      const baseCols = fitMode === 'cover' ? ceilCols : floorCols;
+      const cols = minCols * effectiveStep <= widthBudget ? Math.max(minCols, baseCols) : baseCols;
       const rows = minRows * effectiveStep <= heightBudget ? Math.max(minRows, floorRows) : floorRows;
       const snappedWidth = cols * effectiveStep;
       const snappedHeight = rows * effectiveStep;
