@@ -53,6 +53,28 @@ test.describe('Gallery smoke', () => {
     );
     expect(allVideoTransformsAreDisabled).toBe(true);
 
+    const illustrationVideos = page.locator('.gallery-card-illustration video.gallery-card-illustration__asset');
+    await expect(illustrationVideos).toHaveCount(2);
+
+    const coinWheelVideo = page.locator(
+      '.gallery-card-illustration--coin-wheel video.gallery-card-illustration__asset--coin-wheel',
+    );
+    await expect(coinWheelVideo).toHaveCount(1);
+    const coinWheelVideoIsAutoplayReady = await coinWheelVideo.evaluate((node) => {
+      if (!(node instanceof HTMLVideoElement)) {
+        return false;
+      }
+      return (
+        node.autoplay &&
+        node.muted &&
+        node.loop &&
+        node.playsInline &&
+        node.getAttribute('src')?.endsWith('/media/gallery/illustrations/coin-wheel.webm') === true &&
+        node.getAttribute('poster')?.endsWith('/media/gallery/illustrations/coin-wheel.png') === true
+      );
+    });
+    expect(coinWheelVideoIsAutoplayReady).toBe(true);
+
     const loaderLight = page.locator('.gallery-card-illustration--cube video.gallery-card-illustration__asset--cube');
     await expect(loaderLight).toHaveCount(1);
     const loaderLightIsAutoplayReady = await loaderLight.evaluate((node) => {
@@ -174,6 +196,13 @@ test.describe('Gallery smoke', () => {
       }),
     );
     expect(imageMaskCoverage).toBe(true);
+    const secondImageCardUsesCubeLogIn = await page.evaluate(() => {
+      const target = document.querySelector(
+        '.gallery-card[data-gallery-card-id="57:5450"] .gallery-card__image-layer',
+      );
+      return target instanceof HTMLImageElement && target.src.endsWith('/media/gallery/images/r5-c3-cube-log-in.png');
+    });
+    expect(secondImageCardUsesCubeLogIn).toBe(true);
 
     const compactApertureAlignment = await page.evaluate(async () => {
       const targetCard = document.querySelector('.gallery-card[data-gallery-card-id="51:5269"]');

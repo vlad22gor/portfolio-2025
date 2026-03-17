@@ -180,7 +180,7 @@ export const GALLERY_ROWS: GalleryRow[] = [
         'Gallery phone card: festive campaign concept',
       ),
       phone('57:5449', screenImage('/media/gallery/screens/r5-c2-phone.png'), 'Gallery phone card: neon game campaign concept'),
-      image('57:5450', '/media/gallery/images/r5-c3-image.png', 'Gallery image card: abstract cube composition'),
+      image('57:5450', '/media/gallery/images/r5-c3-cube-log-in.png', 'Gallery image card: cube log in composition'),
     ],
   },
   {

@@ -1120,3 +1120,23 @@
   Причина: по итогам последовательных прогонов (`40/50/60`) пользователь подтвердил финальный выбор `50`.
   Файлы: `src/components/GalleryCard.astro`, `tests/smoke/gallery.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
   Проверки: (1) `npm run build` — успешно; (2) `PLAYWRIGHT_PORT=4179 npm run test:smoke -- tests/smoke/gallery.spec.ts` — успешно (`2/2`) с assert `data-perimeter-step=\"50\"` и проверкой маски у `image-layer` + `darkened bg`.
+
+- 2026-03-17: Для второй `gallery image` (`57:5450`) подключён подготовленный `cube log in` из `assets`.
+  Причина: пользователь попросил использовать вручную подрезанный исходник из `assets/gallery/static/cube log in.png` и экспортировать его в runtime-путь проекта.
+  Файлы: `assets/gallery/static/cube log in.png` (источник), `public/media/gallery/images/r5-c3-cube-log-in.png` (runtime-копия), `src/data/gallery.ts`, `tests/smoke/gallery.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: (1) `npm run build` — успешно; (2) `PLAYWRIGHT_PORT=4180 npm run test:smoke -- tests/smoke/gallery.spec.ts` — успешно (`2/2`), включая новый assert что карточка `57:5450` рендерит `/media/gallery/images/r5-c3-cube-log-in.png`.
+
+- 2026-03-17: Собрана PNG-секвенция `coin wheel sec 840px` в отдельный `VP9 WebM` с alpha рядом с кадрами.
+  Причина: пользователь запросил финальную сборку `0000..0240` (`840x840`) в новый файл без перезаписи текущих runtime-видео.
+  Файлы: `coin wheel sec 840px/coin-loader-clear-840.webm`, `tasks/logs.md`.
+  Проверки: (1) `ffprobe` нового файла — `codec_name=vp9`, `width/height=840x840`, `avg_frame_rate=30/1`, `duration=8.033s`, `size=3592899`; (2) `ffprobe -show_streams` — `TAG:alpha_mode=1` (alpha присутствует); (3) контроль существующих runtime-видео `public/media/cases/section/loader_light.webm` и `public/media/gallery/illustrations/loader-light.webm` — одинаковый SHA-256, изменений нет.
+
+- 2026-03-17: Проведён аудит оптимизации ассетов и зафиксирован отдельный отчёт.
+  Причина: пользователь запросил оценку текущего веса ассетов, классификацию «что уже ок / что сжимать» и проверку, где можно оптимизировать без визуальных потерь.
+  Файлы: `tasks/asset-optimization-audit-2026-03-17.md`, `tasks/logs.md`.
+  Проверки: (1) инвентаризация размеров и топов через `du`, `find + stat`; (2) техническая валидация разрешений/длительностей через `sips` и `ffprobe`; (3) контрольные прогоны сжатия: `cwebp -lossless` (PNG/JPG) и `ffmpeg libvpx-vp9` (WebM) для оценки реальной экономии. Код проекта не изменялся, `npm run build` не запускался (изменены только документы в `tasks/`).
+
+- 2026-03-17: Карточка `/gallery` `51:5274` (`coin-wheel`) переведена с image на video в существующем типе `illustration`.
+  Причина: пользователь попросил использовать новое видео `coin wheel` из `assets/gallery`, экспортировать его в runtime и включить autoplay.
+  Файлы: `src/components/GalleryCardIllustration.astro`, `tests/smoke/gallery.spec.ts`, `public/media/gallery/illustrations/coin-wheel.webm`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: (1) `npm run build` — успешно; (2) `PLAYWRIGHT_PORT=4181 npm run test:smoke -- tests/smoke/gallery.spec.ts` — успешно (`2/2`); (3) `ffprobe public/media/gallery/illustrations/coin-wheel.webm` — `vp9`, `840x840`, `30fps`, `TAG:alpha_mode=1`; (4) `rg`-проверка — runtime использует только `/media/gallery/illustrations/coin-wheel.webm`, без ссылок на `assets/`.
