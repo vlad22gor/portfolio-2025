@@ -1,5 +1,10 @@
 # Logs
 
+- 2026-03-17: Для `/fora` исправлена секция `design system`: заголовки `description text` переведены на `text/default` без opacity-приглушения; PNG перенесены из source `assets` в runtime `public/media/cases/fora/design-system`; в секции убран `object-fit: contain`, чтобы убрать визуальный underscale карточек.
+  Причина: глобальный `p { color: var(--text-secondary) }` делал title слишком светлым, а рендер PNG из `assets` + `contain` создавал эффект уменьшения.
+  Файлы: `src/components/ForaDesignSystemSection.astro`, `public/media/cases/fora/design-system/design-system-image-summary.png`, `public/media/cases/fora/design-system/design-system-image-horizontal-cards.png`, `public/media/cases/fora/design-system/design-system-image-vertical-cards.png`, `public/media/cases/fora/design-system/design-system-image-sheet.png`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; dev-проверка `http://127.0.0.1:4322/fora` подтверждает `copy-title` computed color `rgba(0, 0, 0, 0.85)` и `opacity: 1`; network-запросы для design-system PNG идут с `/media/cases/fora/design-system/...` (без `/@fs/.../assets/images/fora/...` для этой секции).
+
 - 2026-03-16: Реализована секция `feature cards` для `/fora` по Figma `42:1730` и добавлен reusable-компонент `FeatureCard` с API `mockSide + device`.
   Причина: заменить skeleton-блок `feature cards` на рабочую 1:1 секцию, переиспользовать `DeviceMockup`/`QuantizedPerimeter` и подготовить универсальный компонент под варианты `mock side`/`device`.
   Файлы: `src/components/FeatureCard.astro`, `src/components/ForaFeatureCardsSection.astro`, `src/pages/[slug].astro`, `src/styles/global.css`, `public/media/fora/feature-cards/flows/Fora-Delivery.webm`, `public/media/fora/feature-cards/flows/Fora-Catalogue.webm`, `public/media/fora/feature-cards/flows/Fora-Cart.webm`, `public/media/fora/feature-cards/posters/Fora-Delivery.png`, `public/media/fora/feature-cards/posters/Fora-Catalogue.png`, `public/media/fora/feature-cards/posters/Fora-Cart.png`, `tasks/lessons.md`, `tasks/logs.md`.
@@ -851,3 +856,23 @@
   Причина: Astro сериализовал импортированные SVG (из `assets`) в строку функции внутри `img src`, из-за чего браузер показывал broken images.
   Файлы: `src/pages/[slug].astro`, `public/media/cases/fora/challenge/arrow-top-left.svg`, `public/media/cases/fora/challenge/arrow-top-right.svg`, `public/media/cases/fora/challenge/arrow-bottom-left.svg`, `public/media/cases/fora/challenge/arrow-bottom-right.svg`, `tasks/logs.md`.
   Проверки: `npm run build` — успешно; проверка `dist/fora/index.html`: `src="(...args)=>"` у `case-challenge-arrow` отсутствует (`0`), валидных ссылок на `/media/cases/fora/challenge/arrow-*.svg` — `4`, ссылок `/_astro/fora-challenge-arrow*` — `0`.
+
+- 2026-03-16: Реализована секция `design system` для `/fora` по Figma `49:2438` и подключена вместо `skeleton`.
+  Причина: заменить временную заглушку на production-верстку с ассетами из `/assets` и соблюсти desktop-контракт (`816x800`, `margin-top: 268px`) с in-view анимацией.
+  Файлы: `src/components/ForaDesignSystemSection.astro`, `src/pages/[slug].astro`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; в `/fora` компонент `ForaDesignSystemSection` подключён после `ForaFeatureCardsSection`, центральный заголовок исправлен на `app design system`, подключены 4 PNG (`design system-image-*`) и 3 SVG-стрелки (`design system-arrow-*`) из `assets`.
+
+- 2026-03-16: Исправлена сериализация `img src` для SVG-стрелок в `ForaDesignSystemSection`.
+  Причина: прямой импорт SVG из `assets` в `.astro` давал функцию в `src` (`src="(...args)=>"`), из-за чего стрелки не рендерились.
+  Файлы: `src/components/ForaDesignSystemSection.astro`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `dist/fora/index.html` содержит валидные `/_astro/design%20system-arrow-*.svg` пути и не содержит `src="(...args)=>"` для стрелок секции.
+
+- 2026-03-16: Стабилизирован dev-runtime для `/` и `/fora` (Vite/Astro overlay + prefetch/runtime ошибки).
+  Причина: в `ForaDesignSystemSection` стрелки рендерились как `file:///...` (браузер блокировал local resource), а prefetch-конфиг провоцировал нестабильность virtual modules в dev (`__PREFETCH_*`, `Outdated Optimize Dep`).
+  Файлы: `src/components/ForaDesignSystemSection.astro`, `astro.config.mjs`, `public/media/cases/fora/design-system/arrow-top.svg`, `public/media/cases/fora/design-system/arrow-bottom-left.svg`, `public/media/cases/fora/design-system/arrow-bottom-right.svg`, `tasks/logs.md`.
+  Проверки: `npm run dev -- --host 127.0.0.1 --port 4324` + Playwright (`/` и `/fora`) — ошибок в консоли нет (`Not allowed to load local resource`, `ReferenceError: __PREFETCH_PREFETCH_ALL__`, `Outdated Optimize Dep` не воспроизводятся); `browser_network_requests` показывает только `200/206` без `504`; `npm run build` — успешно.
+
+- 2026-03-17: Подтверждён и устранён источник повторной ошибки `TypeError ... (reading 'call')` на `localhost:4321` через перезапуск dev-инстанса и актуальный runtime-контекст.
+  Причина: на `127.0.0.1:4321` работал stale `astro dev` процесс, который отдавал `500` (`/fora` -> `TypeError`), тогда как свежий инстанс на другом порту рендерился корректно; после restart на том же `4321` ошибка исчезла.
+  Файлы: `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `lsof -iTCP:4321` показал активный старый процесс; Playwright до restart: `/fora` с `Page Title: TypeError`; после `kill -TERM` + fresh `npm run dev -- --host 127.0.0.1 --port 4321` Playwright на `/fora` и `browser_console_messages(level:error)` — без ошибок, `Page Title: Fora supermarket app redesign - Vlad Horovyy`.

@@ -1,0 +1,251 @@
+---
+const designSystemSummarySrc = '/media/cases/fora/design-system/design-system-image-summary.png';
+const designSystemHorizontalCardsSrc = '/media/cases/fora/design-system/design-system-image-horizontal-cards.png';
+const designSystemVerticalCardsSrc = '/media/cases/fora/design-system/design-system-image-vertical-cards.png';
+const designSystemSheetSrc = '/media/cases/fora/design-system/design-system-image-sheet.png';
+const designSystemArrowTopSrc = '/media/cases/fora/design-system/arrow-top.svg';
+const designSystemArrowBottomLeftSrc = '/media/cases/fora/design-system/arrow-bottom-left.svg';
+const designSystemArrowBottomRightSrc = '/media/cases/fora/design-system/arrow-bottom-right.svg';
+---
+
+<section
+  class="fora-design-system-section"
+  aria-labelledby="fora-design-system-title"
+  data-motion-inview="appear-v1"
+>
+  <div class="fora-design-system-scene">
+    <h2 id="fora-design-system-title" class="type-t1-tight fora-design-system-heading">app design system</h2>
+
+    <article class="fora-design-system-copy fora-design-system-copy--palette">
+      <p class="fora-design-system-copy-title">color palette</p>
+      <p class="type-body fora-design-system-copy-body">
+        Unified the color palette across platforms, enhancing brand consistency
+      </p>
+    </article>
+
+    <article class="fora-design-system-copy fora-design-system-copy--styles">
+      <p class="fora-design-system-copy-title">unified styles</p>
+      <p class="type-body fora-design-system-copy-body">Synced Figma and code styles with devs, reducing UI bugs by 40%</p>
+    </article>
+
+    <article class="fora-design-system-copy fora-design-system-copy--library">
+      <p class="fora-design-system-copy-title">component library</p>
+      <p class="type-body fora-design-system-copy-body">
+        20+ standardized components cut new feature time to market by 25%
+      </p>
+    </article>
+
+    <img
+      class="fora-design-system-image fora-design-system-image--summary"
+      src={designSystemSummarySrc}
+      alt=""
+      aria-hidden="true"
+      loading="lazy"
+      decoding="async"
+      width="167.236"
+      height="235.283"
+    />
+
+    <img
+      class="fora-design-system-image fora-design-system-image--horizontal"
+      src={designSystemHorizontalCardsSrc}
+      alt=""
+      aria-hidden="true"
+      loading="lazy"
+      decoding="async"
+      width="321.654"
+      height="182.666"
+    />
+
+    <img
+      class="fora-design-system-image fora-design-system-image--vertical"
+      src={designSystemVerticalCardsSrc}
+      alt=""
+      aria-hidden="true"
+      loading="lazy"
+      decoding="async"
+      width="223.555"
+      height="211.046"
+    />
+
+    <img
+      class="fora-design-system-image fora-design-system-image--sheet"
+      src={designSystemSheetSrc}
+      alt=""
+      aria-hidden="true"
+      loading="lazy"
+      decoding="async"
+      width="165.486"
+      height="221.068"
+    />
+
+    <img
+      class="fora-design-system-arrow fora-design-system-arrow--top"
+      src={designSystemArrowTopSrc}
+      alt=""
+      aria-hidden="true"
+      loading="lazy"
+      decoding="async"
+      width="185"
+      height="59"
+    />
+
+    <img
+      class="fora-design-system-arrow fora-design-system-arrow--bottom-left"
+      src={designSystemArrowBottomLeftSrc}
+      alt=""
+      aria-hidden="true"
+      loading="lazy"
+      decoding="async"
+      width="117"
+      height="90"
+    />
+
+    <img
+      class="fora-design-system-arrow fora-design-system-arrow--bottom-right"
+      src={designSystemArrowBottomRightSrc}
+      alt=""
+      aria-hidden="true"
+      loading="lazy"
+      decoding="async"
+      width="100"
+      height="101"
+    />
+  </div>
+</section>
+
+<style>
+  .fora-design-system-section {
+    width: 100%;
+    margin-top: 268px;
+  }
+
+  .fora-design-system-scene {
+    position: relative;
+    width: 816px;
+    height: 800px;
+  }
+
+  .fora-design-system-heading {
+    position: absolute;
+    left: 0;
+    top: 281px;
+    width: 816px;
+    margin: 0;
+    color: var(--color-text-default);
+    text-align: center;
+  }
+
+  .fora-design-system-copy {
+    position: absolute;
+    width: 224px;
+    color: var(--color-text-default);
+  }
+
+  .fora-design-system-copy--palette {
+    left: 296px;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    text-align: center;
+  }
+
+  .fora-design-system-copy--styles {
+    left: 592px;
+    top: 435px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+    text-align: right;
+  }
+
+  .fora-design-system-copy--library {
+    left: 0;
+    top: 680px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .fora-design-system-copy-title {
+    margin: 0;
+    width: 100%;
+    color: var(--color-text-default);
+    opacity: 1;
+    font-family: var(--type-t5-family);
+    font-size: var(--type-t5-size);
+    line-height: var(--type-t5-line-height);
+    font-weight: var(--type-t5-weight);
+    letter-spacing: var(--type-t5-letter-spacing);
+    font-optical-sizing: none;
+    font-variation-settings: var(--type-t5-font-variation);
+  }
+
+  .fora-design-system-copy-body {
+    margin: 0;
+    width: 100%;
+    color: var(--color-text-secondary);
+  }
+
+  .fora-design-system-image,
+  .fora-design-system-arrow {
+    position: absolute;
+    display: block;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .fora-design-system-image--summary {
+    left: 29.959px;
+    top: 15px;
+    width: 167.236px;
+    height: 235.283px;
+  }
+
+  .fora-design-system-image--horizontal {
+    left: 494.346px;
+    top: 60.42px;
+    width: 321.654px;
+    height: 182.666px;
+  }
+
+  .fora-design-system-image--vertical {
+    left: 136.445px;
+    top: 436.818px;
+    width: 223.555px;
+    height: 211.046px;
+  }
+
+  .fora-design-system-image--sheet {
+    left: 475.195px;
+    top: 571px;
+    width: 165.486px;
+    height: 221.068px;
+  }
+
+  .fora-design-system-arrow--top {
+    left: 218px;
+    top: 132px;
+    width: 185px;
+    height: 59px;
+  }
+
+  .fora-design-system-arrow--bottom-left {
+    left: 254px;
+    top: 673px;
+    width: 117px;
+    height: 90px;
+  }
+
+  .fora-design-system-arrow--bottom-right {
+    left: 513px;
+    top: 471px;
+    width: 100px;
+    height: 101px;
+  }
+</style>
