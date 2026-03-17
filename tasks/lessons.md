@@ -63,3 +63,4 @@
 - При повторных коррекциях `kissa` сначала обновлять только raw `targetX/targetY/width/height` из Figma, а runtime-логику нормализации не трогать (она должна оставаться единственным местом компенсации).
 - Для ровной scallop-обводки в `CaseCard` использовать `QuantizedPerimeter outlineMode='geometric'` + `outlinePlacement='outside'`: внешний контур строится как doubled-stroke с inverse SVG-mask; `alpha`-outline оставлять fallback для неподдержанных паттернов/форм.
 - Для `Badge` (`.case-badge`) держать фиксированную высоту `22px` через `height` + `box-sizing: border-box`; визуальную Y-компенсацию задавать `padding-top: 1px`, `padding-bottom: 0`.
+- Для PNG-ассетов из Figma с тенями перед импортом в runtime проверять, что экспорт не деформирует визуальный масштаб (частая причина — некорректный bounds/обрезка при сохранении); после реэкспорта обновлять только runtime-копии в `public/media/...`, не подключая `assets/` напрямую.

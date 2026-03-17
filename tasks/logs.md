@@ -876,3 +876,13 @@
   Причина: на `127.0.0.1:4321` работал stale `astro dev` процесс, который отдавал `500` (`/fora` -> `TypeError`), тогда как свежий инстанс на другом порту рендерился корректно; после restart на том же `4321` ошибка исчезла.
   Файлы: `tasks/lessons.md`, `tasks/logs.md`.
   Проверки: `lsof -iTCP:4321` показал активный старый процесс; Playwright до restart: `/fora` с `Page Title: TypeError`; после `kill -TERM` + fresh `npm run dev -- --host 127.0.0.1 --port 4321` Playwright на `/fora` и `browser_console_messages(level:error)` — без ошибок, `Page Title: Fora supermarket app redesign - Vlad Horovyy`.
+
+- 2026-03-17: Обновлены runtime PNG ассеты секции `design system` для `/fora` из новых исходников в `assets/images/fora`.
+  Причина: старый экспорт PNG имел некорректный масштаб из-за деформированных теней; пользователь пересохранил исходники.
+  Файлы: `public/media/cases/fora/design-system/design-system-image-summary.png`, `public/media/cases/fora/design-system/design-system-image-horizontal-cards.png`, `public/media/cases/fora/design-system/design-system-image-vertical-cards.png`, `public/media/cases/fora/design-system/design-system-image-sheet.png`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: размеры runtime-файлов после замены соответствуют новым исходникам (`681x861`, `1170x774`, `930x849`, `792x879`); `npm run build` — успешно.
+
+- 2026-03-17: Актуализированы размеры и позиции PNG-ассетов `design system` под текущую Figma-ноду `49:2438`.
+  Причина: после реэкспорта PNG изменились их bounding-box, а в коде оставались старые координаты/габариты, из-за чего визуал не совпадал с дизайном.
+  Файлы: `src/components/ForaDesignSystemSection.astro`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; в компоненте синхронизированы значения из Figma (`summary: x0 y-11 w227 h287`, `horizontal: x460 y23 w390 h258`, `vertical: x93 y401 w310 h283`, `sheet: x426 y535 w264 h293`).
