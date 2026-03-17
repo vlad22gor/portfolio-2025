@@ -28,6 +28,8 @@ export interface CaseProcessTicketRow {
   tickets: CaseProcessTicket[];
 }
 
+export type CaseProcessTicketVariant = 'square-36' | 'circle-24';
+
 export interface CaseProcessSectionData {
   title: string;
   caption: string;
@@ -35,4 +37,5 @@ export interface CaseProcessSectionData {
   ticketsRows: CaseProcessTicketRow[];
   variant?: string;
   ticketColorFamily?: 'orange' | 'blue';
+  ticketVariant?: CaseProcessTicketVariant;
 }

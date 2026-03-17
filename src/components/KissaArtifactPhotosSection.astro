@@ -1,0 +1,82 @@
+---
+import QuantizedPerimeter from './QuantizedPerimeter.astro';
+import type { CaseDetailArtifactPhotosData, InViewPreset } from '../data/case-details/types';
+
+interface Props {
+  data: CaseDetailArtifactPhotosData;
+  class?: string;
+  inViewPreset?: InViewPreset;
+}
+
+const { data, class: className = '', inViewPreset = 'appear-v1' } = Astro.props as Props;
+const rootClassName = ['kissa-artifact-photos-section', className].filter(Boolean).join(' ');
+const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefined;
+---
+
+<section class={rootClassName} aria-label="Kissa artifact photos section" data-motion-inview={resolvedInViewPreset}>
+  <QuantizedPerimeter
+    class="kissa-artifact-photos-surface kissa-artifact-photos-surface--left"
+    shape="rectangle"
+    edgePattern="scallop"
+    step={40}
+    bg="var(--color-bg-darkened)"
+    pad="0"
+    exportShapeMask
+    label="Kissa artifact photo left"
+  >
+    <img
+      class="kissa-artifact-photos-image"
+      src={data.leftPhoto.src}
+      alt={data.leftPhoto.alt}
+      loading="lazy"
+      decoding="async"
+    />
+  </QuantizedPerimeter>
+
+  <QuantizedPerimeter
+    class="kissa-artifact-photos-surface kissa-artifact-photos-surface--right"
+    shape="rectangle"
+    edgePattern="scallop"
+    step={40}
+    bg="var(--color-bg-darkened)"
+    pad="0"
+    exportShapeMask
+    label="Kissa artifact photo right"
+  >
+    <img
+      class="kissa-artifact-photos-image"
+      src={data.rightPhoto.src}
+      alt={data.rightPhoto.alt}
+      loading="lazy"
+      decoding="async"
+    />
+  </QuantizedPerimeter>
+
+  <p class="type-description-medium kissa-artifact-photos-caption kissa-artifact-photos-caption--top">
+    {data.topCaption}
+  </p>
+  <p class="type-description-medium kissa-artifact-photos-caption kissa-artifact-photos-caption--bottom">
+    {data.bottomCaption}
+  </p>
+
+  <img
+    class="kissa-artifact-photos-arrow kissa-artifact-photos-arrow--left"
+    src={data.leftArrowSrc}
+    alt=""
+    aria-hidden="true"
+    loading="lazy"
+    decoding="async"
+    width="108"
+    height="82"
+  />
+  <img
+    class="kissa-artifact-photos-arrow kissa-artifact-photos-arrow--right"
+    src={data.rightArrowSrc}
+    alt=""
+    aria-hidden="true"
+    loading="lazy"
+    decoding="async"
+    width="100"
+    height="83"
+  />
+</section>

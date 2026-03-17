@@ -45,6 +45,7 @@ export interface CaseDetailChallengeNote {
 export interface CaseDetailChallengeData {
   title: string;
   columns: [string, string];
+  device: 'phone' | 'tablet';
   screen: CaseDetailImage;
   notes: CaseDetailChallengeNote[];
 }
@@ -93,11 +94,21 @@ export interface CaseDetailTeamPhotoData {
   heartRightSrc: string;
 }
 
+export interface CaseDetailArtifactPhotosData {
+  leftPhoto: CaseDetailImage;
+  rightPhoto: CaseDetailImage;
+  topCaption: string;
+  bottomCaption: string;
+  leftArrowSrc: string;
+  rightArrowSrc: string;
+}
+
 export type CaseDetailSection =
   | {
       type: 'intro';
       data: CaseDetailIntroData;
       inViewPreset?: InViewPreset;
+      className?: string;
     }
   | {
       type: 'introScreens';
@@ -132,6 +143,12 @@ export type CaseDetailSection =
   | {
       type: 'teamPhoto';
       data: CaseDetailTeamPhotoData;
+      className?: string;
+      inViewPreset?: InViewPreset;
+    }
+  | {
+      type: 'artifactPhotos';
+      data: CaseDetailArtifactPhotosData;
       className?: string;
       inViewPreset?: InViewPreset;
     }

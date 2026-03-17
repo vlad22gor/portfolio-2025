@@ -10,6 +10,8 @@ interface DevicePreset {
   width: number;
   height: number;
   shellSrc: ImageMetadata;
+  screenZ: number;
+  shellZ: number;
   screen: {
     top: string;
     right: string;
@@ -42,24 +44,28 @@ const presets: Record<DeviceKind, DevicePreset> = {
     width: 244,
     height: 501,
     shellSrc: shellPhoneSrc,
+    screenZ: 1,
+    shellZ: 2,
     screen: {
       top: '2.18%',
       right: '4.97%',
       bottom: '2.19%',
       left: '5.2%',
-      radius: '0px',
+      radius: '40px',
     },
   },
   tablet: {
     width: 296,
     height: 508,
     shellSrc: shellTabletSrc,
+    screenZ: 1,
+    shellZ: 2,
     screen: {
-      top: '11.5px',
-      right: '11.5px',
-      bottom: '11.5px',
-      left: '11.5px',
-      radius: '17.524px',
+      top: '2.2637795276%',
+      right: '3.8851351351%',
+      bottom: '2.2637795276%',
+      left: '3.8851351351%',
+      radius: '0px',
     },
   },
 };
@@ -75,6 +81,8 @@ const styleVars = [
   `--screen-bottom: ${preset.screen.bottom}`,
   `--screen-left: ${preset.screen.left}`,
   `--screen-radius: ${preset.screen.radius}`,
+  `--screen-z: ${preset.screenZ}`,
+  `--shell-z: ${preset.shellZ}`,
 ].join('; ');
 ---
 
@@ -122,6 +130,7 @@ const styleVars = [
     width: calc(var(--device-width) * var(--device-scale));
     height: calc(var(--device-height) * var(--device-scale));
     max-width: 100%;
+    isolation: isolate;
   }
 
   .device-mockup__screen {
@@ -130,8 +139,9 @@ const styleVars = [
     right: var(--screen-right);
     bottom: var(--screen-bottom);
     left: var(--screen-left);
+    z-index: var(--screen-z);
     overflow: hidden;
-    border-radius: var(--screen-radius);
+    border-radius: calc(var(--screen-radius) * var(--device-scale));
   }
 
   .device-mockup__media {
@@ -144,6 +154,7 @@ const styleVars = [
   .device-mockup__shell {
     position: absolute;
     inset: 0;
+    z-index: var(--shell-z);
     display: block;
     width: 100%;
     height: 100%;

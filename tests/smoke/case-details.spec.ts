@@ -14,17 +14,36 @@ test.describe('Case details smoke', () => {
     await expect(page.locator('.fora-design-system-section')).toBeVisible();
     await expect(page.locator('.fora-team-photo-section')).toBeVisible();
     await expect(page.locator('.case-switcher-section')).toBeVisible();
+
+    const foraProcessSection = page.locator('.case-process-section--fora');
+    const foraFirstTicket = foraProcessSection.locator('.case-process-ticket').first();
+    await expect(foraProcessSection).toHaveAttribute('data-case-process-ticket-variant', 'square-36');
+    await expect(foraFirstTicket).toHaveAttribute('data-perimeter-shape', 'rectangle');
+    await expect(foraFirstTicket).toHaveAttribute('data-perimeter-step', '36');
   });
 
-  test('/kissa keeps fallback layout, nav, and case switcher', async ({ page }) => {
+  test('/kissa renders detail config with artifact photos section and no fallback blocks', async ({ page }) => {
     await page.goto('/kissa');
 
     await expect(page).toHaveTitle(/Kissa\.AI self-checkout terminal redesign/i);
     await expect(page.locator('a[data-nav-id="cases"][aria-current="page"]')).toBeVisible();
 
-    await expect(page.locator('.section-stack h1')).toContainText('Kissa.AI self-checkout terminal redesign');
-    await expect(page.locator('.metrics-grid')).toBeVisible();
-    await expect(page.locator('nav.case-pager')).toBeVisible();
+    await expect(page.locator('.kissa-intro-section')).toBeVisible();
+    await expect(page.locator('.fora-intro-screens-section--tablet')).toBeVisible();
+    await expect(page.locator('.kissa-case-challenge')).toBeVisible();
+    await expect(page.locator('.case-process-section--kissa')).toBeVisible();
+    await expect(page.locator('.kissa-artifact-photos-section')).toBeVisible();
+    await expect(page.locator('.kissa-feature-cards')).toBeVisible();
     await expect(page.locator('.case-switcher-section')).toBeVisible();
+
+    const kissaProcessSection = page.locator('.case-process-section--kissa');
+    const kissaFirstTicket = kissaProcessSection.locator('.case-process-ticket').first();
+    await expect(kissaProcessSection).toHaveAttribute('data-case-process-ticket-variant', 'circle-24');
+    await expect(kissaFirstTicket).toHaveAttribute('data-perimeter-shape', 'circle');
+    await expect(kissaFirstTicket).toHaveAttribute('data-perimeter-step', '24');
+
+    await expect(page.locator('.section-stack')).toHaveCount(0);
+    await expect(page.locator('.metrics-grid')).toHaveCount(0);
+    await expect(page.locator('nav.case-pager')).toHaveCount(0);
   });
 });

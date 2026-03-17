@@ -22,15 +22,17 @@ export type CaseChallengeNote = {
 interface Props {
   title: string;
   columns: [string, string];
+  device: 'phone' | 'tablet';
   screen: CaseChallengeScreen;
   notes: CaseChallengeNote[];
   inViewPreset?: 'appear-v1';
   class?: string;
 }
 
-const { title, columns, screen, notes, inViewPreset, class: className = '' } = Astro.props as Props;
+const { title, columns, device, screen, notes, inViewPreset, class: className = '' } = Astro.props as Props;
 const rootClassName = ['case-challenge-section', className].filter(Boolean).join(' ');
 const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefined;
+const resolvedDevice = device === 'tablet' ? 'tablet' : 'phone';
 const titleIdBase = title
   .toLowerCase()
   .trim()
@@ -51,8 +53,8 @@ const titleId = `case-challenge-title-${titleIdBase || 'section'}`;
 
   <div class="case-challenge-scene-wrap">
     <div class="case-challenge-scene" aria-label={`${title} details`}>
-      <div class="case-challenge-device">
-        <DeviceMockup device="phone" screenKind="image" screenSrc={screen.src} screenAlt={screen.alt} />
+      <div class:list={['case-challenge-device', `case-challenge-device--${resolvedDevice}`]}>
+        <DeviceMockup device={resolvedDevice} screenKind="image" screenSrc={screen.src} screenAlt={screen.alt} />
       </div>
 
       {
@@ -146,9 +148,18 @@ const titleId = `case-challenge-title-${titleIdBase || 'section'}`;
   .case-challenge-device {
     position: absolute;
     top: 0;
+  }
+
+  .case-challenge-device--phone {
     left: 286px;
     width: 244px;
     height: 501px;
+  }
+
+  .case-challenge-device--tablet {
+    left: 260px;
+    width: 296px;
+    height: 508px;
   }
 
   .case-challenge-device :global(.device-mockup) {

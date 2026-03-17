@@ -13,8 +13,6 @@ import processStepArrow3 from '../../../assets/custom icons/process-step arrow 3
 import processStepArrow4 from '../../../assets/custom icons/process-step arrow 4.svg?url';
 import processStepArrow5 from '../../../assets/custom icons/process-step arrow 5.svg?url';
 
-const TICKET_TEXT = `can't add items to cart from "Favorites"`;
-
 export const FORA_PROCESS_SECTION: CaseProcessSectionData = {
   title: 'process',
   variant: 'fora',
@@ -102,19 +100,19 @@ export const FORA_PROCESS_SECTION: CaseProcessSectionData = {
   ticketsRows: [
     {
       tickets: [
-        { text: TICKET_TEXT, tone: 'medium' },
-        { text: TICKET_TEXT, tone: 'high' },
-        { text: TICKET_TEXT, tone: 'low' },
-        { text: TICKET_TEXT, tone: 'critical' },
-        { text: TICKET_TEXT, tone: 'low' },
+        { text: "can't add\nitems to cart from \"Favorites\"", tone: 'medium' },
+        { text: "can't add\nto cart from receipts / past orders", tone: 'high' },
+        { text: 'lack\nof filtering options', tone: 'low' },
+        { text: "delivery\nterms and cost aren't clearly available", tone: 'critical' },
+        { text: "can't pick geolocation in\u00A0app", tone: 'low' },
       ],
     },
     {
       tickets: [
-        { text: TICKET_TEXT, tone: 'muted' },
-        { text: TICKET_TEXT, tone: 'low' },
-        { text: TICKET_TEXT, tone: 'critical' },
-        { text: TICKET_TEXT, tone: 'muted' },
+        { text: 'first-time navigation is confusing; hard to find items', tone: 'muted' },
+        { text: 'adding to\ncart has delay (1-5 seconds)', tone: 'low' },
+        { text: 'some items\nfail to add to cart at all', tone: 'critical' },
+        { text: 'price\nupdate lags when changing item quantity', tone: 'muted' },
       ],
     },
   ],

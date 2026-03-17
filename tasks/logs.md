@@ -1,5 +1,20 @@
 # Logs
 
+- 2026-03-17: Исправлено «перемешивание» слоёв в `intro screens (tablet)` на `/kissa`: overlap теперь работает как единые карточки mockup (центр сверху, боковые снизу) без interleave экранов.
+  Причина: внутренние `z-index` (`screen/shell`) конкурировали глобально между разными `DeviceMockup`, потому что у mockup не было собственного stacking context, а у tablet-item был `z-index: auto`.
+  Файлы: `src/components/DeviceMockup.astro`, `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `npm run test:smoke` — успешно (`2/2`); runtime Playwright (`/kissa`, `1360px`) подтверждает: `.device-mockup { isolation:isolate }`, `z-index`: `center=2`, `left/right=1`; `elementFromPoint` в зонах `left-center` и `right-center` попадает в `center`-устройство, а не в боковой `screen`.
+
+- 2026-03-17: Скорректирован `DeviceMockup tablet` под обновлённый `Shell-tablet` (Figma `43:1811`): `Screen` возвращён под shell, скругление экрана убрано.
+  Причина: в `assets/devices/Shell-tablet.png` удалена лишняя область перекрытия, поэтому надёжнее рендерить экран без радиуса и под shell-слоем.
+  Файлы: `src/components/DeviceMockup.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `npm run test:smoke` — успешно (`2/2`); runtime-проверка Playwright (`/kissa`, preview `1360px`) подтвердила для `.device-mockup--tablet`: `screenZ=1 < shellZ=2`, center inset `11.5px`, left inset при scale `.712838` равен `8.1875px`, `border-radius=0px`.
+
+- 2026-03-17: Доработан `DeviceMockup` для контракта `kissa`/Figma `43:1799`: у `tablet` экран теперь выше shell и корректно масштабирует inset/radius, у `phone` добавлен надёжный клип экрана по скруглению.
+  Причина: нужно было устранить несоответствия по слоям и масштабированию (`tablet`), а также гарантировать, что контент `phone`-экрана не выходит за края `Shell-phone`.
+  Файлы: `src/components/DeviceMockup.astro`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `npm run test:smoke` — успешно (`2/2`); дополнительная Playwright-проверка через `npm run preview -- --host 127.0.0.1 --port 4177` подтвердила `tablet` на `/kissa`: center `top/left=11.5px`, left при `--device-scale=.712838` -> `top/left=8.1875px`, `screenZ=2 > shellZ=1`, `radius 17.524 -> 12.4918`; для `phone` (на `/fora`, где он используется в текущем состоянии) подтверждены `radius=40px`, `overflow=hidden`, `screenZ=1 < shellZ=2`.
+
 - 2026-03-17: Для `/fora` внедрены inView-анимации по плану: `appear-v1` добавлен на top-level блоки (`intro`, `challenge`, `process`, `case switcher`), а `feature cards` переведены на по-карточечный reveal вместо анимации всей секции.
   Причина: требовалось унифицировать scroll-enter на странице кейса и сохранить отдельную анимацию карточек фич.
   Файлы: `src/pages/[slug].astro`, `src/components/CaseChallengeSection.astro`, `src/components/CaseProcessSection.astro`, `src/components/CaseSwitcherSection.astro`, `src/components/FeatureCard.astro`, `src/styles/global.css`, `src/components/InViewMotionRuntime.astro`, `docs/inview-appear-v1.md`, `tasks/lessons.md`, `tasks/logs.md`.
@@ -940,3 +955,48 @@
   Причина: зафиксировать фактический статус (перевод блока `Next` в `Done`, добавить follow-up без смешения с закрытым этапом).
   Файлы: `tasks/fora-hardening-scale-plan.md`, `tasks/logs.md`.
   Проверки: ручная сверка структуры — отражены реализованные пункты `N1`, `N2`, `N3`, `N4` и текущие `Exit criteria`.
+
+- 2026-03-17: `/kissa` переведён на полноценный data-driven detail-config по Figma `50:2705` с новой секцией `artifact photos` (`50:4939`).
+  Причина: закрыть follow-up по hardening/scale (`kissa` больше не на fallback), подключить новые данные/ассеты и реализовать `artifact photos` через `QuantizedPerimeter` с маской фото по периметру.
+  Файлы: `src/data/case-details/kissa.ts`, `src/data/case-process/kissa.ts`, `src/data/case-details/index.ts`, `src/data/case-details/types.ts`, `src/components/KissaArtifactPhotosSection.astro`, `src/components/case-details/CaseDetailIntroSection.astro`, `src/components/case-details/CaseDetailSections.astro`, `src/styles/global.css`, `tests/smoke/case-details.spec.ts`, `public/media/cases/kissa/{intro,challenge,process,artifact-photos,feature-cards/flows,feature-cards/posters}/*`.
+  Проверки: `npm run generate:posters` — успешно (сгенерированы постеры `Kissa-Payment|Pop-up|Portal`); `npm run verify:posters` — успешно (`6` валидных flow/poster пар); `npm run build` — успешно (роуты `/fora` и `/kissa` собраны); `npm run test:smoke` — успешно (`2/2`, включая новый `/kissa` detail + отсутствие fallback-блоков).
+
+- 2026-03-17: Исправлена геометрия секции `kissa artifact photos` под Figma `50:4939` (вертикальные фото-блоки `280x480`).
+  Причина: глобальное правило `:is(.quantized-scallop, .quantized-perimeter)` (`width:100%`, `max-width:100%`, `position:relative`, `margin-inline:auto`) перебивало локальный контракт `.kissa-artifact-photos-surface`, из-за чего блоки растягивались до `800x480` и смещались в потоке.
+  Файлы: `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; runtime-проверка (`/kissa`, `1360px`) подтверждает контракт секции `816x528`, left-photo `280x480` @ `rel(0,0)`, right-photo `280x480` @ `rel(536,48)`, `position:absolute`, `margin-inline:0`, `max-width:280px`, без горизонтального скролла.
+
+- 2026-03-17: Дополнительная регрессионная проверка после фикса `kissa artifact photos`.
+  Причина: подтвердить отсутствие побочных эффектов на detail-роутах после локального CSS override.
+  Файлы: `tasks/logs.md`.
+  Проверки: `npm run test:smoke` — успешно (`2/2`: `/fora` key sections + active `cases`; `/kissa` detail + `artifact photos` + отсутствие fallback-блоков).
+
+- 2026-03-17: `kissa challenge` переведён на tablet-мокап по Figma `50:2766` через data-driven `device`.
+  Причина: `CaseChallengeSection` был захардкожен на `phone`, из-за чего `kissa` не мог рендерить `Shell-tablet` и расходился с макетом.
+  Файлы: `src/data/case-details/types.ts`, `src/data/case-details/kissa.ts`, `src/data/case-details/fora.ts`, `src/components/case-details/CaseDetailSections.astro`, `src/components/CaseChallengeSection.astro`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `npm run test:smoke` — успешно (`2/2`); runtime (`/kissa`, preview `1360px`) — `case-challenge-device--tablet`, `device-mockup--tablet`, геометрия `296x508`, `left=260`; регрессия `/fora` — `case-challenge-device--phone`, геометрия `244x501`, `left=286`.
+
+- 2026-03-17: Добавлена параметризация `ticketVariant` для `case process tickets` и включён `circle-24` для `kissa`.
+  Причина: нужно поддержать две вариации тикетов в process-секции (`square D=36` и `circle D=24`) с выбором на уровне данных кейса, без slug-хардкода в компоненте.
+  Файлы: `src/data/case-process/types.ts`, `src/components/CaseProcessSection.astro`, `src/components/case-details/CaseDetailSections.astro`, `src/data/case-process/kissa.ts`, `tests/smoke/case-details.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: (1) код — в `CaseProcessSection` добавлен `ticketVariant` -> `shape/step` mapping (`square-36 -> rectangle/36`, `circle-24 -> circle/24`) и root-атрибут `data-case-process-ticket-variant`; (2) сборка — `npm run build` успешно; проверка `dist` подтверждает `data-case-process-ticket-variant=\"square-36\"` на `/fora` и `\"circle-24\"` на `/kissa`, плюс `data-perimeter-step=\"36\"` vs `\"24\"`; (3) e2e — `npm run test:smoke -- tests/smoke/case-details.spec.ts` успешно (`2/2`) с assert на shape/step для обоих кейсов.
+
+- 2026-03-17: Для `process tickets` установлен внутренний `padding: 20px` (вместо фактических `17px` от фикс-ширины текста).
+  Причина: требовался явный равномерный inset `20px` для тикетов во всех кейсах (`/fora` и `/kissa`), при сохранении внешнего контракта `144x144`.
+  Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: (1) код — `.case-process-section .case-process-ticket .scallop-content` переведён на `padding: 20px` + `box-sizing: border-box`, `.case-process-ticket__text` на `width: 100%`/`max-width: 100%` (убран фикс `110px`); (2) runtime — Playwright computed styles на `http://127.0.0.1:4321/fora` и `/kissa`: `paddingTop/Right/Bottom/Left = 20px`, размеры тикета `144x144`, ширина текста `104px`; (3) регрессия — `npm run build` и `npm run test:smoke -- tests/smoke/case-details.spec.ts` успешно (`2/2`).
+
+- 2026-03-17: Актуализированы тексты `process tickets` по Figma (`40:1698` для `fora`, `50:2831` для `kissa`) с фиксацией ручных line-break.
+  Причина: пользователь обновил контент и расставил абзацы в Figma, чтобы переносы были в конкретных местах.
+  Файлы: `src/data/case-process/fora.ts`, `src/data/case-process/kissa.ts`, `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: (1) код — в `fora` заменён `TICKET_TEXT` на 9 конкретных текстов из Figma, в `kissa` обновлены тексты с переносами (`lack of a\\n...`, `half\\n...`), для рендера добавлен `.case-process-ticket__text { white-space: pre-line; }`; (2) runtime — Playwright `allInnerTexts()` на `http://127.0.0.1:4321/fora` и `/kissa` подтверждает сохранение `\\n` в нужных тикетах; (3) регрессия — `npm run build` и `npm run test:smoke -- tests/smoke/case-details.spec.ts` успешно (`2/2`).
+
+- 2026-03-17: Переведён рендер переносов в `process tickets` на гибридный режим (явные `<br>` по `\n` + авто-wrap внутри строк).
+  Причина: `white-space: pre-line` давал неоднозначное поведение при ручной правке и неочевидный контроль `NBSP`; требовалось предсказуемо повторять `Shift+Enter` из Figma и при этом сохранять нормальный авто-перенос длинных строк.
+  Файлы: `src/components/CaseProcessSection.astro`, `src/styles/global.css`, `src/data/case-process/fora.ts`, `src/data/case-process/kissa.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: (1) код — `ticket.text` теперь разбивается по `\\n` и рендерится через явные `<br>`, у `.case-process-ticket__text` убран `white-space: pre-line`; (2) runtime (`http://127.0.0.1:4321`) — `/fora` первый тикет содержит `brCount=1`, `whiteSpace='normal'`; NBSP подтверждён в `/fora` тикете `"in\\u00A0app"` и `/kissa` тикете `"making\\u00A0item"` (`nbspCount=1`); (3) регрессия — `npm run build` и `npm run test:smoke -- tests/smoke/case-details.spec.ts` успешно (`2/2`).
+
+- 2026-03-17: Точечно обновлён текст тикета `fora` по Figma ноде `40:1702`.
+  Причина: в макете изменена позиция ручного переноса для тикета `orange/low` (`lack` + `of filtering options`).
+  Файлы: `src/data/case-process/fora.ts`, `tasks/logs.md`.
+  Проверки: (1) код — строка изменена с `lack of\\nfiltering options` на `lack\\nof filtering options`; (2) `npm run build` — успешно; (3) `npm run test:smoke -- tests/smoke/case-details.spec.ts` — успешно (`2/2`).

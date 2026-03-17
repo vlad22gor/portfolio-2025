@@ -5,6 +5,7 @@ import CaseProcessSection from '../CaseProcessSection.astro';
 import ForaFeatureCardsSection from '../ForaFeatureCardsSection.astro';
 import ForaDesignSystemSection from '../ForaDesignSystemSection.astro';
 import TeamPhotoQuantizedPerimeterSection from '../TeamPhotoQuantizedPerimeterSection.astro';
+import KissaArtifactPhotosSection from '../KissaArtifactPhotosSection.astro';
 import CaseSwitcherSection from '../CaseSwitcherSection.astro';
 import CaseDetailIntroSection from './CaseDetailIntroSection.astro';
 
@@ -25,7 +26,11 @@ const { config, currentCase, prevCase, nextCase } = Astro.props as Props;
   config.sections.map((section) => (
     <>
       {section.type === 'intro' && (
-        <CaseDetailIntroSection data={section.data} inViewPreset={section.inViewPreset} />
+        <CaseDetailIntroSection
+          data={section.data}
+          inViewPreset={section.inViewPreset}
+          class={section.className}
+        />
       )}
 
       {section.type === 'introScreens' && (
@@ -42,6 +47,7 @@ const { config, currentCase, prevCase, nextCase } = Astro.props as Props;
           class={section.className}
           title={section.data.title}
           columns={section.data.columns}
+          device={section.data.device}
           screen={section.data.screen}
           notes={section.data.notes}
           inViewPreset={section.inViewPreset}
@@ -56,6 +62,7 @@ const { config, currentCase, prevCase, nextCase } = Astro.props as Props;
           ticketsRows={section.data.ticketsRows}
           variant={section.data.variant}
           ticketColorFamily={section.data.ticketColorFamily}
+          ticketVariant={section.data.ticketVariant}
           class={section.className}
           inViewPreset={section.inViewPreset}
         />
@@ -82,6 +89,14 @@ const { config, currentCase, prevCase, nextCase } = Astro.props as Props;
           heartLeftSrc={section.data.heartLeftSrc}
           heartRightSrc={section.data.heartRightSrc}
           inViewPreset={section.inViewPreset}
+        />
+      )}
+
+      {section.type === 'artifactPhotos' && (
+        <KissaArtifactPhotosSection
+          class={section.className}
+          inViewPreset={section.inViewPreset}
+          data={section.data}
         />
       )}
 

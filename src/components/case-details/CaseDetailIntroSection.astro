@@ -5,13 +5,15 @@ import type { CaseDetailIntroData, InViewPreset } from '../../data/case-details/
 interface Props {
   data: CaseDetailIntroData;
   inViewPreset?: InViewPreset;
+  class?: string;
 }
 
-const { data, inViewPreset } = Astro.props as Props;
+const { data, inViewPreset, class: className = '' } = Astro.props as Props;
 const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefined;
+const rootClassName = ['fora-intro-section', className].filter(Boolean).join(' ');
 ---
 
-<section class="fora-intro-section" aria-labelledby="fora-intro-title" data-motion-inview={resolvedInViewPreset}>
+<section class={rootClassName} aria-labelledby="fora-intro-title" data-motion-inview={resolvedInViewPreset}>
   <div class="fora-intro-top">
     <h1 id="fora-intro-title" class="type-t2 fora-intro-title">
       {data.title}

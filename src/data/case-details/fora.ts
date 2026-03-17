@@ -62,6 +62,7 @@ export const FORA_CASE_DETAIL_CONFIG: CaseDetailConfig = {
           "The Ukrainian food retail market is highly competitive, so refreshing the app's design was essential. Outdated visuals and clunky flows made it difficult to attract and retain users",
           'My challenge was to redesign the app to boost ratings in the stores (and increase installs), streamline ordering to grow average order value and the total number of orders',
         ],
+        device: 'phone',
         screen: {
           src: '/media/cases/fora/challenge/fora-challenge-mock.png',
           alt: 'Fora app challenge screen',

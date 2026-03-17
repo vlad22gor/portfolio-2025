@@ -5,6 +5,7 @@ import type {
   CaseProcessSectionData,
   CaseProcessStep,
   CaseProcessTicketTone,
+  CaseProcessTicketVariant,
 } from '../data/case-process/types';
 
 interface Props extends CaseProcessSectionData {
@@ -20,18 +21,27 @@ const {
   ticketsRows,
   variant,
   ticketColorFamily = 'orange',
+  ticketVariant = 'square-36',
   inViewPreset,
   class: className = '',
   id,
 } = Astro.props as Props;
 
 const safeVariant = variant?.trim() ? variant.trim() : undefined;
+const resolvedTicketVariant: CaseProcessTicketVariant = ticketVariant === 'circle-24' ? 'circle-24' : 'square-36';
 const headingId = id ?? (safeVariant ? `case-process-${safeVariant}-title` : 'case-process-title');
-const composedClassName = ['case-process-section', safeVariant && `case-process-section--${safeVariant}`, className]
+const composedClassName = [
+  'case-process-section',
+  safeVariant && `case-process-section--${safeVariant}`,
+  `case-process-section--tickets-${resolvedTicketVariant}`,
+  className,
+]
   .filter(Boolean)
   .join(' ');
 const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefined;
 const ticketsRowInViewPreset = safeVariant === 'fora' ? 'process-tickets-row-stagger-v1' : undefined;
+const ticketShape = resolvedTicketVariant === 'circle-24' ? 'circle' : 'rectangle';
+const ticketStep = resolvedTicketVariant === 'circle-24' ? 24 : 36;
 
 const resolveTicketBackground = (tone: CaseProcessTicketTone) =>
   `var(--color-ticket-bg-${ticketColorFamily === 'blue' ? 'blue' : 'orange'}-${tone})`;
@@ -41,9 +51,16 @@ const resolveStepRowStyle = (step: CaseProcessStep) =>
 
 const resolveIconStyle = (step: CaseProcessStep) =>
   `--case-process-icon-mask:url("${step.iconSrc}"); --case-process-icon-color:var(${step.iconColorToken});`;
+
+const splitTicketText = (text: string) => text.split('\n');
 ---
 
-<section class={composedClassName} aria-labelledby={headingId} data-motion-inview={resolvedInViewPreset}>
+<section
+  class={composedClassName}
+  aria-labelledby={headingId}
+  data-motion-inview={resolvedInViewPreset}
+  data-case-process-ticket-variant={resolvedTicketVariant}
+>
   <h2 id={headingId} class="type-t3 case-process-section__title">{title}</h2>
 
   <div class="case-process-section__content">
@@ -89,16 +106,23 @@ const resolveIconStyle = (step: CaseProcessStep) =>
                 >
                   <QuantizedPerimeter
                     class="case-process-ticket"
-                    shape="rectangle"
+                    shape={ticketShape}
                     edgePattern="scallop"
-                    step={36}
+                    step={ticketStep}
                     minCols={1}
                     minRows={1}
                     pad="0"
                     bg={resolveTicketBackground(ticket.tone)}
                     label={`Process ticket ${ticket.tone}`}
                   >
-                    <p class="type-text-small case-process-ticket__text">{ticket.text}</p>
+                    <p class="type-text-small case-process-ticket__text">
+                      {splitTicketText(ticket.text).map((line, lineIndex, lines) => (
+                        <>
+                          {line}
+                          {lineIndex < lines.length - 1 && <br />}
+                        </>
+                      ))}
+                    </p>
                   </QuantizedPerimeter>
                 </div>
               ))}
