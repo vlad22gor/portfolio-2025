@@ -53,6 +53,7 @@
 - Для hover-анимаций `QuantizedPerimeter` использовать единый `hoverMorphPreset='default'|'strong'` с pattern-specific интерпретацией: у `totem` меняются `waveAmplitudeRatio/waveTension` (с optional override через `hoverWaveAmplitudeDelta/hoverWaveTensionDelta`), у `scallop` меняется внутренний `scallopRadiusScale`; пунктирную inner-обводку `.scallop-preview-morph .scallop-content` не использовать.
 - Для `ClientRouter` в `dev` держать header prefetch отключенным (`data-astro-prefetch='false'`) и фиксировать критичную геометрию hero-ассетов (например `coin wheel`) inline-стилем, чтобы исключить drift из-за stale CSS при soft-nav + HMR.
 - Для `CaseCard` держать контейнер cover без clip (`clipContentToShape=false`), а scallop-маску применять только к `cover-image` через экспортированный `--perimeter-content-mask`; декоративный `border-radius` у image не использовать.
+- Для блоков с `QuantizedPerimeter`, где нужно управлять `.scallop-content` и маской `cover-image`, правила держать в `global.css` (или `:global(...)`): scoped-стили Astro-компонента не применяются к внутреннему DOM дочернего компонента.
 - Для `CaseCard` держать layout-ориентацию как данные (`coverSide`), а не slug-условия в шаблоне; `kissa` — `coverSide='right'`.
 - Для `CaseCard` корневой элемент должен быть ссылкой на кейс: кликабельна вся карточка, а не только title.
 - Hover-ассеты `CaseCard` должны рендериться под слоями `cover/text` (за карточкой), а stagger задавать по вертикальному порядку `targetY` (верхний без задержки, нижний `+0.08s`).

@@ -1,0 +1,122 @@
+---
+import Button from './Button.astro';
+import QuantizedPerimeter from './QuantizedPerimeter.astro';
+
+import type { Case } from '../data/cases';
+
+import foraCaseCoverSrc from '../../assets/images/cases/fora cover.png';
+import kissaCaseCoverSrc from '../../assets/images/cases/kissa cover.png';
+
+interface Props {
+  currentCase: Case;
+  prevCase: Case;
+  nextCase: Case;
+  class?: string;
+}
+
+const { currentCase, prevCase, nextCase, class: className = '' } = Astro.props as Props;
+
+const caseCoverBySlug: Record<Case['slug'], { src: string; alt: string }> = {
+  fora: {
+    src: foraCaseCoverSrc.src,
+    alt: 'Fora case cover',
+  },
+  kissa: {
+    src: kissaCaseCoverSrc.src,
+    alt: 'Kissa case cover',
+  },
+};
+
+const resolvedCover = caseCoverBySlug[currentCase.slug] ?? {
+  src: currentCase.cardCover.src,
+  alt: currentCase.cardCover.alt,
+};
+
+const rootClassName = ['case-switcher-section', className].filter(Boolean).join(' ');
+---
+
+<section class={rootClassName} aria-label="Case switcher section">
+  <div class="case-switcher-scene-wrap">
+    <nav class="case-switcher-scene" aria-label="Case switcher navigation">
+      <Button
+        href={`/${prevCase.slug}`}
+        variant="bordered-icon"
+        iconSide="left"
+        class="case-switcher-button case-switcher-button--prev"
+      >
+        prev
+      </Button>
+
+      <QuantizedPerimeter
+        class="case-switcher-cover"
+        shape="circle"
+        edgePattern="scallop"
+        fit="contain"
+        step={40}
+        minLobes={8}
+        pad="0"
+        bg="var(--color-bg-darkened)"
+        clipContentToShape={false}
+        exportShapeMask
+        label={`${currentCase.title} case cover (Perimetr Scallop Circle)`}
+      >
+        <img
+          class="case-switcher-cover-image"
+          src={resolvedCover.src}
+          alt={resolvedCover.alt}
+          loading="lazy"
+          decoding="async"
+        />
+      </QuantizedPerimeter>
+
+      <Button
+        href={`/${nextCase.slug}`}
+        variant="bordered-icon"
+        iconSide="right"
+        class="case-switcher-button case-switcher-button--next"
+      >
+        next
+      </Button>
+    </nav>
+  </div>
+</section>
+
+<style>
+  .case-switcher-section {
+    width: 100%;
+    min-height: 480px;
+  }
+
+  .case-switcher-scene-wrap {
+    --case-switcher-scale: min(1, calc((100vw - 2rem) / 816));
+    width: 100%;
+    height: calc(480px * var(--case-switcher-scale));
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .case-switcher-scene {
+    width: 816px;
+    height: 480px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    transform-origin: top center;
+    transform: scale(var(--case-switcher-scale));
+  }
+
+  .case-switcher-button {
+    width: 144px;
+    min-width: 144px;
+    max-width: 144px;
+    flex: 0 0 144px;
+  }
+
+  @media (min-width: 848px) {
+    .case-switcher-scene-wrap {
+      --case-switcher-scale: 1;
+      height: 480px;
+    }
+  }
+</style>

@@ -1,5 +1,20 @@
 # Logs
 
+- 2026-03-17: Исправлен баг `case switcher` — обложка теперь рендерится как фон внутри формы `Perimetr Scallop Circle`, а не как отдельная «пилюля» поверх.
+  Причина: стили маски/клипа для `.case-switcher-cover` были в scoped-стиле компонента и не применялись к DOM-узлам, созданным внутри `QuantizedPerimeter` (другой scope `data-astro-cid`), из-за чего срабатывал глобальный circle-clip (`overflow:hidden`, `border-radius:999px`) и `mask-image` у cover оставался `none`.
+  Файлы: `src/components/CaseSwitcherSection.astro`, `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; runtime `/fora` (`http://127.0.0.1:4321/fora`) подтверждает для `.case-switcher-cover[data-ready='true']`: `.scallop-content` = `overflow: visible`, `border-radius: 0px`; `.case-switcher-cover-image` = `mask-image != none`, `-webkit-mask-image != none`; регрессия `/cases` отсутствует — у `.case-card-cover-image` маска по-прежнему активна (`mask-image != none`), `.case-card-cover .scallop-content` остаётся `overflow: visible`.
+
+- 2026-03-17: Исправлен рендер cover в `case switcher` — обложка больше не лежит поверх круга, а работает как фон формы `Perimetr Scallop Circle`.
+  Причина: глобальный circle-rule в `QuantizedPerimeter` клипал `.scallop-content` в обычный круг (`border-radius: 999px`), из-за чего scallop-периметр частично скрывался и проявлялся только снизу.
+  Файлы: `src/components/CaseSwitcherSection.astro`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; в компоненте добавлен override `.case-switcher-cover.quantized-perimeter[data-scallop-shape='circle'][data-ready='true'] .scallop-content { overflow: visible; border-radius: 0; }`, маска cover остаётся через `--perimeter-content-mask`.
+
+- 2026-03-17: Реализована универсальная секция `case switcher` для `/fora` и заменён соответствующий skeleton-блок.
+  Причина: по согласованному плану требовалось сверстать `case switcher section` из Figma `49:2672`, подключить ассеты из `/assets`, добавить `Perimetr Scallop Circle` на cover и восстановить навигацию `prev/next`.
+  Файлы: `src/components/CaseSwitcherSection.astro`, `src/pages/[slug].astro`, `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `dist/fora/index.html` подтверждает наличие `case-switcher-section` и отсутствие `fora-section-skeleton--case-switcher`; в новой секции присутствуют `data-perimeter-shape="circle"` + `data-perimeter-edge-pattern="scallop"`; рендерятся две ссылки `href="/kissa"` (`prev`/`next`) и cover-ассет из `assets` (hashed `_astro/fora cover.*`).
+
 - 2026-03-17: Для `/fora` реализована секция `team photo` по Figma `49:2607` через `QuantizedPerimeter (scallop, step=48)` и заменён соответствующий skeleton-блок.
   Причина: по согласованному плану нужно было внедрить рабочую desktop-only секцию с точными размерами/координатами, не затрагивая остальные секции.
   Файлы: `src/components/TeamPhotoQuantizedPerimeterSection.astro`, `src/pages/[slug].astro`, `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
