@@ -1,0 +1,568 @@
+---
+import Button from './Button.astro';
+import DeviceMockup from './DeviceMockup.astro';
+import { GALLERY_ROWS, type GalleryPhoneCard } from '../data/gallery';
+
+interface TemporaryAdaptiveSlide {
+  id: string;
+  alt: string;
+  screenKind: 'image' | 'video';
+  screenSrc: string;
+  screenPoster?: string;
+}
+
+const baseSlides: TemporaryAdaptiveSlide[] = GALLERY_ROWS.flatMap((row) => row.items)
+  .filter((item): item is GalleryPhoneCard => item.type === 'phone')
+  .slice(0, 9)
+  .map((item) => ({
+    id: item.id,
+    alt: item.alt,
+    screenKind: item.screen.kind,
+    screenSrc: item.screen.src,
+    screenPoster: item.screen.poster,
+  }));
+
+const loopSlides = [...baseSlides, ...baseSlides];
+const DEVICE_COMPACT_SCALE = 0.67;
+---
+
+<section class="temporary-adaptive-notice" aria-labelledby="temporary-adaptive-title">
+  <div class="temporary-adaptive-notice__content" data-temp-adaptive-content>
+    <div class="temporary-adaptive-notice__screens" aria-hidden="true">
+      <div class="temporary-adaptive-notice__screens-viewport" data-temp-slider data-temp-slider-count={baseSlides.length}>
+        <div class="temporary-adaptive-notice__screens-track" data-temp-slider-track>
+          {
+            loopSlides.map((slide, index) => (
+              <div class="temporary-adaptive-notice__screens-item" data-temp-slider-item data-temp-slider-index={index}>
+                <DeviceMockup
+                  class="temporary-adaptive-notice__device"
+                  device="phone"
+                  size="compact"
+                  scale={DEVICE_COMPACT_SCALE}
+                  screenKind={slide.screenKind}
+                  screenSrc={slide.screenSrc}
+                  screenPoster={slide.screenPoster}
+                  screenAlt={slide.alt}
+                  priority={index < 3 ? 'critical' : 'lazy'}
+                />
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="temporary-adaptive-notice__text">
+      <h1 id="temporary-adaptive-title" class="type-t4 temporary-adaptive-notice__title">mobile version is coming soon</h1>
+      <p class="type-body temporary-adaptive-notice__subtitle">
+        To view the portfolio, please switch to desktop. If you’d like to chat or book a call, just send me a
+        message
+      </p>
+      <Button href="https://linktr.ee/vladhorovyy" target="_blank">message me</Button>
+    </div>
+  </div>
+</section>
+
+<style>
+  .temporary-adaptive-notice {
+    --temporary-device-scale: 0.67;
+    width: 100%;
+    min-height: 100dvh;
+    display: grid;
+    place-items: center;
+    padding: 24px 0;
+    box-sizing: border-box;
+  }
+
+  .temporary-adaptive-notice__content {
+    width: 100%;
+    display: grid;
+    justify-items: center;
+    gap: 40px;
+  }
+
+  .temporary-adaptive-notice__screens {
+    width: 100%;
+    overflow: visible;
+  }
+
+  .temporary-adaptive-notice__screens-viewport {
+    width: 100%;
+    max-width: 100vw;
+    height: 308px;
+    touch-action: pan-y;
+    overflow: visible;
+    position: relative;
+    cursor: grab;
+    user-select: none;
+  }
+
+  .temporary-adaptive-notice__screens-viewport[data-dragging='true'] {
+    cursor: grabbing;
+  }
+
+  .temporary-adaptive-notice__screens-track {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: calc(40px * var(--temporary-device-scale));
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
+  }
+
+  .temporary-adaptive-notice__screens-item {
+    flex: 0 0 auto;
+    transform-origin: 50% 0;
+    will-change: transform;
+  }
+
+  .temporary-adaptive-notice__text {
+    width: min(390px, calc(100vw - 24px));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    padding-inline: 32px;
+    box-sizing: border-box;
+    text-align: center;
+  }
+
+  .temporary-adaptive-notice__title {
+    margin: 0;
+    max-width: 326px;
+    color: var(--color-text-default);
+    text-transform: lowercase;
+  }
+
+  .temporary-adaptive-notice__subtitle {
+    margin: 0;
+    max-width: 326px;
+    color: var(--color-text-secondary);
+  }
+
+  @media (min-width: 768px) and (max-width: 1359px) {
+    .temporary-adaptive-notice {
+      padding: 48px 0;
+    }
+
+    .temporary-adaptive-notice__screens-viewport {
+      height: 320px;
+    }
+
+    .temporary-adaptive-notice__text {
+      width: min(390px, calc(100vw - 64px));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .temporary-adaptive-notice__screens-track,
+    .temporary-adaptive-notice__screens-item {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  (() => {
+    const runtimeKey = '__temporaryAdaptiveSliderRuntime';
+    if (window[runtimeKey]) {
+      window[runtimeKey].mount();
+      return;
+    }
+
+    const sliderSelector = '[data-temp-slider]';
+    const initAttr = 'tempSliderInit';
+    const states = new Map();
+    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const adaptiveQuery = window.matchMedia('(max-width: 1359px)');
+    const fixedDeviceScale = 0.67;
+    let rafId = 0;
+    let lastFrameTs = 0;
+
+    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+    const wrap = (value, size) => {
+      if (!Number.isFinite(size) || size <= 0) {
+        return 0;
+      }
+      return ((value % size) + size) % size;
+    };
+
+    const ARC_PROFILE = {
+      phone: {
+        kInfluence: 0.72,
+        kCurvature: 0.062,
+        rotateCapDeg: 4.2,
+        softEdgeRatio: 0.18,
+      },
+      tablet: {
+        kInfluence: 0.84,
+        kCurvature: 0.05,
+        rotateCapDeg: 3.4,
+        softEdgeRatio: 0.14,
+      },
+    };
+
+    const smoothstep = (t) => {
+      const x = clamp(t, 0, 1);
+      return x * x * (3 - 2 * x);
+    };
+
+    const softClampArcDx = (dx, maxDx, softEdgeRatio) => {
+      const safeMaxDx = Math.max(1, maxDx);
+      const absDx = Math.abs(dx);
+      const zone = Math.max(1, safeMaxDx * clamp(softEdgeRatio, 0.05, 0.45));
+      const softStart = safeMaxDx - zone;
+      if (absDx <= softStart) {
+        return dx;
+      }
+      if (absDx >= safeMaxDx) {
+        return Math.sign(dx) * safeMaxDx;
+      }
+      const t = (absDx - softStart) / zone;
+      const easedAbsDx = softStart + zone * smoothstep(t);
+      return Math.sign(dx) * Math.min(easedAbsDx, safeMaxDx);
+    };
+
+    const resolveAutoSpeed = (state) => {
+      const width = state.viewport.clientWidth;
+      return width <= 767 ? 42 : 58;
+    };
+
+    const computeArcTransform = (state, itemIndex) => {
+      const half = Math.max(1, state.viewportWidth / 2);
+      const itemCenter = itemIndex * state.slot + state.itemWidth / 2 - state.offset;
+      const dx = itemCenter - half;
+      const clampedDx = softClampArcDx(dx, state.arcMaxDx, state.arcSoftEdgeRatio);
+      const radius = Math.max(1, state.arcRadius);
+      const underRoot = Math.max(0, radius * radius - clampedDx * clampedDx);
+      const y = radius - Math.sqrt(underRoot);
+      const tangentSin = clamp(clampedDx / radius, -1, 1);
+      const tangentAngleDeg = (Math.asin(tangentSin) * 180) / Math.PI;
+      const rotate = clamp(tangentAngleDeg, -state.rotateCapDeg, state.rotateCapDeg);
+      const normalized = Math.abs(clampedDx) / Math.max(1, state.arcMaxDx);
+      const zIndex = String(Math.round((2 - normalized) * 100));
+      return {
+        transform: `translate3d(0px, ${y.toFixed(2)}px, 0px) rotate(${rotate.toFixed(2)}deg)`,
+        zIndex,
+      };
+    };
+
+    const readMetrics = (state) => {
+      const first = state.items[0];
+      const second = state.items[1] ?? null;
+      if (!(first instanceof HTMLElement)) {
+        return;
+      }
+
+      const firstRect = first.getBoundingClientRect();
+      const secondRect = second instanceof HTMLElement ? second.getBoundingClientRect() : null;
+      const fallbackGap = 40 * fixedDeviceScale;
+      const slot = secondRect ? secondRect.left - firstRect.left : firstRect.width + fallbackGap;
+
+      state.viewportWidth = state.viewport.clientWidth;
+      state.itemWidth = firstRect.width;
+      state.slot = slot > 1 ? slot : firstRect.width + fallbackGap;
+      state.loopWidth = state.slot * state.baseCount;
+      state.totalWidth = state.slot * state.items.length;
+      const isTabletViewport = state.viewportWidth >= 768;
+      const profile = isTabletViewport ? ARC_PROFILE.tablet : ARC_PROFILE.phone;
+      state.arcMaxDx = clamp(
+        state.viewportWidth * profile.kInfluence,
+        state.slot * 2.2,
+        Math.max(state.slot * 5.2, state.viewportWidth * 0.96),
+      );
+      state.arcSagitta = clamp(state.arcMaxDx * profile.kCurvature, 18, 38);
+      state.arcRadius =
+        (state.arcMaxDx * state.arcMaxDx + state.arcSagitta * state.arcSagitta) /
+        (2 * state.arcSagitta);
+      state.rotateCapDeg = profile.rotateCapDeg;
+      state.arcSoftEdgeRatio = profile.softEdgeRatio;
+      state.offset = wrap(state.offset, state.loopWidth);
+      state.autoSpeed = resolveAutoSpeed(state);
+    };
+
+    const render = (state) => {
+      state.track.style.transform = `translate3d(${-state.offset.toFixed(3)}px, 0px, 0px)`;
+      for (let index = 0; index < state.items.length; index += 1) {
+        const item = state.items[index];
+        if (!(item instanceof HTMLElement)) {
+          continue;
+        }
+        const arc = computeArcTransform(state, index);
+        item.style.transform = arc.transform;
+        item.style.opacity = '1';
+        item.style.zIndex = arc.zIndex;
+      }
+    };
+
+    const shouldAutoplay = (state) =>
+      adaptiveQuery.matches && !reducedMotionQuery.matches && state.inViewport && !document.hidden && !state.dragging;
+
+    const stepState = (state, dtSec) => {
+      if (!(state.root instanceof HTMLElement) || !state.root.isConnected) {
+        return false;
+      }
+      if (!adaptiveQuery.matches) {
+        return false;
+      }
+
+      if (state.loopWidth <= 0) {
+        readMetrics(state);
+      }
+
+      if (shouldAutoplay(state)) {
+        state.offset = wrap(state.offset + state.autoSpeed * dtSec, state.loopWidth);
+      }
+
+      if (!state.dragging && Math.abs(state.inertia) > 0.1) {
+        state.offset = wrap(state.offset + state.inertia * dtSec, state.loopWidth);
+        state.inertia *= Math.exp(-dtSec * 9);
+      }
+
+      render(state);
+      return true;
+    };
+
+    const stopLoop = () => {
+      if (rafId) {
+        window.cancelAnimationFrame(rafId);
+      }
+      rafId = 0;
+      lastFrameTs = 0;
+    };
+
+    const runLoop = (timestamp) => {
+      if (states.size === 0) {
+        stopLoop();
+        return;
+      }
+
+      const dtMs = lastFrameTs > 0 ? timestamp - lastFrameTs : 16.67;
+      lastFrameTs = timestamp;
+      const dtSec = clamp(dtMs / 1000, 0, 0.05);
+
+      for (const [root, state] of states) {
+        if (stepState(state, dtSec)) {
+          continue;
+        }
+        state.cleanups.forEach((cleanup) => cleanup());
+        states.delete(root);
+      }
+
+      rafId = window.requestAnimationFrame(runLoop);
+    };
+
+    const startLoop = () => {
+      if (rafId || states.size === 0) {
+        return;
+      }
+      rafId = window.requestAnimationFrame(runLoop);
+    };
+
+    const bindPointer = (state) => {
+      const viewport = state.viewport;
+      const onPointerDown = (event) => {
+        if (!(event instanceof PointerEvent)) {
+          return;
+        }
+        if (event.pointerType === 'mouse' && event.button !== 0) {
+          return;
+        }
+        state.dragging = true;
+        state.dragPointerId = event.pointerId;
+        state.lastPointerX = event.clientX;
+        state.lastPointerTs = performance.now();
+        state.inertia = 0;
+        viewport.dataset.dragging = 'true';
+        viewport.setPointerCapture(event.pointerId);
+      };
+
+      const onPointerMove = (event) => {
+        if (!(event instanceof PointerEvent)) {
+          return;
+        }
+        if (!state.dragging || state.dragPointerId !== event.pointerId) {
+          return;
+        }
+        const now = performance.now();
+        const dx = event.clientX - state.lastPointerX;
+        const dt = Math.max(1, now - state.lastPointerTs);
+        state.offset = wrap(state.offset - dx, state.loopWidth);
+        state.inertia = clamp((-dx / dt) * 1000, -720, 720);
+        state.lastPointerX = event.clientX;
+        state.lastPointerTs = now;
+        render(state);
+      };
+
+      const finishDrag = (event) => {
+        if (!(event instanceof PointerEvent)) {
+          return;
+        }
+        if (!state.dragging || state.dragPointerId !== event.pointerId) {
+          return;
+        }
+        state.dragging = false;
+        state.dragPointerId = null;
+        viewport.dataset.dragging = 'false';
+        if (viewport.hasPointerCapture(event.pointerId)) {
+          viewport.releasePointerCapture(event.pointerId);
+        }
+      };
+
+      viewport.addEventListener('pointerdown', onPointerDown);
+      viewport.addEventListener('pointermove', onPointerMove);
+      viewport.addEventListener('pointerup', finishDrag);
+      viewport.addEventListener('pointercancel', finishDrag);
+      state.cleanups.push(() => viewport.removeEventListener('pointerdown', onPointerDown));
+      state.cleanups.push(() => viewport.removeEventListener('pointermove', onPointerMove));
+      state.cleanups.push(() => viewport.removeEventListener('pointerup', finishDrag));
+      state.cleanups.push(() => viewport.removeEventListener('pointercancel', finishDrag));
+    };
+
+    const initSlider = (root) => {
+      if (!(root instanceof HTMLElement)) {
+        return;
+      }
+      if (root.dataset[initAttr] === 'true') {
+        return;
+      }
+
+      const viewport = root;
+      const track = root.querySelector('[data-temp-slider-track]');
+      const count = Number(root.getAttribute('data-temp-slider-count'));
+      if (!(track instanceof HTMLElement) || !Number.isFinite(count) || count < 2) {
+        return;
+      }
+
+      const items = Array.from(track.querySelectorAll('[data-temp-slider-item]')).filter((item) => item instanceof HTMLElement);
+      if (items.length < count * 2) {
+        return;
+      }
+
+      root.dataset[initAttr] = 'true';
+
+      const state = {
+        root,
+        viewport,
+        track,
+        items,
+        baseCount: count,
+        viewportWidth: viewport.clientWidth,
+        itemWidth: 0,
+        slot: 0,
+        loopWidth: 0,
+        totalWidth: 0,
+        offset: 0,
+        autoSpeed: 44,
+        arcMaxDx: 0,
+        arcSagitta: 20,
+        arcRadius: 1,
+        rotateCapDeg: 4.5,
+        arcSoftEdgeRatio: 0.16,
+        inertia: 0,
+        inViewport: true,
+        dragging: false,
+        dragPointerId: null,
+        lastPointerX: 0,
+        lastPointerTs: 0,
+        cleanups: [],
+      };
+
+      bindPointer(state);
+
+      const onResize = () => {
+        readMetrics(state);
+        render(state);
+      };
+
+      window.addEventListener('resize', onResize);
+      state.cleanups.push(() => window.removeEventListener('resize', onResize));
+
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.target !== root) {
+              continue;
+            }
+            state.inViewport = entry.isIntersecting && entry.intersectionRatio > 0.02;
+          }
+        },
+        { threshold: [0, 0.02, 0.15] },
+      );
+      io.observe(root);
+      state.cleanups.push(() => io.disconnect());
+
+      const ro = new ResizeObserver(() => {
+        onResize();
+      });
+      ro.observe(viewport);
+      state.cleanups.push(() => ro.disconnect());
+
+      states.set(root, state);
+      readMetrics(state);
+      render(state);
+      startLoop();
+    };
+
+    const mount = () => {
+      if (!adaptiveQuery.matches) {
+        return;
+      }
+      document.querySelectorAll(sliderSelector).forEach((root) => {
+        initSlider(root);
+      });
+      startLoop();
+    };
+
+    const onVisibilityChange = () => {
+      if (!document.hidden) {
+        startLoop();
+      }
+    };
+
+    const onReducedMotionChange = () => {
+      for (const state of states.values()) {
+        if (reducedMotionQuery.matches) {
+          state.inertia = 0;
+        }
+        render(state);
+      }
+      startLoop();
+    };
+
+    const onAdaptiveQueryChange = () => {
+      if (adaptiveQuery.matches) {
+        mount();
+        return;
+      }
+      for (const [root, state] of states) {
+        state.cleanups.forEach((cleanup) => cleanup());
+        states.delete(root);
+      }
+      stopLoop();
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    reducedMotionQuery.addEventListener('change', onReducedMotionChange);
+    adaptiveQuery.addEventListener('change', onAdaptiveQueryChange);
+    document.addEventListener('astro:page-load', mount);
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', mount, { once: true });
+    } else {
+      mount();
+    }
+
+    window[runtimeKey] = {
+      mount,
+      destroy() {
+        for (const [root, state] of states) {
+          state.cleanups.forEach((cleanup) => cleanup());
+          states.delete(root);
+        }
+        stopLoop();
+      },
+    };
+  })();
+</script>

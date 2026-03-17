@@ -3,6 +3,7 @@ import '../styles/global.css';
 import { ClientRouter } from 'astro:transitions';
 import AgentationToolbar from '../components/dev/AgentationToolbar';
 import InViewMotionRuntime from '../components/InViewMotionRuntime.astro';
+import TemporaryAdaptiveNotice from '../components/TemporaryAdaptiveNotice.astro';
 
 export interface Props {
   title: string;
@@ -40,14 +41,19 @@ const agentationEndpoint =
   </head>
   <body>
     <a href="#content" class="skip-link">Skip to content</a>
-    <slot />
-    <InViewMotionRuntime />
-    {
-      isAgentationEnabled && (
-        <div id="agentation-dev-root" transition:persist>
-          <AgentationToolbar client:only="react" endpoint={agentationEndpoint} />
-        </div>
-      )
-    }
+    <div class="temporary-adaptive-shell">
+      <TemporaryAdaptiveNotice />
+    </div>
+    <div class="site-desktop-shell">
+      <slot />
+      <InViewMotionRuntime />
+      {
+        isAgentationEnabled && (
+          <div id="agentation-dev-root" transition:persist>
+            <AgentationToolbar client:only="react" endpoint={agentationEndpoint} />
+          </div>
+        )
+      }
+    </div>
   </body>
 </html>

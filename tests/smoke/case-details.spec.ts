@@ -1,6 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 
 test.describe('Case details smoke', () => {
+  test.use({ viewport: { width: 1440, height: 1100 } });
+
   const assertIntroScreensMockupDimensions = async (
     page: Page,
     variant: 'phone' | 'tablet',
@@ -60,7 +62,7 @@ test.describe('Case details smoke', () => {
   };
 
   const assertCriticalMockupsAreStable = async (page: Page, expectedCount: number) => {
-    const criticalMockups = page.locator('.device-mockup[data-device-priority="critical"]');
+    const criticalMockups = page.locator('.site-desktop-shell .device-mockup[data-device-priority="critical"]');
     await expect(criticalMockups).toHaveCount(expectedCount);
 
     await expect
@@ -79,7 +81,7 @@ test.describe('Case details smoke', () => {
       const startedAt = performance.now();
       while (performance.now() - startedAt < maxDurationMs) {
         const mockups = Array.from(
-          document.querySelectorAll('.device-mockup[data-device-priority="critical"]'),
+          document.querySelectorAll('.site-desktop-shell .device-mockup[data-device-priority="critical"]'),
         );
         const hasShellOnlyState = mockups.some((mockup) => {
           if (!(mockup instanceof HTMLElement)) {

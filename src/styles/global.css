@@ -378,6 +378,14 @@ html {
   z-index: 1100;
 }
 
+.temporary-adaptive-shell {
+  display: none;
+}
+
+.site-desktop-shell {
+  display: block;
+}
+
 .site-header-inner {
   width: min(var(--desktop-breakpoint), calc(100% - 2rem));
   margin-inline: auto;
@@ -3017,5 +3025,25 @@ img.home-hero-asset {
 @media (max-width: 1360px) {
   .site-header-inner {
     width: calc(100% - 1.5rem);
+  }
+}
+
+@media (max-width: 1359px) {
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
+  .skip-link {
+    display: none;
+  }
+
+  .temporary-adaptive-shell {
+    display: block;
+    min-height: 100dvh;
+  }
+
+  .site-desktop-shell {
+    display: none;
   }
 }

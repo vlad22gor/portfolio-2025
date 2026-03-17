@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('Gallery smoke', () => {
+  test.use({ viewport: { width: 1440, height: 1100 } });
+
   test('/gallery renders webm cards, row-stagger, and critical priority contract', async ({ page }) => {
     await page.goto('/gallery');
 
