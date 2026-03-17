@@ -8,6 +8,7 @@ import CaseChallengeSection from '../components/CaseChallengeSection.astro';
 import CaseProcessSection from '../components/CaseProcessSection.astro';
 import ForaFeatureCardsSection from '../components/ForaFeatureCardsSection.astro';
 import ForaDesignSystemSection from '../components/ForaDesignSystemSection.astro';
+import TeamPhotoQuantizedPerimeterSection from '../components/TeamPhotoQuantizedPerimeterSection.astro';
 import foraChallengeScreenSrc from '../../assets/images/fora/fora-challenge-mock.png';
 import { CASES, getCaseBySlug } from '../data/cases';
 import { FORA_PROCESS_SECTION } from '../data/case-process/fora';
@@ -183,7 +184,7 @@ const foraChallengeNotes = [
           <CaseProcessSection {...FORA_PROCESS_SECTION} />
           <ForaFeatureCardsSection />
           <ForaDesignSystemSection />
-          <section class="fora-section-skeleton fora-section-skeleton--team-photo" aria-hidden="true"></section>
+          <TeamPhotoQuantizedPerimeterSection />
           <section class="fora-section-skeleton fora-section-skeleton--case-switcher" aria-hidden="true"></section>
         </>
       ) : (

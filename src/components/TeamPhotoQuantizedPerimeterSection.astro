@@ -1,0 +1,54 @@
+---
+import QuantizedPerimeter from './QuantizedPerimeter.astro';
+import teamPhotoSrc from '../../assets/images/fora/team photo.png';
+import teamPhotoHeartLeftSrc from '../../assets/custom icons/team photo-heart left.svg?url';
+import teamPhotoHeartRightSrc from '../../assets/custom icons/team photo-heart right.svg?url';
+
+interface Props {
+  class?: string;
+}
+
+const { class: className = '' } = Astro.props as Props;
+const rootClassName = ['fora-team-photo-section', className].filter(Boolean).join(' ');
+---
+
+<section class={rootClassName} aria-label="Fora team photo section" data-motion-inview="appear-v1">
+  <QuantizedPerimeter
+    class="fora-team-photo-surface"
+    shape="rectangle"
+    edgePattern="scallop"
+    step={48}
+    bg="var(--color-bg-darkened)"
+    pad="0"
+    clipContentToShape={true}
+    label="Fora team photo"
+  >
+    <img class="fora-team-photo-image" src={teamPhotoSrc.src} alt="Fora team photo" loading="lazy" decoding="async" />
+  </QuantizedPerimeter>
+
+  <p class="type-description-medium fora-team-photo-caption">
+    finally the project turned for us into a shared adventure we truly enjoyed
+  </p>
+
+  <img
+    class="fora-team-photo-heart fora-team-photo-heart--right"
+    src={teamPhotoHeartRightSrc}
+    alt=""
+    aria-hidden="true"
+    loading="lazy"
+    decoding="async"
+    width="36"
+    height="28"
+  />
+
+  <img
+    class="fora-team-photo-heart fora-team-photo-heart--left"
+    src={teamPhotoHeartLeftSrc}
+    alt=""
+    aria-hidden="true"
+    loading="lazy"
+    decoding="async"
+    width="34"
+    height="29"
+  />
+</section>

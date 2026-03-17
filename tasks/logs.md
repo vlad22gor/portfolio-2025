@@ -1,5 +1,10 @@
 # Logs
 
+- 2026-03-17: Для `/fora` реализована секция `team photo` по Figma `49:2607` через `QuantizedPerimeter (scallop, step=48)` и заменён соответствующий skeleton-блок.
+  Причина: по согласованному плану нужно было внедрить рабочую desktop-only секцию с точными размерами/координатами, не затрагивая остальные секции.
+  Файлы: `src/components/TeamPhotoQuantizedPerimeterSection.astro`, `src/pages/[slug].astro`, `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `dist/fora/index.html` подтверждает наличие `fora-team-photo-section`, отсутствие `fora-section-skeleton--team-photo`, а также `data-perimeter-step="48"` и `data-perimeter-clip-content-to-shape="true"` в новой секции.
+
 - 2026-03-17: Для `/fora` исправлена секция `design system`: заголовки `description text` переведены на `text/default` без opacity-приглушения; PNG перенесены из source `assets` в runtime `public/media/cases/fora/design-system`; в секции убран `object-fit: contain`, чтобы убрать визуальный underscale карточек.
   Причина: глобальный `p { color: var(--text-secondary) }` делал title слишком светлым, а рендер PNG из `assets` + `contain` создавал эффект уменьшения.
   Файлы: `src/components/ForaDesignSystemSection.astro`, `public/media/cases/fora/design-system/design-system-image-summary.png`, `public/media/cases/fora/design-system/design-system-image-horizontal-cards.png`, `public/media/cases/fora/design-system/design-system-image-vertical-cards.png`, `public/media/cases/fora/design-system/design-system-image-sheet.png`, `tasks/logs.md`.
