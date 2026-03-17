@@ -103,4 +103,29 @@ test.describe('Case details smoke', () => {
       'lazy',
     );
   });
+
+  test('/fora video mockup covers screen bounds without seams', async ({ page }) => {
+    await page.goto('/fora');
+
+    const coverage = await page.evaluate(() => {
+      const video = document.querySelector('.fora-feature-cards-section video.device-mockup__media');
+      const screen = video?.closest('.device-mockup')?.querySelector('.device-mockup__screen');
+      if (!(video instanceof HTMLVideoElement) || !(screen instanceof HTMLElement)) {
+        return null;
+      }
+      const screenRect = screen.getBoundingClientRect();
+      const videoRect = video.getBoundingClientRect();
+      const epsilon = 0.02;
+      return {
+        covers:
+          videoRect.left <= screenRect.left + epsilon &&
+          videoRect.top <= screenRect.top + epsilon &&
+          videoRect.right >= screenRect.right - epsilon &&
+          videoRect.bottom >= screenRect.bottom - epsilon,
+      };
+    });
+
+    expect(coverage).not.toBeNull();
+    expect(coverage!.covers).toBe(true);
+  });
 });

@@ -1,0 +1,88 @@
+---
+import QuantizedPerimeter from './QuantizedPerimeter.astro';
+import GalleryCardIllustration from './GalleryCardIllustration.astro';
+import DeviceMockup from './DeviceMockup.astro';
+import type { GalleryDeviceLoadPriority, GalleryPhoneCard, GalleryRowItem, GalleryTabletCard } from '../data/gallery';
+
+interface Props {
+  item: GalleryRowItem;
+  priorityOverride?: GalleryDeviceLoadPriority;
+  staggerIndex?: number;
+}
+
+const { item, priorityOverride, staggerIndex = 0 } = Astro.props;
+const isImage = item.type === 'image';
+const isDeviceCard = (candidate: GalleryRowItem): candidate is GalleryPhoneCard | GalleryTabletCard =>
+  candidate.type === 'phone' || candidate.type === 'tablet';
+const resolvedPriority: GalleryDeviceLoadPriority | undefined = isDeviceCard(item)
+  ? priorityOverride === 'critical'
+    ? 'critical'
+    : item.priority
+  : undefined;
+const isCritical = resolvedPriority === 'critical';
+---
+
+<article
+  class={`gallery-card gallery-card--span-${item.colSpan} gallery-card--type-${item.type}`.trim()}
+  data-gallery-card-type={item.type}
+  data-gallery-card-id={item.id}
+  data-gallery-card-priority={resolvedPriority}
+  data-motion-stagger-item
+  data-motion-stagger-index={String(staggerIndex)}
+  aria-label={item.alt}
+>
+  {
+    isImage ? (
+      <QuantizedPerimeter
+        class="gallery-card__surface gallery-card__surface--image"
+        shape="rectangle"
+        edgePattern="totem"
+        fit="cover"
+        step={24}
+        bg="var(--color-bg-darkened)"
+        pad="0"
+        exportShapeMask
+        label={item.alt}
+      >
+        <div class="gallery-card__image-stack" aria-hidden="true">
+          <div class="gallery-card__image-bg"></div>
+          <img
+            class="gallery-card__image-layer"
+            src={item.imageSrc}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            aria-hidden="true"
+          />
+        </div>
+      </QuantizedPerimeter>
+    ) : (
+      <QuantizedPerimeter
+        class="gallery-card__surface gallery-card__surface--mock"
+        shape="rectangle"
+        edgePattern="scallop"
+        step={48}
+        bg="var(--color-bg-darkened)"
+        pad="0"
+        label={item.alt}
+      >
+        {
+          item.type === 'illustration' ? (
+            <GalleryCardIllustration content={item.content} />
+          ) : (
+            <DeviceMockup
+              class={`gallery-card-device gallery-card-device--${item.type}`.trim()}
+              device={item.type === 'tablet' ? 'tablet' : 'phone'}
+              screenKind={item.screen.kind}
+              screenSrc={item.screen.src}
+              screenPoster={item.screen.poster}
+              screenAlt=""
+              priority={isCritical ? 'critical' : 'lazy'}
+              size="compact"
+            />
+          )
+        }
+      </QuantizedPerimeter>
+    )
+  }
+</article>

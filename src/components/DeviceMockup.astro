@@ -4,90 +4,161 @@ import shellPhoneSrc from '../../assets/devices/Shell-phone.png';
 import shellTabletSrc from '../../assets/devices/Shell-tablet.png';
 
 type DeviceKind = 'phone' | 'tablet';
+type DeviceSize = 'default' | 'compact';
 type ScreenKind = 'image' | 'video';
 type DeviceLoadPriority = 'critical' | 'lazy';
 
-interface DevicePreset {
+interface DeviceFramePreset {
   width: number;
   height: number;
+  screen: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    radius: number;
+  };
+}
+
+interface DevicePreset {
   shellSrc: ImageMetadata;
   screenZ: number;
   shellZ: number;
-  screen: {
-    top: string;
-    right: string;
-    bottom: string;
-    left: string;
-    radius: string;
-  };
+  sizes: Record<DeviceSize, DeviceFramePreset>;
+}
+
+interface ApertureRatios {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
 }
 
 interface Props {
   device?: DeviceKind;
+  size?: DeviceSize;
   screenKind: ScreenKind;
   screenSrc: string;
   screenAlt?: string;
   screenPoster?: string;
   priority?: DeviceLoadPriority;
+  scale?: number;
   class?: string;
 }
 
 const {
   device = 'phone',
+  size = 'default',
   screenKind,
   screenSrc,
   screenAlt,
   screenPoster,
   priority = 'lazy',
+  scale,
   class: className = '',
 } = Astro.props;
 
+const frameFromAperture = (
+  width: number,
+  height: number,
+  ratios: ApertureRatios,
+  radius: number,
+): DeviceFramePreset['screen'] => ({
+  x: width * ratios.left,
+  y: height * ratios.top,
+  width: width * (1 - ratios.left - ratios.right),
+  height: height * (1 - ratios.top - ratios.bottom),
+  radius,
+});
+
+const phoneCompactApertureRatios: ApertureRatios = {
+  left: 50 / 976,
+  right: 48 / 976,
+  top: 43 / 2004,
+  bottom: 43 / 2004,
+};
+
 const presets: Record<DeviceKind, DevicePreset> = {
   phone: {
-    width: 244,
-    height: 501,
     shellSrc: shellPhoneSrc,
     screenZ: 1,
     shellZ: 2,
-    screen: {
-      top: '2.18%',
-      right: '4.97%',
-      bottom: '2.19%',
-      left: '5.2%',
-      radius: '40px',
+    sizes: {
+      default: {
+        width: 244,
+        height: 501,
+        screen: {
+          x: 12.6797,
+          y: 10.94,
+          width: 219.2,
+          height: 479.1,
+          radius: 20,
+        },
+      },
+      compact: {
+        width: 216,
+        height: 443,
+        screen: frameFromAperture(216, 443, phoneCompactApertureRatios, 20),
+      },
     },
   },
   tablet: {
-    width: 296,
-    height: 508,
     shellSrc: shellTabletSrc,
     screenZ: 1,
     shellZ: 2,
-    screen: {
-      top: '2.2637795276%',
-      right: '3.8851351351%',
-      bottom: '2.2637795276%',
-      left: '3.8851351351%',
-      radius: '0px',
+    sizes: {
+      default: {
+        width: 296,
+        height: 508,
+        screen: {
+          x: 11.5,
+          y: 11.5,
+          width: 273,
+          height: 485,
+          radius: 0,
+        },
+      },
+      compact: {
+        width: 258,
+        height: 443,
+        screen: {
+          x: 10,
+          y: 10,
+          width: 238,
+          height: 423,
+          radius: 0,
+        },
+      },
     },
   },
 };
 
 const resolvedDevice: DeviceKind = device === 'tablet' ? 'tablet' : 'phone';
+const resolvedSize: DeviceSize = size === 'compact' ? 'compact' : 'default';
 const resolvedPriority: DeviceLoadPriority = priority === 'critical' ? 'critical' : 'lazy';
+const resolvedScale = typeof scale === 'number' && Number.isFinite(scale) && scale > 0 ? scale : 1;
 const preset = presets[resolvedDevice];
+const framePreset = preset.sizes[resolvedSize];
+const screenCalibrationMarker =
+  resolvedDevice === 'phone' && resolvedSize === 'compact' ? 'aperture-compact-v2-aa' : undefined;
+const screenX = framePreset.screen.x * resolvedScale;
+const screenY = framePreset.screen.y * resolvedScale;
+const screenWidth = framePreset.screen.width * resolvedScale;
+const screenHeight = framePreset.screen.height * resolvedScale;
+const screenRadius = framePreset.screen.radius * resolvedScale;
 const mediaLoading = resolvedPriority === 'critical' ? 'eager' : 'lazy';
 const mediaDecoding = resolvedPriority === 'critical' ? 'sync' : 'async';
 const mediaFetchPriority = resolvedPriority === 'critical' ? 'high' : 'auto';
 const composedClassName = ['device-mockup', `device-mockup--${resolvedDevice}`, className].filter(Boolean).join(' ');
 const styleVars = [
-  `--device-width: ${preset.width}px`,
-  `--device-height: ${preset.height}px`,
-  `--screen-top: ${preset.screen.top}`,
-  `--screen-right: ${preset.screen.right}`,
-  `--screen-bottom: ${preset.screen.bottom}`,
-  `--screen-left: ${preset.screen.left}`,
-  `--screen-radius: ${preset.screen.radius}`,
+  `--device-width: ${framePreset.width}px`,
+  `--device-height: ${framePreset.height}px`,
+  `--device-scale: ${resolvedScale}`,
+  `--screen-x: ${screenX}px`,
+  `--screen-y: ${screenY}px`,
+  `--screen-width: ${screenWidth}px`,
+  `--screen-height: ${screenHeight}px`,
+  `--screen-radius: ${screenRadius}px`,
   `--screen-z: ${preset.screenZ}`,
   `--shell-z: ${preset.shellZ}`,
 ].join('; ');
@@ -98,22 +169,26 @@ const styleVars = [
   style={styleVars}
   data-device-mockup
   data-device-priority={resolvedPriority}
+  data-device-size={resolvedSize}
+  data-device-screen-calibration={screenCalibrationMarker}
   data-ready="false"
 >
   <div class="device-mockup__screen" data-layer="screen">
     {
       screenKind === 'video' ? (
-        <video
-          class="device-mockup__media"
-          src={screenSrc}
-          autoplay
-          muted
-          loop
-          playsinline
-          preload="metadata"
-          poster={screenPoster}
-          aria-hidden="true"
-        />
+        <div class="device-mockup__video-bleed" data-device-video-bleed>
+          <video
+            class="device-mockup__media device-mockup__media--video"
+            src={screenSrc}
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="metadata"
+            poster={screenPoster}
+            aria-hidden="true"
+          />
+        </div>
       ) : (
         <img
           class="device-mockup__media"
@@ -156,13 +231,13 @@ const styleVars = [
 
   .device-mockup__screen {
     position: absolute;
-    top: var(--screen-top);
-    right: var(--screen-right);
-    bottom: var(--screen-bottom);
-    left: var(--screen-left);
+    top: var(--screen-y);
+    left: var(--screen-x);
+    width: var(--screen-width);
+    height: var(--screen-height);
     z-index: var(--screen-z);
     overflow: hidden;
-    border-radius: calc(var(--screen-radius) * var(--device-scale));
+    border-radius: var(--screen-radius);
     background: var(--color-bg-darkened, #1a1a1a);
   }
 
@@ -173,6 +248,25 @@ const styleVars = [
     object-fit: cover;
   }
 
+  .device-mockup__video-bleed {
+    position: absolute;
+    top: -1px;
+    right: -1px;
+    bottom: -1px;
+    left: -1px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .device-mockup__media--video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: none;
+  }
+
   .device-mockup__shell {
     position: absolute;
     inset: 0;
@@ -180,7 +274,7 @@ const styleVars = [
     display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: fill;
     pointer-events: none;
     user-select: none;
   }

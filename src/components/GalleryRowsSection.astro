@@ -1,0 +1,29 @@
+---
+import GalleryCard from './GalleryCard.astro';
+import { GALLERY_ROWS } from '../data/gallery';
+import type { GalleryDeviceLoadPriority, GalleryRowItem } from '../data/gallery';
+
+const isDeviceCard = (item: GalleryRowItem) => item.type === 'phone' || item.type === 'tablet';
+const resolvePriorityForRow = (rowIndex: number, item: GalleryRowItem): GalleryDeviceLoadPriority | undefined => {
+  if (!isDeviceCard(item)) {
+    return undefined;
+  }
+  if (rowIndex <= 1) {
+    return 'critical';
+  }
+  return item.priority;
+};
+---
+
+<section class="gallery-rows-section" aria-labelledby="gallery-page-title">
+  <h1 id="gallery-page-title" class="gallery-page-title">Gallery</h1>
+  <div class="gallery-rows">
+    {GALLERY_ROWS.map((row, rowIndex) => (
+      <div class="gallery-row" data-gallery-row-id={row.id} data-motion-inview="process-tickets-row-stagger-v1">
+        {row.items.map((item, itemIndex) => (
+          <GalleryCard item={item} priorityOverride={resolvePriorityForRow(rowIndex, item)} staggerIndex={itemIndex} />
+        ))}
+      </div>
+    ))}
+  </div>
+</section>

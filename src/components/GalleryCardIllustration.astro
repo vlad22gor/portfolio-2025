@@ -1,0 +1,80 @@
+---
+import type { GalleryIllustrationContent } from '../data/gallery';
+
+interface Props {
+  content: GalleryIllustrationContent;
+}
+
+const { content } = Astro.props;
+
+type IllustrationAsset =
+  | {
+      kind: 'image';
+      src: string;
+      className: string;
+    }
+  | {
+      kind: 'video';
+      src: string;
+      className: string;
+      poster?: string;
+    };
+
+const assetByContent: Record<GalleryIllustrationContent, IllustrationAsset> = {
+  'coin-wheel': {
+    kind: 'image',
+    src: '/media/gallery/illustrations/coin-wheel.png',
+    className: 'gallery-card-illustration__asset--coin-wheel',
+  },
+  cube: {
+    kind: 'video',
+    src: '/media/gallery/illustrations/loader-light.webm',
+    poster: '/media/gallery/illustrations/cube.png',
+    className: 'gallery-card-illustration__asset--cube',
+  },
+  terminal: {
+    kind: 'image',
+    src: '/media/gallery/illustrations/terminal.png',
+    className: 'gallery-card-illustration__asset--terminal',
+  },
+  'cup-wheel': {
+    kind: 'image',
+    src: '/media/gallery/illustrations/cup-wheel.png',
+    className: 'gallery-card-illustration__asset--cup-wheel',
+  },
+  'hairy-tubes': {
+    kind: 'image',
+    src: '/media/gallery/illustrations/hairy-tubes.png',
+    className: 'gallery-card-illustration__asset--hairy-tubes',
+  },
+};
+
+const resolvedAsset = assetByContent[content];
+---
+
+<div class={`gallery-card-illustration gallery-card-illustration--${content}`.trim()} aria-hidden="true">
+  {
+    resolvedAsset.kind === 'video' ? (
+      <video
+        class={`gallery-card-illustration__asset ${resolvedAsset.className}`.trim()}
+        src={resolvedAsset.src}
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="metadata"
+        poster={resolvedAsset.poster}
+        aria-hidden="true"
+      />
+    ) : (
+      <img
+        class={`gallery-card-illustration__asset ${resolvedAsset.className}`.trim()}
+        src={resolvedAsset.src}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        aria-hidden="true"
+      />
+    )
+  }
+</div>

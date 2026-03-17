@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
-import { GALLERY_ITEMS } from '../data/gallery';
+import GalleryRowsSection from '../components/GalleryRowsSection.astro';
 ---
 
 <BaseLayout
@@ -11,20 +11,8 @@ import { GALLERY_ITEMS } from '../data/gallery';
   canonicalPath="/gallery"
 >
   <SiteHeader />
-  <main id="content" class="page-shell page-shell--gallery" transition:name="page-content">
-    <section class="section-stack">
-      <h1>Gallery</h1>
-      <p class="lead-copy">Local media placeholders are used to avoid runtime dependency on Framer-hosted assets.</p>
-      <div class="gallery-grid">
-        {GALLERY_ITEMS.map((item) => (
-          <article class="gallery-card scallop-surface">
-            <img src={item.src} alt={item.alt} loading="lazy" decoding="async" />
-            <h2>{item.title}</h2>
-            <p>{item.description}</p>
-          </article>
-        ))}
-      </div>
-    </section>
+  <main id="content" class="page-shell page-shell--gallery" transition:name="gallery-content">
+    <GalleryRowsSection />
   </main>
   <SiteFooter />
 </BaseLayout>

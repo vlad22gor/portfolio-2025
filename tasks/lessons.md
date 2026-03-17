@@ -6,6 +6,8 @@
 - Для wave-divider использовать SVG stroke из чередующихся полуокружностей (`d=8`, `stroke=2`), длину квантизировать только количеством кружков без mask.
 - Для текущего этапа вёрстки: desktop-only, один рабочий breakpoint `1360`; mobile breakpoint `360` добавляется отдельной задачей.
 - Горизонтальная страничная сетка в коде: `main.page-shell` по умолчанию `5-col` (`144/24`, track `816`), для `/gallery` использовать модификатор `page-shell--gallery` с `8-col` (`132/24`, track `1224`); общий вертикальный `gap`-ритм не вводить.
+- Для `/gallery` (rows `51:5306`) держать контракт `6` рядов с `row-gap: 120`, карточка `height: 384`; `phone/tablet/illustration` — `span 2` через `QuantizedPerimeter edgePattern='scallop' step=48`, `image` — `span 4` через `QuantizedPerimeter edgePattern='totem' step=24` с маской на image-слое и отдельным фоновым слоем под прозрачные PNG.
+- Для `/gallery` карточку `51:5287` (`cube`) рендерить как `loader-light.webm` (`autoplay + loop + muted + playsinline`), а `cube.png` использовать как `poster`/fallback.
 - Вертикальные отступы секций задавать по `Y` из Figma (а не по единому `gap`): для первого блока `home hero` базовый контракт `Y=240`.
 - Если `SiteHeader` нефиксированный (`position: static`), для сохранения контракта `home hero Y=240` компенсировать высоту хедера в `page-shell--home`: `padding-top: calc(240px - var(--site-header-height))`.
 - Для `cases cards section` на `/` держать desktop-контракт `Y=1320`; в description-блоке стрелки фиксировать по Figma (`left:155, top:-12` и `left:604, top:32`).
@@ -20,6 +22,11 @@
 - Для `/fora feature cards` использовать reusable `FeatureCard` с props `mockSide ('left'|'right')` и `device ('phone'|'tablet')`; секционный контракт: `816x1580`, card `432`, вертикальный gap `142`; mock-контейнер на `QuantizedPerimeter step=48`, видео/постеры — из `public/media/fora/feature-cards/{flows,posters}`.
 - Для `DeviceMockup tablet` (Figma `43:1811`) держать `Screen` под `Shell-tablet` (`z-index`), без `border-radius`; inset экрана задавать в процентах от базового `296x508` (эквивалент `11.5px`) для корректного масштабирования.
 - Для overlap-сценариев `DeviceMockup` с внутренними `z-index` (`screen/shell`) обязательно изолировать стек компонента (`.device-mockup { isolation: isolate; }`), чтобы слои разных mockup не перемешивались между собой.
+- Для `phone`-мокапов радиус экрана задавать централизованно в `DeviceMockup` (`screen.radius`), а секционные страницы (включая `/gallery`) не должны дублировать/переопределять этот радиус локальными селекторами.
+- Для `/gallery` использовать `DeviceMockup size='compact'` (без `scale`) для предсказуемой геометрии: `phone 216x443`, `tablet 258x443` по Figma `43:1799`.
+- Для `DeviceMockup phone + compact` геометрию `screen` калибровать по AA-aware aperture shell (inset-ratios `50/976`, `48/976`, `43/2004`, `43/2004`) и помечать режим `data-device-screen-calibration='aperture-compact-v2-aa'`.
+- Для video-screen в `DeviceMockup` anti-seam делать через отдельный bleed-wrapper (`top/right/bottom/left: -1px`, `overflow: hidden`) и `video { inset: 0; transform: none; }`; не использовать `transform-scale` для антишва.
+- Для `DeviceMockup` в `size='compact'` использовать `shell` с `object-fit: fill`, чтобы избежать микрокропа низа/верха от несовпадения aspect-ratio (`216x443` vs `976x2004`).
 - Для `/fora team photo section` (`49:2607`) держать контракт `816x500`: photo-блок `816x432` через `QuantizedPerimeter` (`edgePattern='scallop'`, `step=48`, `clipContentToShape=true`), подпись `297x44`, hearts в абсолюте (`right: 552/451, 36x28`; `left: 240/486, 34x29`).
 - Для `/` держать порядок секций и Y-контракты как в Figma: `hero(240) -> cases(1320) -> design tools(3024) -> about me(3744) -> quotes(5112) -> final cta(6000)`, затем `footer(7080)`; при расчёте `margin-top` учитывать `main.page-shell` `grid gap` (`32px`).
 - Для `final cta` на `/`: divider рендерить full-bleed на ширину viewport (`left=0/right=viewport`) отдельным слоем, не задавать собственный фон секции, а motif использовать в синем варианте (`/media/motifs/motif-stack-orb-3-blue.svg`).

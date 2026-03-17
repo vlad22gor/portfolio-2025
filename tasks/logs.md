@@ -1,5 +1,60 @@
 # Logs
 
+- 2026-03-17: Для `DeviceMockup phone compact` введена AA-aware aperture-калибровка (`aperture-compact-v2-aa`) для устранения боковых seam-линий.
+  Причина: прозрачная aperture-калибровка (`v1`) не покрывала полу-прозрачную AA-кайму shell, из-за чего по левому/правому краю оставался заметный «пиксель».
+  Файлы: `src/components/DeviceMockup.astro`, `tests/smoke/gallery.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `npm run test:smoke` — успешно (`5/5`). В smoke `/gallery` обновлён маркер на `aperture-compact-v2-aa` и добавлена проверка покрытия `aaAwareHole` (transparent-hole, расширенный на `1px` по X/Y).
+
+- 2026-03-17: Для `DeviceMockup phone compact` добавлена aperture-калибровка `screen` (устранение правого «гуляющего» пикселя в gallery/webm).
+  Причина: после фикса низа оставался дрейф справа — `screen` всё ещё немного расходился с реальным прозрачным окном `Shell-phone`.
+  Файлы: `src/components/DeviceMockup.astro`, `tests/smoke/gallery.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `npm run test:smoke` — успешно (`5/5`). В smoke `/gallery` добавлены проверки `data-device-screen-calibration='aperture-compact-v1'` и aperture-alignment для карточки `51:5269` (alpha-анализ shell PNG + сравнение границ `screen` с transparent hole по X/Y).
+
+- 2026-03-17: Исправлен белый нижний seam и микроподрез shell в `DeviceMockup compact` (gallery webm cards).
+  Причина: `shell` в compact рендерился с `object-fit: cover` и давал микрокроп из-за несовпадения ratio; video anti-seam через `transform: scale(...)` создавал субпиксельный дрейф на rounded-краях.
+  Файлы: `src/components/DeviceMockup.astro`, `tests/smoke/gallery.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `npm run test:smoke` — успешно (`5/5`); smoke `/gallery` подтверждает `object-fit: fill` на `.device-mockup__shell`, наличие `data-device-video-bleed` wrapper и `transform: none` у video.
+
+- 2026-03-17: Переведён `/gallery` с `scale` на явный `DeviceMockup size='compact'` (без gallery-скейла).
+  Причина: стабилизировать посадку screen в shell и убрать субпиксельный дрейф от scale-пайплайна в gallery.
+  Файлы: `src/components/DeviceMockup.astro`, `src/components/GalleryCard.astro`, `tests/smoke/gallery.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `npm run test:smoke` — успешно (`5/5`); smoke `/gallery` подтверждает `data-device-size='compact'` и размеры `phone ~216x443`, `tablet ~258x443`.
+
+- 2026-03-17: Исправлен масштаб `DeviceMockup` в `/gallery` под Figma-контракт (`phone 216x443`, `tablet 258x442`) через prop `scale` в компоненте.
+  Причина: gallery-override через CSS не применялся стабильно (в runtime `--device-scale` оставался `1`), из-за чего девайсы были визуально крупнее макета.
+  Файлы: `src/components/DeviceMockup.astro`, `src/components/GalleryCard.astro`, `src/styles/global.css`, `tests/smoke/gallery.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `npm run test:smoke` — успешно (`4/4`), включая size-assert для gallery (`phone ~216x443`, `tablet ~258x442`, `--device-scale != 1`).
+
+- 2026-03-17: Для gallery-карточки `51:5287` (`cube`) подключён `loader_light.webm` с autoplay/loop (muted, playsinline) вместо статичного изображения.
+  Причина: по фидбеку этот узел из Figma должен быть motion-контентом, как на других секциях с `loader_light`.
+  Файлы: `src/components/GalleryCardIllustration.astro`, `public/media/gallery/illustrations/loader-light.webm`, `tests/smoke/gallery.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `npm run test:smoke` — успешно (`4/4`, включая проверку autoplay для `.gallery-card-illustration--cube video`).
+
+- 2026-03-17: Перенесено управление скруглением `phone`-экрана на уровень `DeviceMockup`; gallery переведена на рендер через `DeviceMockup` без локального screen/shell override.
+  Причина: по фидбеку радиус должен задаваться централизованно в компоненте mockup, а не gallery-специфичными стилями.
+  Файлы: `src/components/DeviceMockup.astro`, `src/components/GalleryCard.astro`, `src/styles/global.css`, `tests/smoke/gallery.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `npm run test:smoke` — успешно (`4/4`).
+
+- 2026-03-17: Уточнено скругление `phone` screen-wrap в `/gallery` до `20px` (вместо `35px`).
+  Причина: по фидбеку нужно ещё уменьшить радиус для более плотного совпадения с shell без зазоров.
+  Файлы: `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно.
+
+- 2026-03-17: Подкорректировано скругление `phone` screen-wrap в `/gallery` с `40px` до `35px`.
+  Причина: при `40px` визуально появлялся избыточный зазор по углам экрана; требовался более плотный фит без вылезания контента за shell.
+  Файлы: `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно.
+
+- 2026-03-17: Реализован пакет доработок `/gallery`: device-screen clipping для `phone`, autoplay `webm` в mockup-карточках, critical load для device-карточек первых двух рядов, row-based inView-stagger и изоляция route-transition от shared `page-content`.
+  Причина: привести `/gallery` к согласованному поведению с остальными страницами (autoplay flow-видео, предсказуемый first paint для верхних рядов, мягкий вход по рядам без scale-морфа между разными сетками).
+  Файлы: `src/data/gallery.ts`, `src/components/GalleryCard.astro`, `src/components/GalleryRowsSection.astro`, `src/styles/global.css`, `src/pages/gallery.astro`, `tests/smoke/gallery.spec.ts`, `public/media/gallery/flows/{r1-c2-phone,r2-c3-tablet,r3-c2-phone,r3-c4-phone,r4-c1-phone,r5-c1-phone,r6-c1-phone}.webm`, `public/media/gallery/posters/{r1-c2-phone,r2-c3-tablet,r3-c2-phone,r3-c4-phone,r4-c1-phone,r5-c1-phone,r6-c1-phone}.png`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно (включая автогенерацию poster-файлов для новых `gallery/flows`); `npm run test:smoke` — успешно (`4/4`, включая новый `tests/smoke/gallery.spec.ts`); проверка `dist/gallery/index.html` подтверждает `7` `<video class="gallery-card-device__screen">`, `5` `data-gallery-card-priority="critical"` (device-карточки первых двух рядов), `6` row-stagger триггеров `process-tickets-row-stagger-v1` и `21` `data-motion-stagger-item`; runtime-проверка из smoke подтверждает разные `data-astro-transition-scope` для `/cases` и `/gallery` (изоляция transition-пула).
+
+- 2026-03-17: Продолжена замена `gallery` ассетов на оригиналы из `/assets` (без Figma-копий) — перегенерированы 7 `screen`-PNG из исходных `.webm`.
+  Причина: процесс миграции прервался; часть `public/media/gallery/screens/*` не совпадала ни с одним source-файлом в `/assets/gallery/static` и оставалась промежуточным экспортом.
+  Файлы: `public/media/gallery/screens/r1-c2-phone.png`, `public/media/gallery/screens/r2-c3-tablet.png`, `public/media/gallery/screens/r3-c2-phone.png`, `public/media/gallery/screens/r3-c4-phone.png`, `public/media/gallery/screens/r4-c1-phone.png`, `public/media/gallery/screens/r5-c1-phone.png`, `public/media/gallery/screens/r6-c1-phone.png`, `tasks/logs.md`.
+  Проверки: (1) source-верификация — каждый из 7 PNG побайтно совпадает с кадром, заново извлечённым из `assets/gallery/{Scenic-Path,Portal,Echo-Journal,Lights,Red-Lights,Fora,Zeely}-Gallery.webm` (для `r5-c1` с `scale=389:848`); (2) `rg -n "figma.com/api/mcp/asset|/@fs/.*/assets/gallery" src public` — совпадений нет; (3) `npm run build` — успешно.
+
 - 2026-03-17: Исправлено «перемешивание» слоёв в `intro screens (tablet)` на `/kissa`: overlap теперь работает как единые карточки mockup (центр сверху, боковые снизу) без interleave экранов.
   Причина: внутренние `z-index` (`screen/shell`) конкурировали глобально между разными `DeviceMockup`, потому что у mockup не было собственного stacking context, а у tablet-item был `z-index: auto`.
   Файлы: `src/components/DeviceMockup.astro`, `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
@@ -1005,3 +1060,13 @@
   Причина: устранить «рваное» появление ассетов (shell появляется раньше screen) и сделать reveal контролируемым и предсказуемым.
   Файлы: `src/components/DeviceMockup.astro`, `src/components/IntroScreensQuantizedPerimeterSection.astro`, `src/components/CaseChallengeSection.astro`, `src/layouts/BaseLayout.astro`, `src/pages/[slug].astro`, `tests/smoke/case-details.spec.ts`, `tasks/logs.md`.
   Проверки: (1) `npm run build` — успешно; (2) `npm run test:smoke` — успешно (`2/2`, включая новые проверки `data-device-priority="critical"` и readiness/polling на отсутствие shell-only состояния > `1300ms`); (3) проверка `dist/fora|kissa/index.html` — присутствуют `head` preloads для critical screen-изображений, у intro/challenge mockups выставлен `priority=critical`, у feature-cards сохранён `priority=lazy`.
+
+- 2026-03-17: Реализована страница `/gallery` по Figma (`gallery card` + `rows`) с `QuantizedPerimeter`-контрактами по типам.
+  Причина: заменить placeholder-сетку на production-реализацию `GalleryCard` (`phone/tablet/illustration/image`) и полную раскладку рядов `51:5306`, включая image-маску и локальные runtime-ассеты.
+  Файлы: `src/data/gallery.ts`, `src/components/GalleryCard.astro`, `src/components/GalleryCardIllustration.astro`, `src/components/GalleryRowsSection.astro`, `src/pages/gallery.astro`, `src/styles/global.css`, `public/media/gallery/{device-shells,screens,illustrations,images}/*`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: (1) `npm run build` — успешно; (2) проверка `dist/gallery/index.html` подтверждает `rowCount=6`, `span2=19`, `span4=2`, `image=2`, `tablet=1`, `illustration=5`; (3) `rg -n "figma.com/api/mcp/asset" src public dist` — совпадений нет (runtime полностью на локальных ассетах); (4) проверка контрактов `image` подтверждает `data-perimeter-edge-pattern="totem"` + `data-perimeter-step="24"` и CSS-маску через `--perimeter-content-mask`; (5) Playwright-визуальный smoke для `/gallery` не выполнен из-за локального launcher-конфликта Chrome (`Opening in existing browser session`).
+
+- 2026-03-17: Стабилизирована геометрия video-screen в `DeviceMockup` при `scale != 1` и обновлён smoke-контур покрытия экрана.
+  Причина: при уменьшенном mockup (особенно в `/gallery`) у webm экрана проявлялся субпиксельный seam по правому/нижнему краю; требовался системный фикс в reusable-компоненте без route-specific override.
+  Файлы: `src/components/DeviceMockup.astro`, `tests/smoke/gallery.spec.ts`, `tests/smoke/case-details.spec.ts`, `tasks/logs.md`.
+  Проверки: (1) `npm run build` — успешно; (2) `npm run test:smoke` — успешно (`5/5`); (3) runtime-check (`/gallery`, `/fora`) подтверждает, что `videoRect` покрывает `screenRect` без оголения правого/нижнего края.
