@@ -1,0 +1,21 @@
+---
+import QuantizedPerimeter from './QuantizedPerimeter.astro';
+---
+
+<section class="gallery-to-be-more-section" aria-label="To be more section" data-motion-inview="appear-v1">
+  <QuantizedPerimeter
+    class="gallery-to-be-more-surface"
+    shape="circle"
+    edgePattern="scallop"
+    step={24}
+    bg="var(--color-bg-darkened)"
+    pad="0"
+    label="To be more"
+  >
+    <p class="gallery-to-be-more-text type-text-small">
+      there will
+      <br aria-hidden="true" />
+      be&nbsp;much more joyfull works!
+    </p>
+  </QuantizedPerimeter>
+</section>

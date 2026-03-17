@@ -150,6 +150,31 @@ test.describe('Gallery smoke', () => {
     expect(videoCoverage).not.toBeNull();
     expect(videoCoverage!.covers).toBe(true);
 
+    const imageCards = page.locator('.gallery-card[data-gallery-card-type="image"] .gallery-card__surface');
+    await expect(imageCards).toHaveCount(2);
+    const imageCardsUseTotemStep50 = await imageCards.evaluateAll((nodes) =>
+      nodes.every((node) => node instanceof HTMLElement && node.getAttribute('data-perimeter-step') === '50'),
+    );
+    expect(imageCardsUseTotemStep50).toBe(true);
+    const imageMaskCoverage = await imageCards.evaluateAll((nodes) =>
+      nodes.every((surface) => {
+        if (!(surface instanceof HTMLElement) || surface.dataset.ready !== 'true') {
+          return false;
+        }
+        const bg = surface.querySelector('.gallery-card__image-bg');
+        const layer = surface.querySelector('.gallery-card__image-layer');
+        if (!(bg instanceof HTMLElement) || !(layer instanceof HTMLElement)) {
+          return false;
+        }
+        const bgStyles = getComputedStyle(bg);
+        const layerStyles = getComputedStyle(layer);
+        const bgMask = bgStyles.maskImage || bgStyles.webkitMaskImage;
+        const layerMask = layerStyles.maskImage || layerStyles.webkitMaskImage;
+        return bgMask !== 'none' && layerMask !== 'none';
+      }),
+    );
+    expect(imageMaskCoverage).toBe(true);
+
     const compactApertureAlignment = await page.evaluate(async () => {
       const targetCard = document.querySelector('.gallery-card[data-gallery-card-id="51:5269"]');
       const mockup = targetCard?.querySelector('.device-mockup');

@@ -1070,3 +1070,53 @@
   Причина: при уменьшенном mockup (особенно в `/gallery`) у webm экрана проявлялся субпиксельный seam по правому/нижнему краю; требовался системный фикс в reusable-компоненте без route-specific override.
   Файлы: `src/components/DeviceMockup.astro`, `tests/smoke/gallery.spec.ts`, `tests/smoke/case-details.spec.ts`, `tasks/logs.md`.
   Проверки: (1) `npm run build` — успешно; (2) `npm run test:smoke` — успешно (`5/5`); (3) runtime-check (`/gallery`, `/fora`) подтверждает, что `videoRect` покрывает `screenRect` без оголения правого/нижнего края.
+
+- 2026-03-17: Доработана композиция страницы `/gallery` под Figma `51:5014` — добавлены блок `to be more` (`57:5501`) и стандартная `final cta section` (`51:5028`) с финальным выравниванием секций по Y-контракту.
+  Причина: пользователь запросил завершить gallery-страницу и довести порядок/отступы секций до целевого макета.
+  Файлы: `src/components/GalleryToBeMoreSection.astro`, `src/pages/gallery.astro`, `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `npm run test:smoke` — успешно (`5/5`, включая `tests/smoke/gallery.spec.ts`).
+
+- 2026-03-17: Обновлён `tasks/lessons.md` по итогам финализации `/gallery` (порядок секций и формула отступов для `to be more`/`final cta`).
+  Причина: зафиксировать устойчивый layout-контракт из Figma `51:5014` для следующих итераций без повторной калибровки.
+  Файлы: `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: консистентность с реализованным CSS (`to-be-more mt=64`, `final-cta mt=160`, `final-cta mb=138`) подтверждена ручной сверкой кода.
+
+- 2026-03-17: Обновлён текст блока `to be more` по Figma `28:4684` с сохранением ручного переноса (`Shift+Enter`).
+  Причина: пользователь обновил copy в макете; требовалось синхронизировать runtime-текст 1:1, включая перенос строки.
+  Файлы: `src/components/GalleryToBeMoreSection.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `npm run test:smoke` — успешно (`5/5`).
+
+- 2026-03-17: Для `gallery image` увеличен `totem`-step до `40` и маска периметра применена к `darkened`-фону наравне с image-слоем.
+  Причина: требовалось сделать «диаметр» totem заметно крупнее (с `24` ближе к `48`) и убрать рассинхрон клипа между PNG-слоем и подложкой `bg-darkened`.
+  Файлы: `src/components/GalleryCard.astro`, `src/styles/global.css`, `tests/smoke/gallery.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: (1) `npm run build` — успешно; (2) `npm run test:smoke -- tests/smoke/gallery.spec.ts` — успешно (`2/2`), включая новый assert на `data-perimeter-step="40"` у `image`-карточек и наличие маски у `.gallery-card__image-bg` + `.gallery-card__image-layer` при `data-ready="true"`.
+
+- 2026-03-17: Для `gallery image` выполнен тестовый перевод `totem`-step с `40` на `50` (сохранение ширины `600` в `span-4`).
+  Причина: пользователь попросил проверить вариант с точным попаданием в ширину 4 колонок (`600px`) при более крупном totem-паттерне.
+  Файлы: `src/components/GalleryCard.astro`, `tests/smoke/gallery.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: (1) `npm run build` — успешно; (2) `PLAYWRIGHT_PORT=4174 npm run test:smoke -- tests/smoke/gallery.spec.ts` — успешно (`2/2`), включая assert `data-perimeter-step="50"` у `image`-карточек и проверку маски у `.gallery-card__image-bg` + `.gallery-card__image-layer`.
+
+- 2026-03-17: Для `gallery image` выполнен тестовый перевод `totem`-step с `50` на `60` (сохранение ширины `600` в `span-4`).
+  Причина: пользователь запросил ещё более крупный вариант по «диаметру» при обязательном попадании ширины в 4 колонки.
+  Файлы: `src/components/GalleryCard.astro`, `tests/smoke/gallery.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: (1) `npm run build` — успешно; (2) `PLAYWRIGHT_PORT=4175 npm run test:smoke -- tests/smoke/gallery.spec.ts` — успешно (`2/2`) с assert `data-perimeter-step="60"` и сохранением маски у `image-layer` + `darkened bg`.
+
+- 2026-03-17: Для `gallery image` откатили `totem`-step с `60` обратно на `40`.
+  Причина: пользователь выбрал вернуть более умеренный вариант после серии A/B-тестов (`40 -> 50 -> 60`).
+  Файлы: `src/components/GalleryCard.astro`, `tests/smoke/gallery.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: (1) `npm run build` — успешно; (2) `PLAYWRIGHT_PORT=4176 npm run test:smoke -- tests/smoke/gallery.spec.ts` — успешно (`2/2`) с assert `data-perimeter-step=\"40\"` и проверкой маски у `image-layer` + `darkened bg`.
+
+- 2026-03-17: Для `gallery image` выполнен финальный тестовый перевод `totem`-step с `40` на `50`.
+  Причина: пользователь запросил «последний тест» на более крупный диаметр при сохранении попадания в ширину 4 колонок.
+  Файлы: `src/components/GalleryCard.astro`, `tests/smoke/gallery.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: (1) `npm run build` — успешно; (2) `PLAYWRIGHT_PORT=4177 npm run test:smoke -- tests/smoke/gallery.spec.ts` — успешно (`2/2`) с assert `data-perimeter-step=\"50\"` и проверкой маски у `image-layer` + `darkened bg`.
+
+- 2026-03-17: Для `gallery image` повторно выполнен тестовый перевод `totem`-step с `50` на `60`.
+  Причина: пользователь запросил ещё один прогон варианта с более крупным «диаметром» при фиксированной ширине `span-4`.
+  Файлы: `src/components/GalleryCard.astro`, `tests/smoke/gallery.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: (1) `npm run build` — успешно; (2) `PLAYWRIGHT_PORT=4178 npm run test:smoke -- tests/smoke/gallery.spec.ts` — успешно (`2/2`) с assert `data-perimeter-step=\"60\"` и проверкой маски у `image-layer` + `darkened bg`.
+
+- 2026-03-17: Зафиксирован финальный вариант `gallery image` с `totem`-step `50`.
+  Причина: по итогам последовательных прогонов (`40/50/60`) пользователь подтвердил финальный выбор `50`.
+  Файлы: `src/components/GalleryCard.astro`, `tests/smoke/gallery.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: (1) `npm run build` — успешно; (2) `PLAYWRIGHT_PORT=4179 npm run test:smoke -- tests/smoke/gallery.spec.ts` — успешно (`2/2`) с assert `data-perimeter-step=\"50\"` и проверкой маски у `image-layer` + `darkened bg`.

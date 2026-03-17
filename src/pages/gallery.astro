@@ -3,6 +3,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import GalleryRowsSection from '../components/GalleryRowsSection.astro';
+import GalleryToBeMoreSection from '../components/GalleryToBeMoreSection.astro';
+import FinalCtaSection from '../components/FinalCtaSection.astro';
 ---
 
 <BaseLayout
@@ -13,6 +15,8 @@ import GalleryRowsSection from '../components/GalleryRowsSection.astro';
   <SiteHeader />
   <main id="content" class="page-shell page-shell--gallery" transition:name="gallery-content">
     <GalleryRowsSection />
+    <GalleryToBeMoreSection />
+    <FinalCtaSection />
   </main>
   <SiteFooter />
 </BaseLayout>
