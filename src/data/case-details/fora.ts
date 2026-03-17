@@ -39,15 +39,15 @@ export const FORA_CASE_DETAIL_CONFIG: CaseDetailConfig = {
       variant: 'phone',
       screens: [
         {
-          src: '/media/cases/fora/intro/fora-intro-delivery.png',
+          src: '/media/cases/fora/intro/fora-intro-delivery.webp',
           alt: 'Fora delivery home screen',
         },
         {
-          src: '/media/cases/fora/intro/fora-intro-category.png',
+          src: '/media/cases/fora/intro/fora-intro-category.webp',
           alt: 'Fora category listing screen',
         },
         {
-          src: '/media/cases/fora/intro/fora-intro-map.png',
+          src: '/media/cases/fora/intro/fora-intro-map.webp',
           alt: 'Fora map delivery selection screen',
         },
       ],
@@ -64,7 +64,7 @@ export const FORA_CASE_DETAIL_CONFIG: CaseDetailConfig = {
         ],
         device: 'phone',
         screen: {
-          src: '/media/cases/fora/challenge/fora-challenge-mock.png',
+          src: '/media/cases/fora/challenge/fora-challenge-mock.webp',
           alt: 'Fora app challenge screen',
         },
         notes: [
@@ -188,11 +188,11 @@ export const FORA_CASE_DETAIL_CONFIG: CaseDetailConfig = {
         copyLibraryTitle: 'component library',
         copyLibraryBody:
           '20+ standardized components cut new feature time to market by 25%',
-        summaryImageSrc: '/media/cases/fora/design-system/design-system-image-summary.png',
+        summaryImageSrc: '/media/cases/fora/design-system/design-system-image-summary.webp',
         horizontalImageSrc:
           '/media/cases/fora/design-system/design-system-image-horizontal-cards.png',
         verticalImageSrc:
-          '/media/cases/fora/design-system/design-system-image-vertical-cards.png',
+          '/media/cases/fora/design-system/design-system-image-vertical-cards.webp',
         sheetImageSrc: '/media/cases/fora/design-system/design-system-image-sheet.png',
         arrowTopSrc: '/media/cases/fora/design-system/arrow-top.svg',
         arrowBottomLeftSrc: '/media/cases/fora/design-system/arrow-bottom-left.svg',
@@ -203,7 +203,7 @@ export const FORA_CASE_DETAIL_CONFIG: CaseDetailConfig = {
       type: 'teamPhoto',
       inViewPreset: 'appear-v1',
       data: {
-        photoSrc: '/media/cases/fora/team-photo/team-photo.png',
+        photoSrc: '/media/cases/fora/team-photo/team-photo.webp',
         photoAlt: 'Fora team photo',
         caption:
           'finally the project turned for us into a shared adventure we truly enjoyed',

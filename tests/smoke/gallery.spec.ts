@@ -70,7 +70,7 @@ test.describe('Gallery smoke', () => {
         node.loop &&
         node.playsInline &&
         node.getAttribute('src')?.endsWith('/media/gallery/illustrations/coin-wheel.webm') === true &&
-        node.getAttribute('poster')?.endsWith('/media/gallery/illustrations/coin-wheel.png') === true
+        node.getAttribute('poster')?.endsWith('/media/gallery/illustrations/coin-wheel.webp') === true
       );
     });
     expect(coinWheelVideoIsAutoplayReady).toBe(true);
@@ -200,7 +200,7 @@ test.describe('Gallery smoke', () => {
       const target = document.querySelector(
         '.gallery-card[data-gallery-card-id="57:5450"] .gallery-card__image-layer',
       );
-      return target instanceof HTMLImageElement && target.src.endsWith('/media/gallery/images/r5-c3-cube-log-in.png');
+      return target instanceof HTMLImageElement && target.src.endsWith('/media/gallery/images/r5-c3-cube-log-in.webp');
     });
     expect(secondImageCardUsesCubeLogIn).toBe(true);
 

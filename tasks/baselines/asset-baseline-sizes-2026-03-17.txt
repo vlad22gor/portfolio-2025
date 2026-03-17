@@ -1,0 +1,247 @@
+assets/.DS_Store|12292
+assets/custom icons/arrow-button-left.svg|102589
+assets/custom icons/arrow-button-right.svg|102747
+assets/custom icons/case card arrow left.svg|107009
+assets/custom icons/case card arrow right.svg|106954
+assets/custom icons/cases cards arrow left.svg|102722
+assets/custom icons/cases cards arrow right.svg|102675
+assets/custom icons/cases/kissa-photos-arrow-left.svg|101516
+assets/custom icons/cases/kissa-photos-arrow-right.svg|102500
+assets/custom icons/closing quotation mark.svg|30088
+assets/custom icons/design system-arrow-bottom left.svg|100709
+assets/custom icons/design system-arrow-bottom right.svg|101920
+assets/custom icons/design system-arrow-top.svg|100747
+assets/custom icons/fora-challenge-arrow bottom left.svg|102849
+assets/custom icons/fora-challenge-arrow bottom right.svg|101886
+assets/custom icons/fora-challenge-arrow top fight.svg|102090
+assets/custom icons/fora-challenge-arrow top left.svg|100699
+assets/custom icons/opening quotation mark.svg|30247
+assets/custom icons/process-step arrow 1.svg|100715
+assets/custom icons/process-step arrow 2.svg|102039
+assets/custom icons/process-step arrow 3.svg|101663
+assets/custom icons/process-step arrow 4.svg|100763
+assets/custom icons/process-step arrow 5.svg|100740
+assets/custom icons/team photo-heart left.svg|101520
+assets/custom icons/team photo-heart right.svg|101412
+assets/devices/Shell-phone.png|150443
+assets/devices/Shell-tablet.png|76625
+assets/gallery/.DS_Store|10244
+assets/gallery/Echo-Journal-Gallery.mp4|27622052
+assets/gallery/Echo-Journal-Gallery.webm|2711739
+assets/gallery/Fora-Gallery.mp4|14387474
+assets/gallery/Fora-Gallery.webm|6903551
+assets/gallery/Lights-Gallery.mp4|3246176
+assets/gallery/Lights-Gallery.webm|1350520
+assets/gallery/Portal-Gallery.mp4|15257637
+assets/gallery/Portal-Gallery.webm|815376
+assets/gallery/Red-Lights-Gallery.mp4|4588572
+assets/gallery/Red-Lights-Gallery.webm|970565
+assets/gallery/Scenic-Path-Gallery.mp4|26942990
+assets/gallery/Scenic-Path-Gallery.webm|1749725
+assets/gallery/Zeely-Gallery.mp4|3562361
+assets/gallery/Zeely-Gallery.webm|1730665
+assets/gallery/coin wheel.webm|3592899
+assets/gallery/cup wheel.webm|3596916
+assets/gallery/loader_light.webm|678171
+assets/gallery/static/.DS_Store|6148
+assets/gallery/static/Blue.png|368942
+assets/gallery/static/Circus.png|216553
+assets/gallery/static/Closer.png|151292
+assets/gallery/static/Clouds.png|2627688
+assets/gallery/static/Concrete.png|156620
+assets/gallery/static/Nova Pashta.png|6929506
+assets/gallery/static/Red.png|73154
+assets/gallery/static/Void.png|1426794
+assets/gallery/static/closer hairy tubes.png|724178
+assets/gallery/static/coin wheel.png|924343
+assets/gallery/static/cube log in.png|2007229
+assets/gallery/static/cup wheel.png|1007773
+assets/gallery/static/ternimal.png|939566
+assets/images/.DS_Store|10244
+assets/images/cases/.DS_Store|6148
+assets/images/cases/case cards/coin wheel.png|924343
+assets/images/cases/case cards/delivery time.png|202448
+assets/images/cases/case cards/summary.png|317963
+assets/images/cases/case cards/ternimal.png|939566
+assets/images/cases/fora cover.png|1588932
+assets/images/cases/kissa cover.png|1566367
+assets/images/fora/.DS_Store|6148
+assets/images/fora/design system-image-horisontal cards.png|168140
+assets/images/fora/design system-image-sheet.png|109638
+assets/images/fora/design system-image-summary.png|164203
+assets/images/fora/design system-image-vertical cards.png|266376
+assets/images/fora/fora-challenge-mock.png|255201
+assets/images/fora/fora-intro-category.png|419284
+assets/images/fora/fora-intro-delivery.png|2428563
+assets/images/fora/fora-intro-map.png|5110542
+assets/images/fora/team photo.png|5154030
+assets/images/home/.DS_Store|6148
+assets/images/home/Mockup--path.png|2216134
+assets/images/home/Mockup--red.png|252826
+assets/images/home/arch.svg|222
+assets/images/home/coin wheel.png|924343
+assets/images/home/cube.png|550400
+assets/images/home/fora cover.png|1588932
+assets/images/home/kissa cover.png|1566367
+assets/images/home/ternimal.png|939566
+assets/images/home/зрщещ.JPG|232340
+assets/images/kissa/.DS_Store|6148
+assets/images/kissa/kissa-flipchart.png|1549817
+assets/images/kissa/kissa-old.png|732007
+assets/images/kissa/kissa-terminal photo.png|1461888
+assets/images/kissa/kissa-terminal.png|14991625
+assets/images/kissa/kissa-tray.png|8636308
+assets/images/kissa/kissa-welcome.png|1982055
+assets/motifs/motif-hourglass-totem.svg|893
+assets/motifs/motif-rounded-cross.svg|291
+assets/motifs/motif-scallop-disc-20.svg|2646
+assets/motifs/motif-split-halfmoon.svg|378
+assets/motifs/motif-stack-orb-3.svg|1346
+assets/motifs/motif-sunburst-rounded-12.svg|1609
+assets/videos/.DS_Store|6148
+assets/videos/flows/.DS_Store|6148
+assets/videos/flows/Fora-Cart.mp4|28820304
+assets/videos/flows/Fora-Cart.webm|9454878
+assets/videos/flows/Fora-Catalogue.mp4|2997915
+assets/videos/flows/Fora-Catalogue.webm|1260176
+assets/videos/flows/Fora-Delivery.mp4|23650979
+assets/videos/flows/Fora-Delivery.webm|6282194
+assets/videos/flows/Kissa-Payment.mp4|5815005
+assets/videos/flows/Kissa-Payment.webm|1246165
+assets/videos/flows/Kissa-Pop-up.mp4|12527358
+assets/videos/flows/Kissa-Pop-up.webm|3290131
+assets/videos/flows/Kissa-Portal.mp4|13902939
+assets/videos/flows/Kissa-Portal.webm|1923969
+assets/videos/loader_light.webm|678171
+public/media/cases/fora/card/cover.png|1588932
+public/media/cases/fora/card/delivery-time.png|202448
+public/media/cases/fora/card/summary.png|317963
+public/media/cases/fora/challenge/arrow-bottom-left.svg|102849
+public/media/cases/fora/challenge/arrow-bottom-right.svg|101886
+public/media/cases/fora/challenge/arrow-top-left.svg|100699
+public/media/cases/fora/challenge/arrow-top-right.svg|102090
+public/media/cases/fora/challenge/fora-challenge-mock.png|255201
+public/media/cases/fora/design-system/arrow-bottom-left.svg|100709
+public/media/cases/fora/design-system/arrow-bottom-right.svg|101920
+public/media/cases/fora/design-system/arrow-top.svg|100747
+public/media/cases/fora/design-system/design-system-image-horizontal-cards.png|168140
+public/media/cases/fora/design-system/design-system-image-sheet.png|109638
+public/media/cases/fora/design-system/design-system-image-summary.png|164203
+public/media/cases/fora/design-system/design-system-image-vertical-cards.png|266376
+public/media/cases/fora/feature-cards/flows/Fora-Cart.webm|9454878
+public/media/cases/fora/feature-cards/flows/Fora-Catalogue.webm|1260176
+public/media/cases/fora/feature-cards/flows/Fora-Delivery.webm|6282194
+public/media/cases/fora/feature-cards/posters/Fora-Cart.png|615121
+public/media/cases/fora/feature-cards/posters/Fora-Catalogue.png|681681
+public/media/cases/fora/feature-cards/posters/Fora-Delivery.png|1562328
+public/media/cases/fora/hero/hero.svg|803
+public/media/cases/fora/intro/fora-intro-category.png|419284
+public/media/cases/fora/intro/fora-intro-delivery.png|2428563
+public/media/cases/fora/intro/fora-intro-map.png|5110542
+public/media/cases/fora/team-photo/heart-left.svg|101520
+public/media/cases/fora/team-photo/heart-right.svg|101412
+public/media/cases/fora/team-photo/team-photo.png|5154030
+public/media/cases/kissa/artifact-photos/kissa-flipchart.png|1549817
+public/media/cases/kissa/artifact-photos/kissa-photos-arrow-left.svg|101516
+public/media/cases/kissa/artifact-photos/kissa-photos-arrow-right.svg|102500
+public/media/cases/kissa/artifact-photos/kissa-terminal-photo.png|1461888
+public/media/cases/kissa/card/coin-wheel.png|924343
+public/media/cases/kissa/card/cover.png|1566367
+public/media/cases/kissa/card/terminal.png|939566
+public/media/cases/kissa/challenge/arrow-bottom-left.svg|102849
+public/media/cases/kissa/challenge/arrow-bottom-right.svg|101886
+public/media/cases/kissa/challenge/arrow-top-left.svg|100699
+public/media/cases/kissa/challenge/arrow-top-right.svg|102090
+public/media/cases/kissa/challenge/kissa-old.png|732007
+public/media/cases/kissa/feature-cards/flows/Kissa-Payment.webm|1246165
+public/media/cases/kissa/feature-cards/flows/Kissa-Pop-up.webm|3290131
+public/media/cases/kissa/feature-cards/flows/Kissa-Portal.webm|1923969
+public/media/cases/kissa/feature-cards/posters/Kissa-Payment.png|664855
+public/media/cases/kissa/feature-cards/posters/Kissa-Pop-up.png|669072
+public/media/cases/kissa/feature-cards/posters/Kissa-Portal.png|578504
+public/media/cases/kissa/hero/hero.svg|805
+public/media/cases/kissa/intro/kissa-terminal.png|14991625
+public/media/cases/kissa/intro/kissa-tray.png|8636308
+public/media/cases/kissa/intro/kissa-welcome.png|1982055
+public/media/cases/kissa/process/arrow-1.svg|100715
+public/media/cases/kissa/process/arrow-2.svg|102039
+public/media/cases/kissa/process/arrow-3.svg|101663
+public/media/cases/kissa/process/arrow-4.svg|100763
+public/media/cases/kissa/process/arrow-5.svg|100740
+public/media/cases/section/cases-cards-arrow-left.svg|100866
+public/media/cases/section/cases-cards-arrow-right.svg|101293
+public/media/cases/section/loader_light.webm|678171
+public/media/cases/section/more-cases-cube.png|302503
+public/media/fora-hero.svg|803
+public/media/fora/feature-cards/flows/Fora-Cart.webm|9454878
+public/media/fora/feature-cards/flows/Fora-Catalogue.webm|1260176
+public/media/fora/feature-cards/flows/Fora-Delivery.webm|6282194
+public/media/fora/feature-cards/posters/Fora-Cart.png|615121
+public/media/fora/feature-cards/posters/Fora-Catalogue.png|681681
+public/media/fora/feature-cards/posters/Fora-Delivery.png|1562328
+public/media/gallery-3d.svg|439
+public/media/gallery-motion.svg|509
+public/media/gallery-tone.svg|457
+public/media/gallery/device-shells/phone-shell.png|150443
+public/media/gallery/device-shells/tablet-shell.png|76625
+public/media/gallery/flows/r1-c2-phone.webm|1749725
+public/media/gallery/flows/r2-c3-tablet.webm|815376
+public/media/gallery/flows/r3-c2-phone.webm|2711739
+public/media/gallery/flows/r3-c4-phone.webm|1350520
+public/media/gallery/flows/r4-c1-phone.webm|970565
+public/media/gallery/flows/r5-c1-phone.webm|6903551
+public/media/gallery/flows/r6-c1-phone.webm|1730665
+public/media/gallery/illustrations/coin-wheel.png|924343
+public/media/gallery/illustrations/coin-wheel.webm|3592899
+public/media/gallery/illustrations/cube.png|550400
+public/media/gallery/illustrations/cup-wheel.png|1007773
+public/media/gallery/illustrations/hairy-tubes.png|724178
+public/media/gallery/illustrations/loader-light.webm|678171
+public/media/gallery/illustrations/terminal.png|939566
+public/media/gallery/images/r4-c2-image.png|6929506
+public/media/gallery/images/r5-c3-cube-log-in.png|2007229
+public/media/gallery/images/r5-c3-image.png|5172579
+public/media/gallery/posters/r1-c2-phone.png|1203807
+public/media/gallery/posters/r2-c3-tablet.png|578489
+public/media/gallery/posters/r3-c2-phone.png|1784817
+public/media/gallery/posters/r3-c4-phone.png|708205
+public/media/gallery/posters/r4-c1-phone.png|538203
+public/media/gallery/posters/r5-c1-phone.png|1427569
+public/media/gallery/posters/r6-c1-phone.png|1313024
+public/media/gallery/screens/r1-c1-phone.png|73154
+public/media/gallery/screens/r1-c2-phone.png|1203807
+public/media/gallery/screens/r1-c4-phone.png|2627688
+public/media/gallery/screens/r2-c1-phone.png|368942
+public/media/gallery/screens/r2-c3-tablet.png|578489
+public/media/gallery/screens/r3-c2-phone.png|1784817
+public/media/gallery/screens/r3-c3-phone.png|156620
+public/media/gallery/screens/r3-c4-phone.png|708205
+public/media/gallery/screens/r4-c1-phone.png|538203
+public/media/gallery/screens/r4-c3-phone.png|1426794
+public/media/gallery/screens/r5-c1-phone.png|495184
+public/media/gallery/screens/r5-c2-phone.png|216553
+public/media/gallery/screens/r6-c1-phone.png|1313024
+public/media/gallery/screens/r6-c3-phone.png|151292
+public/media/home/about-arch.svg|222
+public/media/home/about-photo.jpg|232340
+public/media/home/coin-wheel.png|924343
+public/media/home/cube.png|550400
+public/media/home/mockup-path.png|2216134
+public/media/home/mockup-red.png|252826
+public/media/home/quotes/quote-close-large.svg|30223
+public/media/home/quotes/quote-close-small.svg|30326
+public/media/home/quotes/quote-open-large.svg|30415
+public/media/home/quotes/quote-open-small.svg|30416
+public/media/home/ternimal.png|939566
+public/media/icons/button/arrow-button-left.svg|102589
+public/media/icons/button/arrow-button-right.svg|102747
+public/media/icons/cases/case-card-arrow-left.svg|107009
+public/media/icons/cases/case-card-arrow-right.svg|106954
+public/media/kissa-hero.svg|805
+public/media/motifs/motif-hourglass-totem.svg|893
+public/media/motifs/motif-rounded-cross.svg|291
+public/media/motifs/motif-scallop-disc-20.svg|2646
+public/media/motifs/motif-split-halfmoon.svg|378
+public/media/motifs/motif-stack-orb-3-blue.svg|1356
+public/media/motifs/motif-stack-orb-3.svg|1346
+public/media/motifs/motif-sunburst-rounded-12.svg|1609

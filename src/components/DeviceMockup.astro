@@ -1,7 +1,4 @@
 ---
-import type { ImageMetadata } from 'astro';
-import shellPhoneSrc from '../../assets/devices/Shell-phone.png';
-import shellTabletSrc from '../../assets/devices/Shell-tablet.png';
 
 type DeviceKind = 'phone' | 'tablet';
 type DeviceSize = 'default' | 'compact';
@@ -21,7 +18,7 @@ interface DeviceFramePreset {
 }
 
 interface DevicePreset {
-  shellSrc: ImageMetadata;
+  shellSrc: string;
   screenZ: number;
   shellZ: number;
   sizes: Record<DeviceSize, DeviceFramePreset>;
@@ -80,7 +77,7 @@ const phoneCompactApertureRatios: ApertureRatios = {
 
 const presets: Record<DeviceKind, DevicePreset> = {
   phone: {
-    shellSrc: shellPhoneSrc,
+    shellSrc: '/media/gallery/device-shells/phone-shell.webp',
     screenZ: 1,
     shellZ: 2,
     sizes: {
@@ -103,7 +100,7 @@ const presets: Record<DeviceKind, DevicePreset> = {
     },
   },
   tablet: {
-    shellSrc: shellTabletSrc,
+    shellSrc: '/media/gallery/device-shells/tablet-shell.webp',
     screenZ: 1,
     shellZ: 2,
     sizes: {
@@ -204,7 +201,7 @@ const styleVars = [
 
   <img
     class="device-mockup__shell"
-    src={preset.shellSrc.src}
+    src={preset.shellSrc}
     alt=""
     aria-hidden="true"
     loading={mediaLoading}

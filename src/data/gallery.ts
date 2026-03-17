@@ -51,8 +51,8 @@ export interface GalleryRow {
   items: GalleryRowItem[];
 }
 
-const PHONE_SHELL_SRC = '/media/gallery/device-shells/phone-shell.png';
-const TABLET_SHELL_SRC = '/media/gallery/device-shells/tablet-shell.png';
+const PHONE_SHELL_SRC = '/media/gallery/device-shells/phone-shell.webp';
+const TABLET_SHELL_SRC = '/media/gallery/device-shells/tablet-shell.webp';
 
 const screenImage = (src: string): GalleryScreenMedia => ({
   kind: 'image',
@@ -115,24 +115,24 @@ export const GALLERY_ROWS: GalleryRow[] = [
   {
     id: 'row-1',
     items: [
-      phone('51:5263', screenImage('/media/gallery/screens/r1-c1-phone.png'), 'Gallery phone card: red editorial mobile concept'),
+      phone('51:5263', screenImage('/media/gallery/screens/r1-c1-phone.webp'), 'Gallery phone card: red editorial mobile concept'),
       phone(
         '51:5269',
-        screenVideo('/media/gallery/flows/r1-c2-phone.webm', '/media/gallery/screens/r1-c2-phone.png'),
+        screenVideo('/media/gallery/flows/r1-c2-phone.webm', '/media/gallery/posters/r1-c2-phone.png'),
         'Gallery phone card: scenic path mobile concept',
       ),
       illustration('51:5274', 'coin-wheel', 'Gallery illustration card: coin wheel'),
-      phone('51:5279', screenImage('/media/gallery/screens/r1-c4-phone.png'), 'Gallery phone card: focus mode weather app'),
+      phone('51:5279', screenImage('/media/gallery/screens/r1-c4-phone.webp'), 'Gallery phone card: focus mode weather app'),
     ],
   },
   {
     id: 'row-2',
     items: [
-      phone('51:5286', screenImage('/media/gallery/screens/r2-c1-phone.png'), 'Gallery phone card: kids wallet dashboard'),
+      phone('51:5286', screenImage('/media/gallery/screens/r2-c1-phone.webp'), 'Gallery phone card: kids wallet dashboard'),
       illustration('51:5287', 'cube', 'Gallery illustration card: cube'),
       tablet(
         '51:5288',
-        screenVideo('/media/gallery/flows/r2-c3-tablet.webm', '/media/gallery/screens/r2-c3-tablet.png'),
+        screenVideo('/media/gallery/flows/r2-c3-tablet.webm', '/media/gallery/posters/r2-c3-tablet.png'),
         'Gallery tablet card: Kissa recognition flow',
       ),
       illustration('51:5289', 'terminal', 'Gallery illustration card: payment terminal'),
@@ -144,17 +144,17 @@ export const GALLERY_ROWS: GalleryRow[] = [
       illustration('53:5326', 'cup-wheel', 'Gallery illustration card: cup wheel'),
       phone(
         '53:5327',
-        screenVideo('/media/gallery/flows/r3-c2-phone.webm', '/media/gallery/screens/r3-c2-phone.png'),
+        screenVideo('/media/gallery/flows/r3-c2-phone.webm', '/media/gallery/posters/r3-c2-phone.png'),
         'Gallery phone card: Echo Journal concept',
       ),
       phone(
         '53:5328',
-        screenImage('/media/gallery/screens/r3-c3-phone.png'),
+        screenImage('/media/gallery/screens/r3-c3-phone.webp'),
         'Gallery phone card: portfolio finance tracker',
       ),
       phone(
         '53:5329',
-        screenVideo('/media/gallery/flows/r3-c4-phone.webm', '/media/gallery/screens/r3-c4-phone.png'),
+        screenVideo('/media/gallery/flows/r3-c4-phone.webm', '/media/gallery/posters/r3-c4-phone.png'),
         'Gallery phone card: Lights smart-home concept',
       ),
     ],
@@ -164,11 +164,11 @@ export const GALLERY_ROWS: GalleryRow[] = [
     items: [
       phone(
         '57:5417',
-        screenVideo('/media/gallery/flows/r4-c1-phone.webm', '/media/gallery/screens/r4-c1-phone.png'),
+        screenVideo('/media/gallery/flows/r4-c1-phone.webm', '/media/gallery/posters/r4-c1-phone.png'),
         'Gallery phone card: dark finance tasks',
       ),
-      image('57:5418', '/media/gallery/images/r4-c2-image.png', 'Gallery image card: Nova Poshta 3D composition'),
-      phone('57:5420', screenImage('/media/gallery/screens/r4-c3-phone.png'), 'Gallery phone card: socioligy concept'),
+      image('57:5418', '/media/gallery/images/r4-c2-image.webp', 'Gallery image card: Nova Poshta 3D composition'),
+      phone('57:5420', screenImage('/media/gallery/screens/r4-c3-phone.webp'), 'Gallery phone card: socioligy concept'),
     ],
   },
   {
@@ -176,11 +176,11 @@ export const GALLERY_ROWS: GalleryRow[] = [
     items: [
       phone(
         '57:5448',
-        screenVideo('/media/gallery/flows/r5-c1-phone.webm', '/media/gallery/screens/r5-c1-phone.png'),
+        screenVideo('/media/gallery/flows/r5-c1-phone.webm', '/media/gallery/posters/r5-c1-phone.png'),
         'Gallery phone card: festive campaign concept',
       ),
-      phone('57:5449', screenImage('/media/gallery/screens/r5-c2-phone.png'), 'Gallery phone card: neon game campaign concept'),
-      image('57:5450', '/media/gallery/images/r5-c3-cube-log-in.png', 'Gallery image card: cube log in composition'),
+      phone('57:5449', screenImage('/media/gallery/screens/r5-c2-phone.webp'), 'Gallery phone card: neon game campaign concept'),
+      image('57:5450', '/media/gallery/images/r5-c3-cube-log-in.webp', 'Gallery image card: cube log in composition'),
     ],
   },
   {
@@ -188,13 +188,13 @@ export const GALLERY_ROWS: GalleryRow[] = [
     items: [
       phone(
         '57:5469',
-        screenVideo('/media/gallery/flows/r6-c1-phone.webm', '/media/gallery/screens/r6-c1-phone.png'),
+        screenVideo('/media/gallery/flows/r6-c1-phone.webm', '/media/gallery/posters/r6-c1-phone.png'),
         'Gallery phone card: referral rewards flow',
       ),
       illustration('57:5470', 'hairy-tubes', 'Gallery illustration card: hairy tubes'),
       phone(
         '57:5471',
-        screenImage('/media/gallery/screens/r6-c3-phone.png'),
+        screenImage('/media/gallery/screens/r6-c3-phone.webp'),
         'Gallery phone card: social connections flow',
       ),
     ],

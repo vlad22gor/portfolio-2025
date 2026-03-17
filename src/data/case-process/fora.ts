@@ -1,17 +1,11 @@
 import type { CaseProcessSectionData } from './types';
 
-import motifSunburstRounded12 from '../../../assets/motifs/motif-sunburst-rounded-12.svg?url';
-import motifStackOrb3 from '../../../assets/motifs/motif-stack-orb-3.svg?url';
-import motifScallopDisc20 from '../../../assets/motifs/motif-scallop-disc-20.svg?url';
-import motifRoundedCross from '../../../assets/motifs/motif-rounded-cross.svg?url';
-import motifSplitHalfmoon from '../../../assets/motifs/motif-split-halfmoon.svg?url';
-import motifHourglassTotem from '../../../assets/motifs/motif-hourglass-totem.svg?url';
-
-import processStepArrow1 from '../../../assets/custom icons/process-step arrow 1.svg?url';
-import processStepArrow2 from '../../../assets/custom icons/process-step arrow 2.svg?url';
-import processStepArrow3 from '../../../assets/custom icons/process-step arrow 3.svg?url';
-import processStepArrow4 from '../../../assets/custom icons/process-step arrow 4.svg?url';
-import processStepArrow5 from '../../../assets/custom icons/process-step arrow 5.svg?url';
+const FORA_MOTIF_SUNBURST = '/media/motifs/motif-sunburst-rounded-12.svg';
+const FORA_MOTIF_STACK = '/media/motifs/motif-stack-orb-3.svg';
+const FORA_MOTIF_SCALLOP = '/media/motifs/motif-scallop-disc-20.svg';
+const FORA_MOTIF_CROSS = '/media/motifs/motif-rounded-cross.svg';
+const FORA_MOTIF_HALFMOON = '/media/motifs/motif-split-halfmoon.svg';
+const FORA_MOTIF_HOURGLASS = '/media/motifs/motif-hourglass-totem.svg';
 
 export const FORA_PROCESS_SECTION: CaseProcessSectionData = {
   title: 'process',
@@ -21,19 +15,19 @@ export const FORA_PROCESS_SECTION: CaseProcessSectionData = {
   steps: [
     {
       text: 'I used market and audience research to analyze user needs',
-      iconSrc: motifSunburstRounded12,
+      iconSrc: FORA_MOTIF_SUNBURST,
       iconColorToken: '--color-accent-green',
       offsetX: 0,
       rowHeight: 48,
     },
     {
       text: 'Synthesized feedback and ideas into 100+ actionable tickets, prioritizing improvements with RICE',
-      iconSrc: motifStackOrb3,
+      iconSrc: FORA_MOTIF_STACK,
       iconColorToken: '--color-accent-blue',
       offsetX: 168,
       rowHeight: 72,
       arrow: {
-        src: processStepArrow1,
+        src: '/media/cases/fora/process/arrow-1.svg',
         width: 63,
         height: 45,
         left: 75,
@@ -42,12 +36,12 @@ export const FORA_PROCESS_SECTION: CaseProcessSectionData = {
     },
     {
       text: 'Then I created 60+ wireframes to rethink flows, making navigation simpler and delivery features clearer',
-      iconSrc: motifScallopDisc20,
+      iconSrc: FORA_MOTIF_SCALLOP,
       iconColorToken: '--color-accent-orange',
       offsetX: 336,
       rowHeight: 96,
       arrow: {
-        src: processStepArrow2,
+        src: '/media/cases/fora/process/arrow-2.svg',
         width: 73,
         height: 60,
         left: 501,
@@ -56,12 +50,12 @@ export const FORA_PROCESS_SECTION: CaseProcessSectionData = {
     },
     {
       text: 'Developed a fresh design concept reflecting brand values with caring, rounded, animated design style',
-      iconSrc: motifRoundedCross,
+      iconSrc: FORA_MOTIF_CROSS,
       iconColorToken: '--color-accent-green',
       offsetX: 504,
       rowHeight: 72,
       arrow: {
-        src: processStepArrow3,
+        src: '/media/cases/fora/process/arrow-3.svg',
         width: 73,
         height: 59,
         left: 403,
@@ -70,12 +64,12 @@ export const FORA_PROCESS_SECTION: CaseProcessSectionData = {
     },
     {
       text: 'Designed handoff UI for 10+ flows with 300+ screens across iOS and Android',
-      iconSrc: motifSplitHalfmoon,
+      iconSrc: FORA_MOTIF_HALFMOON,
       iconColorToken: '--color-accent-blue',
       offsetX: 336,
       rowHeight: 72,
       arrow: {
-        src: processStepArrow4,
+        src: '/media/cases/fora/process/arrow-4.svg',
         width: 52,
         height: 53,
         left: 663,
@@ -84,12 +78,12 @@ export const FORA_PROCESS_SECTION: CaseProcessSectionData = {
     },
     {
       text: 'I also led design reviews that cut bugs in prod by 80%, ensuring a polished look',
-      iconSrc: motifHourglassTotem,
+      iconSrc: FORA_MOTIF_HOURGLASS,
       iconColorToken: '--color-accent-orange',
       offsetX: 168,
       rowHeight: 72,
       arrow: {
-        src: processStepArrow5,
+        src: '/media/cases/fora/process/arrow-5.svg',
         width: 72,
         height: 53,
         left: 243,
