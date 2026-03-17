@@ -1,5 +1,10 @@
 # Logs
 
+- 2026-03-17: Починен scale-regression в `intro screens (QuantizedPerimeter)` для `phone` и `tablet` после доработки `DeviceMockup`.
+  Причина: `DeviceMockup` всегда инлайнил `--device-scale: 1`, из-за чего слетали секционные scale-контракты боковых mockup; дополнительно scale был размазан между inline/CSS и не имел устойчивого приоритета.
+  Файлы: `src/components/DeviceMockup.astro`, `src/components/IntroScreensQuantizedPerimeterSection.astro`, `src/styles/global.css`, `tests/smoke/case-details.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `npm run test:smoke -- tests/smoke/case-details.spec.ts` — успешно (`3/3`); runtime-замер Playwright (`1360px`) подтверждает контракт intro screens: `/fora` `174x357.266 / 244x501 / 174x357.266` (`scale 0.7131147541 / 1 / 0.7131147541`), `/kissa` `211x362.109 / 296x508 / 211x362.109` (`scale 0.7128378378 / 1 / 0.7128378378`).
+
 - 2026-03-17: Для `DeviceMockup phone compact` введена AA-aware aperture-калибровка (`aperture-compact-v2-aa`) для устранения боковых seam-линий.
   Причина: прозрачная aperture-калибровка (`v1`) не покрывала полу-прозрачную AA-кайму shell, из-за чего по левому/правому краю оставался заметный «пиксель».
   Файлы: `src/components/DeviceMockup.astro`, `tests/smoke/gallery.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.

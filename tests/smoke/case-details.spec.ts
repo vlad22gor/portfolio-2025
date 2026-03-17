@@ -1,6 +1,64 @@
 import { expect, test, type Page } from '@playwright/test';
 
 test.describe('Case details smoke', () => {
+  const assertIntroScreensMockupDimensions = async (
+    page: Page,
+    variant: 'phone' | 'tablet',
+    expected: {
+      left: { width: number; height: number };
+      center: { width: number; height: number };
+      right: { width: number; height: number };
+    },
+  ) => {
+    const measured = await page.evaluate((currentVariant) => {
+      const section = document.querySelector(`.fora-intro-screens-section--${currentVariant}`);
+      if (!(section instanceof HTMLElement)) {
+        return null;
+      }
+
+      const read = (position: 'left' | 'center' | 'right') => {
+        const node = section.querySelector(`.fora-intro-screens-${currentVariant}-item--${position} .device-mockup`);
+        if (!(node instanceof HTMLElement)) {
+          return null;
+        }
+        const rect = node.getBoundingClientRect();
+        return {
+          width: rect.width,
+          height: rect.height,
+        };
+      };
+
+      return {
+        left: read('left'),
+        center: read('center'),
+        right: read('right'),
+      };
+    }, variant);
+
+    expect(measured).not.toBeNull();
+    expect(measured?.left).not.toBeNull();
+    expect(measured?.center).not.toBeNull();
+    expect(measured?.right).not.toBeNull();
+
+    const tolerancePx = 1;
+    const assertNear = (actual: number, target: number, metricName: string) => {
+      expect(
+        Math.abs(actual - target),
+        `${variant} intro screens ${metricName}: expected ~${target}px, got ${actual}px`,
+      ).toBeLessThanOrEqual(tolerancePx);
+    };
+
+    assertNear(measured!.left!.width, expected.left.width, 'left width');
+    assertNear(measured!.left!.height, expected.left.height, 'left height');
+    assertNear(measured!.center!.width, expected.center.width, 'center width');
+    assertNear(measured!.center!.height, expected.center.height, 'center height');
+    assertNear(measured!.right!.width, expected.right.width, 'right width');
+    assertNear(measured!.right!.height, expected.right.height, 'right height');
+
+    expect(measured!.center!.width).toBeGreaterThan(measured!.left!.width);
+    expect(measured!.center!.width).toBeGreaterThan(measured!.right!.width);
+  };
+
   const assertCriticalMockupsAreStable = async (page: Page, expectedCount: number) => {
     const criticalMockups = page.locator('.device-mockup[data-device-priority="critical"]');
     await expect(criticalMockups).toHaveCount(expectedCount);
@@ -67,6 +125,11 @@ test.describe('Case details smoke', () => {
     await expect(foraFirstTicket).toHaveAttribute('data-perimeter-step', '36');
 
     await assertCriticalMockupsAreStable(page, 4);
+    await assertIntroScreensMockupDimensions(page, 'phone', {
+      left: { width: 174, height: 357 },
+      center: { width: 244, height: 501 },
+      right: { width: 174, height: 357 },
+    });
     await expect(page.locator('.fora-feature-cards-section .device-mockup').first()).toHaveAttribute(
       'data-device-priority',
       'lazy',
@@ -98,6 +161,11 @@ test.describe('Case details smoke', () => {
     await expect(page.locator('nav.case-pager')).toHaveCount(0);
 
     await assertCriticalMockupsAreStable(page, 4);
+    await assertIntroScreensMockupDimensions(page, 'tablet', {
+      left: { width: 211, height: 362 },
+      center: { width: 296, height: 508 },
+      right: { width: 211, height: 362 },
+    });
     await expect(page.locator('.kissa-feature-cards .device-mockup').first()).toHaveAttribute(
       'data-device-priority',
       'lazy',

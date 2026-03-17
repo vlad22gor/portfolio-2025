@@ -26,6 +26,10 @@ const {
 
 const resolvedVariant: IntroScreensVariant = variant === 'tablet' ? 'tablet' : 'phone';
 const orderedPositions: IntroScreenPosition[] = ['left', 'center', 'right'];
+const sideScaleByVariant: Record<IntroScreensVariant, number> = {
+  phone: 174 / 244,
+  tablet: 211 / 296,
+};
 ---
 
 <QuantizedPerimeter
@@ -48,11 +52,13 @@ const orderedPositions: IntroScreenPosition[] = ['left', 'center', 'right'];
         {
           screens.map((screen, index) => {
             const position = orderedPositions[index] ?? 'center';
+            const mockupScale = position === 'center' ? 1 : sideScaleByVariant.phone;
             return (
               <div class:list={['fora-intro-screens-phone-item', `fora-intro-screens-phone-item--${position}`]}>
                 <DeviceMockup
                   class="fora-intro-screens-device"
                   device="phone"
+                  scale={mockupScale}
                   screenKind="image"
                   screenSrc={screen.src}
                   screenAlt={screen.alt ?? ''}
@@ -68,11 +74,13 @@ const orderedPositions: IntroScreenPosition[] = ['left', 'center', 'right'];
         {
           screens.map((screen, index) => {
             const position = orderedPositions[index] ?? 'center';
+            const mockupScale = position === 'center' ? 1 : sideScaleByVariant.tablet;
             return (
               <div class:list={['fora-intro-screens-tablet-item', `fora-intro-screens-tablet-item--${position}`]}>
                 <DeviceMockup
                   class="fora-intro-screens-device"
                   device="tablet"
+                  scale={mockupScale}
                   screenKind="image"
                   screenSrc={screen.src}
                   screenAlt={screen.alt ?? ''}

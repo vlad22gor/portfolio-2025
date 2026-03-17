@@ -133,16 +133,12 @@ const presets: Record<DeviceKind, DevicePreset> = {
 const resolvedDevice: DeviceKind = device === 'tablet' ? 'tablet' : 'phone';
 const resolvedSize: DeviceSize = size === 'compact' ? 'compact' : 'default';
 const resolvedPriority: DeviceLoadPriority = priority === 'critical' ? 'critical' : 'lazy';
-const resolvedScale = typeof scale === 'number' && Number.isFinite(scale) && scale > 0 ? scale : 1;
+const resolvedScale =
+  typeof scale === 'number' && Number.isFinite(scale) && scale > 0 ? scale : undefined;
 const preset = presets[resolvedDevice];
 const framePreset = preset.sizes[resolvedSize];
 const screenCalibrationMarker =
   resolvedDevice === 'phone' && resolvedSize === 'compact' ? 'aperture-compact-v2-aa' : undefined;
-const screenX = framePreset.screen.x * resolvedScale;
-const screenY = framePreset.screen.y * resolvedScale;
-const screenWidth = framePreset.screen.width * resolvedScale;
-const screenHeight = framePreset.screen.height * resolvedScale;
-const screenRadius = framePreset.screen.radius * resolvedScale;
 const mediaLoading = resolvedPriority === 'critical' ? 'eager' : 'lazy';
 const mediaDecoding = resolvedPriority === 'critical' ? 'sync' : 'async';
 const mediaFetchPriority = resolvedPriority === 'critical' ? 'high' : 'auto';
@@ -150,12 +146,12 @@ const composedClassName = ['device-mockup', `device-mockup--${resolvedDevice}`, 
 const styleVars = [
   `--device-width: ${framePreset.width}px`,
   `--device-height: ${framePreset.height}px`,
-  `--device-scale: ${resolvedScale}`,
-  `--screen-x: ${screenX}px`,
-  `--screen-y: ${screenY}px`,
-  `--screen-width: ${screenWidth}px`,
-  `--screen-height: ${screenHeight}px`,
-  `--screen-radius: ${screenRadius}px`,
+  ...(typeof resolvedScale === 'number' ? [`--device-scale: ${resolvedScale}`] : []),
+  `--screen-x: ${framePreset.screen.x}px`,
+  `--screen-y: ${framePreset.screen.y}px`,
+  `--screen-width: ${framePreset.screen.width}px`,
+  `--screen-height: ${framePreset.screen.height}px`,
+  `--screen-radius: ${framePreset.screen.radius}px`,
   `--screen-z: ${preset.screenZ}`,
   `--shell-z: ${preset.shellZ}`,
 ].join('; ');
@@ -228,13 +224,13 @@ const styleVars = [
 
   .device-mockup__screen {
     position: absolute;
-    top: var(--screen-y);
-    left: var(--screen-x);
-    width: var(--screen-width);
-    height: var(--screen-height);
+    top: calc(var(--screen-y) * var(--device-scale));
+    left: calc(var(--screen-x) * var(--device-scale));
+    width: calc(var(--screen-width) * var(--device-scale));
+    height: calc(var(--screen-height) * var(--device-scale));
     z-index: var(--screen-z);
     overflow: hidden;
-    border-radius: var(--screen-radius);
+    border-radius: calc(var(--screen-radius) * var(--device-scale));
     background: var(--color-bg-darkened, #1a1a1a);
   }
 

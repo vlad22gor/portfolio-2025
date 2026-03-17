@@ -2205,11 +2205,6 @@ img.home-hero-asset {
   margin-top: 72px;
 }
 
-.fora-intro-screens-phone-item--left .device-mockup.fora-intro-screens-device,
-.fora-intro-screens-phone-item--right .device-mockup.fora-intro-screens-device {
-  --device-scale: 0.7131147541;
-}
-
 .fora-intro-screens-track--tablet {
   width: 602px;
   height: 508px;
@@ -2235,11 +2230,6 @@ img.home-hero-asset {
   top: 73px;
   left: 391px;
   z-index: 1;
-}
-
-.fora-intro-screens-tablet-item--left .device-mockup.fora-intro-screens-device,
-.fora-intro-screens-tablet-item--right .device-mockup.fora-intro-screens-device {
-  --device-scale: 0.7128378378;
 }
 
 .fora-case-challenge {
