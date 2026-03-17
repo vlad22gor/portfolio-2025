@@ -53,7 +53,8 @@ test.describe('Temporary adaptive notice', () => {
     expect(Math.abs((secondX ?? 0) - (firstX ?? 0))).toBeGreaterThan(0.5);
   });
 
-  test('1024x1366 keeps temporary screen with fixed compact scale 0.67', async ({ page }) => {
+  test('1024x1366 keeps temporary screen with explicit phone small size', async ({ page }) => {
+    test.setTimeout(60_000);
     await page.setViewportSize({ width: 1024, height: 1366 });
     await page.goto('/gallery');
 
@@ -69,13 +70,17 @@ test.describe('Temporary adaptive notice', () => {
       return {
         width: Number.parseFloat(computed.width),
         height: Number.parseFloat(computed.height),
+        size: device.getAttribute('data-device-size'),
+        hasInlineScaleVar: (device.getAttribute('style') ?? '').includes('--device-scale'),
       };
     });
     expect(firstDeviceSize).not.toBeNull();
-    expect(firstDeviceSize!.width).toBeGreaterThanOrEqual(144);
-    expect(firstDeviceSize!.width).toBeLessThanOrEqual(147);
-    expect(firstDeviceSize!.height).toBeGreaterThanOrEqual(296);
-    expect(firstDeviceSize!.height).toBeLessThanOrEqual(299);
+    expect(firstDeviceSize!.size).toBe('small');
+    expect(firstDeviceSize!.hasInlineScaleVar).toBe(false);
+    expect(firstDeviceSize!.width).toBeGreaterThanOrEqual(142.2);
+    expect(firstDeviceSize!.width).toBeLessThanOrEqual(143.3);
+    expect(firstDeviceSize!.height).toBeGreaterThanOrEqual(292);
+    expect(firstDeviceSize!.height).toBeLessThanOrEqual(293.4);
 
     const screensViewportState = await page.evaluate(() => {
       const screens = document.querySelector('.temporary-adaptive-notice__screens');
@@ -83,23 +88,176 @@ test.describe('Temporary adaptive notice', () => {
       const centerMockup = document.querySelector(
         '.temporary-adaptive-notice__screens-item[data-temp-slider-index="1"] .device-mockup',
       );
-      if (!(screens instanceof HTMLElement) || !(viewport instanceof HTMLElement) || !(centerMockup instanceof HTMLElement)) {
+      const screen = centerMockup instanceof HTMLElement ? centerMockup.querySelector('.device-mockup__screen') : null;
+      const media = screen instanceof HTMLElement ? screen.querySelector('.device-mockup__media') : null;
+      const videoBleed = centerMockup instanceof HTMLElement ? centerMockup.querySelector('[data-device-video-bleed]') : null;
+      if (
+        !(screens instanceof HTMLElement) ||
+        !(viewport instanceof HTMLElement) ||
+        !(centerMockup instanceof HTMLElement) ||
+        !(screen instanceof HTMLElement) ||
+        !(media instanceof HTMLElement) ||
+        !(videoBleed instanceof HTMLElement)
+      ) {
         return null;
       }
       const screensStyle = getComputedStyle(screens);
       const viewportStyle = getComputedStyle(viewport);
       const viewportRect = viewport.getBoundingClientRect();
       const centerRect = centerMockup.getBoundingClientRect();
+      const screenRect = screen.getBoundingClientRect();
+      const mediaRect = media.getBoundingClientRect();
+      const screenBorderRadius = Number.parseFloat(getComputedStyle(screen).borderTopLeftRadius);
+      const videoBleedStyle = getComputedStyle(videoBleed);
       return {
+        screenCalibration: centerMockup.dataset.deviceScreenCalibration ?? null,
+        screenBorderRadius,
+        videoBleedInsetTop: Number.parseFloat(videoBleedStyle.top),
+        videoBleedInsetRight: Number.parseFloat(videoBleedStyle.right),
+        videoBleedInsetBottom: Number.parseFloat(videoBleedStyle.bottom),
+        videoBleedInsetLeft: Number.parseFloat(videoBleedStyle.left),
         screensOverflowY: screensStyle.overflowY,
         viewportOverflowY: viewportStyle.overflowY,
-        notClippedBottom: centerRect.bottom <= viewportRect.bottom + 0.5,
+        notClippedBottom: centerRect.bottom <= viewportRect.bottom + 2,
+        screenGapTop: Math.max(0, mediaRect.top - screenRect.top),
+        screenGapBottom: Math.max(0, screenRect.bottom - mediaRect.bottom),
       };
     });
     expect(screensViewportState).not.toBeNull();
+    expect(screensViewportState!.screenCalibration).toBe('aperture-small-v2-aa');
+    expect(screensViewportState!.screenBorderRadius).toBeGreaterThanOrEqual(11.8);
+    expect(screensViewportState!.screenBorderRadius).toBeLessThanOrEqual(12.2);
+    expect(Math.abs(screensViewportState!.videoBleedInsetTop)).toBeLessThanOrEqual(0.05);
+    expect(Math.abs(screensViewportState!.videoBleedInsetRight)).toBeLessThanOrEqual(0.05);
+    expect(Math.abs(screensViewportState!.videoBleedInsetBottom)).toBeLessThanOrEqual(0.05);
+    expect(Math.abs(screensViewportState!.videoBleedInsetLeft)).toBeLessThanOrEqual(0.05);
     expect(screensViewportState!.screensOverflowY).toBe('visible');
     expect(screensViewportState!.viewportOverflowY).toBe('visible');
     expect(screensViewportState!.notClippedBottom).toBe(true);
+    expect(screensViewportState!.screenGapTop).toBeLessThanOrEqual(0.2);
+    expect(screensViewportState!.screenGapBottom).toBeLessThanOrEqual(0.2);
+
+    const smallApertureAlignment = await page.evaluate(async () => {
+      const target = document.querySelector('.temporary-adaptive-notice__screens-item[data-temp-slider-index="1"] .device-mockup');
+      const shell = target?.querySelector('.device-mockup__shell');
+      const screen = target?.querySelector('.device-mockup__screen');
+      const sliderItem = target?.closest('.temporary-adaptive-notice__screens-item');
+      if (
+        !(shell instanceof HTMLImageElement) ||
+        !(screen instanceof HTMLElement) ||
+        !(sliderItem instanceof HTMLElement) ||
+        !shell.src
+      ) {
+        return null;
+      }
+
+      const loadImage = (src: string): Promise<HTMLImageElement> =>
+        new Promise((resolve, reject) => {
+          const image = new Image();
+          image.crossOrigin = 'anonymous';
+          image.onload = () => resolve(image);
+          image.onerror = reject;
+          image.src = src;
+        });
+
+      const findLongestTransparentRun = (length: number, alphaAt: (index: number) => number) => {
+        let bestStart = -1;
+        let bestEnd = -1;
+        let runStart = -1;
+        for (let index = 0; index < length; index += 1) {
+          const transparent = alphaAt(index) <= 8;
+          if (transparent) {
+            if (runStart === -1) {
+              runStart = index;
+            }
+            continue;
+          }
+          if (runStart !== -1) {
+            const runEnd = index - 1;
+            if (runEnd - runStart > bestEnd - bestStart) {
+              bestStart = runStart;
+              bestEnd = runEnd;
+            }
+            runStart = -1;
+          }
+        }
+        if (runStart !== -1) {
+          const runEnd = length - 1;
+          if (runEnd - runStart > bestEnd - bestStart) {
+            bestStart = runStart;
+            bestEnd = runEnd;
+          }
+        }
+        return bestStart >= 0 && bestEnd >= bestStart ? { start: bestStart, end: bestEnd } : null;
+      };
+
+      const image = await loadImage(shell.src);
+      const canvas = document.createElement('canvas');
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+      if (!context) {
+        return null;
+      }
+      context.drawImage(image, 0, 0);
+      const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+      const alphaAt = (x: number, y: number) => data[(y * canvas.width + x) * 4 + 3] ?? 255;
+
+      const centerRow = Math.floor(canvas.height / 2);
+      const horizontalRun = findLongestTransparentRun(canvas.width, (x) => alphaAt(x, centerRow));
+      if (!horizontalRun) {
+        return null;
+      }
+
+      const verticalSamplingRatios = [0.15, 0.18, 0.22, 0.26, 0.3];
+      const verticalCandidates = verticalSamplingRatios
+        .map((ratio) => {
+          const column = Math.min(
+            canvas.width - 1,
+            Math.max(horizontalRun.start + 1, Math.floor(horizontalRun.start + (horizontalRun.end - horizontalRun.start) * ratio)),
+          );
+          const run = findLongestTransparentRun(canvas.height, (y) => alphaAt(column, y));
+          if (!run) {
+            return null;
+          }
+          return {
+            run,
+            length: run.end - run.start,
+          };
+        })
+        .filter((candidate): candidate is { run: { start: number; end: number }; length: number } => candidate !== null)
+        .sort((left, right) => right.length - left.length);
+      const verticalRun = verticalCandidates[0]?.run;
+      if (!verticalRun) {
+        return null;
+      }
+
+      const previousTransform = sliderItem.style.transform;
+      sliderItem.style.transform = 'none';
+
+      const shellRect = shell.getBoundingClientRect();
+      const screenRect = screen.getBoundingClientRect();
+
+      sliderItem.style.transform = previousTransform;
+      const aaAwareHoleLeft = shellRect.left + ((horizontalRun.start - 1) / canvas.width) * shellRect.width;
+      const aaAwareHoleRight = shellRect.left + ((horizontalRun.end + 2) / canvas.width) * shellRect.width;
+      const aaAwareHoleTop = shellRect.top + ((verticalRun.start - 1) / canvas.height) * shellRect.height;
+      const aaAwareHoleBottom = shellRect.top + ((verticalRun.end + 2) / canvas.height) * shellRect.height;
+      const epsilon = 0.6;
+      const excessEpsilon = 1.6;
+      return {
+        withinX: screenRect.left <= aaAwareHoleLeft + epsilon && screenRect.right >= aaAwareHoleRight - epsilon,
+        withinY: screenRect.top <= aaAwareHoleTop + epsilon && screenRect.bottom >= aaAwareHoleBottom - epsilon,
+        noExcessX: screenRect.left >= aaAwareHoleLeft - excessEpsilon && screenRect.right <= aaAwareHoleRight + excessEpsilon,
+        noExcessY: screenRect.top >= aaAwareHoleTop - excessEpsilon && screenRect.bottom <= aaAwareHoleBottom + excessEpsilon,
+      };
+    });
+
+    expect(smallApertureAlignment).not.toBeNull();
+    expect(smallApertureAlignment!.withinX).toBe(true);
+    expect(smallApertureAlignment!.withinY).toBe(true);
+    expect(smallApertureAlignment!.noExcessX).toBe(true);
+    expect(smallApertureAlignment!.noExcessY).toBe(true);
   });
 
   test('1360+ shows desktop content and hides temporary screen', async ({ page }) => {

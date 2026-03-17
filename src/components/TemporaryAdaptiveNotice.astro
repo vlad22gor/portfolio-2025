@@ -23,7 +23,6 @@ const baseSlides: TemporaryAdaptiveSlide[] = GALLERY_ROWS.flatMap((row) => row.i
   }));
 
 const loopSlides = [...baseSlides, ...baseSlides];
-const DEVICE_COMPACT_SCALE = 0.67;
 ---
 
 <section class="temporary-adaptive-notice" aria-labelledby="temporary-adaptive-title">
@@ -37,8 +36,7 @@ const DEVICE_COMPACT_SCALE = 0.67;
                 <DeviceMockup
                   class="temporary-adaptive-notice__device"
                   device="phone"
-                  size="compact"
-                  scale={DEVICE_COMPACT_SCALE}
+                  size="small"
                   screenKind={slide.screenKind}
                   screenSrc={slide.screenSrc}
                   screenPoster={slide.screenPoster}
@@ -65,7 +63,6 @@ const DEVICE_COMPACT_SCALE = 0.67;
 
 <style>
   .temporary-adaptive-notice {
-    --temporary-device-scale: 0.67;
     width: 100%;
     min-height: 100dvh;
     display: grid;
@@ -107,7 +104,7 @@ const DEVICE_COMPACT_SCALE = 0.67;
     left: 0;
     display: flex;
     align-items: flex-start;
-    gap: calc(40px * var(--temporary-device-scale));
+    gap: 23.4px;
     will-change: transform;
     transform: translate3d(0, 0, 0);
   }
@@ -177,7 +174,6 @@ const DEVICE_COMPACT_SCALE = 0.67;
     const states = new Map();
     const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     const adaptiveQuery = window.matchMedia('(max-width: 1359px)');
-    const fixedDeviceScale = 0.67;
     let rafId = 0;
     let lastFrameTs = 0;
 
@@ -258,7 +254,10 @@ const DEVICE_COMPACT_SCALE = 0.67;
 
       const firstRect = first.getBoundingClientRect();
       const secondRect = second instanceof HTMLElement ? second.getBoundingClientRect() : null;
-      const fallbackGap = 40 * fixedDeviceScale;
+      const trackStyle = getComputedStyle(state.track);
+      const fallbackGapCandidate = Number.parseFloat(trackStyle.columnGap || trackStyle.gap || '0');
+      const fallbackGap =
+        Number.isFinite(fallbackGapCandidate) && fallbackGapCandidate >= 0 ? fallbackGapCandidate : 23.4;
       const slot = secondRect ? secondRect.left - firstRect.left : firstRect.width + fallbackGap;
 
       state.viewportWidth = state.viewport.clientWidth;

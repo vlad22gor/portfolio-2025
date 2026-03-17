@@ -1,7 +1,7 @@
 ---
 
 type DeviceKind = 'phone' | 'tablet';
-type DeviceSize = 'default' | 'compact';
+type DeviceSize = 'default' | 'compact' | 'small';
 type ScreenKind = 'image' | 'video';
 type DeviceLoadPriority = 'critical' | 'lazy';
 
@@ -21,7 +21,12 @@ interface DevicePreset {
   shellSrc: string;
   screenZ: number;
   shellZ: number;
-  sizes: Record<DeviceSize, DeviceFramePreset>;
+  videoBleedPxBySize?: Partial<Record<DeviceSize, number>>;
+  sizes: {
+    default: DeviceFramePreset;
+    compact: DeviceFramePreset;
+    small?: DeviceFramePreset;
+  };
 }
 
 interface ApertureRatios {
@@ -75,27 +80,50 @@ const phoneCompactApertureRatios: ApertureRatios = {
   bottom: 43 / 2004,
 };
 
+const phoneDefaultApertureRatios: ApertureRatios = {
+  left: 50 / 976,
+  right: 48 / 976,
+  top: 43 / 2004,
+  bottom: 43 / 2004,
+};
+
+const frameWithOverscan = (
+  frame: DeviceFramePreset['screen'],
+  overscan: number,
+): DeviceFramePreset['screen'] => ({
+  x: frame.x - overscan,
+  y: frame.y - overscan,
+  width: frame.width + overscan * 2,
+  height: frame.height + overscan * 2,
+  radius: frame.radius,
+});
+
 const presets: Record<DeviceKind, DevicePreset> = {
   phone: {
     shellSrc: '/media/gallery/device-shells/phone-shell.webp',
     screenZ: 1,
     shellZ: 2,
+    videoBleedPxBySize: {
+      small: 0,
+    },
     sizes: {
       default: {
         width: 244,
         height: 501,
-        screen: {
-          x: 12.6797,
-          y: 10.94,
-          width: 219.2,
-          height: 479.1,
-          radius: 20,
-        },
+        screen: frameFromAperture(244, 501, phoneDefaultApertureRatios, 20),
       },
       compact: {
         width: 216,
         height: 443,
         screen: frameFromAperture(216, 443, phoneCompactApertureRatios, 20),
+      },
+      small: {
+        width: 142.74,
+        height: 293.085,
+        screen: (() => {
+          const base = frameFromAperture(142.74, 293.085, phoneDefaultApertureRatios, 12);
+          return frameWithOverscan(base, 1);
+        })(),
       },
     },
   },
@@ -131,14 +159,25 @@ const presets: Record<DeviceKind, DevicePreset> = {
 };
 
 const resolvedDevice: DeviceKind = device === 'tablet' ? 'tablet' : 'phone';
-const resolvedSize: DeviceSize = size === 'compact' ? 'compact' : 'default';
+const requestedSize: DeviceSize = size === 'compact' || size === 'small' ? size : 'default';
 const resolvedPriority: DeviceLoadPriority = priority === 'critical' ? 'critical' : 'lazy';
 const resolvedScale =
   typeof scale === 'number' && Number.isFinite(scale) && scale > 0 ? scale : undefined;
 const preset = presets[resolvedDevice];
-const framePreset = preset.sizes[resolvedSize];
+const framePreset = preset.sizes[requestedSize] ?? preset.sizes.default;
+const resolvedSize: DeviceSize = preset.sizes[requestedSize] ? requestedSize : 'default';
+const resolvedVideoBleedPx =
+  typeof preset.videoBleedPxBySize?.[resolvedSize] === 'number'
+    ? (preset.videoBleedPxBySize?.[resolvedSize] as number)
+    : 1;
 const screenCalibrationMarker =
-  resolvedDevice === 'phone' && resolvedSize === 'compact' ? 'aperture-compact-v2-aa' : undefined;
+  resolvedDevice === 'phone'
+    ? resolvedSize === 'compact'
+      ? 'aperture-compact-v2-aa'
+      : resolvedSize === 'small'
+        ? 'aperture-small-v2-aa'
+        : 'aperture-default-v1-aa'
+    : undefined;
 const mediaLoading = resolvedPriority === 'critical' ? 'eager' : 'lazy';
 const mediaDecoding = resolvedPriority === 'critical' ? 'sync' : 'async';
 const mediaFetchPriority = resolvedPriority === 'critical' ? 'high' : 'auto';
@@ -152,6 +191,7 @@ const styleVars = [
   `--screen-width: ${framePreset.screen.width}px`,
   `--screen-height: ${framePreset.screen.height}px`,
   `--screen-radius: ${framePreset.screen.radius}px`,
+  `--video-bleed-px: ${resolvedVideoBleedPx}px`,
   `--screen-z: ${preset.screenZ}`,
   `--shell-z: ${preset.shellZ}`,
 ].join('; ');
@@ -209,6 +249,7 @@ const styleVars = [
 <style>
   .device-mockup {
     --device-scale: 1;
+    --video-bleed-px: 1px;
     position: relative;
     width: calc(var(--device-width) * var(--device-scale));
     height: calc(var(--device-height) * var(--device-scale));
@@ -243,10 +284,10 @@ const styleVars = [
 
   .device-mockup__video-bleed {
     position: absolute;
-    top: -1px;
-    right: -1px;
-    bottom: -1px;
-    left: -1px;
+    top: calc(var(--video-bleed-px) * -1);
+    right: calc(var(--video-bleed-px) * -1);
+    bottom: calc(var(--video-bleed-px) * -1);
+    left: calc(var(--video-bleed-px) * -1);
     overflow: hidden;
     pointer-events: none;
   }

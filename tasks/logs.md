@@ -1,5 +1,23 @@
 # Logs
 
+- 2026-03-18: Убран double-overscan у `webm` в `phone+small` для `TemporaryAdaptiveNotice`.
+  Причина: после ввода `screen` overscan (`+1px`) для `phone/small` видео-ветка продолжала применять дополнительный `video-bleed -1px`, из-за чего суммарный overscan становился двойным и `screen` визуально «разъезжался» только на `webm`.
+  Файлы: `src/components/DeviceMockup.astro`, `tests/smoke/temporary-adaptive.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) в `DeviceMockup` добавлен bleed-бюджет на уровне пресета (`videoBleedPxBySize`); (2) для `phone+small` выставлен `videoBleedPx=0`, для остальных конфигураций сохранён `1`; (3) `video-bleed` переведён на CSS var `--video-bleed-px` вместо жёсткого `-1px`; (4) в temporary smoke добавлены assert'ы для `video-bleed inset == 0px` у `phone+small` и проверка aperture-покрытия без лишнего вылеза (`within + noExcess`), замер сделан с временным отключением `item`-rotation, чтобы исключить bbox-артефакт.
+  Проверки: (1) `npm run build` — успешно; (2) `npm run test:smoke -- tests/smoke/temporary-adaptive.spec.ts` — успешно (`8/8`); (3) `npm run test:smoke` — успешно (`13/13`).
+
+- 2026-03-18: Для `phone+small` в `DeviceMockup` уменьшен `screen radius` до `12` и добавлена системная компенсация AA-просвета по периметру.
+  Причина: по фидбеку в temporary adaptive радиус экрана был великоват, а пиксельный просвет наблюдался со всех сторон; нужно было закрыть это на уровне геометрии `screen`, а не route-специфичными стилями.
+  Файлы: `src/components/DeviceMockup.astro`, `tests/smoke/temporary-adaptive.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) для `phone.sizes.small.screen` выставлен `radius: 12`; (2) для `phone+small` добавлен симметричный overscan `1px` в геометрии `screen` (`x/y -1`, `width/height +2`); (3) calibration marker обновлён на `data-device-screen-calibration='aperture-small-v2-aa'`; (4) в temporary smoke добавлены проверки `border-radius ~12px` и aperture-alignment по shell alpha (`withinX/withinY`), сохранены strict `screenGapTop/Bottom <= 0.2`.
+  Проверки: (1) `npm run build` — успешно; (2) `npm run test:smoke -- tests/smoke/temporary-adaptive.spec.ts` — успешно; (3) `npm run test:smoke` — успешно.
+
+- 2026-03-18: Переведён `TemporaryAdaptiveNotice` на явный `DeviceMockup size='small'` и добавлена AA-aware aperture-калибровка `phone/small`.
+  Причина: убрать зависимость от `scale` в временном mobile/tablet-режиме и системно закрыть риск top/bottom просветов через калиброванную aperture-геометрию.
+  Файлы: `src/components/DeviceMockup.astro`, `src/components/TemporaryAdaptiveNotice.astro`, `tests/smoke/temporary-adaptive.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) `DeviceMockup` расширен до `size='small'`, добавлен `phone.sizes.small` (`142.74x293.085`) на `frameFromAperture(...)`; (2) добавлен marker `data-device-screen-calibration='aperture-small-v1-aa'` для `phone+small`; (3) `TemporaryAdaptiveNotice` переведён на `size='small'` без `scale`, удалены scale-константы (`DEVICE_MOCKUP_SCALE`, `fixedDeviceScale`, `--temporary-device-scale`), gap трека зафиксирован явно (`23.4px`) и fallback-gap в runtime читается из CSS `gap`; (4) smoke-тест обновлён: assert `data-device-size='small'`, отсутствие inline `--device-scale`, новый calibration marker, сохранены проверки `screenGapTop/Bottom <= 0.2`, autoplay/reduced-motion/drag/arc.
+  Проверки: (1) `npm run build` — успешно; (2) `npm run test:smoke -- tests/smoke/temporary-adaptive.spec.ts` — успешно (`8/8`); (3) `npm run test:smoke` — успешно (`13/13`).
+
 - 2026-03-17: Починен scale-regression в `intro screens (QuantizedPerimeter)` для `phone` и `tablet` после доработки `DeviceMockup`.
   Причина: `DeviceMockup` всегда инлайнил `--device-scale: 1`, из-за чего слетали секционные scale-контракты боковых mockup; дополнительно scale был размазан между inline/CSS и не имел устойчивого приоритета.
   Файлы: `src/components/DeviceMockup.astro`, `src/components/IntroScreensQuantizedPerimeterSection.astro`, `src/styles/global.css`, `tests/smoke/case-details.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
@@ -1180,4 +1198,22 @@
   Причина: пользователь уточнил визуальный дефект: на tablet дуга оставалась слишком плоской, а на mobile в краях читался «стык круга» (резкий старт поворота).
   Файлы: `src/components/TemporaryAdaptiveNotice.astro`, `tests/smoke/temporary-adaptive.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
   Что сделано: (1) параметры дуги переведены на fixed breakpoint-профили (`phone/tablet`) с `kInfluence/kCurvature/rotateCap/softEdgeRatio`; (2) `readMetrics` обновлён по контракту `arcMaxDx/arcSagitta` (`2.2..5.2*slot`, `18..38`) с proportional scaling от viewport; (3) вместо жёсткого clamp по `dx` добавлен `soft-clamp` (smoothstep в предкраевой зоне дуги) для плавного входа в поворот и устранения визуальной границы на mobile; (4) сохранены ограничения: только `translateY + rotate + z-index`, `opacity=1`, fixed `scale=0.67`, loop/drag/inertia/pause без изменений; (5) в smoke усилен tablet-критерий кривизны и добавлен mobile-тест на отсутствие резкого скачка в edge-range по `translateY/rotate`.
+  Проверки: (1) `npm run build` — успешно; (2) `npx playwright test tests/smoke/temporary-adaptive.spec.ts` — успешно (`8/8`); (3) `npx playwright test tests/smoke/gallery.spec.ts tests/smoke/case-details.spec.ts` — успешно (`5/5`).
+
+- 2026-03-17: Для `TemporaryAdaptiveNotice` выполнен пробный переход `DeviceMockup` с `compact` на `default` при `scale=0.585`.
+  Причина: пользователь заметил пиксельный top/bottom зазор в `screen` и попросил проверить конфигурацию `default + 0.585`.
+  Файлы: `src/components/TemporaryAdaptiveNotice.astro`, `tests/smoke/temporary-adaptive.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) `DeviceMockup` в слайдах переключён на `size='default'`; (2) scale-константа обновлена `0.67 -> 0.585` и синхронизирована в CSS-переменной `--temporary-device-scale` и runtime `fixedDeviceScale`, чтобы сохранить консистентный шаг трека/wrap; (3) логика дуги, `soft-clamp`, autoplay/drag/inertia/pause, отсутствие dynamic `scale/opacity` и `overflow-y: visible` не менялись; (4) smoke обновлён под новый размер мокапа (~`143x293`) и дополнен проверкой, что media заполняет `screen` по высоте без внутреннего top/bottom gap.
+  Проверки: (1) `npm run build` — успешно; (2) `npx playwright test tests/smoke/temporary-adaptive.spec.ts` — успешно (`8/8`); (3) `npx playwright test tests/smoke/gallery.spec.ts tests/smoke/case-details.spec.ts` — успешно (`5/5`).
+
+- 2026-03-17: Локально устранён top/bottom seam в `TemporaryAdaptive` через image-overscan внутри `screen` (без изменений `DeviceMockup`).
+  Причина: после перехода на `default + 0.585` оставался пиксельный зазор сверху/снизу экрана; требовался локальный фикс только для временного режима.
+  Файлы: `src/components/TemporaryAdaptiveNotice.astro`, `tests/smoke/temporary-adaptive.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) добавлен локальный `:global`-override только для `.temporary-adaptive-notice__device .device-mockup__screen > .device-mockup__media`: `position:absolute`, `top/bottom:-1px`, `height:calc(100% + 2px)`, `object-fit:cover`; (2) video-bleed путь не изменялся; (3) математика дуги/infinite/drag/pause и остальные контракты без изменений; (4) в smoke ужесточены пороги заполнения `screen` до субпиксельного допуска (`<=0.2px` сверху/снизу).
+  Проверки: (1) `npm run build` — успешно; (2) `npx playwright test tests/smoke/temporary-adaptive.spec.ts` — успешно (`8/8`); (3) `npx playwright test tests/smoke/gallery.spec.ts tests/smoke/case-details.spec.ts` — успешно (`5/5`).
+
+- 2026-03-18: Системно исправлен AA-seam для `DeviceMockup phone/default` и удалён локальный overscan-хак из `TemporaryAdaptive`.
+  Причина: расследование показало, что seam вызван полупрозрачной AA-кромкой aperture у `phone-shell.webp`, а не дугой/scale; локальный route-fix маскировал симптом, но не источник.
+  Файлы: `src/components/DeviceMockup.astro`, `src/components/TemporaryAdaptiveNotice.astro`, `tests/smoke/temporary-adaptive.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) `phone.sizes.default.screen` переведён на `frameFromAperture(...)` с AA-aware ratios (аналогично `compact`) при неизменных внешних размерах `244x501`; (2) добавлен marker `data-device-screen-calibration='aperture-default-v1-aa'` для `phone+default`; (3) удалён локальный `:global` image-overscan в `TemporaryAdaptiveNotice`; (4) smoke дополнен assert на новый calibration marker, при этом строгая проверка top/bottom gap (`<=0.2px`) сохранена.
   Проверки: (1) `npm run build` — успешно; (2) `npx playwright test tests/smoke/temporary-adaptive.spec.ts` — успешно (`8/8`); (3) `npx playwright test tests/smoke/gallery.spec.ts tests/smoke/case-details.spec.ts` — успешно (`5/5`).
