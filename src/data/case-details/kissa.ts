@@ -41,15 +41,15 @@ export const KISSA_CASE_DETAIL_CONFIG: CaseDetailConfig = {
       inViewPreset: 'appear-v1',
       screens: [
         {
-          src: '/media/cases/kissa/intro/kissa-terminal.png',
+          src: '/media/cases/kissa/intro/kissa-terminal.webp',
           alt: 'Kissa terminal screen',
         },
         {
-          src: '/media/cases/kissa/intro/kissa-welcome.png',
+          src: '/media/cases/kissa/intro/kissa-welcome.webp',
           alt: 'Kissa welcome screen',
         },
         {
-          src: '/media/cases/kissa/intro/kissa-tray.png',
+          src: '/media/cases/kissa/intro/kissa-tray.webp',
           alt: 'Kissa tray review screen',
         },
       ],
@@ -66,7 +66,7 @@ export const KISSA_CASE_DETAIL_CONFIG: CaseDetailConfig = {
         ],
         device: 'tablet',
         screen: {
-          src: '/media/cases/kissa/challenge/kissa-old.png',
+          src: '/media/cases/kissa/challenge/kissa-old.webp',
           alt: 'Kissa challenge baseline screen',
         },
         notes: [
@@ -131,11 +131,11 @@ export const KISSA_CASE_DETAIL_CONFIG: CaseDetailConfig = {
       inViewPreset: 'appear-v1',
       data: {
         leftPhoto: {
-          src: '/media/cases/kissa/artifact-photos/kissa-flipchart.png',
+          src: '/media/cases/kissa/artifact-photos/kissa-flipchart.webp',
           alt: 'Kissa navigation brainstorm sketch on flipchart',
         },
         rightPhoto: {
-          src: '/media/cases/kissa/artifact-photos/kissa-terminal-photo.png',
+          src: '/media/cases/kissa/artifact-photos/kissa-terminal-photo.webp',
           alt: 'Kissa prototype tested on a real terminal device',
         },
         topCaption: 'new navigation designed during brainstorm session',

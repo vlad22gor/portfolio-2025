@@ -60,7 +60,7 @@ export const CASES: Case[] = [
     tags: ['Redesign', 'Mobile App', 'Product Design'],
     coverSide: 'left',
     cardCover: {
-      src: '/media/cases/fora/card/cover.png',
+      src: '/media/cases/fora/card/cover.webp',
       alt: 'Fora case card cover',
     },
     cardHover: {
@@ -79,7 +79,7 @@ export const CASES: Case[] = [
           zIndex: 3,
         },
         {
-          src: '/media/cases/fora/card/summary.png',
+          src: '/media/cases/fora/card/summary.webp',
           alt: 'Fora summary preview',
           targetX: -148,
           targetY: 143,
@@ -136,7 +136,7 @@ export const CASES: Case[] = [
     tags: ['Redesign', 'Startup', 'AI'],
     coverSide: 'right',
     cardCover: {
-      src: '/media/cases/kissa/card/cover.png',
+      src: '/media/cases/kissa/card/cover.webp',
       alt: 'Kissa case card cover',
     },
     cardHover: {
@@ -145,7 +145,7 @@ export const CASES: Case[] = [
       arrowDirection: 'left',
       assets: [
         {
-          src: '/media/cases/kissa/card/terminal.png',
+          src: '/media/cases/kissa/card/terminal.webp',
           alt: 'Kissa terminal detail',
           targetX: 704.1,
           targetY: -110,
@@ -155,7 +155,7 @@ export const CASES: Case[] = [
           zIndex: 3,
         },
         {
-          src: '/media/cases/kissa/card/coin-wheel.png',
+          src: '/media/cases/kissa/card/coin-wheel.webp',
           alt: 'Kissa coin wheel detail',
           targetX: 666,
           targetY: 139.14,

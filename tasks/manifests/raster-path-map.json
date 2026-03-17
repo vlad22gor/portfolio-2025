@@ -1,0 +1,939 @@
+{
+  "generatedAt": "2026-03-17T19:57:27.642Z",
+  "manifest": "/Users/vladyslavhorovyy/Documents/Career/portfolio 2025 vibecode/tasks/manifests/render-size-manifest-desktop.json",
+  "optimized": [
+    {
+      "from": "/media/cases/fora/card/cover.png",
+      "to": "/media/cases/fora/card/cover.webp",
+      "originalSize": 1588932,
+      "optimizedSize": 152578,
+      "resized": false,
+      "originalDims": {
+        "width": 1614,
+        "height": 1224
+      },
+      "targetDims": {
+        "width": 1614,
+        "height": 1224
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/cases/fora/card/summary.png",
+      "to": "/media/cases/fora/card/summary.webp",
+      "originalSize": 317963,
+      "optimizedSize": 253994,
+      "resized": false,
+      "originalDims": {
+        "width": 935,
+        "height": 1263
+      },
+      "targetDims": {
+        "width": 935,
+        "height": 1263
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/cases/fora/challenge/fora-challenge-mock.png",
+      "to": "/media/cases/fora/challenge/fora-challenge-mock.webp",
+      "originalSize": 255201,
+      "optimizedSize": 63786,
+      "resized": true,
+      "originalDims": {
+        "width": 1572,
+        "height": 3408
+      },
+      "targetDims": {
+        "width": 664,
+        "height": 1438
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/cases/fora/design-system/design-system-image-summary.png",
+      "to": "/media/cases/fora/design-system/design-system-image-summary.webp",
+      "originalSize": 164203,
+      "optimizedSize": 139314,
+      "resized": false,
+      "originalDims": {
+        "width": 681,
+        "height": 861
+      },
+      "targetDims": {
+        "width": 681,
+        "height": 861
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/cases/fora/design-system/design-system-image-vertical-cards.png",
+      "to": "/media/cases/fora/design-system/design-system-image-vertical-cards.webp",
+      "originalSize": 266376,
+      "optimizedSize": 180928,
+      "resized": false,
+      "originalDims": {
+        "width": 930,
+        "height": 849
+      },
+      "targetDims": {
+        "width": 930,
+        "height": 849
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/cases/fora/feature-cards/posters/Fora-Cart.png",
+      "to": "/media/cases/fora/feature-cards/posters/Fora-Cart.png",
+      "originalSize": 615121,
+      "optimizedSize": 232253,
+      "resized": true,
+      "originalDims": {
+        "width": 1280,
+        "height": 2775
+      },
+      "targetDims": {
+        "width": 667,
+        "height": 1444
+      },
+      "reason": "poster-png-recompress"
+    },
+    {
+      "from": "/media/cases/fora/feature-cards/posters/Fora-Catalogue.png",
+      "to": "/media/cases/fora/feature-cards/posters/Fora-Catalogue.png",
+      "originalSize": 681681,
+      "optimizedSize": 263799,
+      "resized": true,
+      "originalDims": {
+        "width": 1280,
+        "height": 2775
+      },
+      "targetDims": {
+        "width": 667,
+        "height": 1444
+      },
+      "reason": "poster-png-recompress"
+    },
+    {
+      "from": "/media/cases/fora/feature-cards/posters/Fora-Delivery.png",
+      "to": "/media/cases/fora/feature-cards/posters/Fora-Delivery.png",
+      "originalSize": 1562328,
+      "optimizedSize": 562484,
+      "resized": true,
+      "originalDims": {
+        "width": 1280,
+        "height": 2775
+      },
+      "targetDims": {
+        "width": 667,
+        "height": 1444
+      },
+      "reason": "poster-png-recompress"
+    },
+    {
+      "from": "/media/cases/fora/intro/fora-intro-category.png",
+      "to": "/media/cases/fora/intro/fora-intro-category.webp",
+      "originalSize": 419284,
+      "optimizedSize": 84846,
+      "resized": true,
+      "originalDims": {
+        "width": 1572,
+        "height": 3408
+      },
+      "targetDims": {
+        "width": 664,
+        "height": 1438
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/cases/fora/intro/fora-intro-delivery.png",
+      "to": "/media/cases/fora/intro/fora-intro-delivery.webp",
+      "originalSize": 2428563,
+      "optimizedSize": 183962,
+      "resized": true,
+      "originalDims": {
+        "width": 1572,
+        "height": 3408
+      },
+      "targetDims": {
+        "width": 664,
+        "height": 1438
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/cases/fora/intro/fora-intro-map.png",
+      "to": "/media/cases/fora/intro/fora-intro-map.webp",
+      "originalSize": 5110542,
+      "optimizedSize": 349470,
+      "resized": true,
+      "originalDims": {
+        "width": 1572,
+        "height": 3408
+      },
+      "targetDims": {
+        "width": 664,
+        "height": 1438
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/cases/fora/team-photo/team-photo.png",
+      "to": "/media/cases/fora/team-photo/team-photo.webp",
+      "originalSize": 5154030,
+      "optimizedSize": 954852,
+      "resized": false,
+      "originalDims": {
+        "width": 2448,
+        "height": 1685
+      },
+      "targetDims": {
+        "width": 2448,
+        "height": 1685
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/cases/kissa/artifact-photos/kissa-flipchart.png",
+      "to": "/media/cases/kissa/artifact-photos/kissa-flipchart.webp",
+      "originalSize": 1549817,
+      "optimizedSize": 322534,
+      "resized": true,
+      "originalDims": {
+        "width": 844,
+        "height": 1500
+      },
+      "targetDims": {
+        "width": 840,
+        "height": 1493
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/cases/kissa/artifact-photos/kissa-terminal-photo.png",
+      "to": "/media/cases/kissa/artifact-photos/kissa-terminal-photo.webp",
+      "originalSize": 1461888,
+      "optimizedSize": 283480,
+      "resized": true,
+      "originalDims": {
+        "width": 845,
+        "height": 1500
+      },
+      "targetDims": {
+        "width": 840,
+        "height": 1492
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/cases/kissa/card/coin-wheel.png",
+      "to": "/media/cases/kissa/card/coin-wheel.webp",
+      "originalSize": 924343,
+      "optimizedSize": 219128,
+      "resized": false,
+      "originalDims": {
+        "width": 1000,
+        "height": 1000
+      },
+      "targetDims": {
+        "width": 1000,
+        "height": 1000
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/cases/kissa/card/cover.png",
+      "to": "/media/cases/kissa/card/cover.webp",
+      "originalSize": 1566367,
+      "optimizedSize": 138012,
+      "resized": false,
+      "originalDims": {
+        "width": 1614,
+        "height": 1224
+      },
+      "targetDims": {
+        "width": 1614,
+        "height": 1224
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/cases/kissa/card/terminal.png",
+      "to": "/media/cases/kissa/card/terminal.webp",
+      "originalSize": 939566,
+      "optimizedSize": 209730,
+      "resized": false,
+      "originalDims": {
+        "width": 1000,
+        "height": 1000
+      },
+      "targetDims": {
+        "width": 1000,
+        "height": 1000
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/cases/kissa/challenge/kissa-old.png",
+      "to": "/media/cases/kissa/challenge/kissa-old.webp",
+      "originalSize": 732007,
+      "optimizedSize": 123554,
+      "resized": true,
+      "originalDims": {
+        "width": 1081,
+        "height": 1920
+      },
+      "targetDims": {
+        "width": 820,
+        "height": 1455
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/cases/kissa/feature-cards/posters/Kissa-Payment.png",
+      "to": "/media/cases/kissa/feature-cards/posters/Kissa-Payment.png",
+      "originalSize": 664855,
+      "optimizedSize": 417315,
+      "resized": true,
+      "originalDims": {
+        "width": 1280,
+        "height": 2276
+      },
+      "targetDims": {
+        "width": 825,
+        "height": 1467
+      },
+      "reason": "poster-png-recompress"
+    },
+    {
+      "from": "/media/cases/kissa/feature-cards/posters/Kissa-Pop-up.png",
+      "to": "/media/cases/kissa/feature-cards/posters/Kissa-Pop-up.png",
+      "originalSize": 669072,
+      "optimizedSize": 420315,
+      "resized": true,
+      "originalDims": {
+        "width": 1280,
+        "height": 2276
+      },
+      "targetDims": {
+        "width": 825,
+        "height": 1467
+      },
+      "reason": "poster-png-recompress"
+    },
+    {
+      "from": "/media/cases/kissa/feature-cards/posters/Kissa-Portal.png",
+      "to": "/media/cases/kissa/feature-cards/posters/Kissa-Portal.png",
+      "originalSize": 578504,
+      "optimizedSize": 356140,
+      "resized": true,
+      "originalDims": {
+        "width": 1280,
+        "height": 2276
+      },
+      "targetDims": {
+        "width": 825,
+        "height": 1467
+      },
+      "reason": "poster-png-recompress"
+    },
+    {
+      "from": "/media/cases/kissa/intro/kissa-terminal.png",
+      "to": "/media/cases/kissa/intro/kissa-terminal.webp",
+      "originalSize": 14991625,
+      "optimizedSize": 80512,
+      "resized": true,
+      "originalDims": {
+        "width": 3240,
+        "height": 5760
+      },
+      "targetDims": {
+        "width": 819,
+        "height": 1456
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/cases/kissa/intro/kissa-tray.png",
+      "to": "/media/cases/kissa/intro/kissa-tray.webp",
+      "originalSize": 8636308,
+      "optimizedSize": 121162,
+      "resized": true,
+      "originalDims": {
+        "width": 3240,
+        "height": 5760
+      },
+      "targetDims": {
+        "width": 819,
+        "height": 1456
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/cases/kissa/intro/kissa-welcome.png",
+      "to": "/media/cases/kissa/intro/kissa-welcome.webp",
+      "originalSize": 1982055,
+      "optimizedSize": 135990,
+      "resized": true,
+      "originalDims": {
+        "width": 1080,
+        "height": 1920
+      },
+      "targetDims": {
+        "width": 819,
+        "height": 1456
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/cases/section/more-cases-cube.png",
+      "to": "/media/cases/section/more-cases-cube.webp",
+      "originalSize": 302503,
+      "optimizedSize": 15608,
+      "resized": true,
+      "originalDims": {
+        "width": 720,
+        "height": 720
+      },
+      "targetDims": {
+        "width": 252,
+        "height": 252
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/gallery/device-shells/phone-shell.png",
+      "to": "/media/gallery/device-shells/phone-shell.webp",
+      "originalSize": 150443,
+      "optimizedSize": 26222,
+      "resized": true,
+      "originalDims": {
+        "width": 976,
+        "height": 2004
+      },
+      "targetDims": {
+        "width": 732,
+        "height": 1503
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/gallery/device-shells/tablet-shell.png",
+      "to": "/media/gallery/device-shells/tablet-shell.webp",
+      "originalSize": 76625,
+      "optimizedSize": 19918,
+      "resized": false,
+      "originalDims": {
+        "width": 888,
+        "height": 1524
+      },
+      "targetDims": {
+        "width": 888,
+        "height": 1524
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/gallery/illustrations/coin-wheel.png",
+      "to": "/media/gallery/illustrations/coin-wheel.webp",
+      "originalSize": 924343,
+      "optimizedSize": 97130,
+      "resized": true,
+      "originalDims": {
+        "width": 1000,
+        "height": 1000
+      },
+      "targetDims": {
+        "width": 618,
+        "height": 618
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/gallery/illustrations/cube.png",
+      "to": "/media/gallery/illustrations/cube.webp",
+      "originalSize": 550400,
+      "optimizedSize": 35264,
+      "resized": true,
+      "originalDims": {
+        "width": 1000,
+        "height": 1000
+      },
+      "targetDims": {
+        "width": 498,
+        "height": 498
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/gallery/illustrations/cup-wheel.png",
+      "to": "/media/gallery/illustrations/cup-wheel.webp",
+      "originalSize": 1007773,
+      "optimizedSize": 90774,
+      "resized": true,
+      "originalDims": {
+        "width": 1000,
+        "height": 1000
+      },
+      "targetDims": {
+        "width": 582,
+        "height": 582
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/gallery/illustrations/hairy-tubes.png",
+      "to": "/media/gallery/illustrations/hairy-tubes.webp",
+      "originalSize": 724178,
+      "optimizedSize": 201026,
+      "resized": true,
+      "originalDims": {
+        "width": 1080,
+        "height": 720
+      },
+      "targetDims": {
+        "width": 963,
+        "height": 642
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/gallery/illustrations/terminal.png",
+      "to": "/media/gallery/illustrations/terminal.webp",
+      "originalSize": 939566,
+      "optimizedSize": 85528,
+      "resized": true,
+      "originalDims": {
+        "width": 1000,
+        "height": 1000
+      },
+      "targetDims": {
+        "width": 594,
+        "height": 594
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/gallery/images/r4-c2-image.png",
+      "to": "/media/gallery/images/r4-c2-image.webp",
+      "originalSize": 6929506,
+      "optimizedSize": 397754,
+      "resized": true,
+      "originalDims": {
+        "width": 3200,
+        "height": 2400
+      },
+      "targetDims": {
+        "width": 1800,
+        "height": 1350
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/gallery/images/r5-c3-cube-log-in.png",
+      "to": "/media/gallery/images/r5-c3-cube-log-in.webp",
+      "originalSize": 2007229,
+      "optimizedSize": 187686,
+      "resized": true,
+      "originalDims": {
+        "width": 2392,
+        "height": 1536
+      },
+      "targetDims": {
+        "width": 1801,
+        "height": 1156
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/gallery/images/r5-c3-image.png",
+      "to": "/media/gallery/images/r5-c3-image.webp",
+      "originalSize": 5172579,
+      "optimizedSize": 706282,
+      "resized": false,
+      "originalDims": {
+        "width": 4608,
+        "height": 2400
+      },
+      "targetDims": {
+        "width": 4608,
+        "height": 2400
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/gallery/posters/r1-c2-phone.png",
+      "to": "/media/gallery/posters/r1-c2-phone.png",
+      "originalSize": 1203807,
+      "optimizedSize": 494013,
+      "resized": true,
+      "originalDims": {
+        "width": 1280,
+        "height": 2784
+      },
+      "targetDims": {
+        "width": 589,
+        "height": 1282
+      },
+      "reason": "poster-png-recompress"
+    },
+    {
+      "from": "/media/gallery/posters/r2-c3-tablet.png",
+      "to": "/media/gallery/posters/r2-c3-tablet.png",
+      "originalSize": 578489,
+      "optimizedSize": 293101,
+      "resized": true,
+      "originalDims": {
+        "width": 1280,
+        "height": 2276
+      },
+      "targetDims": {
+        "width": 720,
+        "height": 1281
+      },
+      "reason": "poster-png-recompress"
+    },
+    {
+      "from": "/media/gallery/posters/r3-c2-phone.png",
+      "to": "/media/gallery/posters/r3-c2-phone.png",
+      "originalSize": 1784817,
+      "optimizedSize": 643229,
+      "resized": true,
+      "originalDims": {
+        "width": 1280,
+        "height": 2784
+      },
+      "targetDims": {
+        "width": 589,
+        "height": 1282
+      },
+      "reason": "poster-png-recompress"
+    },
+    {
+      "from": "/media/gallery/posters/r3-c4-phone.png",
+      "to": "/media/gallery/posters/r3-c4-phone.png",
+      "originalSize": 708205,
+      "optimizedSize": 236703,
+      "resized": true,
+      "originalDims": {
+        "width": 1280,
+        "height": 2780
+      },
+      "targetDims": {
+        "width": 589,
+        "height": 1280
+      },
+      "reason": "poster-png-recompress"
+    },
+    {
+      "from": "/media/gallery/posters/r4-c1-phone.png",
+      "to": "/media/gallery/posters/r4-c1-phone.png",
+      "originalSize": 538203,
+      "optimizedSize": 224626,
+      "resized": true,
+      "originalDims": {
+        "width": 1280,
+        "height": 2777
+      },
+      "targetDims": {
+        "width": 590,
+        "height": 1278
+      },
+      "reason": "poster-png-recompress"
+    },
+    {
+      "from": "/media/gallery/posters/r5-c1-phone.png",
+      "to": "/media/gallery/posters/r5-c1-phone.png",
+      "originalSize": 1427569,
+      "optimizedSize": 1070910,
+      "resized": true,
+      "originalDims": {
+        "width": 720,
+        "height": 1560
+      },
+      "targetDims": {
+        "width": 590,
+        "height": 1278
+      },
+      "reason": "poster-png-recompress"
+    },
+    {
+      "from": "/media/gallery/posters/r6-c1-phone.png",
+      "to": "/media/gallery/posters/r6-c1-phone.png",
+      "originalSize": 1313024,
+      "optimizedSize": 419989,
+      "resized": true,
+      "originalDims": {
+        "width": 1280,
+        "height": 2783
+      },
+      "targetDims": {
+        "width": 589,
+        "height": 1281
+      },
+      "reason": "poster-png-recompress"
+    },
+    {
+      "from": "/media/gallery/screens/r1-c1-phone.png",
+      "to": "/media/gallery/screens/r1-c1-phone.webp",
+      "originalSize": 73154,
+      "optimizedSize": 37994,
+      "resized": true,
+      "originalDims": {
+        "width": 1206,
+        "height": 2622
+      },
+      "targetDims": {
+        "width": 586,
+        "height": 1272
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/gallery/screens/r1-c4-phone.png",
+      "to": "/media/gallery/screens/r1-c4-phone.webp",
+      "originalSize": 2627688,
+      "optimizedSize": 191756,
+      "resized": true,
+      "originalDims": {
+        "width": 1206,
+        "height": 2622
+      },
+      "targetDims": {
+        "width": 586,
+        "height": 1272
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/gallery/screens/r2-c1-phone.png",
+      "to": "/media/gallery/screens/r2-c1-phone.webp",
+      "originalSize": 368942,
+      "optimizedSize": 98352,
+      "resized": true,
+      "originalDims": {
+        "width": 1206,
+        "height": 2622
+      },
+      "targetDims": {
+        "width": 586,
+        "height": 1272
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/gallery/screens/r3-c3-phone.png",
+      "to": "/media/gallery/screens/r3-c3-phone.webp",
+      "originalSize": 156620,
+      "optimizedSize": 73264,
+      "resized": true,
+      "originalDims": {
+        "width": 1206,
+        "height": 2622
+      },
+      "targetDims": {
+        "width": 586,
+        "height": 1272
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/gallery/screens/r4-c3-phone.png",
+      "to": "/media/gallery/screens/r4-c3-phone.webp",
+      "originalSize": 1426794,
+      "optimizedSize": 316956,
+      "resized": true,
+      "originalDims": {
+        "width": 1206,
+        "height": 2622
+      },
+      "targetDims": {
+        "width": 586,
+        "height": 1272
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/gallery/screens/r5-c2-phone.png",
+      "to": "/media/gallery/screens/r5-c2-phone.webp",
+      "originalSize": 216553,
+      "optimizedSize": 122348,
+      "resized": true,
+      "originalDims": {
+        "width": 1206,
+        "height": 2622
+      },
+      "targetDims": {
+        "width": 586,
+        "height": 1272
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/gallery/screens/r6-c3-phone.png",
+      "to": "/media/gallery/screens/r6-c3-phone.webp",
+      "originalSize": 151292,
+      "optimizedSize": 61906,
+      "resized": true,
+      "originalDims": {
+        "width": 804,
+        "height": 1748
+      },
+      "targetDims": {
+        "width": 586,
+        "height": 1272
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/home/coin-wheel.png",
+      "to": "/media/home/coin-wheel.webp",
+      "originalSize": 924343,
+      "optimizedSize": 148982,
+      "resized": true,
+      "originalDims": {
+        "width": 1000,
+        "height": 1000
+      },
+      "targetDims": {
+        "width": 798,
+        "height": 798
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/home/cube.png",
+      "to": "/media/home/cube.webp",
+      "originalSize": 550400,
+      "optimizedSize": 30248,
+      "resized": true,
+      "originalDims": {
+        "width": 1000,
+        "height": 1000
+      },
+      "targetDims": {
+        "width": 438,
+        "height": 438
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/home/mockup-path.png",
+      "to": "/media/home/mockup-path.webp",
+      "originalSize": 2216134,
+      "optimizedSize": 117584,
+      "resized": true,
+      "originalDims": {
+        "width": 1308,
+        "height": 2706
+      },
+      "targetDims": {
+        "width": 505,
+        "height": 1044
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/home/mockup-red.png",
+      "to": "/media/home/mockup-red.webp",
+      "originalSize": 252826,
+      "optimizedSize": 43970,
+      "resized": true,
+      "originalDims": {
+        "width": 1308,
+        "height": 2706
+      },
+      "targetDims": {
+        "width": 505,
+        "height": 1044
+      },
+      "reason": "webp-lossless"
+    },
+    {
+      "from": "/media/home/ternimal.png",
+      "to": "/media/home/ternimal.webp",
+      "originalSize": 939566,
+      "optimizedSize": 45444,
+      "resized": true,
+      "originalDims": {
+        "width": 1000,
+        "height": 1000
+      },
+      "targetDims": {
+        "width": 414,
+        "height": 414
+      },
+      "reason": "webp-lossless"
+    }
+  ],
+  "skipped": [
+    {
+      "path": "/media/cases/fora/card/delivery-time.png",
+      "reason": "webp-not-smaller",
+      "originalSize": 202448,
+      "candidateSize": 236978
+    },
+    {
+      "path": "/media/cases/fora/design-system/design-system-image-horizontal-cards.png",
+      "reason": "webp-not-smaller",
+      "originalSize": 168140,
+      "candidateSize": 178364
+    },
+    {
+      "path": "/media/cases/fora/design-system/design-system-image-sheet.png",
+      "reason": "webp-not-smaller",
+      "originalSize": 109638,
+      "candidateSize": 117178
+    },
+    {
+      "path": "/media/home/about-photo.jpg",
+      "reason": "webp-not-smaller",
+      "originalSize": 232340,
+      "candidateSize": 327616
+    }
+  ],
+  "replacements": {
+    "/media/cases/fora/card/cover.png": "/media/cases/fora/card/cover.webp",
+    "/media/cases/fora/card/summary.png": "/media/cases/fora/card/summary.webp",
+    "/media/cases/fora/challenge/fora-challenge-mock.png": "/media/cases/fora/challenge/fora-challenge-mock.webp",
+    "/media/cases/fora/design-system/design-system-image-summary.png": "/media/cases/fora/design-system/design-system-image-summary.webp",
+    "/media/cases/fora/design-system/design-system-image-vertical-cards.png": "/media/cases/fora/design-system/design-system-image-vertical-cards.webp",
+    "/media/cases/fora/intro/fora-intro-category.png": "/media/cases/fora/intro/fora-intro-category.webp",
+    "/media/cases/fora/intro/fora-intro-delivery.png": "/media/cases/fora/intro/fora-intro-delivery.webp",
+    "/media/cases/fora/intro/fora-intro-map.png": "/media/cases/fora/intro/fora-intro-map.webp",
+    "/media/cases/fora/team-photo/team-photo.png": "/media/cases/fora/team-photo/team-photo.webp",
+    "/media/cases/kissa/artifact-photos/kissa-flipchart.png": "/media/cases/kissa/artifact-photos/kissa-flipchart.webp",
+    "/media/cases/kissa/artifact-photos/kissa-terminal-photo.png": "/media/cases/kissa/artifact-photos/kissa-terminal-photo.webp",
+    "/media/cases/kissa/card/coin-wheel.png": "/media/cases/kissa/card/coin-wheel.webp",
+    "/media/cases/kissa/card/cover.png": "/media/cases/kissa/card/cover.webp",
+    "/media/cases/kissa/card/terminal.png": "/media/cases/kissa/card/terminal.webp",
+    "/media/cases/kissa/challenge/kissa-old.png": "/media/cases/kissa/challenge/kissa-old.webp",
+    "/media/cases/kissa/intro/kissa-terminal.png": "/media/cases/kissa/intro/kissa-terminal.webp",
+    "/media/cases/kissa/intro/kissa-tray.png": "/media/cases/kissa/intro/kissa-tray.webp",
+    "/media/cases/kissa/intro/kissa-welcome.png": "/media/cases/kissa/intro/kissa-welcome.webp",
+    "/media/cases/section/more-cases-cube.png": "/media/cases/section/more-cases-cube.webp",
+    "/media/gallery/device-shells/phone-shell.png": "/media/gallery/device-shells/phone-shell.webp",
+    "/media/gallery/device-shells/tablet-shell.png": "/media/gallery/device-shells/tablet-shell.webp",
+    "/media/gallery/illustrations/coin-wheel.png": "/media/gallery/illustrations/coin-wheel.webp",
+    "/media/gallery/illustrations/cube.png": "/media/gallery/illustrations/cube.webp",
+    "/media/gallery/illustrations/cup-wheel.png": "/media/gallery/illustrations/cup-wheel.webp",
+    "/media/gallery/illustrations/hairy-tubes.png": "/media/gallery/illustrations/hairy-tubes.webp",
+    "/media/gallery/illustrations/terminal.png": "/media/gallery/illustrations/terminal.webp",
+    "/media/gallery/images/r4-c2-image.png": "/media/gallery/images/r4-c2-image.webp",
+    "/media/gallery/images/r5-c3-cube-log-in.png": "/media/gallery/images/r5-c3-cube-log-in.webp",
+    "/media/gallery/images/r5-c3-image.png": "/media/gallery/images/r5-c3-image.webp",
+    "/media/gallery/screens/r1-c1-phone.png": "/media/gallery/screens/r1-c1-phone.webp",
+    "/media/gallery/screens/r1-c4-phone.png": "/media/gallery/screens/r1-c4-phone.webp",
+    "/media/gallery/screens/r2-c1-phone.png": "/media/gallery/screens/r2-c1-phone.webp",
+    "/media/gallery/screens/r3-c3-phone.png": "/media/gallery/screens/r3-c3-phone.webp",
+    "/media/gallery/screens/r4-c3-phone.png": "/media/gallery/screens/r4-c3-phone.webp",
+    "/media/gallery/screens/r5-c2-phone.png": "/media/gallery/screens/r5-c2-phone.webp",
+    "/media/gallery/screens/r6-c3-phone.png": "/media/gallery/screens/r6-c3-phone.webp",
+    "/media/home/coin-wheel.png": "/media/home/coin-wheel.webp",
+    "/media/home/cube.png": "/media/home/cube.webp",
+    "/media/home/mockup-path.png": "/media/home/mockup-path.webp",
+    "/media/home/mockup-red.png": "/media/home/mockup-red.webp",
+    "/media/home/ternimal.png": "/media/home/ternimal.webp"
+  }
+}

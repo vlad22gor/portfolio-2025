@@ -1,0 +1,1914 @@
+{
+  "generatedAt": "2026-03-17T20:00:41.964Z",
+  "baseURL": "http://127.0.0.1:4173",
+  "viewport": {
+    "width": 1360,
+    "height": 2200
+  },
+  "routes": [
+    "/",
+    "/cases",
+    "/gallery",
+    "/fora",
+    "/kissa"
+  ],
+  "assets": [
+    {
+      "path": "/media/cases/fora/card/cover.webp",
+      "maxRenderedWidth": 480,
+      "maxRenderedHeight": 480,
+      "samples": [
+        {
+          "path": "/media/cases/fora/card/cover.webp",
+          "kind": "image",
+          "renderedWidth": 480,
+          "renderedHeight": 432,
+          "route": "/"
+        },
+        {
+          "path": "/media/cases/fora/card/cover.webp",
+          "kind": "image",
+          "renderedWidth": 480,
+          "renderedHeight": 432,
+          "route": "/cases"
+        },
+        {
+          "path": "/media/cases/fora/card/cover.webp",
+          "kind": "image",
+          "renderedWidth": 480,
+          "renderedHeight": 480,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/card/delivery-time.png",
+      "maxRenderedWidth": 288,
+      "maxRenderedHeight": 257,
+      "samples": [
+        {
+          "path": "/media/cases/fora/card/delivery-time.png",
+          "kind": "image",
+          "renderedWidth": 288,
+          "renderedHeight": 257,
+          "route": "/"
+        },
+        {
+          "path": "/media/cases/fora/card/delivery-time.png",
+          "kind": "image",
+          "renderedWidth": 288,
+          "renderedHeight": 257,
+          "route": "/cases"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/card/summary.webp",
+      "maxRenderedWidth": 252,
+      "maxRenderedHeight": 340,
+      "samples": [
+        {
+          "path": "/media/cases/fora/card/summary.webp",
+          "kind": "image",
+          "renderedWidth": 252,
+          "renderedHeight": 340,
+          "route": "/"
+        },
+        {
+          "path": "/media/cases/fora/card/summary.webp",
+          "kind": "image",
+          "renderedWidth": 252,
+          "renderedHeight": 340,
+          "route": "/cases"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/challenge/arrow-bottom-left.svg",
+      "maxRenderedWidth": 129,
+      "maxRenderedHeight": 32,
+      "samples": [
+        {
+          "path": "/media/cases/fora/challenge/arrow-bottom-left.svg",
+          "kind": "image",
+          "renderedWidth": 129,
+          "renderedHeight": 32,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/challenge/arrow-bottom-right.svg",
+      "maxRenderedWidth": 67,
+      "maxRenderedHeight": 40,
+      "samples": [
+        {
+          "path": "/media/cases/fora/challenge/arrow-bottom-right.svg",
+          "kind": "image",
+          "renderedWidth": 67,
+          "renderedHeight": 40,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/challenge/arrow-top-left.svg",
+      "maxRenderedWidth": 94,
+      "maxRenderedHeight": 102,
+      "samples": [
+        {
+          "path": "/media/cases/fora/challenge/arrow-top-left.svg",
+          "kind": "image",
+          "renderedWidth": 94,
+          "renderedHeight": 102,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/challenge/arrow-top-right.svg",
+      "maxRenderedWidth": 67,
+      "maxRenderedHeight": 85,
+      "samples": [
+        {
+          "path": "/media/cases/fora/challenge/arrow-top-right.svg",
+          "kind": "image",
+          "renderedWidth": 67,
+          "renderedHeight": 85,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/challenge/fora-challenge-mock.webp",
+      "maxRenderedWidth": 219,
+      "maxRenderedHeight": 479,
+      "samples": [
+        {
+          "path": "/media/cases/fora/challenge/fora-challenge-mock.webp",
+          "kind": "image",
+          "renderedWidth": 219,
+          "renderedHeight": 479,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/design-system/arrow-bottom-left.svg",
+      "maxRenderedWidth": 117,
+      "maxRenderedHeight": 90,
+      "samples": [
+        {
+          "path": "/media/cases/fora/design-system/arrow-bottom-left.svg",
+          "kind": "image",
+          "renderedWidth": 117,
+          "renderedHeight": 90,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/design-system/arrow-bottom-right.svg",
+      "maxRenderedWidth": 100,
+      "maxRenderedHeight": 101,
+      "samples": [
+        {
+          "path": "/media/cases/fora/design-system/arrow-bottom-right.svg",
+          "kind": "image",
+          "renderedWidth": 100,
+          "renderedHeight": 101,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/design-system/arrow-top.svg",
+      "maxRenderedWidth": 185,
+      "maxRenderedHeight": 59,
+      "samples": [
+        {
+          "path": "/media/cases/fora/design-system/arrow-top.svg",
+          "kind": "image",
+          "renderedWidth": 185,
+          "renderedHeight": 59,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/design-system/design-system-image-horizontal-cards.png",
+      "maxRenderedWidth": 390,
+      "maxRenderedHeight": 258,
+      "samples": [
+        {
+          "path": "/media/cases/fora/design-system/design-system-image-horizontal-cards.png",
+          "kind": "image",
+          "renderedWidth": 390,
+          "renderedHeight": 258,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/design-system/design-system-image-sheet.png",
+      "maxRenderedWidth": 264,
+      "maxRenderedHeight": 293,
+      "samples": [
+        {
+          "path": "/media/cases/fora/design-system/design-system-image-sheet.png",
+          "kind": "image",
+          "renderedWidth": 264,
+          "renderedHeight": 293,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/design-system/design-system-image-summary.webp",
+      "maxRenderedWidth": 227,
+      "maxRenderedHeight": 287,
+      "samples": [
+        {
+          "path": "/media/cases/fora/design-system/design-system-image-summary.webp",
+          "kind": "image",
+          "renderedWidth": 227,
+          "renderedHeight": 287,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/design-system/design-system-image-vertical-cards.webp",
+      "maxRenderedWidth": 310,
+      "maxRenderedHeight": 283,
+      "samples": [
+        {
+          "path": "/media/cases/fora/design-system/design-system-image-vertical-cards.webp",
+          "kind": "image",
+          "renderedWidth": 310,
+          "renderedHeight": 283,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/feature-cards/posters/Fora-Cart.png",
+      "maxRenderedWidth": 221,
+      "maxRenderedHeight": 481,
+      "samples": [
+        {
+          "path": "/media/cases/fora/feature-cards/posters/Fora-Cart.png",
+          "kind": "poster",
+          "renderedWidth": 221,
+          "renderedHeight": 481,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/feature-cards/posters/Fora-Catalogue.png",
+      "maxRenderedWidth": 221,
+      "maxRenderedHeight": 481,
+      "samples": [
+        {
+          "path": "/media/cases/fora/feature-cards/posters/Fora-Catalogue.png",
+          "kind": "poster",
+          "renderedWidth": 221,
+          "renderedHeight": 481,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/feature-cards/posters/Fora-Delivery.png",
+      "maxRenderedWidth": 221,
+      "maxRenderedHeight": 481,
+      "samples": [
+        {
+          "path": "/media/cases/fora/feature-cards/posters/Fora-Delivery.png",
+          "kind": "poster",
+          "renderedWidth": 221,
+          "renderedHeight": 481,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/intro/fora-intro-category.webp",
+      "maxRenderedWidth": 219,
+      "maxRenderedHeight": 479,
+      "samples": [
+        {
+          "path": "/media/cases/fora/intro/fora-intro-category.webp",
+          "kind": "image",
+          "renderedWidth": 219,
+          "renderedHeight": 479,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/intro/fora-intro-delivery.webp",
+      "maxRenderedWidth": 219,
+      "maxRenderedHeight": 479,
+      "samples": [
+        {
+          "path": "/media/cases/fora/intro/fora-intro-delivery.webp",
+          "kind": "image",
+          "renderedWidth": 219,
+          "renderedHeight": 479,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/intro/fora-intro-map.webp",
+      "maxRenderedWidth": 219,
+      "maxRenderedHeight": 479,
+      "samples": [
+        {
+          "path": "/media/cases/fora/intro/fora-intro-map.webp",
+          "kind": "image",
+          "renderedWidth": 219,
+          "renderedHeight": 479,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/process/arrow-1.svg",
+      "maxRenderedWidth": 63,
+      "maxRenderedHeight": 45,
+      "samples": [
+        {
+          "path": "/media/cases/fora/process/arrow-1.svg",
+          "kind": "image",
+          "renderedWidth": 63,
+          "renderedHeight": 45,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/process/arrow-2.svg",
+      "maxRenderedWidth": 73,
+      "maxRenderedHeight": 60,
+      "samples": [
+        {
+          "path": "/media/cases/fora/process/arrow-2.svg",
+          "kind": "image",
+          "renderedWidth": 73,
+          "renderedHeight": 60,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/process/arrow-3.svg",
+      "maxRenderedWidth": 73,
+      "maxRenderedHeight": 59,
+      "samples": [
+        {
+          "path": "/media/cases/fora/process/arrow-3.svg",
+          "kind": "image",
+          "renderedWidth": 73,
+          "renderedHeight": 59,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/process/arrow-4.svg",
+      "maxRenderedWidth": 52,
+      "maxRenderedHeight": 53,
+      "samples": [
+        {
+          "path": "/media/cases/fora/process/arrow-4.svg",
+          "kind": "image",
+          "renderedWidth": 52,
+          "renderedHeight": 53,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/process/arrow-5.svg",
+      "maxRenderedWidth": 72,
+      "maxRenderedHeight": 53,
+      "samples": [
+        {
+          "path": "/media/cases/fora/process/arrow-5.svg",
+          "kind": "image",
+          "renderedWidth": 72,
+          "renderedHeight": 53,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/team-photo/heart-left.svg",
+      "maxRenderedWidth": 34,
+      "maxRenderedHeight": 29,
+      "samples": [
+        {
+          "path": "/media/cases/fora/team-photo/heart-left.svg",
+          "kind": "image",
+          "renderedWidth": 34,
+          "renderedHeight": 29,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/team-photo/heart-right.svg",
+      "maxRenderedWidth": 36,
+      "maxRenderedHeight": 28,
+      "samples": [
+        {
+          "path": "/media/cases/fora/team-photo/heart-right.svg",
+          "kind": "image",
+          "renderedWidth": 36,
+          "renderedHeight": 28,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/fora/team-photo/team-photo.webp",
+      "maxRenderedWidth": 816,
+      "maxRenderedHeight": 432,
+      "samples": [
+        {
+          "path": "/media/cases/fora/team-photo/team-photo.webp",
+          "kind": "image",
+          "renderedWidth": 816,
+          "renderedHeight": 432,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/artifact-photos/kissa-flipchart.webp",
+      "maxRenderedWidth": 280,
+      "maxRenderedHeight": 480,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/artifact-photos/kissa-flipchart.webp",
+          "kind": "image",
+          "renderedWidth": 280,
+          "renderedHeight": 480,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/artifact-photos/kissa-photos-arrow-left.svg",
+      "maxRenderedWidth": 108,
+      "maxRenderedHeight": 82,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/artifact-photos/kissa-photos-arrow-left.svg",
+          "kind": "image",
+          "renderedWidth": 108,
+          "renderedHeight": 82,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/artifact-photos/kissa-photos-arrow-right.svg",
+      "maxRenderedWidth": 100,
+      "maxRenderedHeight": 83,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/artifact-photos/kissa-photos-arrow-right.svg",
+          "kind": "image",
+          "renderedWidth": 100,
+          "renderedHeight": 83,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/artifact-photos/kissa-terminal-photo.webp",
+      "maxRenderedWidth": 280,
+      "maxRenderedHeight": 480,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/artifact-photos/kissa-terminal-photo.webp",
+          "kind": "image",
+          "renderedWidth": 280,
+          "renderedHeight": 480,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/card/coin-wheel.webp",
+      "maxRenderedWidth": 359,
+      "maxRenderedHeight": 359,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/card/coin-wheel.webp",
+          "kind": "image",
+          "renderedWidth": 359,
+          "renderedHeight": 359,
+          "route": "/"
+        },
+        {
+          "path": "/media/cases/kissa/card/coin-wheel.webp",
+          "kind": "image",
+          "renderedWidth": 359,
+          "renderedHeight": 359,
+          "route": "/cases"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/card/cover.webp",
+      "maxRenderedWidth": 480,
+      "maxRenderedHeight": 480,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/card/cover.webp",
+          "kind": "image",
+          "renderedWidth": 480,
+          "renderedHeight": 432,
+          "route": "/"
+        },
+        {
+          "path": "/media/cases/kissa/card/cover.webp",
+          "kind": "image",
+          "renderedWidth": 480,
+          "renderedHeight": 432,
+          "route": "/cases"
+        },
+        {
+          "path": "/media/cases/kissa/card/cover.webp",
+          "kind": "image",
+          "renderedWidth": 480,
+          "renderedHeight": 480,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/card/terminal.webp",
+      "maxRenderedWidth": 348,
+      "maxRenderedHeight": 348,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/card/terminal.webp",
+          "kind": "image",
+          "renderedWidth": 348,
+          "renderedHeight": 348,
+          "route": "/"
+        },
+        {
+          "path": "/media/cases/kissa/card/terminal.webp",
+          "kind": "image",
+          "renderedWidth": 348,
+          "renderedHeight": 348,
+          "route": "/cases"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/challenge/arrow-bottom-left.svg",
+      "maxRenderedWidth": 129,
+      "maxRenderedHeight": 32,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/challenge/arrow-bottom-left.svg",
+          "kind": "image",
+          "renderedWidth": 129,
+          "renderedHeight": 32,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/challenge/arrow-bottom-right.svg",
+      "maxRenderedWidth": 67,
+      "maxRenderedHeight": 40,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/challenge/arrow-bottom-right.svg",
+          "kind": "image",
+          "renderedWidth": 67,
+          "renderedHeight": 40,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/challenge/arrow-top-left.svg",
+      "maxRenderedWidth": 94,
+      "maxRenderedHeight": 102,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/challenge/arrow-top-left.svg",
+          "kind": "image",
+          "renderedWidth": 94,
+          "renderedHeight": 102,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/challenge/arrow-top-right.svg",
+      "maxRenderedWidth": 67,
+      "maxRenderedHeight": 85,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/challenge/arrow-top-right.svg",
+          "kind": "image",
+          "renderedWidth": 67,
+          "renderedHeight": 85,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/challenge/kissa-old.webp",
+      "maxRenderedWidth": 273,
+      "maxRenderedHeight": 485,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/challenge/kissa-old.webp",
+          "kind": "image",
+          "renderedWidth": 273,
+          "renderedHeight": 485,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/feature-cards/posters/Kissa-Payment.png",
+      "maxRenderedWidth": 275,
+      "maxRenderedHeight": 487,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/feature-cards/posters/Kissa-Payment.png",
+          "kind": "poster",
+          "renderedWidth": 275,
+          "renderedHeight": 487,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/feature-cards/posters/Kissa-Pop-up.png",
+      "maxRenderedWidth": 275,
+      "maxRenderedHeight": 487,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/feature-cards/posters/Kissa-Pop-up.png",
+          "kind": "poster",
+          "renderedWidth": 275,
+          "renderedHeight": 487,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/feature-cards/posters/Kissa-Portal.png",
+      "maxRenderedWidth": 275,
+      "maxRenderedHeight": 487,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/feature-cards/posters/Kissa-Portal.png",
+          "kind": "poster",
+          "renderedWidth": 275,
+          "renderedHeight": 487,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/intro/kissa-terminal.webp",
+      "maxRenderedWidth": 273,
+      "maxRenderedHeight": 485,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/intro/kissa-terminal.webp",
+          "kind": "image",
+          "renderedWidth": 273,
+          "renderedHeight": 485,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/intro/kissa-tray.webp",
+      "maxRenderedWidth": 273,
+      "maxRenderedHeight": 485,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/intro/kissa-tray.webp",
+          "kind": "image",
+          "renderedWidth": 273,
+          "renderedHeight": 485,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/intro/kissa-welcome.webp",
+      "maxRenderedWidth": 273,
+      "maxRenderedHeight": 485,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/intro/kissa-welcome.webp",
+          "kind": "image",
+          "renderedWidth": 273,
+          "renderedHeight": 485,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/process/arrow-1.svg",
+      "maxRenderedWidth": 63,
+      "maxRenderedHeight": 45,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/process/arrow-1.svg",
+          "kind": "image",
+          "renderedWidth": 63,
+          "renderedHeight": 45,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/process/arrow-2.svg",
+      "maxRenderedWidth": 73,
+      "maxRenderedHeight": 60,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/process/arrow-2.svg",
+          "kind": "image",
+          "renderedWidth": 73,
+          "renderedHeight": 60,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/process/arrow-3.svg",
+      "maxRenderedWidth": 73,
+      "maxRenderedHeight": 59,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/process/arrow-3.svg",
+          "kind": "image",
+          "renderedWidth": 73,
+          "renderedHeight": 59,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/process/arrow-4.svg",
+      "maxRenderedWidth": 52,
+      "maxRenderedHeight": 53,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/process/arrow-4.svg",
+          "kind": "image",
+          "renderedWidth": 52,
+          "renderedHeight": 53,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/kissa/process/arrow-5.svg",
+      "maxRenderedWidth": 72,
+      "maxRenderedHeight": 53,
+      "samples": [
+        {
+          "path": "/media/cases/kissa/process/arrow-5.svg",
+          "kind": "image",
+          "renderedWidth": 72,
+          "renderedHeight": 53,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/section/cases-cards-arrow-left.svg",
+      "maxRenderedWidth": 52,
+      "maxRenderedHeight": 52,
+      "samples": [
+        {
+          "path": "/media/cases/section/cases-cards-arrow-left.svg",
+          "kind": "image",
+          "renderedWidth": 52,
+          "renderedHeight": 52,
+          "route": "/"
+        },
+        {
+          "path": "/media/cases/section/cases-cards-arrow-left.svg",
+          "kind": "image",
+          "renderedWidth": 52,
+          "renderedHeight": 52,
+          "route": "/cases"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/section/cases-cards-arrow-right.svg",
+      "maxRenderedWidth": 52,
+      "maxRenderedHeight": 52,
+      "samples": [
+        {
+          "path": "/media/cases/section/cases-cards-arrow-right.svg",
+          "kind": "image",
+          "renderedWidth": 52,
+          "renderedHeight": 52,
+          "route": "/"
+        },
+        {
+          "path": "/media/cases/section/cases-cards-arrow-right.svg",
+          "kind": "image",
+          "renderedWidth": 52,
+          "renderedHeight": 52,
+          "route": "/cases"
+        }
+      ]
+    },
+    {
+      "path": "/media/cases/section/more-cases-cube.webp",
+      "maxRenderedWidth": 84,
+      "maxRenderedHeight": 84,
+      "samples": [
+        {
+          "path": "/media/cases/section/more-cases-cube.webp",
+          "kind": "poster",
+          "renderedWidth": 84,
+          "renderedHeight": 84,
+          "route": "/"
+        },
+        {
+          "path": "/media/cases/section/more-cases-cube.webp",
+          "kind": "poster",
+          "renderedWidth": 84,
+          "renderedHeight": 84,
+          "route": "/cases"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/device-shells/phone-shell.webp",
+      "maxRenderedWidth": 244,
+      "maxRenderedHeight": 501,
+      "samples": [
+        {
+          "path": "/media/gallery/device-shells/phone-shell.webp",
+          "kind": "image",
+          "renderedWidth": 216,
+          "renderedHeight": 443,
+          "route": "/gallery"
+        },
+        {
+          "path": "/media/gallery/device-shells/phone-shell.webp",
+          "kind": "image",
+          "renderedWidth": 216,
+          "renderedHeight": 443,
+          "route": "/gallery"
+        },
+        {
+          "path": "/media/gallery/device-shells/phone-shell.webp",
+          "kind": "image",
+          "renderedWidth": 216,
+          "renderedHeight": 443,
+          "route": "/gallery"
+        },
+        {
+          "path": "/media/gallery/device-shells/phone-shell.webp",
+          "kind": "image",
+          "renderedWidth": 216,
+          "renderedHeight": 443,
+          "route": "/gallery"
+        },
+        {
+          "path": "/media/gallery/device-shells/phone-shell.webp",
+          "kind": "image",
+          "renderedWidth": 216,
+          "renderedHeight": 443,
+          "route": "/gallery"
+        },
+        {
+          "path": "/media/gallery/device-shells/phone-shell.webp",
+          "kind": "image",
+          "renderedWidth": 216,
+          "renderedHeight": 443,
+          "route": "/gallery"
+        },
+        {
+          "path": "/media/gallery/device-shells/phone-shell.webp",
+          "kind": "image",
+          "renderedWidth": 216,
+          "renderedHeight": 443,
+          "route": "/gallery"
+        },
+        {
+          "path": "/media/gallery/device-shells/phone-shell.webp",
+          "kind": "image",
+          "renderedWidth": 216,
+          "renderedHeight": 443,
+          "route": "/gallery"
+        },
+        {
+          "path": "/media/gallery/device-shells/phone-shell.webp",
+          "kind": "image",
+          "renderedWidth": 216,
+          "renderedHeight": 443,
+          "route": "/gallery"
+        },
+        {
+          "path": "/media/gallery/device-shells/phone-shell.webp",
+          "kind": "image",
+          "renderedWidth": 216,
+          "renderedHeight": 443,
+          "route": "/gallery"
+        },
+        {
+          "path": "/media/gallery/device-shells/phone-shell.webp",
+          "kind": "image",
+          "renderedWidth": 216,
+          "renderedHeight": 443,
+          "route": "/gallery"
+        },
+        {
+          "path": "/media/gallery/device-shells/phone-shell.webp",
+          "kind": "image",
+          "renderedWidth": 216,
+          "renderedHeight": 443,
+          "route": "/gallery"
+        },
+        {
+          "path": "/media/gallery/device-shells/phone-shell.webp",
+          "kind": "image",
+          "renderedWidth": 216,
+          "renderedHeight": 443,
+          "route": "/gallery"
+        },
+        {
+          "path": "/media/gallery/device-shells/phone-shell.webp",
+          "kind": "image",
+          "renderedWidth": 244,
+          "renderedHeight": 501,
+          "route": "/fora"
+        },
+        {
+          "path": "/media/gallery/device-shells/phone-shell.webp",
+          "kind": "image",
+          "renderedWidth": 244,
+          "renderedHeight": 501,
+          "route": "/fora"
+        },
+        {
+          "path": "/media/gallery/device-shells/phone-shell.webp",
+          "kind": "image",
+          "renderedWidth": 244,
+          "renderedHeight": 501,
+          "route": "/fora"
+        },
+        {
+          "path": "/media/gallery/device-shells/phone-shell.webp",
+          "kind": "image",
+          "renderedWidth": 244,
+          "renderedHeight": 501,
+          "route": "/fora"
+        },
+        {
+          "path": "/media/gallery/device-shells/phone-shell.webp",
+          "kind": "image",
+          "renderedWidth": 244,
+          "renderedHeight": 501,
+          "route": "/fora"
+        },
+        {
+          "path": "/media/gallery/device-shells/phone-shell.webp",
+          "kind": "image",
+          "renderedWidth": 244,
+          "renderedHeight": 501,
+          "route": "/fora"
+        },
+        {
+          "path": "/media/gallery/device-shells/phone-shell.webp",
+          "kind": "image",
+          "renderedWidth": 244,
+          "renderedHeight": 501,
+          "route": "/fora"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/device-shells/tablet-shell.webp",
+      "maxRenderedWidth": 296,
+      "maxRenderedHeight": 508,
+      "samples": [
+        {
+          "path": "/media/gallery/device-shells/tablet-shell.webp",
+          "kind": "image",
+          "renderedWidth": 258,
+          "renderedHeight": 443,
+          "route": "/gallery"
+        },
+        {
+          "path": "/media/gallery/device-shells/tablet-shell.webp",
+          "kind": "image",
+          "renderedWidth": 296,
+          "renderedHeight": 508,
+          "route": "/kissa"
+        },
+        {
+          "path": "/media/gallery/device-shells/tablet-shell.webp",
+          "kind": "image",
+          "renderedWidth": 296,
+          "renderedHeight": 508,
+          "route": "/kissa"
+        },
+        {
+          "path": "/media/gallery/device-shells/tablet-shell.webp",
+          "kind": "image",
+          "renderedWidth": 296,
+          "renderedHeight": 508,
+          "route": "/kissa"
+        },
+        {
+          "path": "/media/gallery/device-shells/tablet-shell.webp",
+          "kind": "image",
+          "renderedWidth": 296,
+          "renderedHeight": 508,
+          "route": "/kissa"
+        },
+        {
+          "path": "/media/gallery/device-shells/tablet-shell.webp",
+          "kind": "image",
+          "renderedWidth": 296,
+          "renderedHeight": 508,
+          "route": "/kissa"
+        },
+        {
+          "path": "/media/gallery/device-shells/tablet-shell.webp",
+          "kind": "image",
+          "renderedWidth": 296,
+          "renderedHeight": 508,
+          "route": "/kissa"
+        },
+        {
+          "path": "/media/gallery/device-shells/tablet-shell.webp",
+          "kind": "image",
+          "renderedWidth": 296,
+          "renderedHeight": 508,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/illustrations/coin-wheel.webp",
+      "maxRenderedWidth": 206,
+      "maxRenderedHeight": 206,
+      "samples": [
+        {
+          "path": "/media/gallery/illustrations/coin-wheel.webp",
+          "kind": "poster",
+          "renderedWidth": 206,
+          "renderedHeight": 206,
+          "route": "/gallery"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/illustrations/cube.webp",
+      "maxRenderedWidth": 166,
+      "maxRenderedHeight": 166,
+      "samples": [
+        {
+          "path": "/media/gallery/illustrations/cube.webp",
+          "kind": "poster",
+          "renderedWidth": 166,
+          "renderedHeight": 166,
+          "route": "/gallery"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/illustrations/cup-wheel.webp",
+      "maxRenderedWidth": 194,
+      "maxRenderedHeight": 194,
+      "samples": [
+        {
+          "path": "/media/gallery/illustrations/cup-wheel.webp",
+          "kind": "image",
+          "renderedWidth": 194,
+          "renderedHeight": 194,
+          "route": "/gallery"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/illustrations/hairy-tubes.webp",
+      "maxRenderedWidth": 320,
+      "maxRenderedHeight": 214,
+      "samples": [
+        {
+          "path": "/media/gallery/illustrations/hairy-tubes.webp",
+          "kind": "image",
+          "renderedWidth": 320,
+          "renderedHeight": 214,
+          "route": "/gallery"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/illustrations/terminal.webp",
+      "maxRenderedWidth": 198,
+      "maxRenderedHeight": 198,
+      "samples": [
+        {
+          "path": "/media/gallery/illustrations/terminal.webp",
+          "kind": "image",
+          "renderedWidth": 198,
+          "renderedHeight": 198,
+          "route": "/gallery"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/images/r4-c2-image.webp",
+      "maxRenderedWidth": 600,
+      "maxRenderedHeight": 350,
+      "samples": [
+        {
+          "path": "/media/gallery/images/r4-c2-image.webp",
+          "kind": "image",
+          "renderedWidth": 600,
+          "renderedHeight": 350,
+          "route": "/gallery"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/images/r5-c3-cube-log-in.webp",
+      "maxRenderedWidth": 600,
+      "maxRenderedHeight": 350,
+      "samples": [
+        {
+          "path": "/media/gallery/images/r5-c3-cube-log-in.webp",
+          "kind": "image",
+          "renderedWidth": 600,
+          "renderedHeight": 350,
+          "route": "/gallery"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/posters/r1-c2-phone.png",
+      "maxRenderedWidth": 196,
+      "maxRenderedHeight": 426,
+      "samples": [
+        {
+          "path": "/media/gallery/posters/r1-c2-phone.png",
+          "kind": "poster",
+          "renderedWidth": 196,
+          "renderedHeight": 426,
+          "route": "/gallery"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/posters/r2-c3-tablet.png",
+      "maxRenderedWidth": 240,
+      "maxRenderedHeight": 425,
+      "samples": [
+        {
+          "path": "/media/gallery/posters/r2-c3-tablet.png",
+          "kind": "poster",
+          "renderedWidth": 240,
+          "renderedHeight": 425,
+          "route": "/gallery"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/posters/r3-c2-phone.png",
+      "maxRenderedWidth": 196,
+      "maxRenderedHeight": 426,
+      "samples": [
+        {
+          "path": "/media/gallery/posters/r3-c2-phone.png",
+          "kind": "poster",
+          "renderedWidth": 196,
+          "renderedHeight": 426,
+          "route": "/gallery"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/posters/r3-c4-phone.png",
+      "maxRenderedWidth": 196,
+      "maxRenderedHeight": 426,
+      "samples": [
+        {
+          "path": "/media/gallery/posters/r3-c4-phone.png",
+          "kind": "poster",
+          "renderedWidth": 196,
+          "renderedHeight": 426,
+          "route": "/gallery"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/posters/r4-c1-phone.png",
+      "maxRenderedWidth": 196,
+      "maxRenderedHeight": 426,
+      "samples": [
+        {
+          "path": "/media/gallery/posters/r4-c1-phone.png",
+          "kind": "poster",
+          "renderedWidth": 196,
+          "renderedHeight": 426,
+          "route": "/gallery"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/posters/r5-c1-phone.png",
+      "maxRenderedWidth": 196,
+      "maxRenderedHeight": 426,
+      "samples": [
+        {
+          "path": "/media/gallery/posters/r5-c1-phone.png",
+          "kind": "poster",
+          "renderedWidth": 196,
+          "renderedHeight": 426,
+          "route": "/gallery"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/posters/r6-c1-phone.png",
+      "maxRenderedWidth": 196,
+      "maxRenderedHeight": 426,
+      "samples": [
+        {
+          "path": "/media/gallery/posters/r6-c1-phone.png",
+          "kind": "poster",
+          "renderedWidth": 196,
+          "renderedHeight": 426,
+          "route": "/gallery"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/screens/r1-c1-phone.webp",
+      "maxRenderedWidth": 194,
+      "maxRenderedHeight": 424,
+      "samples": [
+        {
+          "path": "/media/gallery/screens/r1-c1-phone.webp",
+          "kind": "image",
+          "renderedWidth": 194,
+          "renderedHeight": 424,
+          "route": "/gallery"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/screens/r1-c4-phone.webp",
+      "maxRenderedWidth": 194,
+      "maxRenderedHeight": 424,
+      "samples": [
+        {
+          "path": "/media/gallery/screens/r1-c4-phone.webp",
+          "kind": "image",
+          "renderedWidth": 194,
+          "renderedHeight": 424,
+          "route": "/gallery"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/screens/r2-c1-phone.webp",
+      "maxRenderedWidth": 194,
+      "maxRenderedHeight": 424,
+      "samples": [
+        {
+          "path": "/media/gallery/screens/r2-c1-phone.webp",
+          "kind": "image",
+          "renderedWidth": 194,
+          "renderedHeight": 424,
+          "route": "/gallery"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/screens/r3-c3-phone.webp",
+      "maxRenderedWidth": 194,
+      "maxRenderedHeight": 424,
+      "samples": [
+        {
+          "path": "/media/gallery/screens/r3-c3-phone.webp",
+          "kind": "image",
+          "renderedWidth": 194,
+          "renderedHeight": 424,
+          "route": "/gallery"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/screens/r4-c3-phone.webp",
+      "maxRenderedWidth": 194,
+      "maxRenderedHeight": 424,
+      "samples": [
+        {
+          "path": "/media/gallery/screens/r4-c3-phone.webp",
+          "kind": "image",
+          "renderedWidth": 194,
+          "renderedHeight": 424,
+          "route": "/gallery"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/screens/r5-c2-phone.webp",
+      "maxRenderedWidth": 194,
+      "maxRenderedHeight": 424,
+      "samples": [
+        {
+          "path": "/media/gallery/screens/r5-c2-phone.webp",
+          "kind": "image",
+          "renderedWidth": 194,
+          "renderedHeight": 424,
+          "route": "/gallery"
+        }
+      ]
+    },
+    {
+      "path": "/media/gallery/screens/r6-c3-phone.webp",
+      "maxRenderedWidth": 194,
+      "maxRenderedHeight": 424,
+      "samples": [
+        {
+          "path": "/media/gallery/screens/r6-c3-phone.webp",
+          "kind": "image",
+          "renderedWidth": 194,
+          "renderedHeight": 424,
+          "route": "/gallery"
+        }
+      ]
+    },
+    {
+      "path": "/media/home/about-photo.jpg",
+      "maxRenderedWidth": 260,
+      "maxRenderedHeight": 326,
+      "samples": [
+        {
+          "path": "/media/home/about-photo.jpg",
+          "kind": "image",
+          "renderedWidth": 260,
+          "renderedHeight": 326,
+          "route": "/"
+        }
+      ]
+    },
+    {
+      "path": "/media/home/coin-wheel.webp",
+      "maxRenderedWidth": 265,
+      "maxRenderedHeight": 265,
+      "samples": [
+        {
+          "path": "/media/home/coin-wheel.webp",
+          "kind": "image",
+          "renderedWidth": 265,
+          "renderedHeight": 265,
+          "route": "/"
+        }
+      ]
+    },
+    {
+      "path": "/media/home/cube.webp",
+      "maxRenderedWidth": 146,
+      "maxRenderedHeight": 146,
+      "samples": [
+        {
+          "path": "/media/home/cube.webp",
+          "kind": "image",
+          "renderedWidth": 146,
+          "renderedHeight": 146,
+          "route": "/"
+        }
+      ]
+    },
+    {
+      "path": "/media/home/mockup-path.webp",
+      "maxRenderedWidth": 168,
+      "maxRenderedHeight": 348,
+      "samples": [
+        {
+          "path": "/media/home/mockup-path.webp",
+          "kind": "image",
+          "renderedWidth": 168,
+          "renderedHeight": 348,
+          "route": "/"
+        }
+      ]
+    },
+    {
+      "path": "/media/home/mockup-red.webp",
+      "maxRenderedWidth": 168,
+      "maxRenderedHeight": 348,
+      "samples": [
+        {
+          "path": "/media/home/mockup-red.webp",
+          "kind": "image",
+          "renderedWidth": 168,
+          "renderedHeight": 348,
+          "route": "/"
+        }
+      ]
+    },
+    {
+      "path": "/media/home/quotes/quote-close-large.svg",
+      "maxRenderedWidth": 22,
+      "maxRenderedHeight": 30,
+      "samples": [
+        {
+          "path": "/media/home/quotes/quote-close-large.svg",
+          "kind": "image",
+          "renderedWidth": 22,
+          "renderedHeight": 30,
+          "route": "/"
+        }
+      ]
+    },
+    {
+      "path": "/media/home/quotes/quote-close-small.svg",
+      "maxRenderedWidth": 9,
+      "maxRenderedHeight": 12,
+      "samples": [
+        {
+          "path": "/media/home/quotes/quote-close-small.svg",
+          "kind": "image",
+          "renderedWidth": 9,
+          "renderedHeight": 12,
+          "route": "/"
+        },
+        {
+          "path": "/media/home/quotes/quote-close-small.svg",
+          "kind": "image",
+          "renderedWidth": 9,
+          "renderedHeight": 12,
+          "route": "/"
+        }
+      ]
+    },
+    {
+      "path": "/media/home/quotes/quote-open-large.svg",
+      "maxRenderedWidth": 27,
+      "maxRenderedHeight": 38,
+      "samples": [
+        {
+          "path": "/media/home/quotes/quote-open-large.svg",
+          "kind": "image",
+          "renderedWidth": 27,
+          "renderedHeight": 38,
+          "route": "/"
+        }
+      ]
+    },
+    {
+      "path": "/media/home/quotes/quote-open-small.svg",
+      "maxRenderedWidth": 12,
+      "maxRenderedHeight": 16,
+      "samples": [
+        {
+          "path": "/media/home/quotes/quote-open-small.svg",
+          "kind": "image",
+          "renderedWidth": 12,
+          "renderedHeight": 16,
+          "route": "/"
+        },
+        {
+          "path": "/media/home/quotes/quote-open-small.svg",
+          "kind": "image",
+          "renderedWidth": 12,
+          "renderedHeight": 16,
+          "route": "/"
+        }
+      ]
+    },
+    {
+      "path": "/media/home/ternimal.webp",
+      "maxRenderedWidth": 138,
+      "maxRenderedHeight": 138,
+      "samples": [
+        {
+          "path": "/media/home/ternimal.webp",
+          "kind": "image",
+          "renderedWidth": 138,
+          "renderedHeight": 138,
+          "route": "/"
+        }
+      ]
+    },
+    {
+      "path": "/media/icons/cases/case-card-arrow-left.svg",
+      "maxRenderedWidth": 78,
+      "maxRenderedHeight": 44,
+      "samples": [
+        {
+          "path": "/media/icons/cases/case-card-arrow-left.svg",
+          "kind": "image",
+          "renderedWidth": 78,
+          "renderedHeight": 44,
+          "route": "/"
+        },
+        {
+          "path": "/media/icons/cases/case-card-arrow-left.svg",
+          "kind": "image",
+          "renderedWidth": 78,
+          "renderedHeight": 44,
+          "route": "/cases"
+        }
+      ]
+    },
+    {
+      "path": "/media/icons/cases/case-card-arrow-right.svg",
+      "maxRenderedWidth": 78,
+      "maxRenderedHeight": 44,
+      "samples": [
+        {
+          "path": "/media/icons/cases/case-card-arrow-right.svg",
+          "kind": "image",
+          "renderedWidth": 78,
+          "renderedHeight": 44,
+          "route": "/"
+        },
+        {
+          "path": "/media/icons/cases/case-card-arrow-right.svg",
+          "kind": "image",
+          "renderedWidth": 78,
+          "renderedHeight": 44,
+          "route": "/cases"
+        }
+      ]
+    },
+    {
+      "path": "/media/motifs/motif-hourglass-totem.svg",
+      "maxRenderedWidth": 162,
+      "maxRenderedHeight": 162,
+      "samples": [
+        {
+          "path": "/media/motifs/motif-hourglass-totem.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 162,
+          "route": "/"
+        },
+        {
+          "path": "/media/motifs/motif-hourglass-totem.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 162,
+          "route": "/cases"
+        },
+        {
+          "path": "/media/motifs/motif-hourglass-totem.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 162,
+          "route": "/gallery"
+        },
+        {
+          "path": "/media/motifs/motif-hourglass-totem.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 162,
+          "route": "/fora"
+        },
+        {
+          "path": "/media/motifs/motif-hourglass-totem.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 162,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/motifs/motif-rounded-cross.svg",
+      "maxRenderedWidth": 162,
+      "maxRenderedHeight": 162,
+      "samples": [
+        {
+          "path": "/media/motifs/motif-rounded-cross.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 162,
+          "route": "/"
+        },
+        {
+          "path": "/media/motifs/motif-rounded-cross.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 162,
+          "route": "/cases"
+        },
+        {
+          "path": "/media/motifs/motif-rounded-cross.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 162,
+          "route": "/gallery"
+        },
+        {
+          "path": "/media/motifs/motif-rounded-cross.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 162,
+          "route": "/fora"
+        },
+        {
+          "path": "/media/motifs/motif-rounded-cross.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 162,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/motifs/motif-scallop-disc-20.svg",
+      "maxRenderedWidth": 162,
+      "maxRenderedHeight": 164,
+      "samples": [
+        {
+          "path": "/media/motifs/motif-scallop-disc-20.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 164,
+          "route": "/"
+        },
+        {
+          "path": "/media/motifs/motif-scallop-disc-20.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 164,
+          "route": "/cases"
+        },
+        {
+          "path": "/media/motifs/motif-scallop-disc-20.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 164,
+          "route": "/gallery"
+        },
+        {
+          "path": "/media/motifs/motif-scallop-disc-20.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 164,
+          "route": "/fora"
+        },
+        {
+          "path": "/media/motifs/motif-scallop-disc-20.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 164,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/motifs/motif-split-halfmoon.svg",
+      "maxRenderedWidth": 162,
+      "maxRenderedHeight": 162,
+      "samples": [
+        {
+          "path": "/media/motifs/motif-split-halfmoon.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 162,
+          "route": "/"
+        },
+        {
+          "path": "/media/motifs/motif-split-halfmoon.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 162,
+          "route": "/cases"
+        },
+        {
+          "path": "/media/motifs/motif-split-halfmoon.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 162,
+          "route": "/gallery"
+        },
+        {
+          "path": "/media/motifs/motif-split-halfmoon.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 162,
+          "route": "/fora"
+        },
+        {
+          "path": "/media/motifs/motif-split-halfmoon.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 162,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/motifs/motif-stack-orb-3-blue.svg",
+      "maxRenderedWidth": 300,
+      "maxRenderedHeight": 300,
+      "samples": [
+        {
+          "path": "/media/motifs/motif-stack-orb-3-blue.svg",
+          "kind": "image",
+          "renderedWidth": 300,
+          "renderedHeight": 300,
+          "route": "/"
+        },
+        {
+          "path": "/media/motifs/motif-stack-orb-3-blue.svg",
+          "kind": "image",
+          "renderedWidth": 300,
+          "renderedHeight": 300,
+          "route": "/cases"
+        },
+        {
+          "path": "/media/motifs/motif-stack-orb-3-blue.svg",
+          "kind": "image",
+          "renderedWidth": 300,
+          "renderedHeight": 300,
+          "route": "/gallery"
+        }
+      ]
+    },
+    {
+      "path": "/media/motifs/motif-stack-orb-3.svg",
+      "maxRenderedWidth": 162,
+      "maxRenderedHeight": 162,
+      "samples": [
+        {
+          "path": "/media/motifs/motif-stack-orb-3.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 162,
+          "route": "/"
+        },
+        {
+          "path": "/media/motifs/motif-stack-orb-3.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 162,
+          "route": "/cases"
+        },
+        {
+          "path": "/media/motifs/motif-stack-orb-3.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 162,
+          "route": "/gallery"
+        },
+        {
+          "path": "/media/motifs/motif-stack-orb-3.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 162,
+          "route": "/fora"
+        },
+        {
+          "path": "/media/motifs/motif-stack-orb-3.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 162,
+          "route": "/kissa"
+        }
+      ]
+    },
+    {
+      "path": "/media/motifs/motif-sunburst-rounded-12.svg",
+      "maxRenderedWidth": 162,
+      "maxRenderedHeight": 163,
+      "samples": [
+        {
+          "path": "/media/motifs/motif-sunburst-rounded-12.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 163,
+          "route": "/"
+        },
+        {
+          "path": "/media/motifs/motif-sunburst-rounded-12.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 163,
+          "route": "/"
+        },
+        {
+          "path": "/media/motifs/motif-sunburst-rounded-12.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 163,
+          "route": "/"
+        },
+        {
+          "path": "/media/motifs/motif-sunburst-rounded-12.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 163,
+          "route": "/cases"
+        },
+        {
+          "path": "/media/motifs/motif-sunburst-rounded-12.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 163,
+          "route": "/cases"
+        },
+        {
+          "path": "/media/motifs/motif-sunburst-rounded-12.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 163,
+          "route": "/cases"
+        },
+        {
+          "path": "/media/motifs/motif-sunburst-rounded-12.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 163,
+          "route": "/gallery"
+        },
+        {
+          "path": "/media/motifs/motif-sunburst-rounded-12.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 163,
+          "route": "/gallery"
+        },
+        {
+          "path": "/media/motifs/motif-sunburst-rounded-12.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 163,
+          "route": "/gallery"
+        },
+        {
+          "path": "/media/motifs/motif-sunburst-rounded-12.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 163,
+          "route": "/fora"
+        },
+        {
+          "path": "/media/motifs/motif-sunburst-rounded-12.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 163,
+          "route": "/fora"
+        },
+        {
+          "path": "/media/motifs/motif-sunburst-rounded-12.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 163,
+          "route": "/fora"
+        },
+        {
+          "path": "/media/motifs/motif-sunburst-rounded-12.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 163,
+          "route": "/kissa"
+        },
+        {
+          "path": "/media/motifs/motif-sunburst-rounded-12.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 163,
+          "route": "/kissa"
+        },
+        {
+          "path": "/media/motifs/motif-sunburst-rounded-12.svg",
+          "kind": "image",
+          "renderedWidth": 162,
+          "renderedHeight": 163,
+          "route": "/kissa"
+        }
+      ]
+    }
+  ]
+}
