@@ -1,28 +1,31 @@
 ---
 import QuantizedPerimeter from './QuantizedPerimeter.astro';
 import DeviceMockup from './DeviceMockup.astro';
-import foraIntroDeliverySrc from '../../assets/images/fora/fora-intro-delivery.png';
-import foraIntroCategorySrc from '../../assets/images/fora/fora-intro-category.png';
-import foraIntroMapSrc from '../../assets/images/fora/fora-intro-map.png';
-import kissaTerminalSrc from '../../assets/images/kissa/kissa-terminal.png';
-import kissaWelcomeSrc from '../../assets/images/kissa/kissa-welcome.png';
-import kissaTraySrc from '../../assets/images/kissa/kissa-tray.png';
 
 type IntroScreensVariant = 'phone' | 'tablet';
+type IntroScreenPosition = 'left' | 'center' | 'right';
+
+interface IntroScreenSource {
+  src: string;
+  alt?: string;
+}
 
 interface Props {
   variant?: IntroScreensVariant;
+  screens: readonly [IntroScreenSource, IntroScreenSource, IntroScreenSource];
   inViewPreset?: 'appear-v1';
   class?: string;
 }
 
 const {
   variant = 'phone',
+  screens,
   inViewPreset = 'appear-v1',
   class: className = '',
 } = Astro.props;
 
 const resolvedVariant: IntroScreensVariant = variant === 'tablet' ? 'tablet' : 'phone';
+const orderedPositions: IntroScreenPosition[] = ['left', 'center', 'right'];
 ---
 
 <QuantizedPerimeter
@@ -42,67 +45,41 @@ const resolvedVariant: IntroScreensVariant = variant === 'tablet' ? 'tablet' : '
   {
     resolvedVariant === 'phone' ? (
       <div class="fora-intro-screens-track fora-intro-screens-track--phone" aria-hidden="true">
-        <div class="fora-intro-screens-phone-item fora-intro-screens-phone-item--left">
-          <DeviceMockup
-            class="fora-intro-screens-device"
-            device="phone"
-            screenKind="image"
-            screenSrc={foraIntroDeliverySrc.src}
-            screenAlt=""
-          />
-        </div>
-
-        <div class="fora-intro-screens-phone-item fora-intro-screens-phone-item--center">
-          <DeviceMockup
-            class="fora-intro-screens-device"
-            device="phone"
-            screenKind="image"
-            screenSrc={foraIntroCategorySrc.src}
-            screenAlt=""
-          />
-        </div>
-
-        <div class="fora-intro-screens-phone-item fora-intro-screens-phone-item--right">
-          <DeviceMockup
-            class="fora-intro-screens-device"
-            device="phone"
-            screenKind="image"
-            screenSrc={foraIntroMapSrc.src}
-            screenAlt=""
-          />
-        </div>
+        {
+          screens.map((screen, index) => {
+            const position = orderedPositions[index] ?? 'center';
+            return (
+              <div class:list={['fora-intro-screens-phone-item', `fora-intro-screens-phone-item--${position}`]}>
+                <DeviceMockup
+                  class="fora-intro-screens-device"
+                  device="phone"
+                  screenKind="image"
+                  screenSrc={screen.src}
+                  screenAlt={screen.alt ?? ''}
+                />
+              </div>
+            );
+          })
+        }
       </div>
     ) : (
       <div class="fora-intro-screens-track fora-intro-screens-track--tablet" aria-hidden="true">
-        <div class="fora-intro-screens-tablet-item fora-intro-screens-tablet-item--left">
-          <DeviceMockup
-            class="fora-intro-screens-device"
-            device="tablet"
-            screenKind="image"
-            screenSrc={kissaTerminalSrc.src}
-            screenAlt=""
-          />
-        </div>
-
-        <div class="fora-intro-screens-tablet-item fora-intro-screens-tablet-item--center">
-          <DeviceMockup
-            class="fora-intro-screens-device"
-            device="tablet"
-            screenKind="image"
-            screenSrc={kissaWelcomeSrc.src}
-            screenAlt=""
-          />
-        </div>
-
-        <div class="fora-intro-screens-tablet-item fora-intro-screens-tablet-item--right">
-          <DeviceMockup
-            class="fora-intro-screens-device"
-            device="tablet"
-            screenKind="image"
-            screenSrc={kissaTraySrc.src}
-            screenAlt=""
-          />
-        </div>
+        {
+          screens.map((screen, index) => {
+            const position = orderedPositions[index] ?? 'center';
+            return (
+              <div class:list={['fora-intro-screens-tablet-item', `fora-intro-screens-tablet-item--${position}`]}>
+                <DeviceMockup
+                  class="fora-intro-screens-device"
+                  device="tablet"
+                  screenKind="image"
+                  screenSrc={screen.src}
+                  screenAlt={screen.alt ?? ''}
+                />
+              </div>
+            );
+          })
+        }
       </div>
     )
   }

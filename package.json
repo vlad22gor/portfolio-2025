@@ -6,8 +6,11 @@
     "node": ">=22.12.0"
   },
   "scripts": {
+    "generate:posters": "node scripts/generate-video-posters.mjs",
+    "predev": "npm run generate:posters",
     "dev": "astro dev",
     "dev:annotate": "PUBLIC_AGENTATION_ENABLED=true PUBLIC_AGENTATION_ENDPOINT=http://localhost:4747 astro dev",
+    "prebuild": "npm run generate:posters",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"

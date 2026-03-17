@@ -4,9 +4,6 @@ import QuantizedPerimeter from './QuantizedPerimeter.astro';
 
 import type { Case } from '../data/cases';
 
-import foraCaseCoverSrc from '../../assets/images/cases/fora cover.png';
-import kissaCaseCoverSrc from '../../assets/images/cases/kissa cover.png';
-
 interface Props {
   currentCase: Case;
   prevCase: Case;
@@ -16,19 +13,7 @@ interface Props {
 }
 
 const { currentCase, prevCase, nextCase, inViewPreset, class: className = '' } = Astro.props as Props;
-
-const caseCoverBySlug: Record<Case['slug'], { src: string; alt: string }> = {
-  fora: {
-    src: foraCaseCoverSrc.src,
-    alt: 'Fora case cover',
-  },
-  kissa: {
-    src: kissaCaseCoverSrc.src,
-    alt: 'Kissa case cover',
-  },
-};
-
-const resolvedCover = caseCoverBySlug[currentCase.slug] ?? {
+const resolvedCover = {
   src: currentCase.cardCover.src,
   alt: currentCase.cardCover.alt,
 };

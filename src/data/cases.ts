@@ -124,7 +124,7 @@ export const CASES: Case[] = [
       {
         kind: 'image',
         src: '/media/fora-hero.svg',
-        alt: 'Fora case visual placeholder',
+        alt: 'Fora case hero visual',
       },
     ],
   },
@@ -200,7 +200,7 @@ export const CASES: Case[] = [
       {
         kind: 'image',
         src: '/media/kissa-hero.svg',
-        alt: 'Kissa case visual placeholder',
+        alt: 'Kissa case hero visual',
       },
     ],
   },

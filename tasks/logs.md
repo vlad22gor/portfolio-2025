@@ -916,3 +916,13 @@
   Причина: после реэкспорта PNG изменились их bounding-box, а в коде оставались старые координаты/габариты, из-за чего визуал не совпадал с дизайном.
   Файлы: `src/components/ForaDesignSystemSection.astro`, `tasks/logs.md`.
   Проверки: `npm run build` — успешно; в компоненте синхронизированы значения из Figma (`summary: x0 y-11 w227 h287`, `horizontal: x460 y23 w390 h258`, `vertical: x93 y401 w310 h283`, `sheet: x426 y535 w264 h293`).
+
+- 2026-03-17: Закрыты пункты ревью по `/fora`: автопостеры, активный `cases` tab на case-страницах, ослабление slug-хардкода и чистка placeholder/typo.
+  Причина: устранить ручной post-production ассетов, убрать визуальные заглушки в feature cards и подготовить базу для масштабирования кейсов.
+  Файлы: `scripts/generate-video-posters.mjs`, `package.json`, `src/components/FeatureCard.astro`, `src/components/ForaFeatureCardsSection.astro`, `src/components/SiteHeader.astro`, `src/components/IntroScreensQuantizedPerimeterSection.astro`, `src/components/case-details/ForaCaseDetail.astro`, `src/pages/[slug].astro`, `src/components/CaseSwitcherSection.astro`, `src/data/cases.ts`, `public/media/fora/feature-cards/posters/Fora-Delivery.png`, `public/media/fora/feature-cards/posters/Fora-Cart.png`, `tasks/fora-hardening-scale-plan.md`, `tasks/logs.md`.
+  Проверки: `npm run generate:posters` — успешно (сканирование ограничено `.../flows/*.webm`, перегенерированы пустые/устаревшие постеры, для двух flow применён fallback `thumbnail`), `npm run build` — успешно; визуально проверено, что `Fora-Delivery.png` и `Fora-Cart.png` больше не пустые.
+
+- 2026-03-17: Актуализирован `tasks/fora-hardening-scale-plan.md` в формат `Done / Next`.
+  Причина: пользователь попросил привести план в соответствие с уже выполненными правками, чтобы убрать дубли и оставить только следующий этап.
+  Файлы: `tasks/fora-hardening-scale-plan.md`, `tasks/logs.md`.
+  Проверки: ручная валидация структуры плана — `Done` отражает реализованные пункты (автопостеры, active tab, декомпозиция, чистка), `Next` содержит только невыполненный backlog.

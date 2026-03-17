@@ -12,7 +12,6 @@ interface FeatureCardItem {
   mock: {
     kind: 'video';
     src: string;
-    poster: string;
   };
 }
 
@@ -30,7 +29,6 @@ const featureCards: FeatureCardItem[] = [
     mock: {
       kind: 'video',
       src: '/media/fora/feature-cards/flows/Fora-Delivery.webm',
-      poster: '/media/fora/feature-cards/posters/Fora-Delivery.png',
     },
   },
   {
@@ -46,7 +44,6 @@ const featureCards: FeatureCardItem[] = [
     mock: {
       kind: 'video',
       src: '/media/fora/feature-cards/flows/Fora-Catalogue.webm',
-      poster: '/media/fora/feature-cards/posters/Fora-Catalogue.png',
     },
   },
   {
@@ -54,7 +51,7 @@ const featureCards: FeatureCardItem[] = [
     device: 'phone',
     badges: [
       { label: 'Cart', tone: 'green' },
-      { label: 'Delivety Method', tone: 'gray' },
+      { label: 'Delivery Method', tone: 'gray' },
     ],
     title: 'Free delivery progress and payment options',
     description:
@@ -62,7 +59,6 @@ const featureCards: FeatureCardItem[] = [
     mock: {
       kind: 'video',
       src: '/media/fora/feature-cards/flows/Fora-Cart.webm',
-      poster: '/media/fora/feature-cards/posters/Fora-Cart.png',
     },
   },
 ];

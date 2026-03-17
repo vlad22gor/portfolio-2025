@@ -40,6 +40,9 @@ const {
 
 const resolvedMockSide: MockSide = mockSide === 'right' ? 'right' : 'left';
 const resolvedDevice: DeviceKind = device === 'tablet' ? 'tablet' : 'phone';
+const resolvePosterFromVideo = (videoSrc: string) =>
+  videoSrc.replace('/flows/', '/posters/').replace(/\.[^./?#]+(?=($|[?#]))/, '.png');
+const resolvedPoster = mock.poster ?? resolvePosterFromVideo(mock.src);
 const rootClassName = [
   'fora-feature-card',
   resolvedMockSide === 'right' ? 'fora-feature-card--mock-right' : 'fora-feature-card--mock-left',
@@ -68,7 +71,7 @@ const rootClassName = [
               device={resolvedDevice}
               screenKind={mock.kind}
               screenSrc={mock.src}
-              screenPoster={mock.poster}
+              screenPoster={resolvedPoster}
               screenAlt=""
             />
           </QuantizedPerimeter>
@@ -117,7 +120,7 @@ const rootClassName = [
               device={resolvedDevice}
               screenKind={mock.kind}
               screenSrc={mock.src}
-              screenPoster={mock.poster}
+              screenPoster={resolvedPoster}
               screenAlt=""
             />
           </QuantizedPerimeter>

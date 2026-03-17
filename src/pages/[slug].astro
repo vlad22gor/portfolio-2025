@@ -2,17 +2,8 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
-import QuantizedWave from '../components/QuantizedWave.astro';
-import IntroScreensQuantizedPerimeterSection from '../components/IntroScreensQuantizedPerimeterSection.astro';
-import CaseChallengeSection from '../components/CaseChallengeSection.astro';
-import CaseProcessSection from '../components/CaseProcessSection.astro';
-import ForaFeatureCardsSection from '../components/ForaFeatureCardsSection.astro';
-import ForaDesignSystemSection from '../components/ForaDesignSystemSection.astro';
-import TeamPhotoQuantizedPerimeterSection from '../components/TeamPhotoQuantizedPerimeterSection.astro';
-import CaseSwitcherSection from '../components/CaseSwitcherSection.astro';
-import foraChallengeScreenSrc from '../../assets/images/fora/fora-challenge-mock.png';
+import ForaCaseDetail from '../components/case-details/ForaCaseDetail.astro';
 import { CASES, getCaseBySlug } from '../data/cases';
-import { FORA_PROCESS_SECTION } from '../data/case-process/fora';
 
 export function getStaticPaths() {
   return CASES.map((item) => ({ params: { slug: item.slug } }));
@@ -29,72 +20,6 @@ const index = CASES.findIndex((item) => item.slug === current.slug);
 const prev = CASES[(index - 1 + CASES.length) % CASES.length];
 const next = CASES[(index + 1) % CASES.length];
 const isFora = current.slug === 'fora';
-
-const foraChallengeColumns: [string, string] = [
-  "The Ukrainian food retail market is highly competitive, so refreshing the app's design was essential. Outdated visuals and clunky flows made it difficult to attract and retain users",
-  'My challenge was to redesign the app to boost ratings in the stores (and increase installs), streamline ordering to grow average order value and the total number of orders',
-];
-
-const foraChallengeScreen = {
-  src: foraChallengeScreenSrc.src,
-  alt: 'Fora app challenge screen',
-};
-
-const foraChallengeArrowTopLeftSrc = '/media/cases/fora/challenge/arrow-top-left.svg';
-const foraChallengeArrowTopRightSrc = '/media/cases/fora/challenge/arrow-top-right.svg';
-const foraChallengeArrowBottomLeftSrc = '/media/cases/fora/challenge/arrow-bottom-left.svg';
-const foraChallengeArrowBottomRightSrc = '/media/cases/fora/challenge/arrow-bottom-right.svg';
-
-const foraChallengeNotes = [
-  {
-    id: 'cart-access',
-    text: 'the cart was hard to spot and access',
-    left: 564,
-    top: 146,
-    width: 184,
-    arrowSrc: foraChallengeArrowTopRightSrc,
-    arrowLeft: 536,
-    arrowTop: 51,
-    arrowWidth: 67,
-    arrowHeight: 85,
-  },
-  {
-    id: 'address-time-controls',
-    text: "Address and time weren't clearly recognized as controls",
-    left: 17,
-    top: 182,
-    width: 184,
-    arrowSrc: foraChallengeArrowTopLeftSrc,
-    arrowLeft: 187,
-    arrowTop: 118,
-    arrowWidth: 94,
-    arrowHeight: 102,
-  },
-  {
-    id: 'icons-shadows',
-    text: 'inconsistent icons and outdated shadows',
-    left: 72,
-    top: 389,
-    width: 184,
-    arrowSrc: foraChallengeArrowBottomLeftSrc,
-    arrowLeft: 149,
-    arrowTop: 446,
-    arrowWidth: 129,
-    arrowHeight: 32,
-  },
-  {
-    id: 'categories-graphics',
-    text: 'Categories lacked graphics, forcing users to read labels',
-    left: 621,
-    top: 325,
-    width: 184,
-    arrowSrc: foraChallengeArrowBottomRightSrc,
-    arrowLeft: 540,
-    arrowTop: 340,
-    arrowWidth: 67,
-    arrowHeight: 40,
-  },
-];
 ---
 
 <BaseLayout title={`${current.title} - Vlad Horovyy`} description={current.subtitle} canonicalPath={`/${current.slug}`}>
@@ -106,95 +31,7 @@ const foraChallengeNotes = [
   >
     {
       isFora ? (
-        <>
-          <section class="fora-intro-section" aria-labelledby="fora-intro-title" data-motion-inview="appear-v1">
-            <div class="fora-intro-top">
-              <h1 id="fora-intro-title" class="type-t2 fora-intro-title">
-                Fora app: driving 5% revenue increase and boosting app ratings from 3.0 to 4.6 over nine months
-              </h1>
-              <p class="type-body fora-intro-subtitle">
-                Fora is one of Ukraine’s largest grocery retailers, with 300+ stores. The company focuses on
-                convenient, friendly shopping experiences, both offline and online
-              </p>
-            </div>
-
-            <div class="fora-intro-bottom">
-              <div class="fora-intro-bottom-left">
-                <article class="fora-intro-column fora-intro-column--overview" aria-label="Overview">
-                  <div class="fora-intro-divider-wrap" aria-hidden="true">
-                    <QuantizedWave class="fora-intro-divider" size="medium" count={22} align="left" minCircles={1} />
-                  </div>
-                  <div class="fora-intro-text-group">
-                    <p class="type-description-large fora-intro-script">overview</p>
-                    <div class="fora-intro-rows">
-                      <p class="type-body fora-intro-row">
-                        <span class="fora-intro-row-label">role:</span>
-                        <span class="fora-intro-row-value">product designer</span>
-                      </p>
-                      <p class="type-body fora-intro-row">
-                        <span class="fora-intro-row-label">team:</span>
-                        <span class="fora-intro-row-value">4 front, 2 back, po, pm, ba, 2 qa</span>
-                      </p>
-                      <p class="type-body fora-intro-row">
-                        <span class="fora-intro-row-label">platform:</span>
-                        <span class="fora-intro-row-value">iOS and Android</span>
-                      </p>
-                    </div>
-                  </div>
-                </article>
-
-                <article class="fora-intro-column fora-intro-column--scope" aria-label="What I worked on">
-                  <div class="fora-intro-divider-wrap" aria-hidden="true">
-                    <QuantizedWave class="fora-intro-divider" size="medium" count={10} align="left" minCircles={1} />
-                  </div>
-                  <div class="fora-intro-text-group">
-                    <p class="type-description-large fora-intro-script">what I worked on</p>
-                    <div class="fora-intro-lines">
-                      <p class="type-body fora-intro-line">app redesign</p>
-                      <p class="type-body fora-intro-line">3d graphics and animations</p>
-                      <p class="type-body fora-intro-line">design system development</p>
-                    </div>
-                  </div>
-                </article>
-              </div>
-
-              <article class="fora-intro-column fora-intro-column--results" aria-label="Results">
-                <div class="fora-intro-divider-wrap" aria-hidden="true">
-                  <QuantizedWave class="fora-intro-divider" size="medium" count={22} align="left" minCircles={1} />
-                </div>
-                <div class="fora-intro-text-group">
-                  <p class="type-description-large fora-intro-script">results</p>
-                  <div class="fora-intro-lines">
-                    <p class="type-body fora-intro-line">increased the App Store and Google Play rating from 3.0 to 4.6</p>
-                    <p class="type-body fora-intro-line">increased company revenue by 5%</p>
-                    <p class="type-body fora-intro-line">increased orders by 15%</p>
-                  </div>
-                </div>
-              </article>
-            </div>
-          </section>
-
-          <IntroScreensQuantizedPerimeterSection variant="phone" />
-          <CaseChallengeSection
-            class="fora-case-challenge"
-            title="challenge"
-            columns={foraChallengeColumns}
-            screen={foraChallengeScreen}
-            notes={foraChallengeNotes}
-            inViewPreset="appear-v1"
-          />
-          <CaseProcessSection {...FORA_PROCESS_SECTION} inViewPreset="appear-v1" />
-          <ForaFeatureCardsSection />
-          <ForaDesignSystemSection />
-          <TeamPhotoQuantizedPerimeterSection />
-          <CaseSwitcherSection
-            class="fora-case-switcher"
-            currentCase={current}
-            prevCase={prev}
-            nextCase={next}
-            inViewPreset="appear-v1"
-          />
-        </>
+        <ForaCaseDetail currentCase={current} prevCase={prev} nextCase={next} />
       ) : (
         <>
           <section class="section-stack">

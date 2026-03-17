@@ -1,5 +1,6 @@
 ---
 import QuantizedWave from './QuantizedWave.astro';
+import { CASES } from '../data/cases';
 
 interface Props {
   headerWaveVariant?: 'classic' | 'wave-rail';
@@ -11,18 +12,18 @@ const links = [
   { id: 'gallery', href: '/gallery', label: 'gallery', waveCount: 8 },
   { id: 'preview', href: '/preview', label: 'preview', waveCount: 8 },
 ];
+const casePaths = ['/cases', ...CASES.map((item) => `/${item.slug}`)];
 
 const pathname = Astro.url.pathname;
 const normalizedPath =
   pathname.length > 1 && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
-const activeId =
-  normalizedPath === '/cases'
-    ? 'cases'
-    : normalizedPath === '/gallery'
-      ? 'gallery'
-      : normalizedPath === '/preview'
-        ? 'preview'
-        : 'home';
+const activeId = casePaths.includes(normalizedPath)
+  ? 'cases'
+  : normalizedPath === '/gallery'
+    ? 'gallery'
+    : normalizedPath === '/preview'
+      ? 'preview'
+      : 'home';
 const rawHeaderWaveVariant =
   Astro.props.headerWaveVariant ?? import.meta.env.PUBLIC_HEADER_WAVE_VARIANT ?? 'wave-rail';
 const headerWaveVariant = rawHeaderWaveVariant === 'wave-rail' ? 'wave-rail' : 'classic';
@@ -37,6 +38,7 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
         data-wave-variant={headerWaveVariant}
         data-wave-rail-ready="false"
         data-wave-active-id={activeId}
+        data-case-paths={JSON.stringify(casePaths)}
         style="--wave-rail-height: 10px; --wave-segment-x: 0px; --wave-segment-width: 0px; --wave-rail-base-offset: -4; --wave-rail-hover-offset: 0;"
       >
         <ul class="site-nav-list">
@@ -128,11 +130,29 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
       return pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
     };
 
+    const parseCasePaths = (track) => {
+      const raw = track?.dataset.casePaths;
+      if (!raw) {
+        return ['/cases'];
+      }
+
+      try {
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) {
+          return ['/cases'];
+        }
+        return parsed.map((value) => normalizePath(String(value)));
+      } catch {
+        return ['/cases'];
+      }
+    };
+
     const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
-    const resolveActiveId = (pathname) => {
+    const resolveActiveId = (pathname, track) => {
       const normalized = normalizePath(pathname);
-      if (normalized === '/cases') {
+      const casePaths = parseCasePaths(track);
+      if (casePaths.includes(normalized)) {
         return 'cases';
       }
       if (normalized === '/gallery') {
@@ -225,7 +245,7 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
           : readTrackVariable(track, '--wave-segment-width', targetGeometry.width);
 
       if (!(currentWidth > 0)) {
-        const activeId = track.dataset.waveActiveId || state.activeId || resolveActiveId(window.location.pathname);
+        const activeId = track.dataset.waveActiveId || state.activeId || resolveActiveId(window.location.pathname, track);
         const activeButton = track.querySelector(`.header-button[data-nav-id="${activeId}"]`);
         const activeGeometry = resolveButtonGeometry(track, activeButton);
         if (activeGeometry) {
@@ -766,7 +786,8 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
         return;
       }
 
-      const activeId = resolveActiveId(window.location.pathname);
+      const primaryTrack = document.querySelector('.site-nav-track');
+      const activeId = resolveActiveId(window.location.pathname, primaryTrack);
       const tracks = new Set();
 
       buttons.forEach((button) => {
