@@ -60,7 +60,7 @@ export const CASES: Case[] = [
     tags: ['Redesign', 'Mobile App', 'Product Design'],
     coverSide: 'left',
     cardCover: {
-      src: '/media/cases/fora-cover.png',
+      src: '/media/cases/fora/card/cover.png',
       alt: 'Fora case card cover',
     },
     cardHover: {
@@ -69,7 +69,7 @@ export const CASES: Case[] = [
       arrowDirection: 'right',
       assets: [
         {
-          src: '/media/cases/fora-delivery-time.png',
+          src: '/media/cases/fora/card/delivery-time.png',
           alt: 'Fora delivery time preview',
           targetX: -149,
           targetY: -75,
@@ -79,7 +79,7 @@ export const CASES: Case[] = [
           zIndex: 3,
         },
         {
-          src: '/media/cases/fora-summary.png',
+          src: '/media/cases/fora/card/summary.png',
           alt: 'Fora summary preview',
           targetX: -148,
           targetY: 143,
@@ -123,7 +123,7 @@ export const CASES: Case[] = [
     media: [
       {
         kind: 'image',
-        src: '/media/fora-hero.svg',
+        src: '/media/cases/fora/hero/hero.svg',
         alt: 'Fora case hero visual',
       },
     ],
@@ -136,7 +136,7 @@ export const CASES: Case[] = [
     tags: ['Redesign', 'Startup', 'AI'],
     coverSide: 'right',
     cardCover: {
-      src: '/media/cases/kissa-cover.png',
+      src: '/media/cases/kissa/card/cover.png',
       alt: 'Kissa case card cover',
     },
     cardHover: {
@@ -145,7 +145,7 @@ export const CASES: Case[] = [
       arrowDirection: 'left',
       assets: [
         {
-          src: '/media/cases/kissa-terminal.png',
+          src: '/media/cases/kissa/card/terminal.png',
           alt: 'Kissa terminal detail',
           targetX: 704.1,
           targetY: -110,
@@ -155,7 +155,7 @@ export const CASES: Case[] = [
           zIndex: 3,
         },
         {
-          src: '/media/cases/kissa-coin-wheel.png',
+          src: '/media/cases/kissa/card/coin-wheel.png',
           alt: 'Kissa coin wheel detail',
           targetX: 666,
           targetY: 139.14,
@@ -199,7 +199,7 @@ export const CASES: Case[] = [
     media: [
       {
         kind: 'image',
-        src: '/media/kissa-hero.svg',
+        src: '/media/cases/kissa/hero/hero.svg',
         alt: 'Kissa case hero visual',
       },
     ],

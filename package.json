@@ -7,12 +7,14 @@
   },
   "scripts": {
     "generate:posters": "node scripts/generate-video-posters.mjs",
+    "verify:posters": "node scripts/verify-video-posters.mjs",
     "predev": "npm run generate:posters",
     "dev": "astro dev",
     "dev:annotate": "PUBLIC_AGENTATION_ENABLED=true PUBLIC_AGENTATION_ENDPOINT=http://localhost:4747 astro dev",
     "prebuild": "npm run generate:posters",
     "build": "astro build",
     "preview": "astro preview",
+    "test:smoke": "playwright test",
     "astro": "astro"
   },
   "dependencies": {
@@ -24,5 +26,8 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "tailwindcss": "^4.2.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
   }
 }

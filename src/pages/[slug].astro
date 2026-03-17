@@ -2,8 +2,10 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
-import ForaCaseDetail from '../components/case-details/ForaCaseDetail.astro';
+import CaseSwitcherSection from '../components/CaseSwitcherSection.astro';
+import CaseDetailSections from '../components/case-details/CaseDetailSections.astro';
 import { CASES, getCaseBySlug } from '../data/cases';
+import { getCaseDetailConfig } from '../data/case-details';
 
 export function getStaticPaths() {
   return CASES.map((item) => ({ params: { slug: item.slug } }));
@@ -19,19 +21,19 @@ if (!current) {
 const index = CASES.findIndex((item) => item.slug === current.slug);
 const prev = CASES[(index - 1 + CASES.length) % CASES.length];
 const next = CASES[(index + 1) % CASES.length];
-const isFora = current.slug === 'fora';
+const detailConfig = getCaseDetailConfig(current.slug);
 ---
 
 <BaseLayout title={`${current.title} - Vlad Horovyy`} description={current.subtitle} canonicalPath={`/${current.slug}`}>
   <SiteHeader />
   <main
     id="content"
-    class:list={['page-shell', isFora && 'page-shell--case-detail', isFora && 'page-shell--fora']}
+    class:list={['page-shell', ...(detailConfig?.pageShellClasses ?? [])]}
     transition:name="page-content"
   >
     {
-      isFora ? (
-        <ForaCaseDetail currentCase={current} prevCase={prev} nextCase={next} />
+      detailConfig ? (
+        <CaseDetailSections config={detailConfig} currentCase={current} prevCase={prev} nextCase={next} />
       ) : (
         <>
           <section class="section-stack">
@@ -74,6 +76,8 @@ const isFora = current.slug === 'fora';
             <a href="/cases">All cases</a>
             <a href={`/${next.slug}`}>Next case: {next.slug}</a>
           </nav>
+
+          <CaseSwitcherSection currentCase={current} prevCase={prev} nextCase={next} inViewPreset="appear-v1" />
         </>
       )
     }

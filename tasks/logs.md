@@ -926,3 +926,17 @@
   Причина: пользователь попросил привести план в соответствие с уже выполненными правками, чтобы убрать дубли и оставить только следующий этап.
   Файлы: `tasks/fora-hardening-scale-plan.md`, `tasks/logs.md`.
   Проверки: ручная валидация структуры плана — `Done` отражает реализованные пункты (автопостеры, active tab, декомпозиция, чистка), `Next` содержит только невыполненный backlog.
+
+- 2026-03-17: Закрыт full-pass `N1–N4` по hardening/scale архитектуры case-detail страниц (`/fora`, `/kissa`).
+  Причина: выполнить согласованный план целиком — guardrails медиа, data-driven detail, унификация ассетов и CI smoke-контур.
+  Файлы:
+  `.github/workflows/deploy.yml`, `README.md`, `package.json`, `package-lock.json`, `playwright.config.ts`, `tests/smoke/case-details.spec.ts`, `scripts/verify-video-posters.mjs`, `src/data/case-details/types.ts`, `src/data/case-details/fora.ts`, `src/data/case-details/index.ts`, `src/components/case-details/CaseDetailIntroSection.astro`, `src/components/case-details/CaseDetailSections.astro`, `src/pages/[slug].astro`, `src/data/cases.ts`, `src/components/ForaFeatureCardsSection.astro`, `src/components/ForaDesignSystemSection.astro`, `src/components/TeamPhotoQuantizedPerimeterSection.astro`, `src/components/case-details/ForaCaseDetail.astro` (удалён), `public/media/cases/fora/**`, `public/media/cases/kissa/**`, legacy-файлы `public/media/fora*`, `public/media/kissa-hero.svg`, `public/media/cases/*-cover|*-summary|*-terminal|*-coin-wheel` (удалены/перенесены).
+  Проверки:
+  `npm run verify:posters` — успешно (`3` flow/poster пары валидны по пути, размеру и PNG-метаданным);
+  `npm run build` — успешно (сгенерированы все роуты, включая `/fora` и `/kissa`);
+  `npm run test:smoke` — успешно (`2/2` теста: `/fora` key sections + active `cases`, `/kissa` fallback + nav + switcher).
+
+- 2026-03-17: Обновлён `tasks/fora-hardening-scale-plan.md` после завершения этапа `N1–N4`.
+  Причина: зафиксировать фактический статус (перевод блока `Next` в `Done`, добавить follow-up без смешения с закрытым этапом).
+  Файлы: `tasks/fora-hardening-scale-plan.md`, `tasks/logs.md`.
+  Проверки: ручная сверка структуры — отражены реализованные пункты `N1`, `N2`, `N3`, `N4` и текущие `Exit criteria`.

@@ -1,21 +1,13 @@
 ---
 import FeatureCard from './FeatureCard.astro';
+import type { CaseFeatureCardItem } from '../data/case-details/types';
 
-type BadgeTone = 'blue' | 'gray' | 'orange' | 'green';
-
-interface FeatureCardItem {
-  mockSide: 'left' | 'right';
-  device: 'phone' | 'tablet';
-  badges: Array<{ label: string; tone: BadgeTone }>;
-  title: string;
-  description: string;
-  mock: {
-    kind: 'video';
-    src: string;
-  };
+interface Props {
+  cards?: CaseFeatureCardItem[];
+  class?: string;
 }
 
-const featureCards: FeatureCardItem[] = [
+const defaultFeatureCards: CaseFeatureCardItem[] = [
   {
     mockSide: 'left',
     device: 'phone',
@@ -28,7 +20,7 @@ const featureCards: FeatureCardItem[] = [
       'Images on category cards made discovery instant. Recent address selection and quick time slots reduced selection time by 50%',
     mock: {
       kind: 'video',
-      src: '/media/fora/feature-cards/flows/Fora-Delivery.webm',
+      src: '/media/cases/fora/feature-cards/flows/Fora-Delivery.webm',
     },
   },
   {
@@ -43,7 +35,7 @@ const featureCards: FeatureCardItem[] = [
       'Subcategory and sub-subcategory filters let users narrow down instantly which cut product search time by 30%',
     mock: {
       kind: 'video',
-      src: '/media/fora/feature-cards/flows/Fora-Catalogue.webm',
+      src: '/media/cases/fora/feature-cards/flows/Fora-Catalogue.webm',
     },
   },
   {
@@ -58,12 +50,15 @@ const featureCards: FeatureCardItem[] = [
       'Free delivery progress bar increased average order value by 10%. Apple and Google Pay integrations lifted order volume by 15%',
     mock: {
       kind: 'video',
-      src: '/media/fora/feature-cards/flows/Fora-Cart.webm',
+      src: '/media/cases/fora/feature-cards/flows/Fora-Cart.webm',
     },
   },
 ];
+
+const { cards = defaultFeatureCards, class: className = '' } = Astro.props as Props;
+const rootClassName = ['fora-feature-cards-section', className].filter(Boolean).join(' ');
 ---
 
-<section class="fora-feature-cards-section" aria-label="Fora feature cards">
-  {featureCards.map((card) => <FeatureCard {...card} />)}
+<section class={rootClassName} aria-label="Fora feature cards">
+  {cards.map((card) => <FeatureCard {...card} />)}
 </section>

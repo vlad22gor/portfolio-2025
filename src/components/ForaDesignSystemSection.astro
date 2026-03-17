@@ -1,43 +1,56 @@
 ---
-const designSystemSummarySrc = '/media/cases/fora/design-system/design-system-image-summary.png';
-const designSystemHorizontalCardsSrc = '/media/cases/fora/design-system/design-system-image-horizontal-cards.png';
-const designSystemVerticalCardsSrc = '/media/cases/fora/design-system/design-system-image-vertical-cards.png';
-const designSystemSheetSrc = '/media/cases/fora/design-system/design-system-image-sheet.png';
-const designSystemArrowTopSrc = '/media/cases/fora/design-system/arrow-top.svg';
-const designSystemArrowBottomLeftSrc = '/media/cases/fora/design-system/arrow-bottom-left.svg';
-const designSystemArrowBottomRightSrc = '/media/cases/fora/design-system/arrow-bottom-right.svg';
+import type { CaseDetailDesignSystemData, InViewPreset } from '../data/case-details/types';
+
+interface Props {
+  data?: CaseDetailDesignSystemData;
+  inViewPreset?: InViewPreset;
+  class?: string;
+}
+
+const defaultData: CaseDetailDesignSystemData = {
+  heading: 'app design system',
+  copyPaletteTitle: 'color palette',
+  copyPaletteBody: 'Unified the color palette across platforms, enhancing brand consistency',
+  copyStylesTitle: 'unified styles',
+  copyStylesBody: 'Synced Figma and code styles with devs, reducing UI bugs by 40%',
+  copyLibraryTitle: 'component library',
+  copyLibraryBody: '20+ standardized components cut new feature time to market by 25%',
+  summaryImageSrc: '/media/cases/fora/design-system/design-system-image-summary.png',
+  horizontalImageSrc: '/media/cases/fora/design-system/design-system-image-horizontal-cards.png',
+  verticalImageSrc: '/media/cases/fora/design-system/design-system-image-vertical-cards.png',
+  sheetImageSrc: '/media/cases/fora/design-system/design-system-image-sheet.png',
+  arrowTopSrc: '/media/cases/fora/design-system/arrow-top.svg',
+  arrowBottomLeftSrc: '/media/cases/fora/design-system/arrow-bottom-left.svg',
+  arrowBottomRightSrc: '/media/cases/fora/design-system/arrow-bottom-right.svg',
+};
+
+const { data = defaultData, inViewPreset = 'appear-v1', class: className = '' } = Astro.props as Props;
+const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefined;
+const rootClassName = ['fora-design-system-section', className].filter(Boolean).join(' ');
 ---
 
-<section
-  class="fora-design-system-section"
-  aria-labelledby="fora-design-system-title"
-  data-motion-inview="appear-v1"
->
+<section class={rootClassName} aria-labelledby="fora-design-system-title" data-motion-inview={resolvedInViewPreset}>
   <div class="fora-design-system-scene">
-    <h2 id="fora-design-system-title" class="type-t1-tight fora-design-system-heading">app design system</h2>
+    <h2 id="fora-design-system-title" class="type-t1-tight fora-design-system-heading">{data.heading}</h2>
 
     <article class="fora-design-system-copy fora-design-system-copy--palette">
-      <p class="fora-design-system-copy-title">color palette</p>
-      <p class="type-body fora-design-system-copy-body">
-        Unified the color palette across platforms, enhancing brand consistency
-      </p>
+      <p class="fora-design-system-copy-title">{data.copyPaletteTitle}</p>
+      <p class="type-body fora-design-system-copy-body">{data.copyPaletteBody}</p>
     </article>
 
     <article class="fora-design-system-copy fora-design-system-copy--styles">
-      <p class="fora-design-system-copy-title">unified styles</p>
-      <p class="type-body fora-design-system-copy-body">Synced Figma and code styles with devs, reducing UI bugs by 40%</p>
+      <p class="fora-design-system-copy-title">{data.copyStylesTitle}</p>
+      <p class="type-body fora-design-system-copy-body">{data.copyStylesBody}</p>
     </article>
 
     <article class="fora-design-system-copy fora-design-system-copy--library">
-      <p class="fora-design-system-copy-title">component library</p>
-      <p class="type-body fora-design-system-copy-body">
-        20+ standardized components cut new feature time to market by 25%
-      </p>
+      <p class="fora-design-system-copy-title">{data.copyLibraryTitle}</p>
+      <p class="type-body fora-design-system-copy-body">{data.copyLibraryBody}</p>
     </article>
 
     <img
       class="fora-design-system-image fora-design-system-image--summary"
-      src={designSystemSummarySrc}
+      src={data.summaryImageSrc}
       alt=""
       aria-hidden="true"
       loading="lazy"
@@ -48,7 +61,7 @@ const designSystemArrowBottomRightSrc = '/media/cases/fora/design-system/arrow-b
 
     <img
       class="fora-design-system-image fora-design-system-image--horizontal"
-      src={designSystemHorizontalCardsSrc}
+      src={data.horizontalImageSrc}
       alt=""
       aria-hidden="true"
       loading="lazy"
@@ -59,7 +72,7 @@ const designSystemArrowBottomRightSrc = '/media/cases/fora/design-system/arrow-b
 
     <img
       class="fora-design-system-image fora-design-system-image--vertical"
-      src={designSystemVerticalCardsSrc}
+      src={data.verticalImageSrc}
       alt=""
       aria-hidden="true"
       loading="lazy"
@@ -70,7 +83,7 @@ const designSystemArrowBottomRightSrc = '/media/cases/fora/design-system/arrow-b
 
     <img
       class="fora-design-system-image fora-design-system-image--sheet"
-      src={designSystemSheetSrc}
+      src={data.sheetImageSrc}
       alt=""
       aria-hidden="true"
       loading="lazy"
@@ -81,7 +94,7 @@ const designSystemArrowBottomRightSrc = '/media/cases/fora/design-system/arrow-b
 
     <img
       class="fora-design-system-arrow fora-design-system-arrow--top"
-      src={designSystemArrowTopSrc}
+      src={data.arrowTopSrc}
       alt=""
       aria-hidden="true"
       loading="lazy"
@@ -92,7 +105,7 @@ const designSystemArrowBottomRightSrc = '/media/cases/fora/design-system/arrow-b
 
     <img
       class="fora-design-system-arrow fora-design-system-arrow--bottom-left"
-      src={designSystemArrowBottomLeftSrc}
+      src={data.arrowBottomLeftSrc}
       alt=""
       aria-hidden="true"
       loading="lazy"
@@ -103,7 +116,7 @@ const designSystemArrowBottomRightSrc = '/media/cases/fora/design-system/arrow-b
 
     <img
       class="fora-design-system-arrow fora-design-system-arrow--bottom-right"
-      src={designSystemArrowBottomRightSrc}
+      src={data.arrowBottomRightSrc}
       alt=""
       aria-hidden="true"
       loading="lazy"

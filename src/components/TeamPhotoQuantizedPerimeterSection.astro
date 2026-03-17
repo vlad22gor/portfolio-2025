@@ -1,18 +1,32 @@
 ---
 import QuantizedPerimeter from './QuantizedPerimeter.astro';
-import teamPhotoSrc from '../../assets/images/fora/team photo.png';
-import teamPhotoHeartLeftSrc from '../../assets/custom icons/team photo-heart left.svg?url';
-import teamPhotoHeartRightSrc from '../../assets/custom icons/team photo-heart right.svg?url';
+import type { InViewPreset } from '../data/case-details/types';
 
 interface Props {
   class?: string;
+  inViewPreset?: InViewPreset;
+  photoSrc?: string;
+  photoAlt?: string;
+  caption?: string;
+  heartLeftSrc?: string;
+  heartRightSrc?: string;
 }
 
-const { class: className = '' } = Astro.props as Props;
+const {
+  class: className = '',
+  inViewPreset = 'appear-v1',
+  photoSrc = '/media/cases/fora/team-photo/team-photo.png',
+  photoAlt = 'Fora team photo',
+  caption = 'finally the project turned for us into a shared adventure we truly enjoyed',
+  heartLeftSrc = '/media/cases/fora/team-photo/heart-left.svg',
+  heartRightSrc = '/media/cases/fora/team-photo/heart-right.svg',
+} = Astro.props as Props;
+
 const rootClassName = ['fora-team-photo-section', className].filter(Boolean).join(' ');
+const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefined;
 ---
 
-<section class={rootClassName} aria-label="Fora team photo section" data-motion-inview="appear-v1">
+<section class={rootClassName} aria-label="Fora team photo section" data-motion-inview={resolvedInViewPreset}>
   <QuantizedPerimeter
     class="fora-team-photo-surface"
     shape="rectangle"
@@ -23,16 +37,14 @@ const rootClassName = ['fora-team-photo-section', className].filter(Boolean).joi
     clipContentToShape={true}
     label="Fora team photo"
   >
-    <img class="fora-team-photo-image" src={teamPhotoSrc.src} alt="Fora team photo" loading="lazy" decoding="async" />
+    <img class="fora-team-photo-image" src={photoSrc} alt={photoAlt} loading="lazy" decoding="async" />
   </QuantizedPerimeter>
 
-  <p class="type-description-medium fora-team-photo-caption">
-    finally the project turned for us into a shared adventure we truly enjoyed
-  </p>
+  <p class="type-description-medium fora-team-photo-caption">{caption}</p>
 
   <img
     class="fora-team-photo-heart fora-team-photo-heart--right"
-    src={teamPhotoHeartRightSrc}
+    src={heartRightSrc}
     alt=""
     aria-hidden="true"
     loading="lazy"
@@ -43,7 +55,7 @@ const rootClassName = ['fora-team-photo-section', className].filter(Boolean).joi
 
   <img
     class="fora-team-photo-heart fora-team-photo-heart--left"
-    src={teamPhotoHeartLeftSrc}
+    src={heartLeftSrc}
     alt=""
     aria-hidden="true"
     loading="lazy"

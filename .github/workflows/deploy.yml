@@ -30,8 +30,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Verify video posters
+        run: npm run verify:posters
+
       - name: Build
         run: npm run build
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run smoke tests
+        run: npm run test:smoke
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

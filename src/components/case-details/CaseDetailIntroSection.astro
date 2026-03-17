@@ -1,0 +1,88 @@
+---
+import QuantizedWave from '../QuantizedWave.astro';
+import type { CaseDetailIntroData, InViewPreset } from '../../data/case-details/types';
+
+interface Props {
+  data: CaseDetailIntroData;
+  inViewPreset?: InViewPreset;
+}
+
+const { data, inViewPreset } = Astro.props as Props;
+const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefined;
+---
+
+<section class="fora-intro-section" aria-labelledby="fora-intro-title" data-motion-inview={resolvedInViewPreset}>
+  <div class="fora-intro-top">
+    <h1 id="fora-intro-title" class="type-t2 fora-intro-title">
+      {data.title}
+    </h1>
+    <p class="type-body fora-intro-subtitle">{data.subtitle}</p>
+  </div>
+
+  <div class="fora-intro-bottom">
+    <div class="fora-intro-bottom-left">
+      <article class="fora-intro-column fora-intro-column--overview" aria-label="Overview">
+        <div class="fora-intro-divider-wrap" aria-hidden="true">
+          <QuantizedWave
+            class="fora-intro-divider"
+            size="medium"
+            count={data.dividerCounts.overview}
+            align="left"
+            minCircles={1}
+          />
+        </div>
+        <div class="fora-intro-text-group">
+          <p class="type-description-large fora-intro-script">{data.overviewLabel}</p>
+          <div class="fora-intro-rows">
+            {data.overviewRows.map((row) => (
+              <p class="type-body fora-intro-row">
+                <span class="fora-intro-row-label">{row.label}</span>
+                <span class="fora-intro-row-value">{row.value}</span>
+              </p>
+            ))}
+          </div>
+        </div>
+      </article>
+
+      <article class="fora-intro-column fora-intro-column--scope" aria-label="What I worked on">
+        <div class="fora-intro-divider-wrap" aria-hidden="true">
+          <QuantizedWave
+            class="fora-intro-divider"
+            size="medium"
+            count={data.dividerCounts.scope}
+            align="left"
+            minCircles={1}
+          />
+        </div>
+        <div class="fora-intro-text-group">
+          <p class="type-description-large fora-intro-script">{data.scopeLabel}</p>
+          <div class="fora-intro-lines">
+            {data.scopeLines.map((line) => (
+              <p class="type-body fora-intro-line">{line}</p>
+            ))}
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <article class="fora-intro-column fora-intro-column--results" aria-label="Results">
+      <div class="fora-intro-divider-wrap" aria-hidden="true">
+        <QuantizedWave
+          class="fora-intro-divider"
+          size="medium"
+          count={data.dividerCounts.results}
+          align="left"
+          minCircles={1}
+        />
+      </div>
+      <div class="fora-intro-text-group">
+        <p class="type-description-large fora-intro-script">{data.resultsLabel}</p>
+        <div class="fora-intro-lines">
+          {data.resultLines.map((line) => (
+            <p class="type-body fora-intro-line">{line}</p>
+          ))}
+        </div>
+      </div>
+    </article>
+  </div>
+</section>

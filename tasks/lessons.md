@@ -68,3 +68,6 @@
 - Для ровной scallop-обводки в `CaseCard` использовать `QuantizedPerimeter outlineMode='geometric'` + `outlinePlacement='outside'`: внешний контур строится как doubled-stroke с inverse SVG-mask; `alpha`-outline оставлять fallback для неподдержанных паттернов/форм.
 - Для `Badge` (`.case-badge`) держать фиксированную высоту `22px` через `height` + `box-sizing: border-box`; визуальную Y-компенсацию задавать `padding-top: 1px`, `padding-bottom: 0`.
 - Для PNG-ассетов из Figma с тенями перед импортом в runtime проверять, что экспорт не деформирует визуальный масштаб (частая причина — некорректный bounds/обрезка при сохранении); после реэкспорта обновлять только runtime-копии в `public/media/...`, не подключая `assets/` напрямую.
+- Для case-runtime ассетов использовать единый canonical namespace: `public/media/cases/<slug>/...`; смешанные пути (`/media/<slug>-*.svg`, `/media/fora/...`) не использовать.
+- Для detail-страниц кейсов держать data-driven композицию в `src/data/case-details/<slug>.ts` и рендерить через общий `CaseDetailSections`; для кейсов без конфига оставлять fallback-ветку в `src/pages/[slug].astro`.
+- Для video flow ассетов в CI обязательно запускать `npm run verify:posters` (валидирует пары `flows/*.webm -> posters/*.png`, размер и PNG-метаданные).

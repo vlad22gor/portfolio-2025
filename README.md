@@ -20,6 +20,8 @@ npm install
 npm run dev
 ```
 
+`npm run dev` автоматически запускает генерацию постеров из `flows/*.webm` в `posters/*.png`.
+
 ### Agentation (dev-only)
 ```bash
 # 1) Start Agentation MCP server in another terminal
@@ -42,6 +44,21 @@ npm run build
 npm run preview
 ```
 
+## Media poster pipeline
+- Generate (локально / predev / prebuild):
+```bash
+npm run generate:posters
+```
+- Verify (CI gate):
+```bash
+npm run verify:posters
+```
+
+## Smoke tests
+```bash
+npm run test:smoke
+```
+
 ## Deployment
 - Workflow: `.github/workflows/deploy.yml`
 - Branch trigger: `main`
@@ -56,6 +73,10 @@ npm run preview
 Case content is centralized in `src/data/cases.ts` and reused by:
 - case cards
 - dynamic case pages (`src/pages/[slug].astro`)
+
+Case detail composition (data-driven) lives in:
+- `src/data/case-details/<slug>.ts`
+- renderer: `src/components/case-details/CaseDetailSections.astro`
 
 ## Media strategy
 - Current placeholders live in `public/media/`

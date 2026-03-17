@@ -1,0 +1,99 @@
+---
+import IntroScreensQuantizedPerimeterSection from '../IntroScreensQuantizedPerimeterSection.astro';
+import CaseChallengeSection from '../CaseChallengeSection.astro';
+import CaseProcessSection from '../CaseProcessSection.astro';
+import ForaFeatureCardsSection from '../ForaFeatureCardsSection.astro';
+import ForaDesignSystemSection from '../ForaDesignSystemSection.astro';
+import TeamPhotoQuantizedPerimeterSection from '../TeamPhotoQuantizedPerimeterSection.astro';
+import CaseSwitcherSection from '../CaseSwitcherSection.astro';
+import CaseDetailIntroSection from './CaseDetailIntroSection.astro';
+
+import type { Case } from '../../data/cases';
+import type { CaseDetailConfig } from '../../data/case-details';
+
+interface Props {
+  config: CaseDetailConfig;
+  currentCase: Case;
+  prevCase: Case;
+  nextCase: Case;
+}
+
+const { config, currentCase, prevCase, nextCase } = Astro.props as Props;
+---
+
+{
+  config.sections.map((section) => (
+    <>
+      {section.type === 'intro' && (
+        <CaseDetailIntroSection data={section.data} inViewPreset={section.inViewPreset} />
+      )}
+
+      {section.type === 'introScreens' && (
+        <IntroScreensQuantizedPerimeterSection
+          variant={section.variant}
+          screens={section.screens}
+          inViewPreset={section.inViewPreset}
+          class={section.className}
+        />
+      )}
+
+      {section.type === 'challenge' && (
+        <CaseChallengeSection
+          class={section.className}
+          title={section.data.title}
+          columns={section.data.columns}
+          screen={section.data.screen}
+          notes={section.data.notes}
+          inViewPreset={section.inViewPreset}
+        />
+      )}
+
+      {section.type === 'process' && (
+        <CaseProcessSection
+          title={section.data.title}
+          caption={section.data.caption}
+          steps={section.data.steps}
+          ticketsRows={section.data.ticketsRows}
+          variant={section.data.variant}
+          ticketColorFamily={section.data.ticketColorFamily}
+          class={section.className}
+          inViewPreset={section.inViewPreset}
+        />
+      )}
+
+      {section.type === 'featureCards' && (
+        <ForaFeatureCardsSection cards={section.cards} class={section.className} />
+      )}
+
+      {section.type === 'designSystem' && (
+        <ForaDesignSystemSection
+          data={section.data}
+          class={section.className}
+          inViewPreset={section.inViewPreset}
+        />
+      )}
+
+      {section.type === 'teamPhoto' && (
+        <TeamPhotoQuantizedPerimeterSection
+          class={section.className}
+          photoSrc={section.data.photoSrc}
+          photoAlt={section.data.photoAlt}
+          caption={section.data.caption}
+          heartLeftSrc={section.data.heartLeftSrc}
+          heartRightSrc={section.data.heartRightSrc}
+          inViewPreset={section.inViewPreset}
+        />
+      )}
+
+      {section.type === 'caseSwitcher' && (
+        <CaseSwitcherSection
+          class={section.className}
+          currentCase={currentCase}
+          prevCase={prevCase}
+          nextCase={nextCase}
+          inViewPreset={section.inViewPreset}
+        />
+      )}
+    </>
+  ))
+}
