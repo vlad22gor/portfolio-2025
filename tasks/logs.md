@@ -1000,3 +1000,8 @@
   Причина: в макете изменена позиция ручного переноса для тикета `orange/low` (`lack` + `of filtering options`).
   Файлы: `src/data/case-process/fora.ts`, `tasks/logs.md`.
   Проверки: (1) код — строка изменена с `lack of\\nfiltering options` на `lack\\nof filtering options`; (2) `npm run build` — успешно; (3) `npm run test:smoke -- tests/smoke/case-details.spec.ts` — успешно (`2/2`).
+
+- 2026-03-17: Реализирована стабилизация загрузки `DeviceMockup` без shell-first flicker на detail-страницах кейсов.
+  Причина: устранить «рваное» появление ассетов (shell появляется раньше screen) и сделать reveal контролируемым и предсказуемым.
+  Файлы: `src/components/DeviceMockup.astro`, `src/components/IntroScreensQuantizedPerimeterSection.astro`, `src/components/CaseChallengeSection.astro`, `src/layouts/BaseLayout.astro`, `src/pages/[slug].astro`, `tests/smoke/case-details.spec.ts`, `tasks/logs.md`.
+  Проверки: (1) `npm run build` — успешно; (2) `npm run test:smoke` — успешно (`2/2`, включая новые проверки `data-device-priority="critical"` и readiness/polling на отсутствие shell-only состояния > `1300ms`); (3) проверка `dist/fora|kissa/index.html` — присутствуют `head` preloads для critical screen-изображений, у intro/challenge mockups выставлен `priority=critical`, у feature-cards сохранён `priority=lazy`.

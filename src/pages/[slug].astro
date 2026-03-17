@@ -22,9 +22,33 @@ const index = CASES.findIndex((item) => item.slug === current.slug);
 const prev = CASES[(index - 1 + CASES.length) % CASES.length];
 const next = CASES[(index + 1) % CASES.length];
 const detailConfig = getCaseDetailConfig(current.slug);
+const criticalMockupImagePreloads = detailConfig
+  ? Array.from(
+      new Set(
+        detailConfig.sections.flatMap((section) => {
+          if (section.type === 'introScreens') {
+            return section.screens.map((screen) => screen.src);
+          }
+          if (section.type === 'challenge') {
+            return [section.data.screen.src];
+          }
+          return [];
+        }),
+      ),
+    )
+  : [];
 ---
 
 <BaseLayout title={`${current.title} - Vlad Horovyy`} description={current.subtitle} canonicalPath={`/${current.slug}`}>
+  {
+    criticalMockupImagePreloads.length > 0 && (
+      <Fragment slot="head">
+        {criticalMockupImagePreloads.map((href) => (
+          <link rel="preload" as="image" href={href} fetchpriority="high" />
+        ))}
+      </Fragment>
+    )
+  }
   <SiteHeader />
   <main
     id="content"

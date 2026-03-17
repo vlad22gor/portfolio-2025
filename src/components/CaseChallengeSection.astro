@@ -54,7 +54,13 @@ const titleId = `case-challenge-title-${titleIdBase || 'section'}`;
   <div class="case-challenge-scene-wrap">
     <div class="case-challenge-scene" aria-label={`${title} details`}>
       <div class:list={['case-challenge-device', `case-challenge-device--${resolvedDevice}`]}>
-        <DeviceMockup device={resolvedDevice} screenKind="image" screenSrc={screen.src} screenAlt={screen.alt} />
+        <DeviceMockup
+          device={resolvedDevice}
+          screenKind="image"
+          screenSrc={screen.src}
+          screenAlt={screen.alt}
+          priority="critical"
+        />
       </div>
 
       {

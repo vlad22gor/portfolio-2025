@@ -5,6 +5,7 @@ import shellTabletSrc from '../../assets/devices/Shell-tablet.png';
 
 type DeviceKind = 'phone' | 'tablet';
 type ScreenKind = 'image' | 'video';
+type DeviceLoadPriority = 'critical' | 'lazy';
 
 interface DevicePreset {
   width: number;
@@ -27,6 +28,7 @@ interface Props {
   screenSrc: string;
   screenAlt?: string;
   screenPoster?: string;
+  priority?: DeviceLoadPriority;
   class?: string;
 }
 
@@ -36,6 +38,7 @@ const {
   screenSrc,
   screenAlt,
   screenPoster,
+  priority = 'lazy',
   class: className = '',
 } = Astro.props;
 
@@ -71,7 +74,11 @@ const presets: Record<DeviceKind, DevicePreset> = {
 };
 
 const resolvedDevice: DeviceKind = device === 'tablet' ? 'tablet' : 'phone';
+const resolvedPriority: DeviceLoadPriority = priority === 'critical' ? 'critical' : 'lazy';
 const preset = presets[resolvedDevice];
+const mediaLoading = resolvedPriority === 'critical' ? 'eager' : 'lazy';
+const mediaDecoding = resolvedPriority === 'critical' ? 'sync' : 'async';
+const mediaFetchPriority = resolvedPriority === 'critical' ? 'high' : 'auto';
 const composedClassName = ['device-mockup', `device-mockup--${resolvedDevice}`, className].filter(Boolean).join(' ');
 const styleVars = [
   `--device-width: ${preset.width}px`,
@@ -86,7 +93,13 @@ const styleVars = [
 ].join('; ');
 ---
 
-<div class={composedClassName} style={styleVars}>
+<div
+  class={composedClassName}
+  style={styleVars}
+  data-device-mockup
+  data-device-priority={resolvedPriority}
+  data-ready="false"
+>
   <div class="device-mockup__screen" data-layer="screen">
     {
       screenKind === 'video' ? (
@@ -106,8 +119,9 @@ const styleVars = [
           class="device-mockup__media"
           src={screenSrc}
           alt={screenAlt ?? ''}
-          loading="lazy"
-          decoding="async"
+          loading={mediaLoading}
+          decoding={mediaDecoding}
+          fetchpriority={mediaFetchPriority}
         />
       )
     }
@@ -118,8 +132,9 @@ const styleVars = [
     src={preset.shellSrc.src}
     alt=""
     aria-hidden="true"
-    loading="lazy"
-    decoding="async"
+    loading={mediaLoading}
+    decoding={mediaDecoding}
+    fetchpriority={mediaFetchPriority}
   />
 </div>
 
@@ -131,6 +146,12 @@ const styleVars = [
     height: calc(var(--device-height) * var(--device-scale));
     max-width: 100%;
     isolation: isolate;
+    opacity: 1;
+    transition: opacity 0.16s ease;
+  }
+
+  .device-mockup[data-ready='false'] {
+    opacity: 0;
   }
 
   .device-mockup__screen {
@@ -142,6 +163,7 @@ const styleVars = [
     z-index: var(--screen-z);
     overflow: hidden;
     border-radius: calc(var(--screen-radius) * var(--device-scale));
+    background: var(--color-bg-darkened, #1a1a1a);
   }
 
   .device-mockup__media {
@@ -162,4 +184,133 @@ const styleVars = [
     pointer-events: none;
     user-select: none;
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .device-mockup {
+      transition: none;
+    }
+  }
 </style>
+
+<script>
+  (() => {
+    const runtimeKey = '__deviceMockupRevealRuntime';
+    if (window[runtimeKey]) {
+      window[runtimeKey].mount();
+      return;
+    }
+
+    const mockupSelector = '.device-mockup[data-device-mockup]';
+    const initAttr = 'data-device-mockup-ready-init';
+    const fallbackDelayMs = 1200;
+
+    const markReady = (mockup) => {
+      if (!(mockup instanceof HTMLElement)) {
+        return;
+      }
+      if (mockup.dataset.ready === 'true') {
+        return;
+      }
+      mockup.dataset.ready = 'true';
+    };
+
+    const initMockup = (mockup) => {
+      if (!(mockup instanceof HTMLElement)) {
+        return;
+      }
+      if (mockup.getAttribute(initAttr) === 'true') {
+        return;
+      }
+      mockup.setAttribute(initAttr, 'true');
+
+      const shell = mockup.querySelector('.device-mockup__shell');
+      const media = mockup.querySelector('.device-mockup__media');
+      let shellReady = !(shell instanceof HTMLImageElement);
+      let mediaReady = !media;
+      let settled = false;
+      const cleanups = [];
+
+      const settle = () => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        cleanups.forEach((cleanup) => cleanup());
+        markReady(mockup);
+      };
+
+      const trySettle = () => {
+        if (shellReady && mediaReady) {
+          settle();
+        }
+      };
+
+      const bindOnce = (target, eventName, handler) => {
+        target.addEventListener(eventName, handler, { once: true });
+        cleanups.push(() => target.removeEventListener(eventName, handler));
+      };
+
+      if (shell instanceof HTMLImageElement) {
+        shellReady = shell.complete && shell.naturalWidth > 0;
+        if (!shellReady) {
+          bindOnce(shell, 'load', () => {
+            shellReady = true;
+            trySettle();
+          });
+          bindOnce(shell, 'error', () => {
+            shellReady = true;
+            trySettle();
+          });
+        }
+      }
+
+      if (media instanceof HTMLImageElement) {
+        mediaReady = media.complete && media.naturalWidth > 0;
+        if (!mediaReady) {
+          bindOnce(media, 'load', () => {
+            mediaReady = true;
+            trySettle();
+          });
+          bindOnce(media, 'error', () => {
+            mediaReady = true;
+            trySettle();
+          });
+        }
+      } else if (media instanceof HTMLVideoElement) {
+        mediaReady = media.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA;
+        if (!mediaReady) {
+          bindOnce(media, 'loadeddata', () => {
+            mediaReady = true;
+            trySettle();
+          });
+          bindOnce(media, 'error', () => {
+            mediaReady = true;
+            trySettle();
+          });
+        }
+      }
+
+      const fallbackTimer = window.setTimeout(() => {
+        settle();
+      }, fallbackDelayMs);
+      cleanups.push(() => window.clearTimeout(fallbackTimer));
+
+      trySettle();
+    };
+
+    const mount = () => {
+      document.querySelectorAll(mockupSelector).forEach((mockup) => {
+        initMockup(mockup);
+      });
+    };
+
+    document.addEventListener('astro:page-load', mount);
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', mount, { once: true });
+    } else {
+      mount();
+    }
+
+    window[runtimeKey] = { mount };
+  })();
+</script>
