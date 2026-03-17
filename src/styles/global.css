@@ -2171,9 +2171,13 @@ img.home-hero-asset {
   box-sizing: border-box;
 }
 
-.case-process-section .case-process-ticket {
+.case-process-ticket-stagger-item {
   flex: 0 0 144px;
   width: 144px;
+}
+
+.case-process-section .case-process-ticket {
+  width: 100%;
   min-width: 144px;
   max-width: 144px;
   height: 144px;

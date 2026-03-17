@@ -107,7 +107,7 @@ const foraChallengeNotes = [
     {
       isFora ? (
         <>
-          <section class="fora-intro-section" aria-labelledby="fora-intro-title">
+          <section class="fora-intro-section" aria-labelledby="fora-intro-title" data-motion-inview="appear-v1">
             <div class="fora-intro-top">
               <h1 id="fora-intro-title" class="type-t2 fora-intro-title">
                 Fora app: driving 5% revenue increase and boosting app ratings from 3.0 to 4.6 over nine months
@@ -181,12 +181,19 @@ const foraChallengeNotes = [
             columns={foraChallengeColumns}
             screen={foraChallengeScreen}
             notes={foraChallengeNotes}
+            inViewPreset="appear-v1"
           />
-          <CaseProcessSection {...FORA_PROCESS_SECTION} />
+          <CaseProcessSection {...FORA_PROCESS_SECTION} inViewPreset="appear-v1" />
           <ForaFeatureCardsSection />
           <ForaDesignSystemSection />
           <TeamPhotoQuantizedPerimeterSection />
-          <CaseSwitcherSection class="fora-case-switcher" currentCase={current} prevCase={prev} nextCase={next} />
+          <CaseSwitcherSection
+            class="fora-case-switcher"
+            currentCase={current}
+            prevCase={prev}
+            nextCase={next}
+            inViewPreset="appear-v1"
+          />
         </>
       ) : (
         <>

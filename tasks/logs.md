@@ -1,5 +1,15 @@
 # Logs
 
+- 2026-03-17: Для `/fora` внедрены inView-анимации по плану: `appear-v1` добавлен на top-level блоки (`intro`, `challenge`, `process`, `case switcher`), а `feature cards` переведены на по-карточечный reveal вместо анимации всей секции.
+  Причина: требовалось унифицировать scroll-enter на странице кейса и сохранить отдельную анимацию карточек фич.
+  Файлы: `src/pages/[slug].astro`, `src/components/CaseChallengeSection.astro`, `src/components/CaseProcessSection.astro`, `src/components/CaseSwitcherSection.astro`, `src/components/FeatureCard.astro`, `src/styles/global.css`, `src/components/InViewMotionRuntime.astro`, `docs/inview-appear-v1.md`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; `dist/fora/index.html` подтверждает `appear-v1` на `fora-intro-section/case-challenge-section/case-process-section/case-switcher-section` (по `1` вхождению), отсутствие `appear-v1` у `fora-feature-cards-section` (`0`), наличие `appear-v1` у `fora-feature-card` (`3`), `process-tickets-row-stagger-v1` у `tickets-row` (`2`), `data-motion-stagger-item` (`9`).
+
+- 2026-03-17: Добавлен fixed preset `process-tickets-row-stagger-v1` в глобальный runtime (`stagger-children`) для `process tickets rows` с offset `Y=25` и задержкой `+0.05s` на карточку внутри ряда.
+  Причина: нужен отдельный паттерн, похожий на `appear-v1`, но с меньшим начальным смещением и поэтапным входом карточек.
+  Файлы: `src/components/InViewMotionRuntime.astro`, `src/components/CaseProcessSection.astro`, `docs/inview-appear-v1.md`, `tasks/lessons.md`, `tasks/logs.md`.
+  Проверки: `npm run build` — успешно; в `dist/fora/index.html` у `case-process-section__tickets-row` есть `data-motion-inview="process-tickets-row-stagger-v1"`, карточки размечены `data-motion-stagger-item` + `data-motion-stagger-index`.
+
 - 2026-03-17: Исправлен баг `case switcher` — обложка теперь рендерится как фон внутри формы `Perimetr Scallop Circle`, а не как отдельная «пилюля» поверх.
   Причина: стили маски/клипа для `.case-switcher-cover` были в scoped-стиле компонента и не применялись к DOM-узлам, созданным внутри `QuantizedPerimeter` (другой scope `data-astro-cid`), из-за чего срабатывал глобальный circle-clip (`overflow:hidden`, `border-radius:999px`) и `mask-image` у cover оставался `none`.
   Файлы: `src/components/CaseSwitcherSection.astro`, `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.

@@ -8,6 +8,7 @@ import type {
 } from '../data/case-process/types';
 
 interface Props extends CaseProcessSectionData {
+  inViewPreset?: 'appear-v1';
   class?: string;
   id?: string;
 }
@@ -19,6 +20,7 @@ const {
   ticketsRows,
   variant,
   ticketColorFamily = 'orange',
+  inViewPreset,
   class: className = '',
   id,
 } = Astro.props as Props;
@@ -28,6 +30,8 @@ const headingId = id ?? (safeVariant ? `case-process-${safeVariant}-title` : 'ca
 const composedClassName = ['case-process-section', safeVariant && `case-process-section--${safeVariant}`, className]
   .filter(Boolean)
   .join(' ');
+const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefined;
+const ticketsRowInViewPreset = safeVariant === 'fora' ? 'process-tickets-row-stagger-v1' : undefined;
 
 const resolveTicketBackground = (tone: CaseProcessTicketTone) =>
   `var(--color-ticket-bg-${ticketColorFamily === 'blue' ? 'blue' : 'orange'}-${tone})`;
@@ -39,7 +43,7 @@ const resolveIconStyle = (step: CaseProcessStep) =>
   `--case-process-icon-mask:url("${step.iconSrc}"); --case-process-icon-color:var(${step.iconColorToken});`;
 ---
 
-<section class={composedClassName} aria-labelledby={headingId}>
+<section class={composedClassName} aria-labelledby={headingId} data-motion-inview={resolvedInViewPreset}>
   <h2 id={headingId} class="type-t3 case-process-section__title">{title}</h2>
 
   <div class="case-process-section__content">
@@ -76,21 +80,27 @@ const resolveIconStyle = (step: CaseProcessStep) =>
       <div class="case-process-section__tickets-rows">
         {
           ticketsRows.map((row) => (
-            <div class="case-process-section__tickets-row">
-              {row.tickets.map((ticket) => (
-                <QuantizedPerimeter
-                  class="case-process-ticket"
-                  shape="rectangle"
-                  edgePattern="scallop"
-                  step={36}
-                  minCols={1}
-                  minRows={1}
-                  pad="0"
-                  bg={resolveTicketBackground(ticket.tone)}
-                  label={`Process ticket ${ticket.tone}`}
+            <div class="case-process-section__tickets-row" data-motion-inview={ticketsRowInViewPreset}>
+              {row.tickets.map((ticket, ticketIndex) => (
+                <div
+                  class="case-process-ticket-stagger-item"
+                  data-motion-stagger-item
+                  data-motion-stagger-index={String(ticketIndex)}
                 >
-                  <p class="type-text-small case-process-ticket__text">{ticket.text}</p>
-                </QuantizedPerimeter>
+                  <QuantizedPerimeter
+                    class="case-process-ticket"
+                    shape="rectangle"
+                    edgePattern="scallop"
+                    step={36}
+                    minCols={1}
+                    minRows={1}
+                    pad="0"
+                    bg={resolveTicketBackground(ticket.tone)}
+                    label={`Process ticket ${ticket.tone}`}
+                  >
+                    <p class="type-text-small case-process-ticket__text">{ticket.text}</p>
+                  </QuantizedPerimeter>
+                </div>
               ))}
             </div>
           ))

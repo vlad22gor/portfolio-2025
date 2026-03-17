@@ -11,10 +11,11 @@ interface Props {
   currentCase: Case;
   prevCase: Case;
   nextCase: Case;
+  inViewPreset?: 'appear-v1';
   class?: string;
 }
 
-const { currentCase, prevCase, nextCase, class: className = '' } = Astro.props as Props;
+const { currentCase, prevCase, nextCase, inViewPreset, class: className = '' } = Astro.props as Props;
 
 const caseCoverBySlug: Record<Case['slug'], { src: string; alt: string }> = {
   fora: {
@@ -33,9 +34,10 @@ const resolvedCover = caseCoverBySlug[currentCase.slug] ?? {
 };
 
 const rootClassName = ['case-switcher-section', className].filter(Boolean).join(' ');
+const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefined;
 ---
 
-<section class={rootClassName} aria-label="Case switcher section">
+<section class={rootClassName} aria-label="Case switcher section" data-motion-inview={resolvedInViewPreset}>
   <div class="case-switcher-scene-wrap">
     <nav class="case-switcher-scene" aria-label="Case switcher navigation">
       <Button

@@ -24,11 +24,13 @@ interface Props {
   columns: [string, string];
   screen: CaseChallengeScreen;
   notes: CaseChallengeNote[];
+  inViewPreset?: 'appear-v1';
   class?: string;
 }
 
-const { title, columns, screen, notes, class: className = '' } = Astro.props as Props;
+const { title, columns, screen, notes, inViewPreset, class: className = '' } = Astro.props as Props;
 const rootClassName = ['case-challenge-section', className].filter(Boolean).join(' ');
+const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefined;
 const titleIdBase = title
   .toLowerCase()
   .trim()
@@ -37,7 +39,7 @@ const titleIdBase = title
 const titleId = `case-challenge-title-${titleIdBase || 'section'}`;
 ---
 
-<section class={rootClassName} aria-labelledby={titleId}>
+<section class={rootClassName} aria-labelledby={titleId} data-motion-inview={resolvedInViewPreset}>
   <div class="case-challenge-top">
     <h2 id={titleId} class="type-t3 case-challenge-title">{title}</h2>
 
