@@ -26,8 +26,12 @@ const loopSlides = [...baseSlides, ...baseSlides];
 ---
 
 <section class="temporary-adaptive-notice" aria-labelledby="temporary-adaptive-title">
-  <div class="temporary-adaptive-notice__content" data-temp-adaptive-content>
-    <div class="temporary-adaptive-notice__screens" aria-hidden="true">
+  <div
+    class="temporary-adaptive-notice__content"
+    data-temp-adaptive-content
+    data-motion-inview="temporary-adaptive-stagger-v1"
+  >
+    <div class="temporary-adaptive-notice__screens" aria-hidden="true" data-temp-stage-item data-motion-stagger-index="0">
       <div class="temporary-adaptive-notice__screens-viewport" data-temp-slider data-temp-slider-count={baseSlides.length}>
         <div class="temporary-adaptive-notice__screens-track" data-temp-slider-track>
           {
@@ -51,12 +55,21 @@ const loopSlides = [...baseSlides, ...baseSlides];
     </div>
 
     <div class="temporary-adaptive-notice__text">
-      <h1 id="temporary-adaptive-title" class="type-t4 temporary-adaptive-notice__title">mobile version is coming soon</h1>
-      <p class="type-body temporary-adaptive-notice__subtitle">
+      <h1
+        id="temporary-adaptive-title"
+        class="type-t4 temporary-adaptive-notice__title"
+        data-temp-stage-item
+        data-motion-stagger-index="1"
+      >
+        mobile version is coming soon
+      </h1>
+      <p class="type-body temporary-adaptive-notice__subtitle" data-temp-stage-item data-motion-stagger-index="2">
         To view the portfolio, please switch to desktop. If you’d like to chat or book a call, just send me a
         message
       </p>
-      <Button href="https://linktr.ee/vladhorovyy" target="_blank">message me</Button>
+      <div class="temporary-adaptive-notice__button-wrap" data-temp-stage-item data-motion-stagger-index="3">
+        <Button href="https://linktr.ee/vladhorovyy" target="_blank">message me</Button>
+      </div>
     </div>
   </div>
 </section>
@@ -137,6 +150,10 @@ const loopSlides = [...baseSlides, ...baseSlides];
     margin: 0;
     max-width: 326px;
     color: var(--color-text-secondary);
+  }
+
+  .temporary-adaptive-notice__button-wrap {
+    display: inline-flex;
   }
 
   @media (min-width: 768px) and (max-width: 1359px) {

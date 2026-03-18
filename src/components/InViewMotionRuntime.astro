@@ -92,6 +92,15 @@
         transition: baseTransition,
         childDelay: 0.05,
       },
+      'temporary-adaptive-stagger-v1': {
+        mode: 'stagger-children',
+        childSelector: '[data-temp-stage-item]',
+        initialTransform: 'translate3d(0px, 50px, 0px)',
+        finalTransform: 'translate3d(0px, 0px, 0px)',
+        transition: baseTransition,
+        childDelay: 0.1,
+        amount: 0,
+      },
     };
 
     const resolveBaseTransform = (element) => {
