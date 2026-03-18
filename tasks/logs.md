@@ -1,5 +1,11 @@
 # Logs
 
+- 2026-03-18: Расширены color tokens и добавлены light/dark коллекции без UI-тоггла.
+  Причина: по задаче нужно синхронизировать цветовые токены с Figma (`83:19088` light, `83:19089` dark), добавить недостающие `button-floating` токены и ввести инфраструктурный theme-контракт через `data-theme`.
+  Файлы: `src/styles/global.css`, `src/layouts/BaseLayout.astro`, `tests/smoke/theme-tokens.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) в `global.css` color tokens вынесены в коллекции `:root, html[data-theme='light']` и `html[data-theme='dark']` с сохранением публичного API имён (`--color-text-*`, `--color-bg-*`, `--color-accent-*`, `--color-ticket-*`); (2) добавлены новые токены `--color-button-floating-bg` и `--color-button-floating-overlay` для обеих тем; (3) в dark оставлен `--color-accent-orange: #79b0e2` строго по текущему Figma; (4) в `BaseLayout` задан явный default `<html data-theme="light">`; (5) добавлен smoke `theme-tokens.spec.ts`, проверяющий значения light/dark для `text/default`, `bg/default`, `ticket/orange/critical`, `button-floating/bg`, переключение через `document.documentElement.dataset.theme` и отсутствие новых runtime ошибок при смене темы.
+  Проверки: (1) `npm run build` — успешно; (2) `npm run test:smoke -- tests/smoke/theme-tokens.spec.ts` — успешно (`1/1`); (3) dev-runtime проверка — `npm run dev -- --host 127.0.0.1 --port 4321` + `PLAYWRIGHT_BASE_URL=http://127.0.0.1:4321 PLAYWRIGHT_SKIP_WEBSERVER=1 npm run test:smoke -- tests/smoke/theme-tokens.spec.ts` — успешно (`1/1`), runtime ошибок при переключении `data-theme` не зафиксировано.
+
 - 2026-03-18: Введён двухскоростной stagger для in-view (`default 0.1`, `dynamic 0.08`) и переключены целевые секции на dynamic-вариант.
   Причина: по задаче нужно разделить ритм `appear-stagger` на два режима, оставить `appear-stagger-v1` дефолтным и ускорить только `intro`, `artifact photos` и tickets в case-details.
   Файлы: `src/components/InViewMotionRuntime.astro`, `src/data/case-details/types.ts`, `src/components/QuantizedPerimeter.astro`, `src/components/case-details/CaseDetailIntroSection.astro`, `src/components/KissaArtifactPhotosSection.astro`, `src/components/CaseProcessSection.astro`, `src/components/CaseChallengeSection.astro`, `src/data/case-details/fora.ts`, `src/data/case-details/kissa.ts`, `tasks/lessons.md`, `tasks/logs.md`.

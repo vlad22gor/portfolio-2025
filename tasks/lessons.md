@@ -65,6 +65,7 @@
 - Для `inView`-runtime при анимации `transform` всегда композировать `base transform + motion transform` (а не перетирать `transform` inline), иначе ломается геометрия элементов с собственным позиционирующим transform (например `final-cta-divider-bleed` с `translateX(-50%)`).
 - Для sans-типографики использовать variable `DM Sans` через axis-токены (`opsz`, `wght`), а отрицательный кернинг заголовков `t1`/`t1-tight`/`t1-compact` держать `-2px` (по Figma token spec).
 - Для актуального token spec: `t5=24/29`, `t6=20/24`; в разметке использовать `type-t6`, legacy-класс `type-t5` не применять.
+- Для цветовых коллекций использовать глобальный контракт `html[data-theme='light'|'dark']`: default задавать в `BaseLayout` как `data-theme='light'`, без UI-toggle по умолчанию.
 - Для токена `type-body` держать `paragraph spacing` как отдельный глобальный токен `--type-body-paragraph-spacing: 10px`; применять только через `.type-body p + p` (без правила `.type-body + .type-body`), чтобы не ломать top-align соседних колонок.
 - Для script-токенов использовать `type-description-medium` (`20/22`) и `type-description-large` (`24/26`) с `text-transform: lowercase`; legacy `type-description` не использовать.
 - Для `type-description-*` (Caveat variable) явно задавать `font-variation-settings` с нужным `wght`; одного `font-weight` недостаточно, если выше по дереву уже задан `font-variation-settings`. Для текущего визуала целевой `wght=485`.

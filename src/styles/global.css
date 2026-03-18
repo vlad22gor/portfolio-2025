@@ -18,7 +18,8 @@
   font-display: swap;
 }
 
-:root {
+:root,
+html[data-theme='light'] {
   --color-text-default-highlighted: #000000;
   --color-text-default: #000000d9;
   --color-text-secondary: #00000080;
@@ -40,6 +41,37 @@
   --color-ticket-bg-blue-medium: #accad7;
   --color-ticket-bg-blue-low: #bbcfd5;
   --color-ticket-bg-blue-muted: #cbd5d3;
+  --color-button-floating-bg: #dbdad1;
+  --color-button-floating-overlay: #00000004;
+}
+
+html[data-theme='dark'] {
+  --color-text-default-highlighted: #efe2d2;
+  --color-text-default: #efe2d2;
+  --color-text-secondary: #efe2d2a6;
+  --color-text-tertiary: #efe2d28c;
+  --color-bg-default: #173a66;
+  --color-bg-darkened: #224b7d;
+  --color-accent-green: #bd4554;
+  --color-accent-blue: #79b0e2;
+  --color-accent-orange: #79b0e2;
+  --color-accent-gray: #bdbdaa;
+  --color-accent-white: #ffffff;
+  --color-ticket-bg-orange-critical: #bd4554;
+  --color-ticket-bg-orange-high: #9c4358;
+  --color-ticket-bg-orange-medium: #7b415b;
+  --color-ticket-bg-orange-low: #593e5f;
+  --color-ticket-bg-orange-muted: #383c62;
+  --color-ticket-bg-blue-critical: #79b0e2;
+  --color-ticket-bg-blue-high: #6598c9;
+  --color-ticket-bg-blue-medium: #5281b0;
+  --color-ticket-bg-blue-low: #3e6998;
+  --color-ticket-bg-blue-muted: #2b527f;
+  --color-button-floating-bg: #224b7d;
+  --color-button-floating-overlay: #00000004;
+}
+
+:root {
   --color-border-soft: color-mix(in srgb, var(--color-bg-darkened) 80%, var(--color-text-default) 20%);
 
   --font-family-sans: "DM Sans", "Inter", "Segoe UI", sans-serif;
