@@ -47,29 +47,29 @@
   --tracking-tight-3pct: -2px;
 
   --axis-dm-t1-opsz: 14;
-  --axis-dm-t1-wght: 580;
+  --axis-dm-t1-wght: 600;
   --axis-dm-t1-tight-opsz: 14;
-  --axis-dm-t1-tight-wght: 580;
+  --axis-dm-t1-tight-wght: 600;
   --axis-dm-t1-compact-opsz: 14;
-  --axis-dm-t1-compact-wght: 580;
+  --axis-dm-t1-compact-wght: 600;
   --axis-dm-t2-opsz: 14;
-  --axis-dm-t2-wght: 580;
+  --axis-dm-t2-wght: 600;
   --axis-dm-t3-opsz: 14;
-  --axis-dm-t3-wght: 580;
+  --axis-dm-t3-wght: 600;
   --axis-dm-t4-opsz: 14;
-  --axis-dm-t4-wght: 580;
+  --axis-dm-t4-wght: 600;
   --axis-dm-t5-opsz: 14;
-  --axis-dm-t5-wght: 580;
+  --axis-dm-t5-wght: 600;
   --axis-dm-t6-opsz: 14;
-  --axis-dm-t6-wght: 580;
+  --axis-dm-t6-wght: 600;
   --axis-dm-body-opsz: 14;
-  --axis-dm-body-wght: 380;
+  --axis-dm-body-wght: 400;
   --axis-dm-text-small-opsz: 14;
-  --axis-dm-text-small-wght: 380;
+  --axis-dm-text-small-wght: 400;
   --axis-dm-label-large-opsz: 14;
-  --axis-dm-label-large-wght: 580;
+  --axis-dm-label-large-wght: 600;
   --axis-dm-label-small-opsz: 14;
-  --axis-dm-label-small-wght: 380;
+  --axis-dm-label-small-wght: 400;
 
   --type-t1-family: var(--font-family-sans);
   --type-t1-size: 108px;
@@ -339,6 +339,8 @@ body {
   flex-direction: column;
   color: var(--text-primary);
   background: var(--page-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   font-family: var(--type-body-family);
   font-size: var(--type-body-size);
   line-height: var(--type-body-line-height);
@@ -2937,6 +2939,7 @@ img.home-hero-asset {
 }
 
 @media (max-width: 1359px) {
+
   html,
   body {
     overflow-x: hidden;

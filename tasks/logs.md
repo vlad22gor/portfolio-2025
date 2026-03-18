@@ -1,5 +1,10 @@
 # Logs
 
+- 2026-03-18: Глобально добавлено crisp text сглаживание для `body` (`-webkit-font-smoothing: antialiased`, `-moz-osx-font-smoothing: grayscale`).
+  Причина: на macOS текст местами визуально утяжелялся; требовалось унифицировать рендеринг и сделать гарнитуру чуть «чище» без изменения токенов веса/размера.
+  Файлы: `src/styles/global.css`, `tasks/logs.md`.
+  Проверки: (1) код — в `src/styles/global.css` подтверждены обе директивы в блоке `body`; (2) сборка — `npm run build` успешно, в `dist` обе директивы присутствуют в итоговом CSS (`body{...-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale...}`); (3) runtime — через headless Playwright проверены `/`, `/fora`, `/gallery`: `getComputedStyle(document.body).getPropertyValue('-webkit-font-smoothing') === 'antialiased'` на всех трёх страницах.
+
 - 2026-03-18: Убран double-overscan у `webm` в `phone+small` для `TemporaryAdaptiveNotice`.
   Причина: после ввода `screen` overscan (`+1px`) для `phone/small` видео-ветка продолжала применять дополнительный `video-bleed -1px`, из-за чего суммарный overscan становился двойным и `screen` визуально «разъезжался» только на `webm`.
   Файлы: `src/components/DeviceMockup.astro`, `tests/smoke/temporary-adaptive.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
