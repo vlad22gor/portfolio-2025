@@ -10,7 +10,6 @@ const links = [
   { id: 'cases', href: '/cases', label: 'cases', waveCount: 7 },
   { id: 'home', href: '/', label: 'vlad horovyy', waveCount: 14 },
   { id: 'gallery', href: '/gallery', label: 'gallery', waveCount: 8 },
-  { id: 'preview', href: '/preview', label: 'preview', waveCount: 8 },
 ];
 const casePaths = ['/cases', ...CASES.map((item) => `/${item.slug}`)];
 
@@ -21,9 +20,7 @@ const activeId = casePaths.includes(normalizedPath)
   ? 'cases'
   : normalizedPath === '/gallery'
     ? 'gallery'
-    : normalizedPath === '/preview'
-      ? 'preview'
-      : 'home';
+    : 'home';
 const rawHeaderWaveVariant =
   Astro.props.headerWaveVariant ?? import.meta.env.PUBLIC_HEADER_WAVE_VARIANT ?? 'wave-rail';
 const headerWaveVariant = rawHeaderWaveVariant === 'wave-rail' ? 'wave-rail' : 'classic';
@@ -157,9 +154,6 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
       }
       if (normalized === '/gallery') {
         return 'gallery';
-      }
-      if (normalized === '/preview') {
-        return 'preview';
       }
       return 'home';
     };
