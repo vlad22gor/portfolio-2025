@@ -1,5 +1,11 @@
 # Logs
 
+- 2026-03-18: Для `TemporaryAdaptiveNotice` добавлен staged inView-reveal на базе `appear-v1` с фиксированным шагом задержки `+0.1` (`screens -> title -> subtitle -> button`).
+  Причина: по задаче нужно было анимировать временный mobile/tablet-экран последовательным reveal в 4 шага, не вводя локальные override и не меняя API `Button`.
+  Файлы: `src/components/InViewMotionRuntime.astro`, `src/components/TemporaryAdaptiveNotice.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) добавлен preset `temporary-adaptive-stagger-v1` (`mode='stagger-children'`, `childSelector='[data-temp-stage-item]'`, `childDelay=0.1`, transform/transition как у `appear-v1`); (2) в `TemporaryAdaptiveNotice` на контент-контейнер добавлен `data-motion-inview='temporary-adaptive-stagger-v1'`; (3) размечены 4 stage-элемента с индексами `0/1/2/3`, для кнопки добавлена отдельная wrapper-обёртка; (4) в `tasks/lessons.md` зафиксирован устойчивый контракт нового preset.
+  Проверки: (1) `npm run build` — успешно; (2) `npm run test:smoke -- tests/smoke/temporary-adaptive.spec.ts` — успешно (`8/8`); (3) статическая проверка `rg` подтверждает наличие preset-а, `data-temp-stage-item` и корректных `data-motion-stagger-index` в разметке.
+
 - 2026-03-18: Глобально добавлено crisp text сглаживание для `body` (`-webkit-font-smoothing: antialiased`, `-moz-osx-font-smoothing: grayscale`).
   Причина: на macOS текст местами визуально утяжелялся; требовалось унифицировать рендеринг и сделать гарнитуру чуть «чище» без изменения токенов веса/размера.
   Файлы: `src/styles/global.css`, `tasks/logs.md`.
@@ -1228,3 +1234,45 @@
   Файлы: `src/pages/preview.astro` (удалён), `src/components/SiteHeader.astro`, `src/styles/global.css`, `docs/inview-appear-v1.md`, `docs/quantized-shapes-and-animation-presets.md`, `tasks/lessons.md`, `tasks/logs.md`.
   Что сделано: (1) удалён route-файл `src/pages/preview.astro`; (2) из `SiteHeader` убрана кнопка `preview` и вся логика active-state для `/preview` (SSR + runtime `resolveActiveId`); (3) удалены мёртвые стили `.scallop-preview*` и `.wave-size-preview*`; (4) docs и lessons очищены от route-specific упоминаний `/preview`, формулировки приведены к универсальным.
   Проверки: (1) `npm run build` — успешно, в output собраны только `/`, `/cases`, `/gallery`, `/fora`, `/kissa`; (2) проверка артефактов — `dist/preview` отсутствует; (3) `npm run test:smoke` — успешно (`13/13`) после повторного прогона (первый запуск дал один флейк на `temporary-adaptive` с последующим зелёным re-run); (4) `rg -n "/preview" src docs` — совпадений нет.
+
+- 2026-03-18: Реализован глобальный Porkbun DNS CLI для Codex App (кросс-репозитории) + skill-документация.
+  Причина: пользователь запросил прямое управление DNS-настройками доменов из разных проектов, без привязки к одному репозиторию.
+  Файлы: `~/.codex/bin/codex-porkbun-dns`, `~/.codex/tools/porkbun-dns/{package.json,src/*.mjs,test/*.test.mjs,examples/desired.example.json}`, `~/.codex/skills/porkbun-dns/SKILL.md`, `tasks/logs.md`.
+  Что сделано: (1) создан глобальный wrapper `codex-porkbun-dns`; (2) реализованы команды `dns list|plan|apply` с безопасным режимом (`--apply` обязателен для записи, `--delete-missing` отдельно включает удаления); (3) добавлена валидация desired-state JSON (`domain`, `records[]`, типы, TTL>=600, нормализация `@/subdomain/FQDN`); (4) добавлены проверки владения доменом через `domain/listAll`, получение текущей зоны через `dns/retrieve`, и операции `dns/create|edit|delete`; (5) реализован diff-движок create/update/delete с подробным stdout-отчётом; (6) добавлены unit/integration mock-тесты для safety и API-контракта; (7) создан skill `porkbun-dns` с безопасным workflow `list -> plan -> apply`.
+  Проверки: (1) `npm test` в `~/.codex/tools/porkbun-dns` — успешно (`9/9`); (2) `~/.codex/bin/codex-porkbun-dns --help` — успешно.
+
+- 2026-03-18: Выполнен cutover домена `vladhorovyy.com` с Framer на GitHub Pages через GitHub API + Porkbun CLI.
+  Причина: завтра (2026-03-19) истекает подписка Framer, требовалось полностью перенести прод-домен на GitHub Pages без ручных операций в панели DNS.
+  Файлы: `tasks/dns-backups/vladhorovyy.com.before-cutover.20260318-120958.json`, `tasks/dns-plans/vladhorovyy.com.github-pages.desired.json`, `tasks/dns-plans/vladhorovyy.com.github-pages.plan.txt`, `tasks/dns-plans/vladhorovyy.com.github-pages.apply.log`, `tasks/dns-backups/vladhorovyy.com.after-cutover.20260318-121538.json`, `tasks/logs.md`.
+  Что сделано: (1) снят preflight-бэкап текущей зоны и подготовлен desired-state под GitHub Pages; (2) обнаружен и устранён риск дублирующих записей из-за `prio` (в desired-state зафиксирован `prio: 0`); (3) запушен `main` (`0f1019a`), деплой `deploy.yml` завершился успешно (`run 23239583482`); (4) в GitHub Pages установлен `cname=vladhorovyy.com`; (5) через `codex-porkbun-dns` применены DNS-изменения (`created=6`, `updated=3`, `errors=0`) без `--delete-missing` (MX/NS/TXT сохранены); (6) проверен rollback-план из pre-cutover backup (`dns plan --delete-missing`) для отката одной командой.
+  Проверки: (1) авторитативные NS Porkbun и локальный resolver отдают целевые записи GitHub (`A 185.199.108.153/109.153/110.153/111.153`, `AAAA 2606:50c0:8000::153/...:8003::153`, `www CNAME vlad22gor.github.io`); (2) `http://vladhorovyy.com` отдаёт GitHub Pages (`200`), `http://www.vladhorovyy.com` редиректит на apex; (3) smoke маршрутов по HTTP (follow redirects): `/`, `/cases`, `/gallery`, `/fora`, `/kissa` => `200`; (4) HTTPS сертификат GitHub пока не выпущен: `PUT pages https_enforced=true` возвращает `404 The certificate does not exist yet` (ожидание выпуска сертификата продолжается).
+
+- 2026-03-18: Добавлены favicon-набор и global social cover из `assets` в runtime `public` + подключение в общий layout.
+  Причина: пользователь запросил экспортировать `favicon` и `cover` из `assets` и подключить глобально для всех маршрутов.
+  Файлы: `src/layouts/BaseLayout.astro`, `public/media/site/site-cover.png`, `public/favicon.ico`, `public/favicon-32x32.png`, `public/favicon-16x16.png`, `public/apple-touch-icon.png`, `tasks/logs.md`.
+  Что сделано: (1) скопирован cover `assets/site cover.png -> public/media/site/site-cover.png`; (2) из `assets/favicon.png` сгенерированы runtime-иконки `favicon-32x32.png`, `favicon-16x16.png`, `apple-touch-icon.png` и перезаписан `favicon.ico` (32x32); (3) в `BaseLayout` добавлены `<link rel="icon"...>`/`apple-touch-icon`; (4) добавлены глобальные `og:image`, `og:image:width`, `og:image:height`, `og:image:alt`, `twitter:image` с абсолютным URL через `new URL(..., Astro.site ?? 'https://vladhorovyy.com')`; (5) `public/favicon.svg` оставлен без изменений и не используется как основной источник в этой задаче.
+  Проверки: (1) `npm run build` — успешно; (2) `file`-проверка runtime-файлов подтвердила форматы и размеры (`site-cover 3420x1796`, `favicon 32/16`, `apple-touch 180`, `favicon.ico` как Windows icon 32x32); (3) проверка `dist/{index,cases,gallery,fora,kissa}/index.html` — во всех head присутствуют favicon и `og:image`/`twitter:image`; (4) `rg -n "assets/" dist` — совпадений нет (runtime не ссылается на `assets`).
+
+- 2026-03-18: Глобализованы `site title` и `site description` для всех текущих страниц (`/`, `/cases`, `/gallery`, `/fora`, `/kissa`).
+  Причина: пользователь попросил задать единые SEO-метаданные на всех маршрутах “на сейчас”, чтобы убрать расхождения между страницами.
+  Файлы: `src/layouts/BaseLayout.astro`, `src/pages/{index.astro,cases.astro,gallery.astro,[slug].astro}`, `tasks/logs.md`.
+  Что сделано: (1) в `BaseLayout` удалены обязательные page-props `title/description`; (2) добавлены глобальные константы `siteTitle = "Vlad Horovyy – Product Designer"` и `siteDescription = "Product designer from Kyiv crafting standout mobile apps"`; (3) единые значения подключены в `<title>`, `<meta name="description">`, `<meta property="og:title">`, `<meta property="og:description">`; (4) все страницы переведены на вызов `BaseLayout` только с `canonicalPath` (без page-level title/description), включая динамический `[slug]`.
+  Проверки: (1) `npm run build` — успешно; (2) `rg -n "title=|description=" src/pages` — совпадений нет; (3) проверка `dist/{index,cases,gallery,fora,kissa}/index.html` — `title/description/og:title/og:description` одинаковые на всех страницах, `canonical` остаётся page-specific.
+
+- 2026-03-18: Точечно исправлен вес script-типографики (`Caveat`) для `type-description-*` и выставлен на `500`.
+  Причина: при изменении token weight визуальная жирность не менялась, потому что inherited `font-variation-settings` фиксировал `wght=400`.
+  Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) `--type-description-large-weight` и `--type-description-medium-weight` изменены `600 -> 500`; (2) в `.type-description-large/.type-description-medium` добавлены `font-optical-sizing: none` и явные `font-variation-settings: "opsz" 14, "wght" var(...)`, чтобы ось variable-font не наследовалась из `body`.
+  Проверки: (1) `rg` по `src/styles/global.css` подтвердил новые значения и правила; (2) runtime-проверка через Playwright на тексте `type-description-medium` показала `fontWeight: 500` и `fontVariationSettings: "opsz" 14, "wght" 500`.
+
+- 2026-03-18: Обновлён глобальный social preview из нового исходника `assets/social preview.png` (2400x1260).
+  Причина: пользователь обновил дизайн social preview (шрифт/композиция) и попросил заменить runtime-ассет в проекте.
+  Файлы: `public/media/site/site-cover.png`, `src/layouts/BaseLayout.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) runtime-`/media/site/site-cover.png` перезаписан из `assets/social preview.png`; (2) в `BaseLayout` обновлены `socialCoverWidth/Height` с `3420x1796` на `2400x1260`; (3) путь `og:image`/`twitter:image` оставлен прежним (`/media/site/site-cover.png`) для стабильности ссылок и кеша.
+  Проверки: (1) `npm run build` — успешно; (2) `sips` подтвердил фактический размер runtime-файла `2400x1260`; (3) проверка `dist/{index,cases,gallery,fora,kissa}/index.html` — во всех head `og:image:width=2400`, `og:image:height=1260`, `twitter:image` указывает на `https://vladhorovyy.com/media/site/site-cover.png`.
+
+- 2026-03-18: Точечно скорректирован вес `Caveat` для `type-description-*` с `500` на `485`.
+  Причина: пользователь уточнил целевую жирность script-стилей.
+  Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: обновлены токены `--type-description-large-weight` и `--type-description-medium-weight` (`500 -> 485`), при сохранении явного `font-variation-settings` для `type-description-*`.
+  Проверки: runtime-проверка через Playwright на `type-description-medium` показала `fontWeight: 485` и `fontVariationSettings: "opsz" 14, "wght" 485`.

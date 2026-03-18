@@ -39,7 +39,7 @@ const criticalMockupImagePreloads = detailConfig
   : [];
 ---
 
-<BaseLayout title={`${current.title} - Vlad Horovyy`} description={current.subtitle} canonicalPath={`/${current.slug}`}>
+<BaseLayout canonicalPath={`/${current.slug}`}>
   {
     criticalMockupImagePreloads.length > 0 && (
       <Fragment slot="head">

@@ -130,14 +130,14 @@
   --type-description-large-family: var(--font-family-script);
   --type-description-large-size: 24px;
   --type-description-large-line-height: 26px;
-  --type-description-large-weight: 450;
+  --type-description-large-weight: 485;
   --type-description-large-letter-spacing: 0;
   --type-description-large-text-transform: lowercase;
 
   --type-description-medium-family: var(--font-family-script);
   --type-description-medium-size: 20px;
   --type-description-medium-line-height: 22px;
-  --type-description-medium-weight: 450;
+  --type-description-medium-weight: 485;
   --type-description-medium-letter-spacing: 0;
   --type-description-medium-text-transform: lowercase;
 
@@ -277,6 +277,8 @@
   font-weight: var(--type-description-large-weight);
   letter-spacing: var(--type-description-large-letter-spacing);
   text-transform: var(--type-description-large-text-transform);
+  font-optical-sizing: none;
+  font-variation-settings: "opsz" 14, "wght" var(--type-description-large-weight);
 }
 
 .type-description-medium {
@@ -286,6 +288,8 @@
   font-weight: var(--type-description-medium-weight);
   letter-spacing: var(--type-description-medium-letter-spacing);
   text-transform: var(--type-description-medium-text-transform);
+  font-optical-sizing: none;
+  font-variation-settings: "opsz" 14, "wght" var(--type-description-medium-weight);
 }
 
 .type-body {
