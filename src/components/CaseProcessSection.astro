@@ -1,5 +1,6 @@
 ---
 import QuantizedPerimeter from './QuantizedPerimeter.astro';
+import ThemedSvgIcon from './ThemedSvgIcon.astro';
 import type { InViewPreset } from '../data/case-details/types';
 
 import type {
@@ -82,15 +83,10 @@ const splitTicketText = (text: string) => text.split('\n');
             </article>
 
             {step.arrow && (
-              <img
+              <ThemedSvgIcon
                 class="case-process-step__arrow"
                 src={step.arrow.src}
-                alt=""
                 aria-hidden="true"
-                loading="lazy"
-                decoding="async"
-                width={step.arrow.width}
-                height={step.arrow.height}
                 style={`left:${step.arrow.left}px; top:${step.arrow.top}px; width:${step.arrow.width}px; height:${step.arrow.height}px;`}
               />
             )}

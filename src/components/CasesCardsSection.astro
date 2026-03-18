@@ -2,6 +2,7 @@
 import CaseCard from './CaseCard.astro';
 import Badge from './Badge.astro';
 import QuantizedPerimeter from './QuantizedPerimeter.astro';
+import ThemedSvgIcon from './ThemedSvgIcon.astro';
 import { CASES } from '../data/cases';
 
 const foraCase = CASES.find((item) => item.slug === 'fora');
@@ -18,23 +19,17 @@ const kissaCase = CASES.find((item) => item.slug === 'kissa');
 
     <div class="cases-cards-description" data-motion-stage-item data-motion-stagger-index="1">
       <p class="cases-cards-description-label type-description-medium">Click on cases to learn more about the projects</p>
-      <img
+      <ThemedSvgIcon
         class="cases-cards-description-arrow cases-cards-description-arrow--left"
         data-motion-inview="cases-arrow-left-v1"
         src="/media/cases/section/cases-cards-arrow-left.svg"
-        alt=""
         aria-hidden="true"
-        loading="lazy"
-        decoding="async"
       />
-      <img
+      <ThemedSvgIcon
         class="cases-cards-description-arrow cases-cards-description-arrow--right"
         data-motion-inview="cases-arrow-right-v1"
         src="/media/cases/section/cases-cards-arrow-right.svg"
-        alt=""
         aria-hidden="true"
-        loading="lazy"
-        decoding="async"
       />
     </div>
 

@@ -1,5 +1,6 @@
 ---
 import DeviceMockup from './DeviceMockup.astro';
+import ThemedSvgIcon from './ThemedSvgIcon.astro';
 import type { InViewPreset } from '../data/case-details/types';
 
 export type CaseChallengeScreen = {
@@ -80,13 +81,10 @@ const titleId = `case-challenge-title-${titleIdBase || 'section'}`;
               {note.text}
             </p>
 
-            <img
+            <ThemedSvgIcon
               class="case-challenge-arrow"
               src={note.arrowSrc}
-              alt=""
               aria-hidden="true"
-              loading="lazy"
-              decoding="async"
               style={`--case-arrow-left:${note.arrowLeft}px;--case-arrow-top:${note.arrowTop}px;--case-arrow-width:${note.arrowWidth}px;--case-arrow-height:${note.arrowHeight}px;`}
             />
           </>

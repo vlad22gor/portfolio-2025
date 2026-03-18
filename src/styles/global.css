@@ -44,6 +44,7 @@ html[data-theme='light'] {
   --color-button-floating-bg: #dbdad1;
   --color-button-floating-overlay: #00000004;
   --color-button-floating-motif: var(--color-accent-blue);
+  --color-icon-accent: var(--color-accent-green);
 }
 
 html[data-theme='dark'] {
@@ -71,6 +72,7 @@ html[data-theme='dark'] {
   --color-button-floating-bg: #224b7d;
   --color-button-floating-overlay: #00000004;
   --color-button-floating-motif: var(--color-accent-blue);
+  --color-icon-accent: var(--color-accent-green);
 }
 
 :root {
@@ -486,6 +488,19 @@ html {
     opacity 200ms ease,
     transform 200ms ease,
     filter 200ms ease;
+}
+
+.themed-svg-icon {
+  display: block;
+  background-color: var(--themed-svg-icon-color, var(--color-icon-accent));
+  -webkit-mask-image: var(--themed-svg-icon-mask);
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: 100% 100%;
+  mask-image: var(--themed-svg-icon-mask);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: 100% 100%;
 }
 
 .floating-theme-button__motif {

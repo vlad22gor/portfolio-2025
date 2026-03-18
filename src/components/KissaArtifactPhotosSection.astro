@@ -1,5 +1,6 @@
 ---
 import QuantizedPerimeter from './QuantizedPerimeter.astro';
+import ThemedSvgIcon from './ThemedSvgIcon.astro';
 import type { CaseDetailArtifactPhotosData, InViewPreset } from '../data/case-details/types';
 
 interface Props {
@@ -76,30 +77,20 @@ const resolvedInViewPreset =
     {data.bottomCaption}
   </p>
 
-  <img
+  <ThemedSvgIcon
     class="kissa-artifact-photos-arrow kissa-artifact-photos-arrow--left"
     data-motion-stage-item
     data-motion-stagger-index="3"
     data-motion-stage-side="left"
     src={data.leftArrowSrc}
-    alt=""
     aria-hidden="true"
-    loading="lazy"
-    decoding="async"
-    width="108"
-    height="82"
   />
-  <img
+  <ThemedSvgIcon
     class="kissa-artifact-photos-arrow kissa-artifact-photos-arrow--right"
     data-motion-stage-item
     data-motion-stagger-index="4"
     data-motion-stage-side="right"
     src={data.rightArrowSrc}
-    alt=""
     aria-hidden="true"
-    loading="lazy"
-    decoding="async"
-    width="100"
-    height="83"
   />
 </section>

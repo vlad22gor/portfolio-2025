@@ -1,5 +1,6 @@
 ---
 import QuantizedPerimeter from './QuantizedPerimeter.astro';
+import ThemedSvgIcon from './ThemedSvgIcon.astro';
 import type { InViewPreset } from '../data/case-details/types';
 
 interface Props {
@@ -42,25 +43,15 @@ const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefi
 
   <p class="type-description-medium fora-team-photo-caption">{caption}</p>
 
-  <img
+  <ThemedSvgIcon
     class="fora-team-photo-heart fora-team-photo-heart--right"
     src={heartRightSrc}
-    alt=""
     aria-hidden="true"
-    loading="lazy"
-    decoding="async"
-    width="36"
-    height="28"
   />
 
-  <img
+  <ThemedSvgIcon
     class="fora-team-photo-heart fora-team-photo-heart--left"
     src={heartLeftSrc}
-    alt=""
     aria-hidden="true"
-    loading="lazy"
-    decoding="async"
-    width="34"
-    height="29"
   />
 </section>

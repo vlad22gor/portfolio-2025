@@ -2,6 +2,7 @@
 import type { Case } from '../data/cases';
 import Badge from './Badge.astro';
 import QuantizedScallop from './QuantizedScallop.astro';
+import ThemedSvgIcon from './ThemedSvgIcon.astro';
 
 interface Props {
   item: Case;
@@ -76,7 +77,7 @@ const arrowAssetPath =
     <h3 class="case-card-title">{item.title}</h3>
     <p class="case-card-subtitle">{item.subtitle}</p>
 
-    <img class="case-card-arrow" src={arrowAssetPath} alt="" loading="lazy" decoding="async" aria-hidden="true" />
+    <ThemedSvgIcon class="case-card-arrow" src={arrowAssetPath} aria-hidden="true" />
   </div>
 
   {isCoverRight && (

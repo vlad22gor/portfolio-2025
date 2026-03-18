@@ -1,0 +1,29 @@
+---
+interface Props {
+  src: string;
+  color?: string;
+  class?: string;
+  style?: string;
+  [key: string]: unknown;
+}
+
+const {
+  src,
+  color = 'var(--color-icon-accent)',
+  class: className = '',
+  style: styleProp = '',
+  ...rest
+} = Astro.props as Props;
+
+const escapedSrc = src.replace(/"/g, '\\"');
+const composedClassName = ['themed-svg-icon', className].filter(Boolean).join(' ');
+const composedStyle = [
+  `--themed-svg-icon-mask: url("${escapedSrc}")`,
+  `--themed-svg-icon-color: ${color}`,
+  styleProp,
+]
+  .filter(Boolean)
+  .join('; ');
+---
+
+<span class={composedClassName} style={composedStyle} {...rest}></span>

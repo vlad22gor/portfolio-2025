@@ -102,6 +102,48 @@ const readFloatingButtonState = () => {
   };
 };
 
+const readThemedGlyphSnapshot = (selectors: string[]) => {
+  const resolveColor = (value: string) => {
+    const probe = document.createElement('span');
+    probe.style.color = value;
+    document.body.appendChild(probe);
+    const resolved = getComputedStyle(probe).color;
+    probe.remove();
+    return resolved;
+  };
+
+  const rootStyles = getComputedStyle(document.documentElement);
+  const iconTokenExpression = rootStyles.getPropertyValue('--color-icon-accent').trim();
+  const expectedColor = resolveColor(iconTokenExpression);
+
+  return {
+    iconTokenExpression,
+    expectedColor,
+    entries: selectors.map((selector) => {
+      const element = document.querySelector(selector);
+      if (!(element instanceof HTMLElement)) {
+        return {
+          selector,
+          present: false,
+          color: null,
+          motionInview: null,
+          motionStageSide: null,
+          motionStaggerIndex: null,
+        };
+      }
+
+      return {
+        selector,
+        present: true,
+        color: getComputedStyle(element).backgroundColor,
+        motionInview: element.getAttribute('data-motion-inview'),
+        motionStageSide: element.getAttribute('data-motion-stage-side'),
+        motionStaggerIndex: element.getAttribute('data-motion-stagger-index'),
+      };
+    }),
+  };
+};
+
 test.describe('Theme tokens smoke', () => {
   test.use({ viewport: { width: 1440, height: 1100 } });
 
@@ -260,6 +302,58 @@ test.describe('Theme tokens smoke', () => {
     expect(toggledState!.activeMotifColor).toBe(toggledState!.accentColorResolved);
     expect(toggledState!.iconOffsetX).toBe('-1.5px');
     expect(Math.abs(toggledState!.activeTranslateX - -1.5)).toBeLessThanOrEqual(0.05);
+
+    const homeGlyphSelectors = ['.quotes-mark--main-open', '.quotes-mark--main-close', '.cases-cards-description-arrow--left'];
+    const homeGlyphSnapshot = await page.evaluate(readThemedGlyphSnapshot, homeGlyphSelectors);
+    expect(homeGlyphSnapshot.iconTokenExpression.length).toBeGreaterThan(0);
+    homeGlyphSnapshot.entries.forEach((entry) => {
+      expect(entry.present).toBe(true);
+      expect(entry.color).toBe(homeGlyphSnapshot.expectedColor);
+    });
+    const homeCasesArrow = homeGlyphSnapshot.entries.find((entry) => entry.selector === '.cases-cards-description-arrow--left');
+    expect(homeCasesArrow?.motionInview).toBe('cases-arrow-left-v1');
+    const homeQuoteClose = homeGlyphSnapshot.entries.find((entry) => entry.selector === '.quotes-mark--main-close');
+    expect(homeQuoteClose?.motionInview).toBe('quotes-main-close-after-v1');
+
+    await page.goto('/fora');
+    await expect(page.locator(floatingThemeButtonSelector)).toBeVisible();
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.dataset.theme), {
+        timeout: 2000,
+      })
+      .toBe('dark');
+
+    const foraGlyphSelectors = [
+      '.case-challenge-arrow',
+      '.case-process-step__arrow',
+      '.fora-design-system-arrow--top',
+      '.fora-team-photo-heart--left',
+    ];
+    const foraGlyphSnapshot = await page.evaluate(readThemedGlyphSnapshot, foraGlyphSelectors);
+    foraGlyphSnapshot.entries.forEach((entry) => {
+      expect(entry.present).toBe(true);
+      expect(entry.color).toBe(foraGlyphSnapshot.expectedColor);
+    });
+
+    await page.goto('/kissa');
+    await expect(page.locator(floatingThemeButtonSelector)).toBeVisible();
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.dataset.theme), {
+        timeout: 2000,
+      })
+      .toBe('dark');
+
+    const kissaGlyphSelectors = ['.kissa-artifact-photos-arrow--left', '.case-challenge-arrow', '.case-process-step__arrow'];
+    const kissaGlyphSnapshot = await page.evaluate(readThemedGlyphSnapshot, kissaGlyphSelectors);
+    kissaGlyphSnapshot.entries.forEach((entry) => {
+      expect(entry.present).toBe(true);
+      expect(entry.color).toBe(kissaGlyphSnapshot.expectedColor);
+    });
+    const kissaArtifactArrow = kissaGlyphSnapshot.entries.find(
+      (entry) => entry.selector === '.kissa-artifact-photos-arrow--left',
+    );
+    expect(kissaArtifactArrow?.motionStageSide).toBe('left');
+    expect(kissaArtifactArrow?.motionStaggerIndex).toBe('3');
 
     await page.click('a[data-nav-id="gallery"]');
     await expect(page).toHaveURL(/\/gallery\/?$/);
