@@ -32,6 +32,26 @@ const agentationEndpoint =
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>
+      document.documentElement.setAttribute('data-js', 'true');
+    </script>
+    <noscript>
+      <style>
+        .home-hero[data-home-hero-appear='pending'] .home-hero-line {
+          opacity: 1 !important;
+          transform: translate3d(0px, 0px, 0px) !important;
+        }
+
+        .home-hero[data-home-hero-appear='pending'] .home-hero-asset {
+          opacity: 1 !important;
+          transform: translate3d(0px, 0px, 0px) scale(1) !important;
+        }
+
+        .home-hero[data-home-hero-appear='pending'] .home-hero-asset--coin {
+          transform: translate3d(0px, 0px, 0px) scale(1) rotate(0deg) !important;
+        }
+      </style>
+    </noscript>
     <ClientRouter fallback="swap" />
     <slot name="head" />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />

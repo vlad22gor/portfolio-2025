@@ -1,5 +1,17 @@
 # Logs
 
+- 2026-03-18: Откат последних правок по фиксу микровспышки на `/` по запросу.
+  Причина: предложенный фикс не дал ожидаемого эффекта.
+  Файлы: `src/pages/index.astro`, `src/styles/global.css`, `tasks/logs.md`.
+  Что сделано: удалены добавленные в последнем проходе изменения (`html background` в `global.css`, условие `html:not([data-astro-transition])` для `home-hero[pending]`, defer-монтаж `mountHeroWhenReady` и helper `isAstroTransitionActive` в `index.astro`, а также соответствующая запись в логе).
+  Проверки: `rg` не находит маркеры откатываемого патча (`isAstroTransitionActive`, `homeHeroAppearMountScheduled`, `html:not([data-astro-transition])`, `Устранён источник микровспышки`).
+
+- 2026-03-18: Устранена микровспышка при переходе на `/` с сохранением hero-анимации на каждый вход.
+  Причина: при soft navigation на `home` runtime сначала показывал hero, затем принудительно сбрасывал элементы в `opacity: 0`, что давало краткий `visible -> hidden -> visible` эффект.
+  Файлы: `src/pages/index.astro`, `src/styles/global.css`, `src/layouts/BaseLayout.astro`, `tasks/logs.md`.
+  Что сделано: (1) введён DOM-state контракт `data-home-hero-appear='pending|running|done'` и SSR-state `pending` у `.home-hero`; (2) добавлен pre-arm CSS для `pending` (initial opacity/transform для `.home-hero-line` и `.home-hero-asset`, включая coin-variant), чтобы первый кадр сразу был в начальном состоянии; (3) runtime `home-hero` переведён на state-машину `pending -> running -> done` с завершением по `Promise.allSettled(control.finished)`; (4) анимация снова запускается keyframes `0 -> 1` на каждом входе; (5) добавлен `noscript` fallback-override, чтобы при отключённом JS hero не оставался скрытым.
+  Проверки: (1) `npm run build` — успешно; (2) headless Playwright probe для `/cases -> /`, `/gallery -> /`, `/kissa -> /` подтверждает отсутствие паттерна `first opacity = 1`, затем падение к `0` (`hasFlashPattern=false` во всех трёх сценариях) и наличие анимации (`hasAnimation=true`); (3) hard-load `/` подтверждает активную hero-анимацию (`state=running`, `lineOpacity` растёт до `1`); (4) `prefers-reduced-motion: reduce` на soft-nav и hard-load приводит к `state=done`, `linesMin=1`, `assetsMin=1`; (5) `javascriptEnabled=false` подтверждает `noscript` fallback (`lineOpacity=1`, `assetOpacity=1`, transform без смещений).
+
 - 2026-03-18: Для `TemporaryAdaptiveNotice` добавлен staged inView-reveal на базе `appear-v1` с фиксированным шагом задержки `+0.1` (`screens -> title -> subtitle -> button`).
   Причина: по задаче нужно было анимировать временный mobile/tablet-экран последовательным reveal в 4 шага, не вводя локальные override и не меняя API `Button`.
   Файлы: `src/components/InViewMotionRuntime.astro`, `src/components/TemporaryAdaptiveNotice.astro`, `tasks/lessons.md`, `tasks/logs.md`.

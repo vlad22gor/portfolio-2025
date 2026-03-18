@@ -749,6 +749,21 @@ p {
   user-select: none;
 }
 
+/* Pre-arm hero initial frame to avoid visible->hidden flicker on soft navigation. */
+.home-hero[data-home-hero-appear='pending'] .home-hero-line {
+  opacity: 0;
+  transform: translate3d(0px, 25px, 0px);
+}
+
+.home-hero[data-home-hero-appear='pending'] .home-hero-asset {
+  opacity: 0;
+  transform: translate3d(0px, 25px, 0px) scale(0.5);
+}
+
+.home-hero[data-home-hero-appear='pending'] .home-hero-asset--coin {
+  transform: translate3d(0px, 25px, 0px) scale(0.5) rotate(0deg);
+}
+
 .home-hero-asset img,
 img.home-hero-asset {
   display: block;

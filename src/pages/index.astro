@@ -23,7 +23,7 @@ const coinInlineStyle = [
 >
   <SiteHeader />
   <main id="content" class="page-shell page-shell--home" transition:name="page-content">
-    <section class="home-hero" aria-labelledby="home-hero-title">
+    <section class="home-hero" data-home-hero-appear="pending" aria-labelledby="home-hero-title">
       <div class="home-hero-media">
         <h1 id="home-hero-title" class="home-hero-title">
           <span class="home-hero-line home-hero-line--tertiary">i’m Vlad —</span>
@@ -77,6 +77,9 @@ const coinInlineStyle = [
 
   (() => {
     const runtimeKey = '__homeHeroAppearRuntime';
+    const HERO_APPEAR_PENDING = 'pending';
+    const HERO_APPEAR_RUNNING = 'running';
+    const HERO_APPEAR_DONE = 'done';
     if (window[runtimeKey]) {
       window[runtimeKey].mount();
       return;
@@ -94,21 +97,14 @@ const coinInlineStyle = [
       'home-hero-asset--mockup-path': 0.3,
     };
 
-    const setLabelInitial = (line) => {
-      line.style.opacity = '0';
-      line.style.transform = 'translate3d(0px, 25px, 0px)';
-    };
-
     const setLabelFinal = (line) => {
       line.style.opacity = '1';
       line.style.transform = 'translate3d(0px, 0px, 0px)';
     };
 
-    const setAssetInitial = (asset, isCoin) => {
-      asset.style.opacity = '0';
-      asset.style.transform = isCoin
-        ? 'translate3d(0px, 25px, 0px) scale(0.5) rotate(0deg)'
-        : 'translate3d(0px, 25px, 0px) scale(0.5)';
+    const setLabelInitial = (line) => {
+      line.style.opacity = '0';
+      line.style.transform = 'translate3d(0px, 25px, 0px)';
     };
 
     const setAssetFinal = (asset, isCoin) => {
@@ -118,14 +114,26 @@ const coinInlineStyle = [
         : 'translate3d(0px, 0px, 0px) scale(1)';
     };
 
+    const setAssetInitial = (asset, isCoin) => {
+      asset.style.opacity = '0';
+      asset.style.transform = isCoin
+        ? 'translate3d(0px, 25px, 0px) scale(0.5) rotate(0deg)'
+        : 'translate3d(0px, 25px, 0px) scale(0.5)';
+    };
+
+    const setHeroState = (hero, state) => {
+      hero.dataset.homeHeroAppear = state;
+    };
+
     const animateLabels = (hero) => {
       const labels = Array.from(hero.querySelectorAll('.home-hero-line'));
+      const controls = [];
       labels.forEach((line, index) => {
         if (!(line instanceof HTMLElement)) {
           return;
         }
         setLabelInitial(line);
-        animate(
+        const control = animate(
           line,
           {
             opacity: [0, 1],
@@ -133,7 +141,9 @@ const coinInlineStyle = [
           },
           { ...labelSpring, delay: index * 0.1 },
         );
+        controls.push(control);
       });
+      return controls;
     };
 
     const resolveAssetDelay = (asset) => {
@@ -147,6 +157,7 @@ const coinInlineStyle = [
 
     const animateAssets = (hero) => {
       const assets = Array.from(hero.querySelectorAll('.home-hero-asset'));
+      const controls = [];
       assets.forEach((asset) => {
         if (!(asset instanceof HTMLElement)) {
           return;
@@ -157,7 +168,7 @@ const coinInlineStyle = [
         setAssetInitial(asset, isCoin);
 
         if (isCoin) {
-          animate(
+          const control = animate(
             asset,
             {
               opacity: [0, 1],
@@ -168,10 +179,11 @@ const coinInlineStyle = [
             },
             { ...coinSpring, delay },
           );
+          controls.push(control);
           return;
         }
 
-        animate(
+        const control = animate(
           asset,
           {
             opacity: [0, 1],
@@ -179,6 +191,28 @@ const coinInlineStyle = [
           },
           { ...assetSpring, delay },
         );
+        controls.push(control);
+      });
+      return controls;
+    };
+
+    const markDoneWhenAnimationsFinish = (hero, controls) => {
+      if (!controls.length) {
+        setHeroState(hero, HERO_APPEAR_DONE);
+        return;
+      }
+
+      Promise.allSettled(
+        controls.map((control) =>
+          control && control.finished && typeof control.finished.then === 'function'
+            ? control.finished
+            : Promise.resolve(),
+        ),
+      ).finally(() => {
+        if (!hero.isConnected || hero.dataset.homeHeroAppearMounted !== 'true') {
+          return;
+        }
+        setHeroState(hero, HERO_APPEAR_DONE);
       });
     };
 
@@ -191,7 +225,12 @@ const coinInlineStyle = [
       }
       hero.dataset.homeHeroAppearMounted = 'true';
 
+      if (hero.dataset.homeHeroAppear !== HERO_APPEAR_PENDING) {
+        setHeroState(hero, HERO_APPEAR_PENDING);
+      }
+
       if (prefersReducedMotion.matches) {
+        setHeroState(hero, HERO_APPEAR_RUNNING);
         hero.querySelectorAll('.home-hero-line').forEach((line) => {
           if (line instanceof HTMLElement) {
             setLabelFinal(line);
@@ -203,11 +242,13 @@ const coinInlineStyle = [
             setAssetFinal(asset, isCoin);
           }
         });
+        setHeroState(hero, HERO_APPEAR_DONE);
         return;
       }
 
-      animateLabels(hero);
-      animateAssets(hero);
+      const controls = [...animateLabels(hero), ...animateAssets(hero)];
+      setHeroState(hero, HERO_APPEAR_RUNNING);
+      markDoneWhenAnimationsFinish(hero, controls);
     };
 
     const mount = () => {
