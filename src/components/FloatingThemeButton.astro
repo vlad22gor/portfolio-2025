@@ -1,0 +1,205 @@
+<button
+  class="floating-theme-button"
+  type="button"
+  aria-label="Switch to dark theme"
+  aria-pressed="false"
+  data-floating-theme-button
+  data-theme-state="light"
+  transition:persist
+>
+  <span class="floating-theme-button__icon floating-theme-button__icon--sun" aria-hidden="true">
+    <span class="floating-theme-button__motif floating-theme-button__motif--sun" aria-hidden="true"></span>
+  </span>
+  <span class="floating-theme-button__icon floating-theme-button__icon--moon" aria-hidden="true">
+    <span class="floating-theme-button__motif floating-theme-button__motif--moon" aria-hidden="true"></span>
+  </span>
+</button>
+
+<script>
+  import { animate } from 'motion';
+
+  (() => {
+    const runtimeKey = '__floatingThemeButtonRuntime';
+    if (window[runtimeKey]) {
+      window[runtimeKey].mount();
+      return;
+    }
+
+    const storageKey = 'vh-theme';
+    const themeDark = 'dark';
+    const themeLight = 'light';
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const boundButtons = new WeakSet();
+    const scaleControls = new WeakMap();
+    let observerInitialized = false;
+
+    const normalizeTheme = (value) => (value === themeDark ? themeDark : themeLight);
+
+    const readTheme = () => normalizeTheme(document.documentElement.dataset.theme);
+
+    const writeTheme = (theme) => {
+      document.documentElement.dataset.theme = theme;
+      try {
+        window.localStorage.setItem(storageKey, theme);
+      } catch {
+        // Ignore storage write failures (private mode / blocked storage).
+      }
+    };
+
+    const setScale = (button, value) => {
+      button.style.setProperty('--floating-theme-button-scale', `${value}`);
+    };
+
+    const readScale = (button) => {
+      const value = getComputedStyle(button).getPropertyValue('--floating-theme-button-scale').trim();
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : 1;
+    };
+
+    const stopScale = (button) => {
+      const control = scaleControls.get(button);
+      if (!control) {
+        return;
+      }
+      control.stop();
+      scaleControls.delete(button);
+    };
+
+    const animateScale = (button, target) => {
+      stopScale(button);
+      if (prefersReducedMotion.matches) {
+        setScale(button, target);
+        return;
+      }
+
+      const from = readScale(button);
+      const control = animate(from, target, {
+        type: 'spring',
+        stiffness: 520,
+        damping: 30,
+        mass: 0.42,
+        onUpdate: (latest) => {
+          setScale(button, latest);
+        },
+        onComplete: () => {
+          scaleControls.delete(button);
+        },
+      });
+
+      scaleControls.set(button, control);
+    };
+
+    const pressIn = (button) => {
+      animateScale(button, 0.9);
+    };
+
+    const pressOut = (button) => {
+      animateScale(button, 1);
+    };
+
+    const syncButton = (button, theme) => {
+      const isDark = theme === themeDark;
+      button.dataset.themeState = theme;
+      button.setAttribute('aria-pressed', String(isDark));
+      button.setAttribute('aria-label', isDark ? 'Switch to light theme' : 'Switch to dark theme');
+    };
+
+    const syncButtons = () => {
+      const theme = readTheme();
+      const buttons = Array.from(document.querySelectorAll('.floating-theme-button[data-floating-theme-button]'));
+      buttons.forEach((button) => {
+        if (!(button instanceof HTMLButtonElement)) {
+          return;
+        }
+        syncButton(button, theme);
+      });
+    };
+
+    const toggleTheme = () => {
+      const nextTheme = readTheme() === themeDark ? themeLight : themeDark;
+      writeTheme(nextTheme);
+      syncButtons();
+    };
+
+    const bindButton = (button) => {
+      if (boundButtons.has(button)) {
+        return;
+      }
+
+      boundButtons.add(button);
+      setScale(button, 1);
+
+      button.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
+          return;
+        }
+        pressIn(button);
+      });
+
+      button.addEventListener('pointerup', () => {
+        pressOut(button);
+      });
+
+      button.addEventListener('pointercancel', () => {
+        pressOut(button);
+      });
+
+      button.addEventListener('pointerleave', () => {
+        pressOut(button);
+      });
+
+      button.addEventListener('blur', () => {
+        pressOut(button);
+      });
+
+      button.addEventListener('keydown', (event) => {
+        if (event.repeat) {
+          return;
+        }
+        if (event.key === 'Enter' || event.key === ' ') {
+          pressIn(button);
+        }
+      });
+
+      button.addEventListener('keyup', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          pressOut(button);
+        }
+      });
+
+      button.addEventListener('click', () => {
+        toggleTheme();
+      });
+    };
+
+    const ensureObserver = () => {
+      if (observerInitialized) {
+        return;
+      }
+      observerInitialized = true;
+      const observer = new MutationObserver(() => {
+        syncButtons();
+      });
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme'],
+      });
+    };
+
+    const mount = () => {
+      const buttons = Array.from(document.querySelectorAll('.floating-theme-button[data-floating-theme-button]'));
+      buttons.forEach((button) => {
+        if (!(button instanceof HTMLButtonElement)) {
+          return;
+        }
+        bindButton(button);
+      });
+      ensureObserver();
+      syncButtons();
+    };
+
+    mount();
+    document.addEventListener('astro:page-load', mount);
+    window[runtimeKey] = { mount, syncButtons };
+  })();
+</script>

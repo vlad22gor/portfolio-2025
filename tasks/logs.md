@@ -1,5 +1,17 @@
 # Logs
 
+- 2026-03-18: Уточнён визуальный контракт `FloatingThemeButton`: tap-scale `0.9`, tokenized motif color и dark offset `-1.5px`.
+  Причина: по фидбеку нужно усилить press-анимацию, убрать зависимость от встроенного цвета SVG и компенсировать визуальный центр мотива в dark-теме.
+  Файлы: `src/components/FloatingThemeButton.astro`, `src/styles/global.css`, `tests/smoke/theme-tokens.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) в runtime FAB `pressIn` изменён `0.96 -> 0.9`; (2) иконки `sun/moon` переведены с `<img>` на CSS mask (`mask-image/-webkit-mask-image`) и окрашиваются через новый токен `--color-button-floating-motif`; (3) токен `--color-button-floating-motif` добавлен в light/dark коллекции и привязан к `--color-accent-blue`; (4) введён `--floating-theme-icon-offset-x` (`0px` default, `-1.5px` для `data-theme-state='dark'`) и скомпонован в transform обеих icon-state веток; (5) smoke-тест расширен проверками press scale до `0.9`, соответствия цвета активного мотива токену акцента и dark translateX `-1.5px`; (6) `tasks/lessons.md` обновлён под новый устойчивый контракт FAB.
+  Проверки: (1) `npm run build` — успешно; (2) `npx playwright test tests/smoke/theme-tokens.spec.ts` — успешно (`3/3`).
+
+- 2026-03-18: Реализован глобальный `floating theme FAB` (desktop-only) с анимированным SVG-toggle и персистентной сменой темы.
+  Причина: по задаче нужно добавить компонент `floating button` из Figma `83:19192`, переключение `light/dark` по tap и сохранить состояние темы между переходами/перезагрузками.
+  Файлы: `src/layouts/BaseLayout.astro`, `src/components/FloatingThemeButton.astro`, `src/styles/global.css`, `tests/smoke/theme-tokens.spec.ts`, `tasks/logs.md`.
+  Что сделано: (1) в `BaseLayout` убран статичный `data-theme="light"` и добавлен ранний inline-bootstrap темы (`vh-theme` из `localStorage`, fallback `prefers-color-scheme`) + re-apply на `astro:page-load`, чтобы `data-theme` не терялся на soft-nav; (2) добавлен новый `FloatingThemeButton` в `.site-desktop-shell` с `transition:persist`, idempotent runtime (`window`-singleton), `aria-pressed/aria-label` sync, toggle `html[data-theme]` и запись в `localStorage['vh-theme']`; (3) в `global.css` добавлены стили FAB (64x64, radius 40, shadow `2px 4px 15px 2px rgba(0,0,0,0.1)`, fixed `right/bottom 32px`, hover overlay, focus-visible, crossfade blur+scale для `sun/moon` и reduced-motion fallback); (4) smoke `theme-tokens.spec.ts` расширен проверками bootstrap-приоритета (`system` vs `localStorage`), клика по FAB, персистентности темы на soft/hard nav и скрытия FAB в mobile temporary mode.
+  Проверки: (1) `npm run build` — успешно; (2) `npx playwright test tests/smoke/theme-tokens.spec.ts` — успешно (`3/3`); (3) `npm run test:smoke` — `18/19` (один интермиттентный фейл в pre-navigation тайминге `case switcher`); (4) повторный запуск `npx playwright test tests/smoke/case-details.spec.ts -g "case switcher next"` — успешно (`1/1`).
+
 - 2026-03-18: Расширены color tokens и добавлены light/dark коллекции без UI-тоггла.
   Причина: по задаче нужно синхронизировать цветовые токены с Figma (`83:19088` light, `83:19089` dark), добавить недостающие `button-floating` токены и ввести инфраструктурный theme-контракт через `data-theme`.
   Файлы: `src/styles/global.css`, `src/layouts/BaseLayout.astro`, `tests/smoke/theme-tokens.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.

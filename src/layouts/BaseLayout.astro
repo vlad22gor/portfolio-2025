@@ -5,6 +5,7 @@ import AgentationToolbar from '../components/dev/AgentationToolbar';
 import InViewMotionRuntime from '../components/InViewMotionRuntime.astro';
 import TemporaryAdaptiveNotice from '../components/TemporaryAdaptiveNotice.astro';
 import CriticalMediaWarmupRuntime from '../components/CriticalMediaWarmupRuntime.astro';
+import FloatingThemeButton from '../components/FloatingThemeButton.astro';
 import { resolveCriticalRouteIdFromPath } from '../data/critical-media';
 
 export interface Props {
@@ -31,10 +32,43 @@ const agentationEndpoint =
 ---
 
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>
+      (() => {
+        const runtimeKey = '__themeBootstrapRuntime';
+        const themeKey = 'vh-theme';
+        const normalizeTheme = (value) => (value === 'dark' ? 'dark' : 'light');
+        const resolveTheme = () => {
+          let storedTheme = null;
+          try {
+            storedTheme = window.localStorage.getItem(themeKey);
+          } catch {
+            storedTheme = null;
+          }
+
+          const prefersDark =
+            typeof window.matchMedia === 'function' &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches;
+          return storedTheme ? normalizeTheme(storedTheme) : prefersDark ? 'dark' : 'light';
+        };
+
+        const applyTheme = () => {
+          document.documentElement.dataset.theme = resolveTheme();
+        };
+
+        if (window[runtimeKey]) {
+          window[runtimeKey].applyTheme();
+          return;
+        }
+
+        applyTheme();
+        document.addEventListener('astro:page-load', applyTheme);
+        window[runtimeKey] = { applyTheme };
+      })();
+    </script>
     <script is:inline>
       document.documentElement.setAttribute('data-js', 'true');
     </script>
@@ -84,6 +118,7 @@ const agentationEndpoint =
     </div>
     <div class="site-desktop-shell">
       <slot />
+      <FloatingThemeButton />
       <InViewMotionRuntime />
       <CriticalMediaWarmupRuntime routeId={criticalRouteId} />
       {
