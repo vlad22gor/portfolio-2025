@@ -325,4 +325,54 @@ test.describe('Gallery smoke', () => {
     expect(galleryScope).toBeTruthy();
     expect(galleryScope).not.toBe(casesScope);
   });
+
+  test('route transition to home keeps fade only in page-content and removes plus-lighter artifacts', async ({ page }) => {
+    await page.goto('/cases');
+
+    await page.evaluate(() => {
+      window.__routeTransitionAnimations = [];
+
+      const startedAt = performance.now();
+      const record = () => {
+        const activeAnimations = document
+          .getAnimations()
+          .map((animation) => {
+            const effect = animation.effect;
+            const pseudoElement = effect && typeof effect.pseudoElement === 'string' ? effect.pseudoElement : '';
+            return {
+              name: animation.animationName || '',
+              pseudoElement,
+            };
+          })
+          .filter((entry) => entry.name || entry.pseudoElement.includes('view-transition'));
+
+        window.__routeTransitionAnimations.push(activeAnimations);
+
+        if (performance.now() - startedAt < 1000) {
+          requestAnimationFrame(record);
+        }
+      };
+
+      requestAnimationFrame(record);
+    });
+
+    await page.click('a[data-nav-id="home"]');
+    await page.waitForTimeout(1100);
+
+    const uniqueAnimations = await page.evaluate(() => {
+      const all = (window.__routeTransitionAnimations || []).flat();
+      return Array.from(new Set(all.map((entry) => `${entry.name}|${entry.pseudoElement}`))).sort();
+    });
+
+    expect(uniqueAnimations).not.toContain('-ua-mix-blend-mode-plus-lighter|::view-transition-new(root)');
+    expect(uniqueAnimations).not.toContain('-ua-mix-blend-mode-plus-lighter|::view-transition-old(root)');
+
+    const hasHeaderFooterAstroFade = uniqueAnimations.some((entry) =>
+      /astroFade(In|Out)\|::view-transition-(new|old)\(site-(header|footer)\)/.test(entry),
+    );
+    expect(hasHeaderFooterAstroFade).toBe(false);
+
+    expect(uniqueAnimations).toContain('contentFadeIn|::view-transition-new(page-content)');
+    expect(uniqueAnimations).toContain('contentFadeOut|::view-transition-old(page-content)');
+  });
 });

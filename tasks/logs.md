@@ -1294,3 +1294,21 @@
   Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
   Что сделано: обновлены токены `--type-description-large-weight` и `--type-description-medium-weight` (`500 -> 485`), при сохранении явного `font-variation-settings` для `type-description-*`.
   Проверки: runtime-проверка через Playwright на `type-description-medium` показала `fontWeight: 485` и `fontVariationSettings: "opsz" 14, "wght" 485`.
+
+- 2026-03-18: Обновлён investigation-документ по микровспышке на `/` после неуспешной итерации с `transition:animate="none"` для `main`.
+  Причина: пользователь подтвердил, что визуальная вспышка остаётся, несмотря на отключение blended-fade в `page-content/gallery-content`.
+  Файлы: `tasks/main-soft-nav-flash-investigation.md`, `tasks/logs.md`.
+  Что сделано: в investigation добавлены: (1) факты по выполненному патчу (`main` scope -> `none`), (2) инструментальные результаты (build/smoke/headed-route checks), (3) итог «не помогло по UX», (4) обновлённые гипотезы и следующий план (проверка header/footer scope, headed frame-by-frame, Chrome/Safari).
+  Проверки: в этой итерации изменялась только документация; код/тесты не запускались.
+
+- 2026-03-18: Реализован фикс микровспышки при soft-nav на `/` через политику «fade только в контенте».
+  Причина: расследование подтвердило, что артефакт связан с compositing-path View Transitions (`plus-lighter`) на `root` и дефолтным `astroFade` у shared scope (`site-header/site-footer`).
+  Файлы: `src/components/SiteHeader.astro`, `src/components/SiteFooter.astro`, `src/styles/global.css`, `tests/smoke/gallery.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) для `site-header` и `site-footer` включён `transition:animate='none'` при сохранении `transition:name` + `transition:persist`; (2) в `global.css` добавлена View Transition policy: отключена root-анимация (`::view-transition-*(root)`), добавлены кастомные `@keyframes contentFadeIn/contentFadeOut` без additive blend, переопределены `page-content/gallery-content` на эти keyframes с `mix-blend-mode: normal`; (3) добавлены fallback-override правила для `main#content[data-astro-transition-scope]` под `data-astro-transition-fallback='old|new'`; (4) добавлен smoke-тест `/cases -> /`, который проверяет отсутствие root `plus-lighter`, отсутствие `astroFade*` у `site-header/site-footer` и наличие `contentFade*` у `page-content`.
+  Проверки: (1) `npm run build` — успешно; (2) первый `npm run test:smoke` дал 1 флейк в несвязанном тесте `temporary-adaptive` (`notClippedBottom`); (3) точечный re-run флейка `npx playwright test tests/smoke/temporary-adaptive.spec.ts --grep "1024x1366 keeps temporary screen with explicit phone small size"` — успешно (`1/1`); (4) повторный полный `npm run test:smoke` — успешно (`14/14`), новый transition-smoke зелёный.
+
+- 2026-03-18: Обновлён investigation-документ по микровспышке после внедрения policy «fade только в контенте».
+  Причина: зафиксировать завершённую итерацию расследования (изменённый transition-path, подтверждённые проверки, статус закрытия).
+  Файлы: `tasks/main-soft-nav-flash-investigation.md`, `tasks/logs.md`.
+  Что сделано: добавлен новый блок итерации с описанием внесённых изменений (`root/header/footer/content`), результатами build/smoke и текущим статусом (технический фикс + необходимость headed UX-check).
+  Проверки: отдельные проверки не запускались (документационный апдейт после уже выполненных `npm run build` и `npm run test:smoke`).
