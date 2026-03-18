@@ -29,6 +29,54 @@ const readFooterBackgrounds = () => {
   };
 };
 
+const readBadgeThemeSnapshot = () => {
+  const resolveColor = (value: string) => {
+    const probe = document.createElement('span');
+    probe.style.color = value;
+    document.body.appendChild(probe);
+    const resolved = getComputedStyle(probe).color;
+    probe.remove();
+    return resolved;
+  };
+
+  const rootStyles = getComputedStyle(document.documentElement);
+  const expectedAccentBlue = resolveColor(rootStyles.getPropertyValue('--color-accent-blue').trim());
+  const expectedTextSecondary = resolveColor(rootStyles.getPropertyValue('--color-text-secondary').trim());
+  const defaultBadge = document.querySelector('.case-badge-row .case-badge');
+  if (!(defaultBadge instanceof HTMLElement)) {
+    return null;
+  }
+
+  const defaultBadgeStyles = getComputedStyle(defaultBadge);
+
+  const explicitOutlined = document.createElement('span');
+  explicitOutlined.className = 'case-badge case-badge--outlined';
+  explicitOutlined.dataset.badgeType = 'outlined';
+  explicitOutlined.textContent = 'Outlined';
+  document.body.appendChild(explicitOutlined);
+  const explicitOutlinedStyles = getComputedStyle(explicitOutlined);
+
+  const snapshot = {
+    expectedAccentBlue,
+    expectedTextSecondary,
+    defaultBadge: {
+      dataBadgeType: defaultBadge.dataset.badgeType ?? null,
+      backgroundColor: defaultBadgeStyles.backgroundColor,
+      borderTopWidth: defaultBadgeStyles.borderTopWidth,
+      borderTopColor: defaultBadgeStyles.borderTopColor,
+    },
+    explicitOutlined: {
+      dataBadgeType: explicitOutlined.dataset.badgeType ?? null,
+      backgroundColor: explicitOutlinedStyles.backgroundColor,
+      borderTopWidth: explicitOutlinedStyles.borderTopWidth,
+      borderTopColor: explicitOutlinedStyles.borderTopColor,
+    },
+  };
+
+  explicitOutlined.remove();
+  return snapshot;
+};
+
 const readFloatingButtonState = () => {
   const button = document.querySelector('.floating-theme-button[data-floating-theme-button]');
   if (!(button instanceof HTMLButtonElement)) {
@@ -226,6 +274,55 @@ test.describe('Theme tokens smoke', () => {
       () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
     );
     expect(darkHasHorizontalOverflow).toBe(false);
+  });
+
+  test('badge uses outlined in dark for default type and restores tone in light', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.goto('/');
+    await expect(page).toHaveTitle(/Vlad Horovyy – Product Designer/i);
+
+    await page.evaluate(() => {
+      document.documentElement.dataset.theme = 'light';
+      window.localStorage.setItem('vh-theme', 'light');
+    });
+
+    const lightSnapshot = await page.evaluate(readBadgeThemeSnapshot);
+    expect(lightSnapshot).not.toBeNull();
+    expect(lightSnapshot!.defaultBadge.dataBadgeType).toBe('default');
+    expect(lightSnapshot!.defaultBadge.backgroundColor).toBe(lightSnapshot!.expectedAccentBlue);
+    expect(Number.parseFloat(lightSnapshot!.defaultBadge.borderTopWidth)).toBe(0);
+    expect(lightSnapshot!.explicitOutlined.dataBadgeType).toBe('outlined');
+    expect(lightSnapshot!.explicitOutlined.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(Number.parseFloat(lightSnapshot!.explicitOutlined.borderTopWidth)).toBeGreaterThanOrEqual(1);
+    expect(lightSnapshot!.explicitOutlined.borderTopColor).toBe(lightSnapshot!.expectedTextSecondary);
+
+    await page.evaluate(() => {
+      document.documentElement.dataset.theme = 'dark';
+      window.localStorage.setItem('vh-theme', 'dark');
+    });
+
+    const darkSnapshot = await page.evaluate(readBadgeThemeSnapshot);
+    expect(darkSnapshot).not.toBeNull();
+    expect(darkSnapshot!.defaultBadge.dataBadgeType).toBe('default');
+    expect(darkSnapshot!.defaultBadge.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(Number.parseFloat(darkSnapshot!.defaultBadge.borderTopWidth)).toBeGreaterThanOrEqual(1);
+    expect(darkSnapshot!.defaultBadge.borderTopColor).toBe(darkSnapshot!.expectedTextSecondary);
+    expect(darkSnapshot!.explicitOutlined.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(Number.parseFloat(darkSnapshot!.explicitOutlined.borderTopWidth)).toBeGreaterThanOrEqual(1);
+    expect(darkSnapshot!.explicitOutlined.borderTopColor).toBe(darkSnapshot!.expectedTextSecondary);
+
+    await page.evaluate(() => {
+      document.documentElement.dataset.theme = 'light';
+      window.localStorage.setItem('vh-theme', 'light');
+    });
+
+    const lightAgainSnapshot = await page.evaluate(readBadgeThemeSnapshot);
+    expect(lightAgainSnapshot).not.toBeNull();
+    expect(lightAgainSnapshot!.defaultBadge.backgroundColor).toBe(lightAgainSnapshot!.expectedAccentBlue);
+    expect(Number.parseFloat(lightAgainSnapshot!.defaultBadge.borderTopWidth)).toBe(0);
+    expect(lightAgainSnapshot!.explicitOutlined.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(Number.parseFloat(lightAgainSnapshot!.explicitOutlined.borderTopWidth)).toBeGreaterThanOrEqual(1);
+    expect(lightAgainSnapshot!.explicitOutlined.borderTopColor).toBe(lightAgainSnapshot!.expectedTextSecondary);
   });
 
   test('floating theme button toggles theme and keeps state across soft/hard navigation', async ({ page }) => {

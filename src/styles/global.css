@@ -2044,7 +2044,8 @@ img.home-hero-asset {
   align-items: center;
   justify-content: center;
   height: 22px;
-  padding: 1px 8px 0;
+  padding: 0 8px;
+  border: none;
   border-radius: 9999px;
   color: var(--color-text-default);
   font-family: var(--type-label-small-family);
@@ -2055,6 +2056,10 @@ img.home-hero-asset {
   font-optical-sizing: none;
   font-variation-settings: var(--type-label-small-font-variation);
   white-space: nowrap;
+}
+
+.case-badge__label {
+  display: block;
 }
 
 .case-badge--blue {
@@ -2071,6 +2076,16 @@ img.home-hero-asset {
 
 .case-badge--green {
   background: var(--color-accent-green);
+}
+
+.case-badge--outlined {
+  background: transparent;
+  border: 1.2px solid var(--color-text-secondary);
+}
+
+html[data-theme='dark'] .case-badge[data-badge-type='default'] {
+  background: transparent;
+  border: 1.2px solid var(--color-text-secondary);
 }
 
 .case-card-title {

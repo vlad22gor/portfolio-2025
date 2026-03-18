@@ -1,5 +1,23 @@
 # Logs
 
+- 2026-03-18: Для теста убран Y-offset лейбла в `Badge`.
+  Причина: по запросу нужно временно отключить вертикальный offset текста в бейдже.
+  Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) в `.case-badge__label` удалён `transform: translateY(0.5px)`; (2) правило в `tasks/lessons.md` обновлено на “без Y-offset”.
+  Проверки: (1) `npm run build` — успешно; (2) `npx playwright test tests/smoke/theme-tokens.spec.ts` — успешно (`4/4`).
+
+- 2026-03-18: Для `Badge` убран верхний padding и добавлен `offsetY=0.5px` для лейбла.
+  Причина: по фидбеку нужно убрать `padding-top` у бейджа и сохранить визуальную вертикальную компенсацию текста через отдельный offset.
+  Файлы: `src/components/Badge.astro`, `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) в `Badge` лейбл обёрнут в `.case-badge__label`; (2) у `.case-badge` padding изменён с `1px 8px 0` на `0 8px`; (3) для `.case-badge__label` добавлен `transform: translateY(0.5px)`; (4) устойчивое правило в `tasks/lessons.md` обновлено под новый контракт.
+  Проверки: (1) `npm run build` — успешно; (2) `npx playwright test tests/smoke/theme-tokens.spec.ts` — успешно (`4/4`).
+
+- 2026-03-18: `Badge` расширен типом `outlined`; добавлен глобальный dark-override без потери light tone-цветов.
+  Причина: по задаче нужно внедрить Figma-вариант `outlined` (`85:19574`) и поведение темы: в dark все badge по умолчанию становятся outlined, при возврате в light восстанавливаются исходные tone-оверрайды.
+  Файлы: `src/components/Badge.astro`, `src/styles/global.css`, `tests/smoke/theme-tokens.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) в `Badge` добавлен prop `type?: 'default'|'outlined'` (default=`default`) и атрибут `data-badge-type`; tone API сохранён без breaking changes; (2) добавлен класс `.case-badge--outlined`; (3) в `global.css` добавлен dark-theme override `html[data-theme='dark'] .case-badge[data-badge-type='default']` с `background: transparent` и `border: 1.2px solid var(--color-text-secondary)`; (4) в smoke добавлен тест `badge uses outlined in dark for default type and restores tone in light`, включая проверку explicit outlined в обеих темах; (5) обновлено устойчивое правило в `tasks/lessons.md`.
+  Проверки: (1) `npm run build` — успешно; (2) `npx playwright test tests/smoke/theme-tokens.spec.ts` — успешно (`4/4`).
+
 - 2026-03-18: Добавлен компонентный токен `--color-footer-bg` и футер переведён на него в обоих фоновых слоях.
   Причина: по Figma-контракту `footer bg` должен иметь отдельный публичный токен (`light #dbdad1`, `dark #224b7d`) и не зависеть от `--color-accent-blue`.
   Файлы: `src/styles/global.css`, `src/components/SiteFooter.astro`, `tests/smoke/theme-tokens.spec.ts`, `tasks/logs.md`.
