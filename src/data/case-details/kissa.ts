@@ -8,7 +8,7 @@ export const KISSA_CASE_DETAIL_CONFIG: CaseDetailConfig = {
     {
       type: 'intro',
       className: 'kissa-intro-section',
-      inViewPreset: 'appear-v1',
+      inViewPreset: 'appear-stagger-dynamic-v1',
       data: {
         title: 'Kissa.AI: making complex self-checkout technology easy and engaging for everyday users',
         subtitle:
@@ -128,7 +128,7 @@ export const KISSA_CASE_DETAIL_CONFIG: CaseDetailConfig = {
     },
     {
       type: 'artifactPhotos',
-      inViewPreset: 'appear-v1',
+      inViewPreset: 'appear-stagger-dynamic-v1',
       data: {
         leftPhoto: {
           src: '/media/cases/kissa/artifact-photos/kissa-flipchart.webp',

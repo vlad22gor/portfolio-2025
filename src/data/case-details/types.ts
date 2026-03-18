@@ -1,7 +1,7 @@
 import type { Case } from '../cases';
 import type { CaseProcessSectionData } from '../case-process/types';
 
-export type InViewPreset = 'appear-v1';
+export type InViewPreset = 'appear-v1' | 'appear-stagger-v1' | 'appear-stagger-dynamic-v1';
 
 export interface CaseDetailImage {
   src: string;

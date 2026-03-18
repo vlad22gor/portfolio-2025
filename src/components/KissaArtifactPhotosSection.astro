@@ -10,12 +10,19 @@ interface Props {
 
 const { data, class: className = '', inViewPreset = 'appear-v1' } = Astro.props as Props;
 const rootClassName = ['kissa-artifact-photos-section', className].filter(Boolean).join(' ');
-const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefined;
+const resolvedInViewPreset =
+  inViewPreset === 'appear-v1' ||
+  inViewPreset === 'appear-stagger-v1' ||
+  inViewPreset === 'appear-stagger-dynamic-v1'
+    ? inViewPreset
+    : undefined;
 ---
 
 <section class={rootClassName} aria-label="Kissa artifact photos section" data-motion-inview={resolvedInViewPreset}>
   <QuantizedPerimeter
     class="kissa-artifact-photos-surface kissa-artifact-photos-surface--left"
+    data-motion-stage-item
+    data-motion-stagger-index="0"
     shape="rectangle"
     edgePattern="scallop"
     step={40}
@@ -35,6 +42,8 @@ const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefi
 
   <QuantizedPerimeter
     class="kissa-artifact-photos-surface kissa-artifact-photos-surface--right"
+    data-motion-stage-item
+    data-motion-stagger-index="1"
     shape="rectangle"
     edgePattern="scallop"
     step={40}
@@ -52,15 +61,26 @@ const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefi
     />
   </QuantizedPerimeter>
 
-  <p class="type-description-medium kissa-artifact-photos-caption kissa-artifact-photos-caption--top">
+  <p
+    class="type-description-medium kissa-artifact-photos-caption kissa-artifact-photos-caption--top"
+    data-motion-stage-item
+    data-motion-stagger-index="2"
+  >
     {data.topCaption}
   </p>
-  <p class="type-description-medium kissa-artifact-photos-caption kissa-artifact-photos-caption--bottom">
+  <p
+    class="type-description-medium kissa-artifact-photos-caption kissa-artifact-photos-caption--bottom"
+    data-motion-stage-item
+    data-motion-stagger-index="5"
+  >
     {data.bottomCaption}
   </p>
 
   <img
     class="kissa-artifact-photos-arrow kissa-artifact-photos-arrow--left"
+    data-motion-stage-item
+    data-motion-stagger-index="3"
+    data-motion-stage-side="left"
     src={data.leftArrowSrc}
     alt=""
     aria-hidden="true"
@@ -71,6 +91,9 @@ const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefi
   />
   <img
     class="kissa-artifact-photos-arrow kissa-artifact-photos-arrow--right"
+    data-motion-stage-item
+    data-motion-stagger-index="4"
+    data-motion-stage-side="right"
     src={data.rightArrowSrc}
     alt=""
     aria-hidden="true"

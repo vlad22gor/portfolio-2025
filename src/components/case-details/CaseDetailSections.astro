@@ -26,11 +26,7 @@ const { config, currentCase, prevCase, nextCase } = Astro.props as Props;
   config.sections.map((section) => (
     <>
       {section.type === 'intro' && (
-        <CaseDetailIntroSection
-          data={section.data}
-          inViewPreset={section.inViewPreset}
-          class={section.className}
-        />
+        <CaseDetailIntroSection data={section.data} inViewPreset={section.inViewPreset} class={section.className} />
       )}
 
       {section.type === 'introScreens' && (

@@ -13,6 +13,12 @@
     const observers = new Map();
     const completedSequences = new Set();
     const sequenceEventName = 'motion:sequence-complete';
+    const routeTransitionAttribute = 'data-astro-transition';
+    const introSyncMarkerKey = '__case-switcher-intro-sync';
+    const introSyncMarkerMaxAgeMs = 5000;
+    const transitionWaitMaxMs = 1500;
+    const transitionStartWaitMaxMs = 250;
+    const transitionInactiveStableMs = 80;
     const baseTransition = { duration: 0.4, ease: [0.44, 0, 0.56, 1] };
     const charSegmenter =
       typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function'
@@ -28,6 +34,24 @@
         initialTransform: 'translate3d(0px, 50px, 0px)',
         finalTransform: 'translate3d(0px, 0px, 0px)',
         transition: baseTransition,
+      },
+      'appear-stagger-v1': {
+        mode: 'stagger-children',
+        childSelector: '[data-motion-stage-item]',
+        initialTransform: 'translate3d(0px, 50px, 0px)',
+        finalTransform: 'translate3d(0px, 0px, 0px)',
+        transition: baseTransition,
+        childDelay: 0.1,
+        sideAware: true,
+      },
+      'appear-stagger-dynamic-v1': {
+        mode: 'stagger-children',
+        childSelector: '[data-motion-stage-item]',
+        initialTransform: 'translate3d(0px, 50px, 0px)',
+        finalTransform: 'translate3d(0px, 0px, 0px)',
+        transition: baseTransition,
+        childDelay: 0.08,
+        sideAware: true,
       },
       'cases-arrow-left-v1': {
         mode: 'element',
@@ -91,6 +115,14 @@
         finalTransform: 'translate3d(0px, 0px, 0px)',
         transition: baseTransition,
         childDelay: 0.05,
+      },
+      'process-tickets-row-stagger-dynamic-v1': {
+        mode: 'stagger-children',
+        childSelector: '[data-motion-stagger-item]',
+        initialTransform: 'translate3d(0px, 25px, 0px)',
+        finalTransform: 'translate3d(0px, 0px, 0px)',
+        transition: baseTransition,
+        childDelay: 0.08,
       },
       'temporary-adaptive-stagger-v1': {
         mode: 'stagger-children',
@@ -177,6 +209,67 @@
         window.removeEventListener(sequenceEventName, handler);
       };
     };
+
+    const clearIntroSyncMarker = () => {
+      try {
+        window.sessionStorage.removeItem(introSyncMarkerKey);
+      } catch {
+        // Ignore storage access errors.
+      }
+    };
+
+    const hasFreshIntroSyncMarker = () => {
+      try {
+        const raw = window.sessionStorage.getItem(introSyncMarkerKey);
+        if (!raw) {
+          return false;
+        }
+        const timestamp = Number.parseInt(raw, 10);
+        if (!Number.isFinite(timestamp)) {
+          clearIntroSyncMarker();
+          return false;
+        }
+        if (Date.now() - timestamp > introSyncMarkerMaxAgeMs) {
+          clearIntroSyncMarker();
+          return false;
+        }
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    const waitForRouteTransitionEnd = () =>
+      new Promise((resolve) => {
+        const startedAt = performance.now();
+        let sawActiveTransition = document.documentElement.hasAttribute(routeTransitionAttribute);
+        let inactiveSince = sawActiveTransition ? null : startedAt;
+        const poll = () => {
+          const transitionActive = document.documentElement.hasAttribute(routeTransitionAttribute);
+          if (transitionActive) {
+            sawActiveTransition = true;
+            inactiveSince = null;
+          } else if (inactiveSince === null) {
+            inactiveSince = performance.now();
+          }
+          const now = performance.now();
+          const elapsed = now - startedAt;
+          const reachedGlobalTimeout = elapsed >= transitionWaitMaxMs;
+          if (sawActiveTransition) {
+            const stableInactive =
+              inactiveSince !== null && now - inactiveSince >= transitionInactiveStableMs;
+            if (stableInactive || reachedGlobalTimeout) {
+              resolve();
+              return;
+            }
+          } else if (elapsed >= transitionStartWaitMaxMs || reachedGlobalTimeout) {
+            resolve();
+            return;
+          }
+          window.requestAnimationFrame(poll);
+        };
+        window.requestAnimationFrame(poll);
+      });
 
     const setInitial = (element, initialTransform) => {
       element.style.opacity = '0';
@@ -314,6 +407,34 @@
     };
 
     const resolveStaggerChildren = (element, preset) => {
+      const resolveMotionTransform = (node) => {
+        if (!preset.sideAware) {
+          return {
+            initialTransform: preset.initialTransform,
+            finalTransform: preset.finalTransform,
+          };
+        }
+
+        const side = node.dataset.motionStageSide?.trim().toLowerCase();
+        if (side === 'left') {
+          return {
+            initialTransform: 'translate3d(25px, 0px, 0px) scale(0.9)',
+            finalTransform: 'translate3d(0px, 0px, 0px) scale(1)',
+          };
+        }
+        if (side === 'right') {
+          return {
+            initialTransform: 'translate3d(-25px, 0px, 0px) scale(0.9)',
+            finalTransform: 'translate3d(0px, 0px, 0px) scale(1)',
+          };
+        }
+
+        return {
+          initialTransform: preset.initialTransform,
+          finalTransform: preset.finalTransform,
+        };
+      };
+
       const selectorForChildren =
         typeof preset.childSelector === 'string' && preset.childSelector.trim()
           ? preset.childSelector
@@ -324,12 +445,13 @@
           const explicitIndex = Number.parseInt(node.dataset.motionStaggerIndex ?? '', 10);
           const order = Number.isFinite(explicitIndex) ? explicitIndex : domIndex;
           const baseTransform = resolveBaseTransform(node);
+          const motionTransform = resolveMotionTransform(node);
           return {
             node,
             order,
             domIndex,
-            initialTransform: composeTransform(baseTransform, preset.initialTransform),
-            finalTransform: composeTransform(baseTransform, preset.finalTransform),
+            initialTransform: composeTransform(baseTransform, motionTransform.initialTransform),
+            finalTransform: composeTransform(baseTransform, motionTransform.finalTransform),
           };
         })
         .sort((left, right) => {
@@ -356,14 +478,92 @@
 
     const mountStaggerChildrenElement = (element, preset) => {
       const childStates = resolveStaggerChildren(element, preset);
-      if (prefersReducedMotion.matches) {
-        element.dataset.motionInviewAnimated = 'true';
-        setStaggerChildrenFinal(childStates);
-        return;
+      const sequenceAfterId = element.dataset.motionSequenceAfter ?? '';
+      const sequenceSourceId = element.dataset.motionSequenceSource ?? '';
+      let removeSequenceListener = null;
+
+      const cleanupSequenceListener = () => {
+        if (!removeSequenceListener) {
+          return;
+        }
+        removeSequenceListener();
+        removeSequenceListener = null;
+      };
+
+      const start = async (target) => {
+        if (!isMotionNode(target)) {
+          return;
+        }
+        if (target.dataset.motionInviewAnimated === 'true') {
+          return;
+        }
+
+        const shouldAwaitRouteTransition =
+          target instanceof HTMLElement &&
+          target.dataset.motionAwaitRouteTransition === 'case-switcher-intro' &&
+          !prefersReducedMotion.matches &&
+          hasFreshIntroSyncMarker();
+
+        if (shouldAwaitRouteTransition) {
+          await waitForRouteTransitionEnd();
+          clearIntroSyncMarker();
+          if (!document.contains(target)) {
+            cleanupSequenceListener();
+            return;
+          }
+          if (target.dataset.motionInviewAnimated === 'true') {
+            cleanupSequenceListener();
+            return;
+          }
+          setStaggerChildrenInitial(childStates);
+        }
+
+        target.dataset.motionInviewAnimated = 'true';
+
+        if (prefersReducedMotion.matches) {
+          if (target instanceof HTMLElement && target.dataset.motionAwaitRouteTransition === 'case-switcher-intro') {
+            clearIntroSyncMarker();
+          }
+          setStaggerChildrenFinal(childStates);
+          emitSequenceComplete(sequenceSourceId);
+          cleanupSequenceListener();
+          return;
+        }
+
+        if (childStates.length === 0) {
+          emitSequenceComplete(sequenceSourceId);
+          cleanupSequenceListener();
+          return;
+        }
+
+        let pending = childStates.length;
+        childStates.forEach((state, index) => {
+          animate(
+            state.node,
+            {
+              opacity: [0, 1],
+              transform: [state.initialTransform, state.finalTransform],
+            },
+            {
+              ...preset.transition,
+              delay: index * preset.childDelay,
+              onComplete: () => {
+                pending -= 1;
+                if (pending === 0) {
+                  emitSequenceComplete(sequenceSourceId);
+                  cleanupSequenceListener();
+                }
+              },
+            },
+          );
+        });
+      };
+
+      if (!prefersReducedMotion.matches) {
+        setStaggerChildrenInitial(childStates);
       }
 
-      setStaggerChildrenInitial(childStates);
-      const stop = inView(
+      const stopInView = inView(
         element,
         (target) => {
           if (!isMotionNode(target)) {
@@ -372,24 +572,23 @@
           if (target.dataset.motionInviewAnimated === 'true') {
             return;
           }
-          target.dataset.motionInviewAnimated = 'true';
-          childStates.forEach((state, index) => {
-            animate(
-              state.node,
-              {
-                opacity: [0, 1],
-                transform: [state.initialTransform, state.finalTransform],
-              },
-              {
-                ...preset.transition,
-                delay: index * preset.childDelay,
-              },
-            );
-          });
+          if (!sequenceAfterId || completedSequences.has(sequenceAfterId)) {
+            start(target);
+            return;
+          }
+          if (!removeSequenceListener) {
+            removeSequenceListener = onSequenceComplete(sequenceAfterId, () => {
+              start(target);
+            });
+          }
         },
         { amount: preset.amount ?? 0 },
       );
-      observers.set(element, stop);
+
+      observers.set(element, () => {
+        stopInView();
+        cleanupSequenceListener();
+      });
     };
 
     const mountPerCharElement = (element, preset) => {
@@ -554,15 +753,76 @@
       const baseTransform = resolveBaseTransform(element);
       const initialTransform = composeTransform(baseTransform, preset.initialTransform);
       const finalTransform = composeTransform(baseTransform, preset.finalTransform);
+      const sequenceAfterId = element.dataset.motionSequenceAfter ?? '';
+      const sequenceSourceId = element.dataset.motionSequenceSource ?? '';
+      let removeSequenceListener = null;
+
+      const cleanupSequenceListener = () => {
+        if (!removeSequenceListener) {
+          return;
+        }
+        removeSequenceListener();
+        removeSequenceListener = null;
+      };
+
+      const start = async (target) => {
+        if (!isMotionNode(target)) {
+          return;
+        }
+        if (target.dataset.motionInviewAnimated === 'true') {
+          return;
+        }
+
+        const shouldAwaitRouteTransition =
+          target instanceof HTMLElement &&
+          target.dataset.motionAwaitRouteTransition === 'case-switcher-intro' &&
+          !prefersReducedMotion.matches &&
+          hasFreshIntroSyncMarker();
+
+        if (shouldAwaitRouteTransition) {
+          await waitForRouteTransitionEnd();
+          clearIntroSyncMarker();
+          if (!document.contains(target)) {
+            cleanupSequenceListener();
+            return;
+          }
+          if (target.dataset.motionInviewAnimated === 'true') {
+            cleanupSequenceListener();
+            return;
+          }
+          setInitial(target, initialTransform);
+        }
+
+        target.dataset.motionInviewAnimated = 'true';
+        animate(
+          target,
+          {
+            opacity: [0, 1],
+            transform: [initialTransform, finalTransform],
+          },
+          {
+            ...preset.transition,
+            onComplete: () => {
+              emitSequenceComplete(sequenceSourceId);
+              cleanupSequenceListener();
+            },
+          },
+        );
+      };
 
       if (prefersReducedMotion.matches) {
         element.dataset.motionInviewAnimated = 'true';
+        if (element.dataset.motionAwaitRouteTransition === 'case-switcher-intro') {
+          clearIntroSyncMarker();
+        }
         setFinal(element, finalTransform);
+        emitSequenceComplete(sequenceSourceId);
+        cleanupSequenceListener();
         return;
       }
 
       setInitial(element, initialTransform);
-      const stop = inView(
+      const stopInView = inView(
         element,
         (target) => {
           if (!isMotionNode(target)) {
@@ -571,19 +831,22 @@
           if (target.dataset.motionInviewAnimated === 'true') {
             return;
           }
-          target.dataset.motionInviewAnimated = 'true';
-          animate(
-            target,
-            {
-              opacity: [0, 1],
-              transform: [initialTransform, finalTransform],
-            },
-            preset.transition,
-          );
+          if (!sequenceAfterId || completedSequences.has(sequenceAfterId)) {
+            start(target);
+            return;
+          }
+          if (!removeSequenceListener) {
+            removeSequenceListener = onSequenceComplete(sequenceAfterId, () => {
+              start(target);
+            });
+          }
         },
         { amount: 0 },
       );
-      observers.set(element, stop);
+      observers.set(element, () => {
+        stopInView();
+        cleanupSequenceListener();
+      });
     };
 
     const mountSequencedElement = (element, preset) => {

@@ -31,7 +31,10 @@ interface Props {
   outlineWidth?: number;
   outlineColor?: string;
   outlineOpacity?: number;
-  inViewPreset?: 'appear-v1';
+  inViewPreset?: 'appear-v1' | 'appear-stagger-v1' | 'appear-stagger-dynamic-v1';
+  'data-motion-stage-item'?: string;
+  'data-motion-stagger-index'?: string;
+  'data-motion-stage-side'?: 'left' | 'right';
 }
 
 const {
@@ -66,6 +69,9 @@ const {
   outlineColor,
   outlineOpacity,
   inViewPreset,
+  'data-motion-stage-item': motionStageItem,
+  'data-motion-stagger-index': motionStaggerIndex,
+  'data-motion-stage-side': motionStageSide,
 } = Astro.props;
 
 const resolvedShape = shape === 'circle' ? 'circle' : 'rectangle';
@@ -103,7 +109,12 @@ if (typeof outlineOpacity === 'number' && Number.isFinite(outlineOpacity)) {
 }
 
 const rootStyle = styleParts.join(' ');
-const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefined;
+const resolvedInViewPreset =
+  inViewPreset === 'appear-v1' ||
+  inViewPreset === 'appear-stagger-v1' ||
+  inViewPreset === 'appear-stagger-dynamic-v1'
+    ? inViewPreset
+    : undefined;
 ---
 
 <div
@@ -139,6 +150,9 @@ const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefi
   data-scallop-min-rows={String(minRows)}
   data-scallop-min-lobes={String(minLobes)}
   data-motion-inview={resolvedInViewPreset}
+  data-motion-stage-item={motionStageItem !== undefined ? '' : undefined}
+  data-motion-stagger-index={motionStaggerIndex}
+  data-motion-stage-side={motionStageSide}
   style={rootStyle}
   aria-label={label}
   tabindex={resolvedHoverAnimationEnabled ? '0' : undefined}

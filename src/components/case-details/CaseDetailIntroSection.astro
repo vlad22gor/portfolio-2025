@@ -9,21 +9,36 @@ interface Props {
 }
 
 const { data, inViewPreset, class: className = '' } = Astro.props as Props;
-const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefined;
+const resolvedInViewPreset =
+  inViewPreset === 'appear-v1' ||
+  inViewPreset === 'appear-stagger-v1' ||
+  inViewPreset === 'appear-stagger-dynamic-v1'
+    ? inViewPreset
+    : undefined;
 const rootClassName = ['fora-intro-section', className].filter(Boolean).join(' ');
 ---
 
-<section class={rootClassName} aria-labelledby="fora-intro-title" data-motion-inview={resolvedInViewPreset}>
+<section
+  class={rootClassName}
+  aria-labelledby="fora-intro-title"
+  data-motion-inview={resolvedInViewPreset}
+  data-motion-await-route-transition="case-switcher-intro"
+>
   <div class="fora-intro-top">
-    <h1 id="fora-intro-title" class="type-t2 fora-intro-title">
+    <h1 id="fora-intro-title" class="type-t2 fora-intro-title" data-motion-stage-item data-motion-stagger-index="0">
       {data.title}
     </h1>
-    <p class="type-body fora-intro-subtitle">{data.subtitle}</p>
+    <p class="type-body fora-intro-subtitle" data-motion-stage-item data-motion-stagger-index="1">{data.subtitle}</p>
   </div>
 
   <div class="fora-intro-bottom">
     <div class="fora-intro-bottom-left">
-      <article class="fora-intro-column fora-intro-column--overview" aria-label="Overview">
+      <article
+        class="fora-intro-column fora-intro-column--overview"
+        aria-label="Overview"
+        data-motion-stage-item
+        data-motion-stagger-index="2"
+      >
         <div class="fora-intro-divider-wrap" aria-hidden="true">
           <QuantizedWave
             class="fora-intro-divider"
@@ -46,7 +61,12 @@ const rootClassName = ['fora-intro-section', className].filter(Boolean).join(' '
         </div>
       </article>
 
-      <article class="fora-intro-column fora-intro-column--scope" aria-label="What I worked on">
+      <article
+        class="fora-intro-column fora-intro-column--scope"
+        aria-label="What I worked on"
+        data-motion-stage-item
+        data-motion-stagger-index="3"
+      >
         <div class="fora-intro-divider-wrap" aria-hidden="true">
           <QuantizedWave
             class="fora-intro-divider"
@@ -67,7 +87,12 @@ const rootClassName = ['fora-intro-section', className].filter(Boolean).join(' '
       </article>
     </div>
 
-    <article class="fora-intro-column fora-intro-column--results" aria-label="Results">
+    <article
+      class="fora-intro-column fora-intro-column--results"
+      aria-label="Results"
+      data-motion-stage-item
+      data-motion-stagger-index="4"
+    >
       <div class="fora-intro-divider-wrap" aria-hidden="true">
         <QuantizedWave
           class="fora-intro-divider"

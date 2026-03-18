@@ -1,5 +1,6 @@
 ---
 import QuantizedPerimeter from './QuantizedPerimeter.astro';
+import type { InViewPreset } from '../data/case-details/types';
 
 import type {
   CaseProcessSectionData,
@@ -9,7 +10,7 @@ import type {
 } from '../data/case-process/types';
 
 interface Props extends CaseProcessSectionData {
-  inViewPreset?: 'appear-v1';
+  inViewPreset?: InViewPreset;
   class?: string;
   id?: string;
 }
@@ -38,8 +39,13 @@ const composedClassName = [
 ]
   .filter(Boolean)
   .join(' ');
-const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefined;
-const ticketsRowInViewPreset = safeVariant === 'fora' ? 'process-tickets-row-stagger-v1' : undefined;
+const resolvedInViewPreset =
+  inViewPreset === 'appear-v1' ||
+  inViewPreset === 'appear-stagger-v1' ||
+  inViewPreset === 'appear-stagger-dynamic-v1'
+    ? inViewPreset
+    : undefined;
+const ticketsRowInViewPreset = safeVariant === 'fora' ? 'process-tickets-row-stagger-dynamic-v1' : undefined;
 const ticketShape = resolvedTicketVariant === 'circle-24' ? 'circle' : 'rectangle';
 const ticketStep = resolvedTicketVariant === 'circle-24' ? 24 : 36;
 

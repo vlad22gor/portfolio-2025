@@ -7,7 +7,7 @@ export const FORA_CASE_DETAIL_CONFIG: CaseDetailConfig = {
   sections: [
     {
       type: 'intro',
-      inViewPreset: 'appear-v1',
+      inViewPreset: 'appear-stagger-dynamic-v1',
       data: {
         title:
           'Fora app: driving 5% revenue increase and boosting app ratings from 3.0 to 4.6 over nine months',
@@ -36,6 +36,7 @@ export const FORA_CASE_DETAIL_CONFIG: CaseDetailConfig = {
     },
     {
       type: 'introScreens',
+      inViewPreset: 'appear-v1',
       variant: 'phone',
       screens: [
         {

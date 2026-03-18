@@ -106,6 +106,55 @@ test.describe('Case details smoke', () => {
     expect(observedShellOnlyState).toBe(false);
   };
 
+  const assertIntroScreensPerimeterIntegrity = async (
+    page: Page,
+    variant: 'phone' | 'tablet',
+  ) => {
+    const measured = await page.evaluate((currentVariant) => {
+      const section = document.querySelector(`.fora-intro-screens-section--${currentVariant}`);
+      if (!(section instanceof HTMLElement)) {
+        return null;
+      }
+
+      const surface = section.querySelector('.fora-intro-screens-surface.quantized-perimeter');
+      if (!(surface instanceof HTMLElement)) {
+        return null;
+      }
+
+      const frame = surface.querySelector('.scallop-frame');
+      const rect = surface.getBoundingClientRect();
+      const viewBox = frame instanceof SVGSVGElement ? frame.getAttribute('viewBox') : null;
+      if (!viewBox) {
+        return null;
+      }
+
+      const viewBoxParts = viewBox
+        .trim()
+        .split(/\s+/)
+        .map((part) => Number.parseFloat(part));
+      const viewBoxHeight =
+        viewBoxParts.length === 4 && Number.isFinite(viewBoxParts[3]) ? viewBoxParts[3] : null;
+
+      return {
+        rows: surface.dataset.perimeterRows ?? null,
+        snapMismatch: surface.dataset.perimeterSnapMismatch ?? null,
+        rectHeight: rect.height,
+        viewBoxHeight,
+      };
+    }, variant);
+
+    expect(measured).not.toBeNull();
+    expect(measured?.rows).toBe('9');
+    expect(measured?.snapMismatch).not.toBe('true');
+    expect(measured?.viewBoxHeight).not.toBeNull();
+
+    const delta = Math.abs((measured?.rectHeight ?? 0) - (measured?.viewBoxHeight ?? 0));
+    expect(
+      delta,
+      `${variant} intro perimeter is stretched: rectHeight=${measured?.rectHeight}, viewBoxHeight=${measured?.viewBoxHeight}`,
+    ).toBeLessThanOrEqual(1);
+  };
+
   test('/fora renders detail config with key sections and active cases nav', async ({ page }) => {
     await page.goto('/fora');
 
@@ -132,6 +181,7 @@ test.describe('Case details smoke', () => {
       center: { width: 244, height: 501 },
       right: { width: 174, height: 357 },
     });
+    await assertIntroScreensPerimeterIntegrity(page, 'phone');
     await expect(page.locator('.fora-feature-cards-section .device-mockup').first()).toHaveAttribute(
       'data-device-priority',
       'lazy',
@@ -168,10 +218,171 @@ test.describe('Case details smoke', () => {
       center: { width: 296, height: 508 },
       right: { width: 211, height: 362 },
     });
+    await assertIntroScreensPerimeterIntegrity(page, 'tablet');
     await expect(page.locator('.kissa-feature-cards .device-mockup').first()).toHaveAttribute(
       'data-device-priority',
       'lazy',
     );
+  });
+
+  test('/fora case switcher next waits for fade-end and starts intro after route transition', async ({ page }) => {
+    await page.goto('/fora');
+
+    const switcher = page.locator('.case-switcher-section');
+    await switcher.scrollIntoViewIfNeeded();
+    await expect(page.locator('.case-switcher-button--next')).toBeVisible();
+
+    const scrollBeforeClick = await page.evaluate(() => window.scrollY);
+    expect(scrollBeforeClick).toBeGreaterThan(0);
+
+    await page.evaluate(() => {
+      const runtimeWindow = window as Window & {
+        __introTransitionAudit?: {
+          startedAt: number;
+          sawTransitionWindow: boolean;
+          animatedDuringTransition: boolean;
+          screensAnimatedDuringTransition: boolean;
+        };
+      };
+
+      runtimeWindow.__introTransitionAudit = {
+        startedAt: performance.now(),
+        sawTransitionWindow: false,
+        animatedDuringTransition: false,
+        screensAnimatedDuringTransition: false,
+      };
+      const maxAuditDurationMs = 2200;
+      const tick = () => {
+        const audit = runtimeWindow.__introTransitionAudit;
+        if (!audit) {
+          return;
+        }
+        const elapsed = performance.now() - audit.startedAt;
+        const transitionActive =
+          document.documentElement.hasAttribute('data-astro-transition') && window.location.pathname === '/kissa';
+        const intro = document.querySelector('.kissa-intro-section');
+        const introAnimated = intro instanceof HTMLElement && intro.getAttribute('data-motion-inview-animated') === 'true';
+        const introScreens = document.querySelector('.kissa-intro-screens');
+        const screensAnimated =
+          introScreens instanceof HTMLElement && introScreens.getAttribute('data-motion-inview-animated') === 'true';
+        if (transitionActive) {
+          audit.sawTransitionWindow = true;
+          if (introAnimated) {
+            audit.animatedDuringTransition = true;
+          }
+          if (screensAnimated) {
+            audit.screensAnimatedDuringTransition = true;
+          }
+        }
+        if (elapsed < maxAuditDurationMs) {
+          window.requestAnimationFrame(tick);
+        }
+      };
+      window.requestAnimationFrame(tick);
+    });
+
+    await page.locator('.case-switcher-button--next').click({ noWaitAfter: true });
+    await page.waitForTimeout(80);
+
+    const preNavigationState = await page.evaluate(() => ({
+      path: window.location.pathname,
+      leavingState: document.querySelector('main#content')?.getAttribute('data-case-switcher-leaving') ?? null,
+      mainOpacity: Number.parseFloat(getComputedStyle(document.querySelector('main#content')).opacity),
+      scrollY: window.scrollY,
+    }));
+
+    expect(preNavigationState.path).toBe('/fora');
+    expect(preNavigationState.leavingState).toBe('true');
+    expect(preNavigationState.mainOpacity).toBeLessThan(1);
+    expect(preNavigationState.scrollY).toBeGreaterThan(0);
+
+    await expect(page).toHaveURL(/\/kissa\/?$/);
+    await expect(page.locator('.kissa-intro-section')).toBeVisible();
+
+    const transitionWindowCheck = await page.evaluate(() => {
+      const runtimeWindow = window as Window & {
+        __introTransitionAudit?: {
+          startedAt: number;
+          sawTransitionWindow: boolean;
+          animatedDuringTransition: boolean;
+          screensAnimatedDuringTransition: boolean;
+        };
+      };
+      return runtimeWindow.__introTransitionAudit ?? null;
+    });
+    if (transitionWindowCheck?.sawTransitionWindow) {
+      expect(transitionWindowCheck.animatedDuringTransition).toBe(false);
+      expect(transitionWindowCheck.screensAnimatedDuringTransition).toBe(false);
+    }
+
+    await expect
+      .poll(
+        async () =>
+          page.evaluate(() => document.querySelector('.kissa-intro-section')?.getAttribute('data-motion-inview-animated')),
+        {
+          timeout: 2500,
+          message: 'Intro stagger should start after route transition settles',
+        },
+      )
+      .toBe('true');
+
+    await expect
+      .poll(
+        async () =>
+          page.evaluate(
+            () => document.querySelector('.kissa-intro-screens')?.getAttribute('data-motion-inview-animated'),
+          ),
+        {
+          timeout: 2500,
+          message: 'Intro screens should start only after route transition settles',
+        },
+      )
+      .toBe('true');
+
+    await expect
+      .poll(
+        async () =>
+          page.evaluate(() => {
+            const intro = document.querySelector('.kissa-intro-section');
+            const firstStage = intro?.querySelector('[data-motion-stage-item][data-motion-stagger-index="0"]');
+            if (!(firstStage instanceof HTMLElement)) {
+              return null;
+            }
+            return Number.parseFloat(Number.parseFloat(getComputedStyle(firstStage).opacity).toFixed(3));
+          }),
+        {
+          timeout: 2500,
+          message: 'First intro stage item should finish opacity animation',
+        },
+      )
+      .toBe(1);
+
+    await expect
+      .poll(
+        async () =>
+          page.evaluate(() => {
+            const introScreens = document.querySelector('.kissa-intro-screens');
+            if (!(introScreens instanceof HTMLElement)) {
+              return null;
+            }
+            return Number.parseFloat(Number.parseFloat(getComputedStyle(introScreens).opacity).toFixed(3));
+          }),
+        {
+          timeout: 2500,
+          message: 'Intro screens should finish element opacity animation',
+        },
+      )
+      .toBe(1);
+
+    await expect
+      .poll(async () => page.evaluate(() => window.scrollY), {
+        timeout: 2500,
+        message: 'After navigation the new case page should reset scroll to top',
+      })
+      .toBe(0);
+    await expect
+      .poll(async () => page.evaluate(() => window.sessionStorage.getItem('__case-switcher-intro-sync')))
+      .toBeNull();
   });
 
   test('/fora video mockup covers screen bounds without seams', async ({ page }) => {

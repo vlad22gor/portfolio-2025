@@ -9,10 +9,14 @@ const kissaCase = CASES.find((item) => item.slug === 'kissa');
 ---
 
 <section class="cases-cards-section" aria-label="Cases cards section">
-  <div class="cases-cards-list">
-    {foraCase && <CaseCard item={foraCase} inViewPreset="appear-v1" />}
+  <div class="cases-cards-list" data-motion-inview="appear-stagger-v1">
+    {foraCase && (
+      <div data-motion-stage-item data-motion-stagger-index="0">
+        <CaseCard item={foraCase} />
+      </div>
+    )}
 
-    <div class="cases-cards-description" data-motion-inview="appear-v1">
+    <div class="cases-cards-description" data-motion-stage-item data-motion-stagger-index="1">
       <p class="cases-cards-description-label type-description-medium">Click on cases to learn more about the projects</p>
       <img
         class="cases-cards-description-arrow cases-cards-description-arrow--left"
@@ -34,7 +38,11 @@ const kissaCase = CASES.find((item) => item.slug === 'kissa');
       />
     </div>
 
-    {kissaCase && <CaseCard item={kissaCase} inViewPreset="appear-v1" />}
+    {kissaCase && (
+      <div data-motion-stage-item data-motion-stagger-index="2">
+        <CaseCard item={kissaCase} />
+      </div>
+    )}
   </div>
 
   <QuantizedPerimeter

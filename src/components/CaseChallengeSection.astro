@@ -1,5 +1,6 @@
 ---
 import DeviceMockup from './DeviceMockup.astro';
+import type { InViewPreset } from '../data/case-details/types';
 
 export type CaseChallengeScreen = {
   src: string;
@@ -25,13 +26,18 @@ interface Props {
   device: 'phone' | 'tablet';
   screen: CaseChallengeScreen;
   notes: CaseChallengeNote[];
-  inViewPreset?: 'appear-v1';
+  inViewPreset?: InViewPreset;
   class?: string;
 }
 
 const { title, columns, device, screen, notes, inViewPreset, class: className = '' } = Astro.props as Props;
 const rootClassName = ['case-challenge-section', className].filter(Boolean).join(' ');
-const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefined;
+const resolvedInViewPreset =
+  inViewPreset === 'appear-v1' ||
+  inViewPreset === 'appear-stagger-v1' ||
+  inViewPreset === 'appear-stagger-dynamic-v1'
+    ? inViewPreset
+    : undefined;
 const resolvedDevice = device === 'tablet' ? 'tablet' : 'phone';
 const titleIdBase = title
   .toLowerCase()

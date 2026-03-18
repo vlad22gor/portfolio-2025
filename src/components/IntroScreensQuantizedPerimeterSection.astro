@@ -26,71 +26,85 @@ const {
 
 const resolvedVariant: IntroScreensVariant = variant === 'tablet' ? 'tablet' : 'phone';
 const orderedPositions: IntroScreenPosition[] = ['left', 'center', 'right'];
+const rootClassName = [
+  'fora-intro-screens-section',
+  `fora-intro-screens-section--${resolvedVariant}`,
+  className,
+];
+const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefined;
 const sideScaleByVariant: Record<IntroScreensVariant, number> = {
   phone: 174 / 244,
   tablet: 211 / 296,
 };
 ---
 
-<QuantizedPerimeter
-  class:list={[
-    'fora-intro-screens-section',
-    `fora-intro-screens-section--${resolvedVariant}`,
-    className,
-  ]}
-  inViewPreset={inViewPreset}
-  shape="rectangle"
-  edgePattern="scallop"
-  step={48}
-  bg="var(--color-bg-darkened)"
-  pad="0"
-  label={`Fora intro screens (${resolvedVariant})`}
+<section
+  class:list={rootClassName}
+  aria-label={`Intro screens (${resolvedVariant})`}
+  data-motion-inview={resolvedInViewPreset}
+  data-motion-await-route-transition="case-switcher-intro"
 >
-  {
-    resolvedVariant === 'phone' ? (
-      <div class="fora-intro-screens-track fora-intro-screens-track--phone" aria-hidden="true">
-        {
-          screens.map((screen, index) => {
-            const position = orderedPositions[index] ?? 'center';
-            const mockupScale = position === 'center' ? 1 : sideScaleByVariant.phone;
-            return (
-              <div class:list={['fora-intro-screens-phone-item', `fora-intro-screens-phone-item--${position}`]}>
-                <DeviceMockup
-                  class="fora-intro-screens-device"
-                  device="phone"
-                  scale={mockupScale}
-                  screenKind="image"
-                  screenSrc={screen.src}
-                  screenAlt={screen.alt ?? ''}
-                  priority="critical"
-                />
-              </div>
-            );
-          })
-        }
-      </div>
-    ) : (
-      <div class="fora-intro-screens-track fora-intro-screens-track--tablet" aria-hidden="true">
-        {
-          screens.map((screen, index) => {
-            const position = orderedPositions[index] ?? 'center';
-            const mockupScale = position === 'center' ? 1 : sideScaleByVariant.tablet;
-            return (
-              <div class:list={['fora-intro-screens-tablet-item', `fora-intro-screens-tablet-item--${position}`]}>
-                <DeviceMockup
-                  class="fora-intro-screens-device"
-                  device="tablet"
-                  scale={mockupScale}
-                  screenKind="image"
-                  screenSrc={screen.src}
-                  screenAlt={screen.alt ?? ''}
-                  priority="critical"
-                />
-              </div>
-            );
-          })
-        }
-      </div>
-    )
-  }
-</QuantizedPerimeter>
+  <QuantizedPerimeter
+    class="fora-intro-screens-surface"
+    shape="rectangle"
+    edgePattern="scallop"
+    step={48}
+    bg="var(--color-bg-darkened)"
+    pad="0"
+    label={`Fora intro screens (${resolvedVariant})`}
+  >
+    {
+      resolvedVariant === 'phone' ? (
+        <div
+          class="fora-intro-screens-track fora-intro-screens-track--phone"
+          aria-hidden="true"
+        >
+          {
+            screens.map((screen, index) => {
+              const position = orderedPositions[index] ?? 'center';
+              const mockupScale = position === 'center' ? 1 : sideScaleByVariant.phone;
+              return (
+                <div class:list={['fora-intro-screens-phone-item', `fora-intro-screens-phone-item--${position}`]}>
+                  <DeviceMockup
+                    class="fora-intro-screens-device"
+                    device="phone"
+                    scale={mockupScale}
+                    screenKind="image"
+                    screenSrc={screen.src}
+                    screenAlt={screen.alt ?? ''}
+                    priority="critical"
+                  />
+                </div>
+              );
+            })
+          }
+        </div>
+      ) : (
+        <div
+          class="fora-intro-screens-track fora-intro-screens-track--tablet"
+          aria-hidden="true"
+        >
+          {
+            screens.map((screen, index) => {
+              const position = orderedPositions[index] ?? 'center';
+              const mockupScale = position === 'center' ? 1 : sideScaleByVariant.tablet;
+              return (
+                <div class:list={['fora-intro-screens-tablet-item', `fora-intro-screens-tablet-item--${position}`]}>
+                  <DeviceMockup
+                    class="fora-intro-screens-device"
+                    device="tablet"
+                    scale={mockupScale}
+                    screenKind="image"
+                    screenSrc={screen.src}
+                    screenAlt={screen.alt ?? ''}
+                    priority="critical"
+                  />
+                </div>
+              );
+            })
+          }
+        </div>
+      )
+    }
+  </QuantizedPerimeter>
+</section>
