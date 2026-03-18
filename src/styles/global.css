@@ -42,7 +42,7 @@ html[data-theme='light'] {
   --color-ticket-bg-blue-low: #bbcfd5;
   --color-ticket-bg-blue-muted: #cbd5d3;
   --color-button-floating-bg: #dbdad1;
-  --color-footer-bg: #dbdad1;
+  --color-footer-bg: #8cbfdb;
   --color-button-floating-overlay: #00000004;
   --color-button-floating-motif: var(--color-accent-blue);
   --color-icon-accent: var(--color-accent-green);

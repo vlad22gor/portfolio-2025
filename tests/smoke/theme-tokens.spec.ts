@@ -255,12 +255,12 @@ test.describe('Theme tokens smoke', () => {
       bgDefault: '#dbdad1',
       ticketOrangeCritical: '#cda476',
       buttonFloatingBg: '#dbdad1',
-      footerBg: '#dbdad1',
+      footerBg: '#8cbfdb',
     });
     const lightFooterByStorage = await page.evaluate(readFooterBackgrounds);
     expect(lightFooterByStorage).toEqual({
-      before: 'rgb(219, 218, 209)',
-      scallopFrame: 'rgb(219, 218, 209)',
+      before: 'rgb(140, 191, 219)',
+      scallopFrame: 'rgb(140, 191, 219)',
     });
 
     await page.evaluate(() => {

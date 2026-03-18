@@ -1,5 +1,11 @@
 # Logs
 
+- 2026-03-18: Обновлено значение light-режима у компонентного токена `--color-footer-bg` по актуальному Figma-контракту.
+  Причина: в Figma `colors/footer/bg` (node `85:19520`) light-значение изменилось на `#8cbfdb`; dark (node `85:19569`) остаётся `#224b7d`.
+  Файлы: `src/styles/global.css`, `tests/smoke/theme-tokens.spec.ts`, `tasks/logs.md`.
+  Что сделано: (1) `--color-footer-bg` в `:root/html[data-theme='light']` обновлён `#dbdad1 -> #8cbfdb`; (2) в smoke-тесте обновлены ожидания `footerBg` и computed-цветов футера для light (`rgb(140, 191, 219)`); dark-ожидания сохранены без изменений.
+  Проверки: (1) `npm run build` — успешно; (2) `npx playwright test tests/smoke/theme-tokens.spec.ts` — успешно (`5/5`).
+
 - 2026-03-18: Для теста убран Y-offset лейбла в `Badge`.
   Причина: по запросу нужно временно отключить вертикальный offset текста в бейдже.
   Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
