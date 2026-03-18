@@ -42,6 +42,7 @@ export interface GalleryImageCard extends GalleryCardBase {
   type: 'image';
   colSpan: 4;
   imageSrc: string;
+  darkImageSrc?: string;
 }
 
 export type GalleryRowItem = GalleryPhoneCard | GalleryTabletCard | GalleryIllustrationCard | GalleryImageCard;
@@ -103,11 +104,12 @@ const illustration = (id: string, content: GalleryIllustrationContent, alt: stri
   alt,
 });
 
-const image = (id: string, imageSrc: string, alt: string): GalleryImageCard => ({
+const image = (id: string, imageSrc: string, alt: string, darkImageSrc?: string): GalleryImageCard => ({
   id,
   type: 'image',
   colSpan: 4,
   imageSrc,
+  darkImageSrc,
   alt,
 });
 
@@ -180,7 +182,12 @@ export const GALLERY_ROWS: GalleryRow[] = [
         'Gallery phone card: festive campaign concept',
       ),
       phone('57:5449', screenImage('/media/gallery/screens/r5-c2-phone.webp'), 'Gallery phone card: neon game campaign concept'),
-      image('57:5450', '/media/gallery/images/r5-c3-cube-log-in.webp', 'Gallery image card: cube log in composition'),
+      image(
+        '57:5450',
+        '/media/gallery/images/r5-c3-cube-log-in.webp',
+        'Gallery image card: cube log in composition',
+        '/media/gallery/images/r5-c3-cube-log-in-dark.webp',
+      ),
     ],
   },
   {

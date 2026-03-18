@@ -70,6 +70,69 @@ const agentationEndpoint =
       })();
     </script>
     <script is:inline>
+      (() => {
+        const runtimeKey = '__themedRasterRuntime';
+        const imageSelector = 'img[data-theme-src-light], img[data-theme-src-dark]';
+        const normalizeTheme = (value) => (value === 'dark' ? 'dark' : 'light');
+        const readTheme = () => normalizeTheme(document.documentElement.dataset.theme);
+
+        const resolveImageSrc = (image, theme) => {
+          const lightSrc = image.dataset.themeSrcLight?.trim();
+          const darkSrc = image.dataset.themeSrcDark?.trim();
+
+          if (theme === 'dark' && darkSrc) {
+            return darkSrc;
+          }
+
+          return lightSrc || image.getAttribute('src') || darkSrc || '';
+        };
+
+        const syncAllThemedImages = () => {
+          const theme = readTheme();
+          const images = Array.from(document.querySelectorAll(imageSelector));
+          images.forEach((node) => {
+            if (!(node instanceof HTMLImageElement)) {
+              return;
+            }
+            const targetSrc = resolveImageSrc(node, theme);
+            if (!targetSrc || node.getAttribute('src') === targetSrc) {
+              return;
+            }
+            node.setAttribute('src', targetSrc);
+          });
+        };
+
+        if (window[runtimeKey]) {
+          window[runtimeKey].mount();
+          return;
+        }
+
+        const onThemeMutation = (mutations) => {
+          const themeChanged = mutations.some(
+            (record) => record.type === 'attributes' && record.attributeName === 'data-theme',
+          );
+          if (!themeChanged) {
+            return;
+          }
+          syncAllThemedImages();
+        };
+
+        const themeObserver = new MutationObserver(onThemeMutation);
+        themeObserver.observe(document.documentElement, {
+          attributes: true,
+          attributeFilter: ['data-theme'],
+        });
+
+        const mount = () => {
+          syncAllThemedImages();
+        };
+
+        mount();
+        document.addEventListener('astro:page-load', mount);
+        window[runtimeKey] = { mount };
+      })();
+    </script>
+    <script is:inline>
       document.documentElement.setAttribute('data-js', 'true');
     </script>
     <noscript>

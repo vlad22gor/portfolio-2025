@@ -3,6 +3,19 @@ import { expect, test } from '@playwright/test';
 const themeStorageKey = 'vh-theme';
 const floatingThemeButtonSelector = '.floating-theme-button[data-floating-theme-button]';
 
+const readHomeThemedMockups = () => {
+  const mockupRed = document.querySelector('.home-hero-asset--mockup-red img');
+  const mockupPath = document.querySelector('.home-hero-asset--mockup-path img');
+  if (!(mockupRed instanceof HTMLImageElement) || !(mockupPath instanceof HTMLImageElement)) {
+    return null;
+  }
+
+  return {
+    mockupRedSrc: mockupRed.getAttribute('src'),
+    mockupPathSrc: mockupPath.getAttribute('src'),
+  };
+};
+
 const readThemeTokens = () => {
   const styles = getComputedStyle(document.documentElement);
   const read = (name: string) => styles.getPropertyValue(name).trim().toLowerCase();
@@ -323,6 +336,85 @@ test.describe('Theme tokens smoke', () => {
     expect(lightAgainSnapshot!.explicitOutlined.backgroundColor).toBe('rgba(0, 0, 0, 0)');
     expect(Number.parseFloat(lightAgainSnapshot!.explicitOutlined.borderTopWidth)).toBeGreaterThanOrEqual(1);
     expect(lightAgainSnapshot!.explicitOutlined.borderTopColor).toBe(lightAgainSnapshot!.expectedTextSecondary);
+  });
+
+  test('home hero mockups switch themed sources in both directions', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.goto('/');
+    await expect(page.locator(floatingThemeButtonSelector)).toBeVisible();
+
+    await page.evaluate((storageKey) => {
+      document.documentElement.dataset.theme = 'light';
+      try {
+        window.localStorage.setItem(storageKey, 'light');
+      } catch {
+        // Ignore storage access failures in restricted contexts.
+      }
+    }, themeStorageKey);
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.dataset.theme), {
+        timeout: 2000,
+      })
+      .toBe('light');
+
+    const lightSnapshot = await page.evaluate(readHomeThemedMockups);
+    expect(lightSnapshot).not.toBeNull();
+    expect(lightSnapshot!.mockupRedSrc).toBe('/media/home/mockup-red.webp');
+    expect(lightSnapshot!.mockupPathSrc).toBe('/media/home/mockup-path.webp');
+
+    await page.click(floatingThemeButtonSelector);
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.dataset.theme), {
+        timeout: 2000,
+      })
+      .toBe('dark');
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const target = document.querySelector('.home-hero-asset--mockup-red img');
+            return target instanceof HTMLImageElement ? target.getAttribute('src') : null;
+          }),
+        { timeout: 2000 },
+      )
+      .toBe('/media/home/mockup-clouds.webp');
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const target = document.querySelector('.home-hero-asset--mockup-path img');
+            return target instanceof HTMLImageElement ? target.getAttribute('src') : null;
+          }),
+        { timeout: 2000 },
+      )
+      .toBe('/media/home/mockup-evening.webp');
+
+    await page.click(floatingThemeButtonSelector);
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.dataset.theme), {
+        timeout: 2000,
+      })
+      .toBe('light');
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const target = document.querySelector('.home-hero-asset--mockup-red img');
+            return target instanceof HTMLImageElement ? target.getAttribute('src') : null;
+          }),
+        { timeout: 2000 },
+      )
+      .toBe('/media/home/mockup-red.webp');
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const target = document.querySelector('.home-hero-asset--mockup-path img');
+            return target instanceof HTMLImageElement ? target.getAttribute('src') : null;
+          }),
+        { timeout: 2000 },
+      )
+      .toBe('/media/home/mockup-path.webp');
   });
 
   test('floating theme button toggles theme and keeps state across soft/hard navigation', async ({ page }) => {

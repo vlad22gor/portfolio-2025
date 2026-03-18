@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+const floatingThemeButtonSelector = '.floating-theme-button[data-floating-theme-button]';
+
 test.describe('Gallery smoke', () => {
   test.use({ viewport: { width: 1440, height: 1100 } });
 
@@ -198,13 +200,49 @@ test.describe('Gallery smoke', () => {
       }),
     );
     expect(imageMaskCoverage).toBe(true);
-    const secondImageCardUsesCubeLogIn = await page.evaluate(() => {
+    await page.evaluate(() => {
+      document.documentElement.dataset.theme = 'light';
+      window.localStorage.setItem('vh-theme', 'light');
+    });
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.dataset.theme), {
+        timeout: 2000,
+      })
+      .toBe('light');
+
+    const secondImageCardLightSnapshot = await page.evaluate(() => {
       const target = document.querySelector(
         '.gallery-card[data-gallery-card-id="57:5450"] .gallery-card__image-layer',
       );
-      return target instanceof HTMLImageElement && target.src.endsWith('/media/gallery/images/r5-c3-cube-log-in.webp');
+      if (!(target instanceof HTMLImageElement)) {
+        return null;
+      }
+      return {
+        src: target.getAttribute('src'),
+      };
     });
-    expect(secondImageCardUsesCubeLogIn).toBe(true);
+    expect(secondImageCardLightSnapshot).not.toBeNull();
+    expect(secondImageCardLightSnapshot!.src).toBe('/media/gallery/images/r5-c3-cube-log-in.webp');
+
+    await expect(page.locator(floatingThemeButtonSelector)).toBeVisible();
+    await page.click(floatingThemeButtonSelector);
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.dataset.theme), {
+        timeout: 2000,
+      })
+      .toBe('dark');
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const target = document.querySelector(
+              '.gallery-card[data-gallery-card-id="57:5450"] .gallery-card__image-layer',
+            );
+            return target instanceof HTMLImageElement ? target.getAttribute('src') : null;
+          }),
+        { timeout: 2000 },
+      )
+      .toBe('/media/gallery/images/r5-c3-cube-log-in-dark.webp');
 
     const compactApertureAlignment = await page.evaluate(async () => {
       const targetCard = document.querySelector('.gallery-card[data-gallery-card-id="51:5269"]');

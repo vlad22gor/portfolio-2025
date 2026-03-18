@@ -49,6 +49,8 @@ const isCritical = resolvedPriority === 'critical';
           <img
             class="gallery-card__image-layer"
             src={item.imageSrc}
+            data-theme-src-light={item.imageSrc}
+            data-theme-src-dark={item.darkImageSrc}
             alt=""
             loading="lazy"
             decoding="async"
