@@ -315,6 +315,61 @@ test.describe('Gallery smoke', () => {
     expect(compactApertureAlignment!.withinY).toBe(true);
   });
 
+  test('/gallery preloads critical media and keeps critical mockups ready on repeat entry', async ({ page }) => {
+    await page.goto('/gallery');
+
+    const preloadSummary = await page.evaluate(() => {
+      const links = Array.from(document.querySelectorAll('head link[rel="preload"]'));
+      const galleryLinks = links
+        .map((link) => ({
+          href: link.getAttribute('href') ?? '',
+          as: link.getAttribute('as') ?? '',
+          fetchpriority: link.getAttribute('fetchpriority') ?? '',
+        }))
+        .filter((link) => link.href.startsWith('/media/gallery/'));
+
+      return {
+        count: galleryLinks.length,
+        hasPhoneShell: galleryLinks.some((link) => link.href === '/media/gallery/device-shells/phone-shell.webp' && link.as === 'image'),
+        hasTabletShell: galleryLinks.some((link) => link.href === '/media/gallery/device-shells/tablet-shell.webp' && link.as === 'image'),
+        hasCriticalVideoR1: galleryLinks.some((link) => link.href === '/media/gallery/flows/r1-c2-phone.webm' && link.as === 'video'),
+        hasCriticalVideoR2: galleryLinks.some((link) => link.href === '/media/gallery/flows/r2-c3-tablet.webm' && link.as === 'video'),
+        allImagePreloadsAreHigh: galleryLinks
+          .filter((link) => link.as === 'image')
+          .every((link) => link.fetchpriority === 'high'),
+      };
+    });
+
+    expect(preloadSummary.count).toBe(9);
+    expect(preloadSummary.hasPhoneShell).toBe(true);
+    expect(preloadSummary.hasTabletShell).toBe(true);
+    expect(preloadSummary.hasCriticalVideoR1).toBe(true);
+    expect(preloadSummary.hasCriticalVideoR2).toBe(true);
+    expect(preloadSummary.allImagePreloadsAreHigh).toBe(true);
+
+    await page.waitForTimeout(1200);
+    await page.click('.site-desktop-shell a[data-nav-id="home"]');
+    await page.waitForURL('**/');
+    await page.waitForTimeout(250);
+    await page.click('.site-desktop-shell a[data-nav-id="gallery"]');
+    await page.waitForURL('**/gallery');
+
+    await page.waitForTimeout(200);
+    const criticalReadyState = await page.evaluate(() => {
+      const criticalMockups = Array.from(
+        document.querySelectorAll('.gallery-row:nth-child(-n+2) .device-mockup[data-device-priority="critical"]'),
+      );
+
+      return {
+        count: criticalMockups.length,
+        allReady: criticalMockups.every((mockup) => mockup.getAttribute('data-ready') === 'true'),
+      };
+    });
+
+    expect(criticalReadyState.count).toBe(5);
+    expect(criticalReadyState.allReady).toBe(true);
+  });
+
   test('gallery content transition is isolated from shared page-content transition', async ({ page }) => {
     await page.goto('/cases');
     const casesScope = await page.locator('main#content').getAttribute('data-astro-transition-scope');

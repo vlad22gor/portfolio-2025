@@ -5,11 +5,24 @@ import SiteFooter from '../components/SiteFooter.astro';
 import GalleryRowsSection from '../components/GalleryRowsSection.astro';
 import GalleryToBeMoreSection from '../components/GalleryToBeMoreSection.astro';
 import FinalCtaSection from '../components/FinalCtaSection.astro';
+import { getCriticalMediaForRoute } from '../data/critical-media';
+
+const criticalMediaPreloads = getCriticalMediaForRoute('gallery');
 ---
 
 <BaseLayout
   canonicalPath="/gallery"
 >
+  <Fragment slot="head">
+    {criticalMediaPreloads.map((asset) => (
+      <link
+        rel="preload"
+        as={asset.kind === 'video' ? 'video' : 'image'}
+        href={asset.href}
+        fetchpriority={asset.kind === 'video' ? undefined : 'high'}
+      />
+    ))}
+  </Fragment>
   <SiteHeader />
   <main id="content" class="page-shell page-shell--gallery" transition:name="gallery-content">
     <GalleryRowsSection />

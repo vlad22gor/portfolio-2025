@@ -181,6 +181,7 @@ const screenCalibrationMarker =
 const mediaLoading = resolvedPriority === 'critical' ? 'eager' : 'lazy';
 const mediaDecoding = resolvedPriority === 'critical' ? 'sync' : 'async';
 const mediaFetchPriority = resolvedPriority === 'critical' ? 'high' : 'auto';
+const videoPreload = resolvedPriority === 'critical' ? 'auto' : 'metadata';
 const composedClassName = ['device-mockup', `device-mockup--${resolvedDevice}`, className].filter(Boolean).join(' ');
 const styleVars = [
   `--device-width: ${framePreset.width}px`,
@@ -202,6 +203,10 @@ const styleVars = [
   style={styleVars}
   data-device-mockup
   data-device-priority={resolvedPriority}
+  data-device-kind={resolvedDevice}
+  data-device-media-kind={screenKind}
+  data-device-media-src={screenSrc}
+  data-device-media-poster={screenPoster ?? ''}
   data-device-size={resolvedSize}
   data-device-screen-calibration={screenCalibrationMarker}
   data-ready="false"
@@ -217,7 +222,8 @@ const styleVars = [
             muted
             loop
             playsinline
-            preload="metadata"
+            preload={videoPreload}
+            fetchpriority={mediaFetchPriority}
             poster={screenPoster}
             aria-hidden="true"
           />
@@ -323,6 +329,78 @@ const styleVars = [
 <script>
   (() => {
     const runtimeKey = '__deviceMockupRevealRuntime';
+    const warmVideoSrcsKey = '__deviceMockupWarmVideoSrcs';
+    const warmVideoKeysKey = '__deviceMockupWarmVideoKeys';
+    const warmedVideoSrcs =
+      window[warmVideoSrcsKey] instanceof Set ? window[warmVideoSrcsKey] : new Set();
+    const warmedVideoKeys =
+      window[warmVideoKeysKey] instanceof Set ? window[warmVideoKeysKey] : new Set();
+    window[warmVideoSrcsKey] = warmedVideoSrcs;
+    window[warmVideoKeysKey] = warmedVideoKeys;
+
+    const resolveVideoSrc = (media, mockup) => {
+      if (media instanceof HTMLVideoElement) {
+        if (typeof media.currentSrc === 'string' && media.currentSrc.length > 0) {
+          return media.currentSrc;
+        }
+        const mediaSrc = media.getAttribute('src');
+        if (typeof mediaSrc === 'string' && mediaSrc.length > 0) {
+          return mediaSrc;
+        }
+      }
+      return mockup?.dataset.deviceMediaSrc ?? '';
+    };
+
+    const resolveVideoPoster = (media, mockup) => {
+      if (media instanceof HTMLVideoElement) {
+        const poster = media.getAttribute('poster');
+        if (typeof poster === 'string' && poster.length > 0) {
+          return poster;
+        }
+      }
+      return mockup?.dataset.deviceMediaPoster ?? '';
+    };
+
+    const buildVideoWarmKey = (mockup, media) => {
+      if (!(mockup instanceof HTMLElement)) {
+        return null;
+      }
+      const src = resolveVideoSrc(media, mockup);
+      if (src.length === 0) {
+        return null;
+      }
+      const deviceKind = mockup.dataset.deviceKind ?? 'phone';
+      const size = mockup.dataset.deviceSize ?? 'default';
+      const poster = resolveVideoPoster(media, mockup);
+      return `${deviceKind}|${size}|${src}|${poster}`;
+    };
+
+    const markVideoWarm = (mockup, media) => {
+      if (!(media instanceof HTMLVideoElement)) {
+        return;
+      }
+      const src = resolveVideoSrc(media, mockup);
+      if (src.length > 0) {
+        warmedVideoSrcs.add(src);
+      }
+      const key = buildVideoWarmKey(mockup, media);
+      if (key) {
+        warmedVideoKeys.add(key);
+      }
+    };
+
+    const isVideoWarm = (mockup, media) => {
+      if (!(media instanceof HTMLVideoElement)) {
+        return false;
+      }
+      const src = resolveVideoSrc(media, mockup);
+      if (src.length > 0 && warmedVideoSrcs.has(src)) {
+        return true;
+      }
+      const key = buildVideoWarmKey(mockup, media);
+      return typeof key === 'string' && warmedVideoKeys.has(key);
+    };
+
     if (window[runtimeKey]) {
       window[runtimeKey].mount();
       return;
@@ -405,10 +483,21 @@ const styleVars = [
           });
         }
       } else if (media instanceof HTMLVideoElement) {
-        mediaReady = media.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA;
+        mediaReady =
+          media.readyState >= HTMLMediaElement.HAVE_METADATA ||
+          isVideoWarm(mockup, media);
+        if (media.readyState >= HTMLMediaElement.HAVE_METADATA) {
+          markVideoWarm(mockup, media);
+        }
         if (!mediaReady) {
+          bindOnce(media, 'loadedmetadata', () => {
+            mediaReady = true;
+            markVideoWarm(mockup, media);
+            trySettle();
+          });
           bindOnce(media, 'loadeddata', () => {
             mediaReady = true;
+            markVideoWarm(mockup, media);
             trySettle();
           });
           bindOnce(media, 'error', () => {

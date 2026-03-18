@@ -4,6 +4,8 @@ import { ClientRouter } from 'astro:transitions';
 import AgentationToolbar from '../components/dev/AgentationToolbar';
 import InViewMotionRuntime from '../components/InViewMotionRuntime.astro';
 import TemporaryAdaptiveNotice from '../components/TemporaryAdaptiveNotice.astro';
+import CriticalMediaWarmupRuntime from '../components/CriticalMediaWarmupRuntime.astro';
+import { resolveCriticalRouteIdFromPath } from '../data/critical-media';
 
 export interface Props {
   canonicalPath?: string;
@@ -14,6 +16,7 @@ const siteTitle = 'Vlad Horovyy – Product Designer';
 const siteDescription = 'Product designer from Kyiv crafting standout mobile apps';
 const siteBaseUrl = Astro.site ?? 'https://vladhorovyy.com';
 const canonical = new URL(canonicalPath, siteBaseUrl).toString();
+const criticalRouteId = resolveCriticalRouteIdFromPath(canonicalPath);
 const socialCoverPath = '/media/site/site-cover.png';
 const socialCoverUrl = new URL(socialCoverPath, siteBaseUrl).toString();
 const socialCoverWidth = 2400;
@@ -82,6 +85,7 @@ const agentationEndpoint =
     <div class="site-desktop-shell">
       <slot />
       <InViewMotionRuntime />
+      <CriticalMediaWarmupRuntime routeId={criticalRouteId} />
       {
         isAgentationEnabled && (
           <div id="agentation-dev-root" transition:persist>

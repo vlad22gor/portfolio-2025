@@ -1,0 +1,237 @@
+---
+import {
+  getCriticalMediaByRoute,
+  type CriticalRouteId,
+} from '../data/critical-media';
+
+interface Props {
+  routeId: CriticalRouteId;
+}
+
+const { routeId } = Astro.props;
+const mediaByRoute = getCriticalMediaByRoute();
+---
+
+<script is:inline>
+  (() => {
+    const runtimeKey = '__criticalMediaWarmupRuntime';
+    const warmVideoSrcsKey = '__deviceMockupWarmVideoSrcs';
+    const warmVideoKeysKey = '__deviceMockupWarmVideoKeys';
+    const currentRouteId = {JSON.stringify(routeId)};
+    const mediaByRoute = {JSON.stringify(mediaByRoute)};
+
+    const routeIds = Object.keys(mediaByRoute);
+    const resolveRouteAssets = (routeId) => {
+      const assets = mediaByRoute?.[routeId];
+      return Array.isArray(assets) ? assets : [];
+    };
+    const shouldSkipBackgroundWarmup = () => {
+      const connection =
+        navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      if (!connection) {
+        return false;
+      }
+      if (connection.saveData === true) {
+        return true;
+      }
+      const effectiveType = String(connection.effectiveType || '').toLowerCase();
+      return effectiveType === 'slow-2g' || effectiveType === '2g';
+    };
+    const toUniqueAssets = (assets) => {
+      const seen = new Set();
+      const result = [];
+      for (const asset of assets) {
+        if (!asset || typeof asset.href !== 'string' || asset.href.length === 0) {
+          continue;
+        }
+        if (seen.has(asset.href)) {
+          continue;
+        }
+        seen.add(asset.href);
+        result.push(asset);
+      }
+      return result;
+    };
+
+    if (window[runtimeKey]) {
+      window[runtimeKey].setCurrentRoute(currentRouteId);
+      window[runtimeKey].mount();
+      return;
+    }
+
+    const timeoutMs = 5000;
+    const maxCurrentConcurrency = 3;
+    const maxBackgroundConcurrency = 2;
+    const inFlightByHref = new Map();
+    const warmedHrefs = new Set();
+    const warmedVideoSrcs =
+      window[warmVideoSrcsKey] instanceof Set ? window[warmVideoSrcsKey] : new Set();
+    const warmedVideoKeys =
+      window[warmVideoKeysKey] instanceof Set ? window[warmVideoKeysKey] : new Set();
+    window[warmVideoSrcsKey] = warmedVideoSrcs;
+    window[warmVideoKeysKey] = warmedVideoKeys;
+
+    let activeRouteId = currentRouteId;
+    let hasScheduledBackgroundWarmup = false;
+
+    const warmImage = (href) =>
+      new Promise((resolve) => {
+        const image = new Image();
+        let settled = false;
+        const settle = () => {
+          if (settled) {
+            return;
+          }
+          settled = true;
+          window.clearTimeout(timer);
+          resolve();
+        };
+        const timer = window.setTimeout(settle, timeoutMs);
+        image.addEventListener('load', settle, { once: true });
+        image.addEventListener('error', settle, { once: true });
+        image.src = href;
+      });
+
+    const warmVideo = (href) =>
+      new Promise((resolve) => {
+        const video = document.createElement('video');
+        let settled = false;
+        const settle = () => {
+          if (settled) {
+            return;
+          }
+          settled = true;
+          window.clearTimeout(timer);
+          video.removeEventListener('loadedmetadata', settle);
+          video.removeEventListener('loadeddata', settle);
+          video.removeEventListener('error', settle);
+          video.pause();
+          video.removeAttribute('src');
+          video.load();
+          resolve();
+        };
+        const timer = window.setTimeout(settle, timeoutMs);
+
+        video.muted = true;
+        video.playsInline = true;
+        video.preload = 'auto';
+        video.addEventListener('loadedmetadata', settle, { once: true });
+        video.addEventListener('loadeddata', settle, { once: true });
+        video.addEventListener('error', settle, { once: true });
+        video.src = href;
+        video.load();
+      });
+
+    const warmAsset = async (asset) => {
+      if (!asset || typeof asset.href !== 'string' || asset.href.length === 0) {
+        return;
+      }
+
+      if (warmedHrefs.has(asset.href)) {
+        return;
+      }
+
+      const existingPromise = inFlightByHref.get(asset.href);
+      if (existingPromise) {
+        await existingPromise;
+        return;
+      }
+
+      const promise = (async () => {
+        try {
+          if (asset.kind === 'video') {
+            await warmVideo(asset.href);
+            warmedVideoSrcs.add(asset.href);
+          } else {
+            await warmImage(asset.href);
+          }
+          warmedHrefs.add(asset.href);
+        } catch {
+          warmedHrefs.add(asset.href);
+        }
+      })();
+
+      inFlightByHref.set(asset.href, promise);
+      await promise.finally(() => {
+        inFlightByHref.delete(asset.href);
+      });
+    };
+
+    const warmAssets = async (assets, concurrency) => {
+      const uniqueAssets = toUniqueAssets(assets);
+      if (uniqueAssets.length === 0) {
+        return;
+      }
+
+      const workerCount = Math.min(concurrency, uniqueAssets.length);
+      let index = 0;
+
+      const worker = async () => {
+        while (index < uniqueAssets.length) {
+          const nextIndex = index;
+          index += 1;
+          await warmAsset(uniqueAssets[nextIndex]);
+        }
+      };
+
+      await Promise.all(Array.from({ length: workerCount }, () => worker()));
+    };
+
+    const warmCurrentRoute = async () => {
+      await warmAssets(resolveRouteAssets(activeRouteId), maxCurrentConcurrency);
+    };
+
+    const warmBackgroundRoutes = async () => {
+      if (shouldSkipBackgroundWarmup()) {
+        return;
+      }
+
+      const assets = routeIds
+        .filter((routeId) => routeId !== activeRouteId)
+        .flatMap((routeId) => resolveRouteAssets(routeId));
+      await warmAssets(assets, maxBackgroundConcurrency);
+    };
+
+    const scheduleBackgroundWarmup = () => {
+      if (hasScheduledBackgroundWarmup) {
+        return;
+      }
+      hasScheduledBackgroundWarmup = true;
+
+      const run = () => {
+        void warmBackgroundRoutes();
+      };
+
+      if ('requestIdleCallback' in window && typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(run, { timeout: 2200 });
+      } else {
+        window.setTimeout(run, 1200);
+      }
+    };
+
+    const mount = () => {
+      void warmCurrentRoute();
+      scheduleBackgroundWarmup();
+    };
+
+    document.addEventListener('astro:page-load', mount);
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', mount, { once: true });
+    } else {
+      mount();
+    }
+
+    window[runtimeKey] = {
+      mount,
+      setCurrentRoute(routeId) {
+        activeRouteId = routeId;
+      },
+      getWarmedVideoSrcs() {
+        return warmedVideoSrcs;
+      },
+      getWarmedVideoKeys() {
+        return warmedVideoKeys;
+      },
+    };
+  })();
+</script>
