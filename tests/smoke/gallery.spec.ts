@@ -6,7 +6,7 @@ test.describe('Gallery smoke', () => {
   test('/gallery renders webm cards, row-stagger, and critical priority contract', async ({ page }) => {
     await page.goto('/gallery');
 
-    await expect(page).toHaveTitle(/Gallery - Vlad Horovyy/i);
+    await expect(page).toHaveTitle(/Vlad Horovyy – Product Designer/i);
 
     const rows = page.locator('.gallery-row');
     await expect(rows).toHaveCount(6);

@@ -1271,6 +1271,12 @@
   Что сделано: (1) runtime-`/media/site/site-cover.png` перезаписан из `assets/social preview.png`; (2) в `BaseLayout` обновлены `socialCoverWidth/Height` с `3420x1796` на `2400x1260`; (3) путь `og:image`/`twitter:image` оставлен прежним (`/media/site/site-cover.png`) для стабильности ссылок и кеша.
   Проверки: (1) `npm run build` — успешно; (2) `sips` подтвердил фактический размер runtime-файла `2400x1260`; (3) проверка `dist/{index,cases,gallery,fora,kissa}/index.html` — во всех head `og:image:width=2400`, `og:image:height=1260`, `twitter:image` указывает на `https://vladhorovyy.com/media/site/site-cover.png`.
 
+- 2026-03-18: Исправлено падение GitHub Pages CI после глобализации метаданных (`title/description`) и устранено предупреждение Node 20 actions.
+  Причина: деплой `Deploy Astro to GitHub Pages` на коммите `ab35015` падал в шаге `Run smoke tests` из-за устаревших `toHaveTitle`-ожиданий; дополнительно workflow предупреждал о deprecated `actions/*@v4`.
+  Файлы: `tests/smoke/gallery.spec.ts`, `tests/smoke/case-details.spec.ts`, `.github/workflows/deploy.yml`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) обновлены smoke-ожидания title на единый глобальный `Vlad Horovyy – Product Designer` для `/gallery`, `/fora`, `/kissa`; (2) в workflow обновлены action-версии `actions/checkout@v4 -> @v6` и `actions/setup-node@v4 -> @v6`, чтобы снять Node 20 deprecation warning.
+  Проверки: (1) `gh run view` для run `23242674142` подтвердил исходную причину падения (`toHaveTitle /Gallery - Vlad Horovyy/i` vs фактический глобальный title); (2) `npm run build` — успешно; (3) `npx playwright test tests/smoke/gallery.spec.ts tests/smoke/case-details.spec.ts` — успешно (`5/5`); (4) `npm run test:smoke` — успешно (`13/13`).
+
 - 2026-03-18: Точечно скорректирован вес `Caveat` для `type-description-*` с `500` на `485`.
   Причина: пользователь уточнил целевую жирность script-стилей.
   Файлы: `src/styles/global.css`, `tasks/lessons.md`, `tasks/logs.md`.
