@@ -12,6 +12,20 @@ const readThemeTokens = () => {
     bgDefault: read('--color-bg-default'),
     ticketOrangeCritical: read('--color-ticket-bg-orange-critical'),
     buttonFloatingBg: read('--color-button-floating-bg'),
+    footerBg: read('--color-footer-bg'),
+  };
+};
+
+const readFooterBackgrounds = () => {
+  const footer = document.querySelector('.site-footer');
+  const scallopFrame = document.querySelector('.site-footer .quantized-scallop .scallop-frame');
+  if (!(footer instanceof HTMLElement) || !(scallopFrame instanceof SVGElement)) {
+    return null;
+  }
+
+  return {
+    before: getComputedStyle(footer, '::before').backgroundColor,
+    scallopFrame: getComputedStyle(scallopFrame).color,
   };
 };
 
@@ -160,6 +174,12 @@ test.describe('Theme tokens smoke', () => {
       bgDefault: '#173a66',
       ticketOrangeCritical: '#bd4554',
       buttonFloatingBg: '#224b7d',
+      footerBg: '#224b7d',
+    });
+    const darkFooterBySystem = await page.evaluate(readFooterBackgrounds);
+    expect(darkFooterBySystem).toEqual({
+      before: 'rgb(34, 75, 125)',
+      scallopFrame: 'rgb(34, 75, 125)',
     });
 
     await page.evaluate(() => {
@@ -174,6 +194,12 @@ test.describe('Theme tokens smoke', () => {
       bgDefault: '#dbdad1',
       ticketOrangeCritical: '#cda476',
       buttonFloatingBg: '#dbdad1',
+      footerBg: '#dbdad1',
+    });
+    const lightFooterByStorage = await page.evaluate(readFooterBackgrounds);
+    expect(lightFooterByStorage).toEqual({
+      before: 'rgb(219, 218, 209)',
+      scallopFrame: 'rgb(219, 218, 209)',
     });
 
     await page.evaluate(() => {
@@ -188,6 +214,12 @@ test.describe('Theme tokens smoke', () => {
       bgDefault: '#173a66',
       ticketOrangeCritical: '#bd4554',
       buttonFloatingBg: '#224b7d',
+      footerBg: '#224b7d',
+    });
+    const darkFooterByStorage = await page.evaluate(readFooterBackgrounds);
+    expect(darkFooterByStorage).toEqual({
+      before: 'rgb(34, 75, 125)',
+      scallopFrame: 'rgb(34, 75, 125)',
     });
 
     const darkHasHorizontalOverflow = await page.evaluate(

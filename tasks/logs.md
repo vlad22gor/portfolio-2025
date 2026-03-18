@@ -1,5 +1,11 @@
 # Logs
 
+- 2026-03-18: Добавлен компонентный токен `--color-footer-bg` и футер переведён на него в обоих фоновых слоях.
+  Причина: по Figma-контракту `footer bg` должен иметь отдельный публичный токен (`light #dbdad1`, `dark #224b7d`) и не зависеть от `--color-accent-blue`.
+  Файлы: `src/styles/global.css`, `src/components/SiteFooter.astro`, `tests/smoke/theme-tokens.spec.ts`, `tasks/logs.md`.
+  Что сделано: (1) в light/dark theme-блоки добавлен `--color-footer-bg`; (2) в `SiteFooter` `QuantizedScallop bg` переключён на `var(--color-footer-bg)`; (3) `.site-footer::before` переведён на `background: var(--color-footer-bg)`; (4) smoke-тест расширен: `readThemeTokens()` читает `footerBg`, добавлены ожидания для light/dark, плюс проверка фактического цвета `footer::before` и `.site-footer .quantized-scallop .scallop-frame`.
+  Проверки: (1) `npm run build` — успешно; (2) `npx playwright test tests/smoke/theme-tokens.spec.ts` — успешно (`3/3`).
+
 - 2026-03-18: Уточнён визуальный контракт `FloatingThemeButton`: tap-scale `0.9`, tokenized motif color и dark offset `-1.5px`.
   Причина: по фидбеку нужно усилить press-анимацию, убрать зависимость от встроенного цвета SVG и компенсировать визуальный центр мотива в dark-теме.
   Файлы: `src/components/FloatingThemeButton.astro`, `src/styles/global.css`, `tests/smoke/theme-tokens.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.

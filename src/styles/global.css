@@ -42,6 +42,7 @@ html[data-theme='light'] {
   --color-ticket-bg-blue-low: #bbcfd5;
   --color-ticket-bg-blue-muted: #cbd5d3;
   --color-button-floating-bg: #dbdad1;
+  --color-footer-bg: #dbdad1;
   --color-button-floating-overlay: #00000004;
   --color-button-floating-motif: var(--color-accent-blue);
   --color-icon-accent: var(--color-accent-green);
@@ -70,6 +71,7 @@ html[data-theme='dark'] {
   --color-ticket-bg-blue-low: #3e6998;
   --color-ticket-bg-blue-muted: #2b527f;
   --color-button-floating-bg: #224b7d;
+  --color-footer-bg: #224b7d;
   --color-button-floating-overlay: #00000004;
   --color-button-floating-motif: var(--color-accent-blue);
   --color-icon-accent: var(--color-accent-green);
@@ -2865,7 +2867,7 @@ img.home-hero-asset {
   bottom: 0;
   left: 0;
   z-index: 0;
-  background: var(--color-accent-blue);
+  background: var(--color-footer-bg);
   pointer-events: none;
 }
 
