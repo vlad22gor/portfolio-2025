@@ -69,11 +69,13 @@ const coinInlineStyle = [
         </div>
       </div>
 
-      <div class="home-hero-cta" data-motion-inview="appear-v1">
-        <p class="home-hero-cta-text">
+      <div class="home-hero-cta" data-home-hero-cta>
+        <p class="home-hero-cta-text" data-home-hero-cta-stage="text">
           I make apps people love return to. Shaped by product vision, fresh ideas, and an enjoyable teamwork
         </p>
-        <Button href="https://linktr.ee/vladhorovyy" target="_blank" variant="default">message me</Button>
+        <div data-home-hero-cta-stage="button">
+          <Button href="https://linktr.ee/vladhorovyy" target="_blank" variant="default">message me</Button>
+        </div>
       </div>
     </section>
 
@@ -104,6 +106,8 @@ const coinInlineStyle = [
     const labelSpring = { type: 'spring', duration: 0.4, bounce: 0.2 };
     const assetSpring = { type: 'spring', duration: 0.4, bounce: 0.2 };
     const coinSpring = { type: 'spring', duration: 1.2, bounce: 0.2 };
+    const ctaInViewPreset = 'appear-v1';
+    const ctaStageDelay = 0.1;
     const assetDelayByModifier = {
       'home-hero-asset--mockup-red': 0.05,
       'home-hero-asset--cube': 0.1,
@@ -137,6 +141,128 @@ const coinInlineStyle = [
 
     const setHeroState = (hero, state) => {
       hero.dataset.homeHeroAppear = state;
+    };
+
+    const resolveHeroCta = (hero) => {
+      const cta = hero.querySelector('[data-home-hero-cta]');
+      if (!(cta instanceof HTMLElement)) {
+        return { cta: null, stageNodes: [] };
+      }
+      const stageNodes = Array.from(cta.querySelectorAll('[data-home-hero-cta-stage]')).filter(
+        (node) => node instanceof HTMLElement,
+      );
+      return { cta, stageNodes };
+    };
+
+    const setCtaStageInitial = (node) => {
+      node.style.opacity = '0';
+      node.style.transform = 'translate3d(0px, 25px, 0px)';
+    };
+
+    const setCtaStageFinal = (node) => {
+      node.style.opacity = '1';
+      node.style.transform = 'translate3d(0px, 0px, 0px)';
+    };
+
+    const clearCtaStageStyles = (nodes) => {
+      nodes.forEach((node) => {
+        node.style.opacity = '';
+        node.style.transform = '';
+      });
+    };
+
+    const clearCtaInViewState = (cta) => {
+      cta.removeAttribute('data-motion-inview');
+      cta.removeAttribute('data-motion-inview-bound');
+      cta.removeAttribute('data-motion-inview-animated');
+    };
+
+    const requestInViewRuntimeMount = () => {
+      const runtime = window.__inViewAppearRuntime;
+      if (runtime && typeof runtime.mount === 'function') {
+        runtime.mount();
+        return;
+      }
+      window.requestAnimationFrame(() => {
+        const deferredRuntime = window.__inViewAppearRuntime;
+        if (deferredRuntime && typeof deferredRuntime.mount === 'function') {
+          deferredRuntime.mount();
+        }
+      });
+    };
+
+    const isElementInViewport = (element) => {
+      const rect = element.getBoundingClientRect();
+      const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+      return rect.bottom > 0 && rect.right > 0 && rect.left < viewportWidth && rect.top < viewportHeight;
+    };
+
+    const resolveHeroCtaMode = (hero) => {
+      const { cta, stageNodes } = resolveHeroCta(hero);
+      if (!(cta instanceof HTMLElement)) {
+        return { mode: 'none', cta: null, stageNodes };
+      }
+
+      if (cta.dataset.homeHeroCtaRuntimeGuard === 'true') {
+        return { mode: cta.dataset.homeHeroCtaMode ?? 'none', cta, stageNodes };
+      }
+
+      cta.dataset.homeHeroCtaRuntimeGuard = 'true';
+      const shouldUseHeroLocalStagger = isElementInViewport(cta);
+
+      if (shouldUseHeroLocalStagger) {
+        clearCtaInViewState(cta);
+        cta.dataset.homeHeroCtaMode = 'hero-local-stagger';
+        return { mode: 'hero-local-stagger', cta, stageNodes };
+      }
+
+      clearCtaStageStyles(stageNodes);
+      cta.setAttribute('data-motion-inview', ctaInViewPreset);
+      cta.dataset.homeHeroCtaMode = 'inview';
+      requestInViewRuntimeMount();
+      return { mode: 'inview', cta, stageNodes };
+    };
+
+    const animateHeroCtaAsContinuation = (hero, baseIndex) => {
+      const { cta, stageNodes } = resolveHeroCta(hero);
+      if (!(cta instanceof HTMLElement) || stageNodes.length === 0) {
+        return [];
+      }
+      if (cta.dataset.homeHeroCtaAnimated === 'true') {
+        return [];
+      }
+      cta.dataset.homeHeroCtaAnimated = 'true';
+      clearCtaInViewState(cta);
+
+      const controls = [];
+      stageNodes.forEach((node, stageIndex) => {
+        setCtaStageInitial(node);
+        const control = animate(
+          node,
+          {
+            opacity: [0, 1],
+            transform: ['translate3d(0px, 25px, 0px)', 'translate3d(0px, 0px, 0px)'],
+          },
+          { ...labelSpring, delay: (baseIndex + stageIndex) * ctaStageDelay },
+        );
+        controls.push(control);
+      });
+      return controls;
+    };
+
+    const setHeroCtaFinal = (hero) => {
+      const { cta, stageNodes } = resolveHeroCta(hero);
+      if (!(cta instanceof HTMLElement)) {
+        return;
+      }
+      cta.dataset.homeHeroCtaRuntimeGuard = 'true';
+      cta.dataset.homeHeroCtaMode = cta.dataset.homeHeroCtaMode ?? 'reduced';
+      cta.dataset.homeHeroCtaAnimated = 'true';
+      clearCtaInViewState(cta);
+      stageNodes.forEach((node) => {
+        setCtaStageFinal(node);
+      });
     };
 
     const animateLabels = (hero) => {
@@ -256,11 +382,18 @@ const coinInlineStyle = [
             setAssetFinal(asset, isCoin);
           }
         });
+        setHeroCtaFinal(hero);
         setHeroState(hero, HERO_APPEAR_DONE);
         return;
       }
 
-      const controls = [...animateLabels(hero), ...animateAssets(hero)];
+      const labelControls = animateLabels(hero);
+      const ctaMode = resolveHeroCtaMode(hero);
+      const ctaControls =
+        ctaMode.mode === 'hero-local-stagger'
+          ? animateHeroCtaAsContinuation(hero, hero.querySelectorAll('.home-hero-line').length)
+          : [];
+      const controls = [...labelControls, ...animateAssets(hero), ...ctaControls];
       setHeroState(hero, HERO_APPEAR_RUNNING);
       markDoneWhenAnimationsFinish(hero, controls);
     };
