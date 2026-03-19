@@ -91,8 +91,11 @@ const resolvedRel =
 
 <script>
   import { animate } from 'motion';
+  import { installThemeToggleSoundRuntime, playButtonClickSound } from '../lib/sound/engine';
 
   (() => {
+    installThemeToggleSoundRuntime();
+
     const runtimeKey = '__uiButtonRuntime';
     if (window[runtimeKey]) {
       window[runtimeKey].mount();
@@ -203,6 +206,13 @@ const resolvedRel =
         if (event.key === 'Enter' || event.key === ' ') {
           pressOut(button);
         }
+      });
+
+      button.addEventListener('click', () => {
+        if (!isPressable(button)) {
+          return;
+        }
+        void playButtonClickSound();
       });
     };
 

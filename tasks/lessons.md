@@ -109,7 +109,9 @@
 - Для устранения микровспышки на soft-nav в Astro держать policy «fade только в контенте»: `site-header/site-footer` с `transition:animate='none'`, `root`-transition отключать (`::view-transition-*(root)`), а `page-content/gallery-content` анимировать кастомными keyframes без `mix-blend-mode: plus-lighter` (включая fallback-ветку `data-astro-transition-fallback`).
 - Для переходов case-switcher (`/fora <-> /kissa`) route-transition gate по marker `__case-switcher-intro-sync` применять и к `stagger` (`intro`), и к `element` (`intro screens`) через `data-motion-await-route-transition='case-switcher-intro'`; старт анимации только после стабильного снятия `html[data-astro-transition]`.
 - Для `FloatingThemeButton` использовать единый `toggle`-пресет (без разделения `light/dark`) и подстраивать характер только параметрами слоёв.
-- Для оперативной подстройки loudness у текущего `FloatingThemeButton`-звука сначала менять только `masterGainValue` в `theme-toggle-sound.ts`, не трогая форму пресета.
+- Для оперативной подстройки loudness у текущего `FloatingThemeButton`-звука сначала менять только `masterGainValue` в `src/lib/sound/engine.ts`, не трогая форму пресета.
 - Для направления «живой реальный выключатель» держать короткий фильтрованный `noise`-транзиент плюс компактное осцилляторное тело; это дает реализм и сохраняет читаемый щелчок.
 - Для более резкого и звонкого щелчка поднимать верхний `bandpass`-слой (`filterFrequency/Q`) и держать короткий `decay` (~10-20ms), избегая выраженного «удара».
 - Для уменьшения глухоты поднимать `lowpass` cutoff у body-слоёв и сохранять короткий хвост без затяжного low-mid резонанса.
+- Для ручного sound-tuning держать минимальную структуру `src/lib/sound/presets.ts` (все параметры звуков) + `src/lib/sound/engine.ts` (только playback/runtime), без дублирующих `theme-toggle*` неймингов.
+- Если при частых тапах у кнопки появляются редкие резкие всплески, сначала уменьшать humanize-диапазоны в `src/lib/sound/engine.ts` и включать мягкий master-compressor; только потом усиливать/ослаблять отдельные слои пресета.

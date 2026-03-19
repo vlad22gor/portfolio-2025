@@ -1,27 +1,10 @@
-type BaseLayerPreset = {
-  attackMs: number;
-  decayMs: number;
-  filterFrequency: number;
-  filterType: BiquadFilterType;
-  gain: number;
-  q: number;
-};
-
-type OscillatorLayerPreset = BaseLayerPreset & {
-  source: 'oscillator';
-  curve: Array<[number, number]>;
-  oscillatorType: OscillatorType;
-};
-
-type NoiseLayerPreset = BaseLayerPreset & {
-  source: 'noise';
-};
-
-type LayerPreset = OscillatorLayerPreset | NoiseLayerPreset;
+import { buttonClickPreset, themeTogglePreset } from './presets';
+import type { LayerPreset } from './presets';
 
 type ThemeToggleSoundRuntime = {
   context: AudioContext | null;
   masterGain: GainNode | null;
+  compressor: DynamicsCompressorNode | null;
   noiseBuffer: AudioBuffer | null;
   supported: boolean;
 };
@@ -35,67 +18,12 @@ declare global {
 
 const runtimeKey = '__themeToggleSoundRuntime';
 const minGain = 0.0001;
-const masterGainValue = 0.68;
-
-// One realistic lamp-switch click:
-// short noisy transient + compact mechanical body.
-const togglePreset: LayerPreset[] = [
-  {
-    source: 'noise',
-    filterType: 'bandpass',
-    filterFrequency: 2800,
-    q: 1.0,
-    gain: 0.12,
-    attackMs: 1,
-    decayMs: 22,
-  },
-  {
-    source: 'oscillator',
-    oscillatorType: 'triangle',
-    filterType: 'bandpass',
-    filterFrequency: 1800,
-    q: 1.2,
-    gain: 0.058,
-    attackMs: 1,
-    decayMs: 16,
-    curve: [
-      [0, 2620],
-      [16, 1660],
-    ],
-  },
-  {
-    source: 'oscillator',
-    oscillatorType: 'triangle',
-    filterType: 'lowpass',
-    filterFrequency: 1000,
-    q: 0.78,
-    gain: 0.105,
-    attackMs: 1,
-    decayMs: 28,
-    curve: [
-      [0, 640],
-      [28, 430],
-    ],
-  },
-  {
-    source: 'oscillator',
-    oscillatorType: 'sine',
-    filterType: 'lowpass',
-    filterFrequency: 760,
-    q: 0.64,
-    gain: 0.046,
-    attackMs: 1,
-    decayMs: 36,
-    curve: [
-      [0, 330],
-      [36, 248],
-    ],
-  },
-];
+const masterGainValue = 0.52;
 
 const createRuntime = (): ThemeToggleSoundRuntime => ({
   context: null,
   masterGain: null,
+  compressor: null,
   noiseBuffer: null,
   supported: typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext) != null,
 });
@@ -127,6 +55,7 @@ const ensureContext = async (runtime: ThemeToggleSoundRuntime): Promise<AudioCon
   if (runtime.context?.state === 'closed') {
     runtime.context = null;
     runtime.masterGain = null;
+    runtime.compressor = null;
     runtime.noiseBuffer = null;
   }
 
@@ -140,8 +69,15 @@ const ensureContext = async (runtime: ThemeToggleSoundRuntime): Promise<AudioCon
     try {
       runtime.context = new AudioContextCtor();
       runtime.masterGain = runtime.context.createGain();
+      runtime.compressor = runtime.context.createDynamicsCompressor();
       runtime.masterGain.gain.value = masterGainValue;
-      runtime.masterGain.connect(runtime.context.destination);
+      runtime.compressor.threshold.value = -22;
+      runtime.compressor.knee.value = 18;
+      runtime.compressor.ratio.value = 3.5;
+      runtime.compressor.attack.value = 0.002;
+      runtime.compressor.release.value = 0.07;
+      runtime.masterGain.connect(runtime.compressor);
+      runtime.compressor.connect(runtime.context.destination);
     } catch {
       return null;
     }
@@ -182,8 +118,9 @@ const scheduleLayer = (
   startAt: number,
   preset: LayerPreset,
 ) => {
-  const gainHumanize = 0.97 + Math.random() * 0.12;
-  const freqHumanize = 0.97 + Math.random() * 0.06;
+  const gainHumanize = 0.985 + Math.random() * 0.04;
+  const freqHumanize = 0.985 + Math.random() * 0.03;
+  const layerStartAt = startAt + Math.max(0, (preset.startOffsetMs ?? 0) / 1000);
 
   const filter = context.createBiquadFilter();
   filter.type = preset.filterType;
@@ -193,11 +130,14 @@ const scheduleLayer = (
   const envelope = context.createGain();
   const attackSeconds = Math.max(0.001, preset.attackMs / 1000);
   const decaySeconds = Math.max(0.01, preset.decayMs / 1000);
-  const stopAt = startAt + attackSeconds + decaySeconds + 0.03;
+  const stopAt = layerStartAt + attackSeconds + decaySeconds + 0.03;
 
-  envelope.gain.setValueAtTime(minGain, startAt);
-  envelope.gain.linearRampToValueAtTime(Math.max(minGain, preset.gain * gainHumanize), startAt + attackSeconds);
-  envelope.gain.exponentialRampToValueAtTime(minGain, startAt + attackSeconds + decaySeconds);
+  envelope.gain.setValueAtTime(minGain, layerStartAt);
+  envelope.gain.linearRampToValueAtTime(
+    Math.max(minGain, preset.gain * gainHumanize),
+    layerStartAt + attackSeconds,
+  );
+  envelope.gain.exponentialRampToValueAtTime(minGain, layerStartAt + attackSeconds + decaySeconds);
 
   let source: OscillatorNode | AudioBufferSourceNode | null = null;
   if (preset.source === 'oscillator') {
@@ -207,12 +147,12 @@ const scheduleLayer = (
 
     const oscillator = context.createOscillator();
     oscillator.type = preset.oscillatorType;
-    oscillator.frequency.setValueAtTime(Math.max(16, preset.curve[0][1] * freqHumanize), startAt);
+    oscillator.frequency.setValueAtTime(Math.max(16, preset.curve[0][1] * freqHumanize), layerStartAt);
     for (let i = 1; i < preset.curve.length; i += 1) {
       const [timeMs, frequency] = preset.curve[i];
       oscillator.frequency.exponentialRampToValueAtTime(
         Math.max(16, frequency * freqHumanize),
-        startAt + timeMs / 1000,
+        layerStartAt + timeMs / 1000,
       );
     }
     source = oscillator;
@@ -227,7 +167,7 @@ const scheduleLayer = (
   filter.connect(envelope);
   envelope.connect(destination);
 
-  source.start(startAt);
+  source.start(layerStartAt);
   source.stop(stopAt);
   source.addEventListener('ended', () => {
     source?.disconnect();
@@ -236,7 +176,7 @@ const scheduleLayer = (
   });
 };
 
-const playThemeToggleSound = async () => {
+const playPreset = async (preset: LayerPreset[]) => {
   const runtime = getRuntime();
   if (!runtime) {
     return;
@@ -248,9 +188,17 @@ const playThemeToggleSound = async () => {
   }
 
   const startAt = context.currentTime + 0.005;
-  togglePreset.forEach((layer) => {
+  preset.forEach((layer) => {
     scheduleLayer(context, runtime, runtime.masterGain as AudioNode, startAt, layer);
   });
 };
 
-export { installThemeToggleSoundRuntime, playThemeToggleSound };
+const playThemeToggleSound = async () => {
+  await playPreset(themeTogglePreset);
+};
+
+const playButtonClickSound = async () => {
+  await playPreset(buttonClickPreset);
+};
+
+export { installThemeToggleSoundRuntime, playThemeToggleSound, playButtonClickSound };
