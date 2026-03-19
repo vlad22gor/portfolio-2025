@@ -219,11 +219,11 @@ const resolvedRel =
 
 <style>
   .ui-button {
-    --button-bg: var(--color-accent-green);
-    --button-fg: var(--color-text-default-highlighted);
-    --button-border-color: transparent;
-    --button-border-width: 0px;
-    --button-icon-color: var(--color-accent-green);
+    --button-bg: var(--color-button-bg);
+    --button-fg: var(--color-button-text);
+    --button-border-color: var(--color-button-border);
+    --button-border-width: 1px;
+    --button-icon-color: var(--color-button-arrow);
     --button-scale: 1;
     box-sizing: border-box;
     display: inline-flex;
@@ -273,37 +273,40 @@ const resolvedRel =
   }
 
   .ui-button--default {
-    --button-bg: var(--color-accent-green);
-    --button-fg: var(--color-text-default-highlighted);
-    --button-border-color: transparent;
-    --button-border-width: 0px;
+    --button-bg: var(--color-button-bg);
+    --button-fg: var(--color-button-text);
+    --button-border-color: var(--color-button-border);
+    --button-border-width: 1px;
   }
 
   .ui-button--bordered {
     --button-bg: transparent;
-    --button-fg: var(--color-text-default-highlighted);
-    --button-border-color: var(--color-accent-green);
+    --button-fg: var(--color-button-text-outlined);
+    --button-border-color: var(--color-button-border);
     --button-border-width: 2px;
+    --button-icon-color: var(--color-button-arrow);
   }
 
   .ui-button--bordered:hover {
-    --button-bg: var(--color-accent-green);
-    --button-border-color: var(--color-accent-green);
+    --button-bg: var(--color-button-bg);
+    --button-fg: var(--color-button-text);
+    --button-border-color: var(--color-button-border);
   }
 
   .ui-button--bordered-icon {
     --button-bg: transparent;
-    --button-fg: var(--color-text-default-highlighted);
-    --button-border-color: var(--color-accent-green);
+    --button-fg: var(--color-button-text-outlined);
+    --button-border-color: var(--color-button-border);
     --button-border-width: 2px;
-    --button-icon-color: var(--color-accent-green);
+    --button-icon-color: var(--color-button-bg);
     gap: 10px;
   }
 
   .ui-button--bordered-icon:hover {
-    --button-bg: var(--color-accent-green);
-    --button-border-color: var(--color-accent-green);
-    --button-icon-color: var(--color-text-default-highlighted);
+    --button-bg: var(--color-button-bg);
+    --button-fg: var(--color-button-text);
+    --button-border-color: var(--color-button-border);
+    --button-icon-color: var(--color-button-arrow);
   }
 
   .ui-button--icon-right {

@@ -26,6 +26,119 @@ const readThemeTokens = () => {
     ticketOrangeCritical: read('--color-ticket-bg-orange-critical'),
     buttonFloatingBg: read('--color-button-floating-bg'),
     footerBg: read('--color-footer-bg'),
+    buttonBg: read('--color-button-bg'),
+    buttonText: read('--color-button-text'),
+    buttonTextOutlined: read('--color-button-text-outlined'),
+    buttonArrow: read('--color-button-arrow'),
+    buttonBorder: read('--color-button-border'),
+    inkBg: read('--color-ink-bg'),
+    dividerBg: read('--color-divider-bg'),
+  };
+};
+
+const readIconAliasSnapshot = () => {
+  const resolveColor = (value: string) => {
+    const probe = document.createElement('span');
+    probe.style.color = value;
+    document.body.appendChild(probe);
+    const resolved = getComputedStyle(probe).color;
+    probe.remove();
+    return resolved;
+  };
+
+  const styles = getComputedStyle(document.documentElement);
+  const inkExpression = styles.getPropertyValue('--color-ink-bg').trim();
+  const iconExpression = styles.getPropertyValue('--color-icon-accent').trim();
+
+  return {
+    inkExpression,
+    iconExpression,
+    inkResolved: resolveColor(inkExpression),
+    iconResolved: resolveColor(iconExpression),
+  };
+};
+
+const readWaveColorSnapshot = (selectors: string[]) => {
+  const resolveColor = (value: string) => {
+    const probe = document.createElement('span');
+    probe.style.color = value;
+    document.body.appendChild(probe);
+    const resolved = getComputedStyle(probe).color;
+    probe.remove();
+    return resolved;
+  };
+
+  const rootStyles = getComputedStyle(document.documentElement);
+  const dividerTokenExpression = rootStyles.getPropertyValue('--color-divider-bg').trim();
+  const expectedColor = resolveColor(dividerTokenExpression);
+
+  return {
+    dividerTokenExpression,
+    expectedColor,
+    entries: selectors.map((selector) => {
+      const element = document.querySelector(selector);
+      if (!(element instanceof HTMLElement)) {
+        return {
+          selector,
+          present: false,
+          color: null,
+        };
+      }
+
+      return {
+        selector,
+        present: true,
+        color: getComputedStyle(element).color,
+      };
+    }),
+  };
+};
+
+const readButtonTokenSnapshot = (input: string | [string, string, string?]) => {
+  const selector = Array.isArray(input) ? input[0] : input;
+  const textTokenName = Array.isArray(input) ? input[1] : '--color-button-text';
+  const iconTokenName = Array.isArray(input) ? (input[2] ?? '--color-button-arrow') : '--color-button-arrow';
+  const resolveColor = (value: string) => {
+    const probe = document.createElement('span');
+    probe.style.color = value;
+    document.body.appendChild(probe);
+    const resolved = getComputedStyle(probe).color;
+    probe.remove();
+    return resolved;
+  };
+
+  const rootStyles = getComputedStyle(document.documentElement);
+  const expected = {
+    bg: resolveColor(rootStyles.getPropertyValue('--color-button-bg').trim()),
+    text: resolveColor(rootStyles.getPropertyValue(textTokenName).trim()),
+    border: resolveColor(rootStyles.getPropertyValue('--color-button-border').trim()),
+    arrow: resolveColor(rootStyles.getPropertyValue(iconTokenName).trim()),
+  };
+
+  const button = document.querySelector(selector);
+  if (!(button instanceof HTMLElement)) {
+    return {
+      selector,
+      present: false,
+      expected,
+      actual: null,
+    };
+  }
+
+  const buttonStyles = getComputedStyle(button);
+  const icon = button.querySelector('.ui-button__icon');
+
+  return {
+    selector,
+    present: true,
+    expected,
+    actual: {
+      backgroundColor: buttonStyles.backgroundColor,
+      textColor: buttonStyles.color,
+      borderTopColor: buttonStyles.borderTopColor,
+      borderTopWidth: buttonStyles.borderTopWidth,
+      iconColor: icon instanceof HTMLElement ? getComputedStyle(icon).backgroundColor : null,
+    },
   };
 };
 
@@ -39,6 +152,62 @@ const readFooterBackgrounds = () => {
   return {
     before: getComputedStyle(footer, '::before').backgroundColor,
     scallopFrame: getComputedStyle(scallopFrame).color,
+  };
+};
+
+const readFooterMotifSnapshot = () => {
+  const resolveColor = (value: string) => {
+    const probe = document.createElement('span');
+    probe.style.color = value;
+    document.body.appendChild(probe);
+    const resolved = getComputedStyle(probe).color;
+    probe.remove();
+    return resolved;
+  };
+
+  const rootStyles = getComputedStyle(document.documentElement);
+  const expectedAccentWhite = resolveColor(rootStyles.getPropertyValue('--color-accent-white').trim());
+  const motifs = Array.from(document.querySelectorAll('.site-footer-motif'));
+
+  return {
+    expectedAccentWhite,
+    entries: motifs.map((motif) =>
+      motif instanceof HTMLElement
+        ? {
+            present: true,
+            color: getComputedStyle(motif).backgroundColor,
+          }
+        : {
+            present: false,
+            color: null,
+          },
+    ),
+  };
+};
+
+const readAboutArchSnapshot = () => {
+  const resolveColor = (value: string) => {
+    const probe = document.createElement('span');
+    probe.style.color = value;
+    document.body.appendChild(probe);
+    const resolved = getComputedStyle(probe).color;
+    probe.remove();
+    return resolved;
+  };
+
+  const rootStyles = getComputedStyle(document.documentElement);
+  const expectedAccentOrange = resolveColor(rootStyles.getPropertyValue('--color-accent-orange').trim());
+  const arch = document.querySelector('.about-me-arch');
+  const archPath = document.querySelector('.about-me-arch [data-motion-trim-path]');
+
+  if (!(arch instanceof SVGElement) || !(archPath instanceof SVGElement)) {
+    return null;
+  }
+
+  return {
+    expectedAccentOrange,
+    archColor: getComputedStyle(arch).color,
+    archPathStroke: getComputedStyle(archPath).stroke,
   };
 };
 
@@ -233,15 +402,35 @@ test.describe('Theme tokens smoke', () => {
       theme: 'dark',
       textDefault: '#efe2d2',
       bgDefault: '#173a66',
-      ticketOrangeCritical: '#bd4554',
+      ticketOrangeCritical: '#79b0e2',
       buttonFloatingBg: '#224b7d',
       footerBg: '#224b7d',
+      buttonBg: '#79b0e2',
+      buttonText: '#173a66',
+      buttonTextOutlined: '#efe2d2',
+      buttonArrow: '#173a66',
+      buttonBorder: '#79b0e2',
+      inkBg: '#79b0e2',
+      dividerBg: '#79b0e2',
     });
+    const darkAliasSnapshot = await page.evaluate(readIconAliasSnapshot);
+    expect(darkAliasSnapshot.iconExpression.length).toBeGreaterThan(0);
+    expect(darkAliasSnapshot.iconResolved).toBe(darkAliasSnapshot.inkResolved);
+
     const darkFooterBySystem = await page.evaluate(readFooterBackgrounds);
     expect(darkFooterBySystem).toEqual({
       before: 'rgb(34, 75, 125)',
       scallopFrame: 'rgb(34, 75, 125)',
     });
+    const darkFooterMotifBySystem = await page.evaluate(readFooterMotifSnapshot);
+    darkFooterMotifBySystem.entries.forEach((entry) => {
+      expect(entry.present).toBe(true);
+      expect(entry.color).toBe(darkFooterMotifBySystem.expectedAccentWhite);
+    });
+    const darkArchBySystem = await page.evaluate(readAboutArchSnapshot);
+    expect(darkArchBySystem).not.toBeNull();
+    expect(darkArchBySystem!.archColor).toBe(darkArchBySystem!.expectedAccentOrange);
+    expect(darkArchBySystem!.archPathStroke).toBe(darkArchBySystem!.expectedAccentOrange);
 
     await page.evaluate(() => {
       window.localStorage.setItem('vh-theme', 'light');
@@ -256,12 +445,32 @@ test.describe('Theme tokens smoke', () => {
       ticketOrangeCritical: '#cda476',
       buttonFloatingBg: '#dbdad1',
       footerBg: '#8cbfdb',
+      buttonBg: '#c0bd6d',
+      buttonText: '#000',
+      buttonTextOutlined: '#000',
+      buttonArrow: '#000000d9',
+      buttonBorder: '#c0bd6d',
+      inkBg: '#c0bd6d',
+      dividerBg: '#c0bd6d',
     });
+    const lightAliasSnapshot = await page.evaluate(readIconAliasSnapshot);
+    expect(lightAliasSnapshot.iconExpression.length).toBeGreaterThan(0);
+    expect(lightAliasSnapshot.iconResolved).toBe(lightAliasSnapshot.inkResolved);
+
     const lightFooterByStorage = await page.evaluate(readFooterBackgrounds);
     expect(lightFooterByStorage).toEqual({
       before: 'rgb(140, 191, 219)',
       scallopFrame: 'rgb(140, 191, 219)',
     });
+    const lightFooterMotifByStorage = await page.evaluate(readFooterMotifSnapshot);
+    lightFooterMotifByStorage.entries.forEach((entry) => {
+      expect(entry.present).toBe(true);
+      expect(entry.color).toBe(lightFooterMotifByStorage.expectedAccentWhite);
+    });
+    const lightArchByStorage = await page.evaluate(readAboutArchSnapshot);
+    expect(lightArchByStorage).not.toBeNull();
+    expect(lightArchByStorage!.archColor).toBe(lightArchByStorage!.expectedAccentOrange);
+    expect(lightArchByStorage!.archPathStroke).toBe(lightArchByStorage!.expectedAccentOrange);
 
     await page.evaluate(() => {
       window.localStorage.setItem('vh-theme', 'dark');
@@ -273,14 +482,26 @@ test.describe('Theme tokens smoke', () => {
       theme: 'dark',
       textDefault: '#efe2d2',
       bgDefault: '#173a66',
-      ticketOrangeCritical: '#bd4554',
+      ticketOrangeCritical: '#79b0e2',
       buttonFloatingBg: '#224b7d',
       footerBg: '#224b7d',
+      buttonBg: '#79b0e2',
+      buttonText: '#173a66',
+      buttonTextOutlined: '#efe2d2',
+      buttonArrow: '#173a66',
+      buttonBorder: '#79b0e2',
+      inkBg: '#79b0e2',
+      dividerBg: '#79b0e2',
     });
     const darkFooterByStorage = await page.evaluate(readFooterBackgrounds);
     expect(darkFooterByStorage).toEqual({
       before: 'rgb(34, 75, 125)',
       scallopFrame: 'rgb(34, 75, 125)',
+    });
+    const darkFooterMotifByStorage = await page.evaluate(readFooterMotifSnapshot);
+    darkFooterMotifByStorage.entries.forEach((entry) => {
+      expect(entry.present).toBe(true);
+      expect(entry.color).toBe(darkFooterMotifByStorage.expectedAccentWhite);
     });
 
     const darkHasHorizontalOverflow = await page.evaluate(
@@ -593,6 +814,166 @@ test.describe('Theme tokens smoke', () => {
     expect(stateAfterReload!.themeState).toBe('dark');
     expect(stateAfterReload!.storedTheme).toBe('dark');
     expect(stateAfterReload!.label).toBe('Switch to light theme');
+  });
+
+  test('button and divider tokens are applied to variants and waves', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.goto('/');
+    await expect(page).toHaveTitle(/Vlad Horovyy – Product Designer/i);
+
+    await page.evaluate((storageKey) => {
+      document.documentElement.dataset.theme = 'light';
+      try {
+        window.localStorage.setItem(storageKey, 'light');
+      } catch {
+        // Ignore storage access failures in restricted contexts.
+      }
+    }, themeStorageKey);
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.dataset.theme), {
+        timeout: 2000,
+      })
+      .toBe('light');
+
+    const homeWaveLight = await page.evaluate(readWaveColorSnapshot, [
+      '.site-nav-wave-rail .quantized-wave',
+      '.design-tools-divider.design-tools-wave-span-1',
+      '.final-cta-divider-bleed .quantized-wave',
+    ]);
+    homeWaveLight.entries.forEach((entry) => {
+      expect(entry.present).toBe(true);
+      expect(entry.color).toBe(homeWaveLight.expectedColor);
+    });
+
+    const homeDefaultLight = await page.evaluate(readButtonTokenSnapshot, '.home-hero-cta .ui-button--default');
+    expect(homeDefaultLight.present).toBe(true);
+    expect(homeDefaultLight.actual?.backgroundColor).toBe(homeDefaultLight.expected.bg);
+    expect(homeDefaultLight.actual?.textColor).toBe(homeDefaultLight.expected.text);
+    expect(homeDefaultLight.actual?.borderTopColor).toBe(homeDefaultLight.expected.border);
+    expect(Number.parseFloat(homeDefaultLight.actual?.borderTopWidth ?? '0')).toBeGreaterThanOrEqual(1);
+
+    const homeBorderedLight = await page.evaluate(readButtonTokenSnapshot, [
+      '.quotes-section .ui-button--bordered',
+      '--color-button-text-outlined',
+    ]);
+    expect(homeBorderedLight.present).toBe(true);
+    expect(homeBorderedLight.actual?.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(homeBorderedLight.actual?.textColor).toBe(homeBorderedLight.expected.text);
+    expect(homeBorderedLight.actual?.borderTopColor).toBe(homeBorderedLight.expected.border);
+    expect(Number.parseFloat(homeBorderedLight.actual?.borderTopWidth ?? '0')).toBeGreaterThanOrEqual(2);
+    await page.hover('.quotes-section .ui-button--bordered');
+    const homeBorderedLightHover = await page.evaluate(readButtonTokenSnapshot, [
+      '.quotes-section .ui-button--bordered',
+      '--color-button-text',
+    ]);
+    expect(homeBorderedLightHover.present).toBe(true);
+    expect(homeBorderedLightHover.actual?.textColor).toBe(homeBorderedLightHover.expected.text);
+
+    await page.evaluate((storageKey) => {
+      document.documentElement.dataset.theme = 'dark';
+      try {
+        window.localStorage.setItem(storageKey, 'dark');
+      } catch {
+        // Ignore storage access failures in restricted contexts.
+      }
+    }, themeStorageKey);
+    await page.reload();
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.dataset.theme), {
+        timeout: 2000,
+      })
+      .toBe('dark');
+
+    const homeWaveDark = await page.evaluate(readWaveColorSnapshot, [
+      '.site-nav-wave-rail .quantized-wave',
+      '.design-tools-divider.design-tools-wave-span-1',
+      '.final-cta-divider-bleed .quantized-wave',
+    ]);
+    homeWaveDark.entries.forEach((entry) => {
+      expect(entry.present).toBe(true);
+      expect(entry.color).toBe(homeWaveDark.expectedColor);
+    });
+
+    const homeDefaultDark = await page.evaluate(readButtonTokenSnapshot, '.home-hero-cta .ui-button--default');
+    expect(homeDefaultDark.present).toBe(true);
+    expect(homeDefaultDark.actual?.backgroundColor).toBe(homeDefaultDark.expected.bg);
+    expect(homeDefaultDark.actual?.textColor).toBe(homeDefaultDark.expected.text);
+    expect(homeDefaultDark.actual?.borderTopColor).toBe(homeDefaultDark.expected.border);
+    expect(Number.parseFloat(homeDefaultDark.actual?.borderTopWidth ?? '0')).toBeGreaterThanOrEqual(1);
+
+    await page.goto('/fora');
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.dataset.theme), {
+        timeout: 2000,
+      })
+      .toBe('dark');
+
+    const foraBorderedIconDark = await page.evaluate(
+      readButtonTokenSnapshot,
+      ['.case-switcher-button--next.ui-button--bordered-icon', '--color-button-text-outlined', '--color-button-bg'],
+    );
+    expect(foraBorderedIconDark.present).toBe(true);
+    expect(foraBorderedIconDark.actual?.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    expect(foraBorderedIconDark.actual?.textColor).toBe(foraBorderedIconDark.expected.text);
+    expect(foraBorderedIconDark.actual?.borderTopColor).toBe(foraBorderedIconDark.expected.border);
+    expect(Number.parseFloat(foraBorderedIconDark.actual?.borderTopWidth ?? '0')).toBeGreaterThanOrEqual(2);
+    expect(foraBorderedIconDark.actual?.iconColor).toBe(foraBorderedIconDark.expected.arrow);
+    const nextCaseButton = page.locator('.case-switcher-button--next.ui-button--bordered-icon');
+    await nextCaseButton.scrollIntoViewIfNeeded();
+    const nextCaseButtonBox = await nextCaseButton.boundingBox();
+    expect(nextCaseButtonBox).not.toBeNull();
+    await page.mouse.move(
+      nextCaseButtonBox!.x + nextCaseButtonBox!.width / 2,
+      nextCaseButtonBox!.y + nextCaseButtonBox!.height / 2,
+    );
+    const foraBorderedIconDarkHover = await page.evaluate(readButtonTokenSnapshot, [
+      '.case-switcher-button--next.ui-button--bordered-icon',
+      '--color-button-text',
+      '--color-button-arrow',
+    ]);
+    expect(foraBorderedIconDarkHover.present).toBe(true);
+    await expect
+      .poll(
+        () =>
+          page.evaluate(readButtonTokenSnapshot, [
+            '.case-switcher-button--next.ui-button--bordered-icon',
+            '--color-button-text',
+            '--color-button-arrow',
+          ]),
+        { timeout: 2000 },
+      )
+      .toMatchObject({
+        present: true,
+        actual: {
+          textColor: foraBorderedIconDarkHover.expected.text,
+          iconColor: foraBorderedIconDarkHover.expected.arrow,
+        },
+      });
+
+    const foraWaveDark = await page.evaluate(readWaveColorSnapshot, [
+      '.site-nav-wave-rail .quantized-wave',
+      '.fora-intro-divider',
+    ]);
+    foraWaveDark.entries.forEach((entry) => {
+      expect(entry.present).toBe(true);
+      expect(entry.color).toBe(foraWaveDark.expectedColor);
+    });
+
+    await page.goto('/gallery');
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.dataset.theme), {
+        timeout: 2000,
+      })
+      .toBe('dark');
+
+    const galleryWaveDark = await page.evaluate(readWaveColorSnapshot, [
+      '.site-nav-wave-rail .quantized-wave',
+      '.final-cta-divider-bleed .quantized-wave',
+    ]);
+    galleryWaveDark.entries.forEach((entry) => {
+      expect(entry.present).toBe(true);
+      expect(entry.color).toBe(galleryWaveDark.expectedColor);
+    });
   });
 
   test('floating theme button is hidden in temporary adaptive mode on mobile viewport', async ({ page }) => {
