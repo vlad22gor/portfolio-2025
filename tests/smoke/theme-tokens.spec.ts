@@ -402,9 +402,9 @@ test.describe('Theme tokens smoke', () => {
       theme: 'dark',
       textDefault: '#efe2d2',
       bgDefault: '#173a66',
-      ticketOrangeCritical: '#79b0e2',
-      buttonFloatingBg: '#224b7d',
-      footerBg: '#224b7d',
+      ticketOrangeCritical: '#6a9ecf',
+      buttonFloatingBg: '#234978',
+      footerBg: '#234978',
       buttonBg: '#79b0e2',
       buttonText: '#173a66',
       buttonTextOutlined: '#efe2d2',
@@ -419,8 +419,8 @@ test.describe('Theme tokens smoke', () => {
 
     const darkFooterBySystem = await page.evaluate(readFooterBackgrounds);
     expect(darkFooterBySystem).toEqual({
-      before: 'rgb(34, 75, 125)',
-      scallopFrame: 'rgb(34, 75, 125)',
+      before: 'rgb(35, 73, 120)',
+      scallopFrame: 'rgb(35, 73, 120)',
     });
     const darkFooterMotifBySystem = await page.evaluate(readFooterMotifSnapshot);
     darkFooterMotifBySystem.entries.forEach((entry) => {
@@ -482,9 +482,9 @@ test.describe('Theme tokens smoke', () => {
       theme: 'dark',
       textDefault: '#efe2d2',
       bgDefault: '#173a66',
-      ticketOrangeCritical: '#79b0e2',
-      buttonFloatingBg: '#224b7d',
-      footerBg: '#224b7d',
+      ticketOrangeCritical: '#6a9ecf',
+      buttonFloatingBg: '#234978',
+      footerBg: '#234978',
       buttonBg: '#79b0e2',
       buttonText: '#173a66',
       buttonTextOutlined: '#efe2d2',
@@ -495,8 +495,8 @@ test.describe('Theme tokens smoke', () => {
     });
     const darkFooterByStorage = await page.evaluate(readFooterBackgrounds);
     expect(darkFooterByStorage).toEqual({
-      before: 'rgb(34, 75, 125)',
-      scallopFrame: 'rgb(34, 75, 125)',
+      before: 'rgb(35, 73, 120)',
+      scallopFrame: 'rgb(35, 73, 120)',
     });
     const darkFooterMotifByStorage = await page.evaluate(readFooterMotifSnapshot);
     darkFooterMotifByStorage.entries.forEach((entry) => {
@@ -814,6 +814,73 @@ test.describe('Theme tokens smoke', () => {
     expect(stateAfterReload!.themeState).toBe('dark');
     expect(stateAfterReload!.storedTheme).toBe('dark');
     expect(stateAfterReload!.label).toBe('Switch to light theme');
+  });
+
+  test('dark soft navigation keeps html theme and floating button state stable', async ({ page }) => {
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.goto('/');
+    await expect(page.locator(floatingThemeButtonSelector)).toBeVisible();
+
+    await page.evaluate((storageKey) => {
+      document.documentElement.dataset.theme = 'dark';
+      try {
+        window.localStorage.setItem(storageKey, 'dark');
+      } catch {
+        // Ignore storage access failures in restricted contexts.
+      }
+    }, themeStorageKey);
+
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.getAttribute('data-theme')), {
+        timeout: 2000,
+      })
+      .toBe('dark');
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const button = document.querySelector('.floating-theme-button[data-floating-theme-button]');
+            return button instanceof HTMLButtonElement ? button.dataset.themeState ?? null : null;
+          }),
+        { timeout: 2000 },
+      )
+      .toBe('dark');
+
+    const samplesPromise = page.evaluate(() => {
+      return new Promise<
+        Array<{ t: number; path: string; htmlTheme: string | null; floatingState: string | null }>
+      >((resolve) => {
+        const start = performance.now();
+        const samples: Array<{ t: number; path: string; htmlTheme: string | null; floatingState: string | null }> = [];
+
+        const sample = () => {
+          const button = document.querySelector('.floating-theme-button[data-floating-theme-button]');
+          samples.push({
+            t: Math.round(performance.now() - start),
+            path: window.location.pathname,
+            htmlTheme: document.documentElement.getAttribute('data-theme'),
+            floatingState: button instanceof HTMLButtonElement ? button.dataset.themeState ?? null : null,
+          });
+
+          if (performance.now() - start < 1200) {
+            window.requestAnimationFrame(sample);
+            return;
+          }
+
+          resolve(samples);
+        };
+
+        sample();
+      });
+    });
+
+    await page.click('a[data-nav-id="gallery"]');
+    await expect(page).toHaveURL(/\/gallery\/?$/);
+
+    const samples = await samplesPromise;
+    expect(samples.some((sample) => sample.path === '/gallery')).toBe(true);
+    expect(samples.filter((sample) => sample.htmlTheme !== 'dark')).toEqual([]);
+    expect(samples.filter((sample) => sample.floatingState !== 'dark')).toEqual([]);
   });
 
   test('button and divider tokens are applied to variants and waves', async ({ page }) => {

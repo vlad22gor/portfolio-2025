@@ -1,5 +1,11 @@
 # Logs
 
+- 2026-03-19: Исправлен `dark-flash` при soft-nav: тема больше не теряется на swap, а `FloatingThemeButton` не откатывается в `light`.
+  Причина: во время `ClientRouter`-swap root-атрибуты `<html>` временно пересоздаются; из-за отсутствия `data-theme` происходил краткий откат на light-токены, что визуально проявлялось как мигание header-кнопок и FAB.
+  Файлы: `src/layouts/BaseLayout.astro`, `src/components/FloatingThemeButton.astro`, `tests/smoke/theme-tokens.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) в theme-bootstrap добавлен `astro:before-swap` хук, который копирует текущую тему в `event.newDocument.documentElement.dataset.theme` до swap; (2) сохранён существующий `applyTheme` на initial load + `astro:page-load` как safety net; (3) в FAB-runtime добавлен устойчивый `readTheme`: при временно отсутствующем `data-theme` используется `localStorage('vh-theme')`, затем `cachedTheme` (без немедленного fallback в `light`); (4) добавлен smoke-регрессионный тест `dark soft navigation keeps html theme and floating button state stable`, который покадрово проверяет отсутствие промежуточных состояний `htmlTheme !== 'dark'` и `floatingState !== 'dark'` при переходе по header.
+  Проверки: (1) `npx playwright test tests/smoke/theme-tokens.spec.ts -g "dark soft navigation keeps html theme and floating button state stable"` — успешно (`1/1`); (2) `npx playwright test tests/smoke/theme-tokens.spec.ts tests/smoke/gallery.spec.ts tests/smoke/case-details.spec.ts` — успешно (`15/15`); (3) `npm run build` — успешно.
+
 - 2026-03-19: Внедрены компонентные токены `button/*`, `ink/bg`, `divider/bg` и выполнен полный sync color-коллекций с Figma (`83:19088` light, `83:19089` dark).
   Причина: по задаче нужно перевести кнопки/глифы/divider на компонентные токены, синхронизировать светлую/тёмную коллекции 1:1 с Figma и сохранить backward compatibility для существующего API иконок.
   Файлы: `src/styles/global.css`, `src/components/Button.astro`, `src/components/ThemedSvgIcon.astro`, `src/components/QuantizedWave.astro`, `tests/smoke/theme-tokens.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
@@ -1454,3 +1460,18 @@
   Файлы: `src/components/Button.astro`, `tests/smoke/theme-tokens.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
   Что сделано: (1) для `.ui-button--bordered-icon` в default `--button-icon-color` переключён на `--color-button-bg`; (2) для hover оставлен `--color-button-arrow`; (3) smoke-тест обновлён: в dark/default для bordered-icon ожидается iconColor от `--color-button-bg`, в hover — от `--color-button-arrow`, добавлена стабилизация hover-проверки через `scrollIntoViewIfNeeded + mouse.move + expect.poll`.
   Проверки: `npm run build` — успешно; `npx playwright test tests/smoke/theme-tokens.spec.ts --grep "button and divider tokens are applied to variants and waves"` — успешно (`1/1`); `npx playwright test tests/smoke/theme-tokens.spec.ts` — успешно (`6/6`).
+- 2026-03-19: Обновлён dark-токен `bg/darkened` на `#214675` по Figma `83:19141`.
+  Причина: пользователь уточнил актуальное значение коллекции для dark theme.
+  Файлы: `src/styles/global.css`, `tasks/logs.md`, `tasks/lessons.md`.
+  Что сделано: в `html[data-theme='dark']` изменён `--color-bg-darkened` с `#224b7d` на `#214675`.
+  Проверки: `npm run build` — успешно.
+- 2026-03-19: Актуализирован dark-токен `bg/darkened` на `#234978` (обновление после правки значения пользователем).
+  Причина: пользователь изменил целевое значение после предыдущей синхронизации.
+  Файлы: `src/styles/global.css`, `tasks/logs.md`, `tasks/lessons.md`.
+  Что сделано: в `html[data-theme='dark']` обновлён `--color-bg-darkened` `#214675 -> #234978`; в `tasks/lessons.md` обновлён устойчивый reference для Figma `83:19141`.
+  Проверки: `npm run build` — успешно.
+- 2026-03-19: Выполнен полный sync color-токенов с Figma коллекциями `83:19088` (light) и `83:19089` (dark).
+  Причина: пользователь запросил обновить токены по актуальным коллекциям в Figma.
+  Файлы: `src/styles/global.css`, `tests/smoke/theme-tokens.spec.ts`, `tasks/logs.md`, `tasks/lessons.md`.
+  Что сделано: (1) dark `text/secondary` и `text/tertiary` синхронизированы на `#faf6f2a6` и `#faf6f28c`; (2) dark `bg/darkened`, `button-floating/bg`, `footer/bg` синхронизированы на `#234978`; (3) dark `ticket/bg/orange/*` и `ticket/bg/blue/*` синхронизированы на `#6a9ecf/#5c8dbd/#4d7baa/#3e6998/#305885`; (4) обновлены smoke-ожидания для dark `ticketOrangeCritical`, `buttonFloatingBg`, `footerBg` и computed footer color.
+  Проверки: `npm run build` — успешно; `npx playwright test tests/smoke/theme-tokens.spec.ts` — успешно (`7/7`).

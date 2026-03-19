@@ -55,8 +55,25 @@ const agentationEndpoint =
           return storedTheme ? normalizeTheme(storedTheme) : prefersDark ? 'dark' : 'light';
         };
 
+        const readCurrentTheme = () => {
+          const htmlTheme = document.documentElement.dataset.theme;
+          if (htmlTheme === 'dark' || htmlTheme === 'light') {
+            return htmlTheme;
+          }
+          return resolveTheme();
+        };
+
         const applyTheme = () => {
           document.documentElement.dataset.theme = resolveTheme();
+        };
+
+        const syncThemeBeforeSwap = (event) => {
+          const nextDocument = event?.newDocument;
+          const nextRoot = nextDocument?.documentElement;
+          if (!nextRoot) {
+            return;
+          }
+          nextRoot.setAttribute('data-theme', readCurrentTheme());
         };
 
         if (window[runtimeKey]) {
@@ -65,8 +82,9 @@ const agentationEndpoint =
         }
 
         applyTheme();
+        document.addEventListener('astro:before-swap', syncThemeBeforeSwap);
         document.addEventListener('astro:page-load', applyTheme);
-        window[runtimeKey] = { applyTheme };
+        window[runtimeKey] = { applyTheme, syncThemeBeforeSwap };
       })();
     </script>
     <script is:inline>

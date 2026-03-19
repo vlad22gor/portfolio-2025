@@ -32,15 +32,44 @@
     const boundButtons = new WeakSet();
     const scaleControls = new WeakMap();
     let observerInitialized = false;
+    let cachedTheme = themeLight;
 
     const normalizeTheme = (value) => (value === themeDark ? themeDark : themeLight);
+    const parseTheme = (value) =>
+      value === themeDark || value === themeLight ? value : null;
 
-    const readTheme = () => normalizeTheme(document.documentElement.dataset.theme);
+    const readStoredTheme = () => {
+      try {
+        return parseTheme(window.localStorage.getItem(storageKey));
+      } catch {
+        return null;
+      }
+    };
+
+    const readTheme = () => {
+      const htmlTheme = parseTheme(document.documentElement.dataset.theme);
+      if (htmlTheme) {
+        cachedTheme = htmlTheme;
+        return htmlTheme;
+      }
+
+      const storedTheme = readStoredTheme();
+      if (storedTheme) {
+        cachedTheme = storedTheme;
+        return storedTheme;
+      }
+
+      return cachedTheme;
+    };
+
+    cachedTheme = readTheme();
 
     const writeTheme = (theme) => {
-      document.documentElement.dataset.theme = theme;
+      const normalizedTheme = normalizeTheme(theme);
+      cachedTheme = normalizedTheme;
+      document.documentElement.dataset.theme = normalizedTheme;
       try {
-        window.localStorage.setItem(storageKey, theme);
+        window.localStorage.setItem(storageKey, normalizedTheme);
       } catch {
         // Ignore storage write failures (private mode / blocked storage).
       }
