@@ -1,5 +1,17 @@
 # Logs
 
+- 2026-03-19: Восстановлен staged-appear tickets по рядам в `case process` для `/fora` и `/kissa`.
+  Причина: визуально пропал читаемый reveal «по рядам»; оба ряда стартовали одновременно, из-за чего stagger внутри ряда не считывался как последовательный сценарий.
+  Файлы: `src/components/CaseProcessSection.astro`, `tests/smoke/case-details.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) в `CaseProcessSection` dynamic preset `process-tickets-row-stagger-dynamic-v1` расширен на `variant in {'fora','kissa'}`; (2) для `.case-process-section__tickets-row` добавлен sequence-chain через `data-motion-sequence-source/after` (`row0 -> rowN`) со стабильными id `case-process-<variant>-tickets-row-<index>-stagger-complete-v1`; (3) per-ticket stagger (`data-motion-stagger-item`, `data-motion-stagger-index`) оставлен без изменений; (4) smoke `case-details` расширен: для `/fora` добавлена проверка реальной последовательности старта рядов по timeline `opacity` (`row2` стартует позже `row1`, `delta >= 250ms`), для `/kissa` добавлены проверки preset/sequence-атрибутов и отсутствия `sequence-after` у единственного ряда; (5) `tasks/lessons.md` синхронизирован под новый устойчивый контракт.
+  Проверки: (1) `npm run build` — успешно; (2) `npm run -s test:smoke -- tests/smoke/case-details.spec.ts` — успешно (`4/4`); (3) `npm run -s test:smoke -- tests/smoke/case-details.spec.ts -g "/fora renders detail config with key sections and active cases nav"` — успешно (`1/1`); (4) `npm run -s test:smoke -- tests/smoke/gallery.spec.ts -g "row-stagger"` — успешно (`1/1`).
+
+- 2026-03-19: Отменён эксперимент с hover-звуком для мотивов футера.
+  Причина: по фидбеку пользователя звук на hover и отдельный wind-пресет признаны лишними для текущего UX.
+  Файлы: `tasks/logs.md`.
+  Что сделано: (1) удалены добавления hover-звука в `SiteFooter`; (2) удалены `footer`-preset и экспорт/вызов из sound-engine; (3) кодовая база по этим файлам возвращена к исходному состоянию (без diff).
+  Проверки: (1) `git diff -- src/components/SiteFooter.astro src/lib/sound/engine.ts src/lib/sound/presets.ts` — пусто; (2) `npm run build` — успешно.
+
 - 2026-03-19: Исправлен `dark-flash` при soft-nav: тема больше не теряется на swap, а `FloatingThemeButton` не откатывается в `light`.
   Причина: во время `ClientRouter`-swap root-атрибуты `<html>` временно пересоздаются; из-за отсутствия `data-theme` происходил краткий откат на light-токены, что визуально проявлялось как мигание header-кнопок и FAB.
   Файлы: `src/layouts/BaseLayout.astro`, `src/components/FloatingThemeButton.astro`, `tests/smoke/theme-tokens.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.

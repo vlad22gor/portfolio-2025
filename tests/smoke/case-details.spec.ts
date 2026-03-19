@@ -155,6 +155,84 @@ test.describe('Case details smoke', () => {
     ).toBeLessThanOrEqual(1);
   };
 
+  const assertProcessTicketsRowsRevealSequentially = async (page: Page, sectionSelector: string) => {
+    const measured = await page.evaluate(async (selector) => {
+      const section = document.querySelector(selector);
+      if (!(section instanceof HTMLElement)) {
+        return null;
+      }
+
+      const rows = Array.from(section.querySelectorAll('.case-process-section__tickets-row')).filter(
+        (node): node is HTMLElement => node instanceof HTMLElement,
+      );
+      if (rows.length < 2) {
+        return {
+          rowCount: rows.length,
+          row1StartMs: null,
+          row2StartMs: null,
+          deltaMs: null,
+        };
+      }
+
+      const rowsContainer = section.querySelector('.case-process-section__tickets-rows');
+      if (rowsContainer instanceof HTMLElement) {
+        rowsContainer.scrollIntoView({ block: 'center', behavior: 'instant' });
+      } else {
+        rows[0].scrollIntoView({ block: 'center', behavior: 'instant' });
+      }
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+      const timeline: Array<{ t: number; firstOpacities: Array<number | null> }> = [];
+      const startedAt = performance.now();
+      const sampleCount = 24;
+      const sampleIntervalMs = 50;
+
+      const readFirstOpacity = (row: HTMLElement): number | null => {
+        const firstTicket = row.querySelector('.case-process-ticket-stagger-item');
+        if (!(firstTicket instanceof HTMLElement)) {
+          return null;
+        }
+        return Number.parseFloat(getComputedStyle(firstTicket).opacity);
+      };
+
+      for (let index = 0; index < sampleCount; index += 1) {
+        timeline.push({
+          t: performance.now() - startedAt,
+          firstOpacities: [readFirstOpacity(rows[0]), readFirstOpacity(rows[1])],
+        });
+        await new Promise((resolve) => setTimeout(resolve, sampleIntervalMs));
+      }
+
+      const startThreshold = 0.05;
+      const resolveStartMs = (rowIndex: number) => {
+        const firstVisibleSample = timeline.find((sample) => {
+          const value = sample.firstOpacities[rowIndex];
+          return typeof value === 'number' && Number.isFinite(value) && value > startThreshold;
+        });
+        return firstVisibleSample ? Number(firstVisibleSample.t.toFixed(1)) : null;
+      };
+
+      const row1StartMs = resolveStartMs(0);
+      const row2StartMs = resolveStartMs(1);
+      const deltaMs =
+        row1StartMs !== null && row2StartMs !== null ? Number((row2StartMs - row1StartMs).toFixed(1)) : null;
+
+      return {
+        rowCount: rows.length,
+        row1StartMs,
+        row2StartMs,
+        deltaMs,
+      };
+    }, sectionSelector);
+
+    expect(measured).not.toBeNull();
+    expect(measured?.rowCount).toBeGreaterThanOrEqual(2);
+    expect(measured?.row1StartMs).not.toBeNull();
+    expect(measured?.row2StartMs).not.toBeNull();
+    expect(measured?.deltaMs).not.toBeNull();
+    expect(measured?.deltaMs ?? 0).toBeGreaterThanOrEqual(250);
+  };
+
   test('/fora renders detail config with key sections and active cases nav', async ({ page }) => {
     await page.goto('/fora');
 
@@ -171,9 +249,26 @@ test.describe('Case details smoke', () => {
 
     const foraProcessSection = page.locator('.case-process-section--fora');
     const foraFirstTicket = foraProcessSection.locator('.case-process-ticket').first();
+    const foraTicketRows = foraProcessSection.locator('.case-process-section__tickets-row');
     await expect(foraProcessSection).toHaveAttribute('data-case-process-ticket-variant', 'square-36');
     await expect(foraFirstTicket).toHaveAttribute('data-perimeter-shape', 'rectangle');
     await expect(foraFirstTicket).toHaveAttribute('data-perimeter-step', '36');
+    await expect(foraTicketRows).toHaveCount(2);
+    await expect(foraTicketRows.nth(0)).toHaveAttribute('data-motion-inview', 'process-tickets-row-stagger-dynamic-v1');
+    await expect(foraTicketRows.nth(0)).toHaveAttribute(
+      'data-motion-sequence-source',
+      'case-process-fora-tickets-row-0-stagger-complete-v1',
+    );
+    await expect(foraTicketRows.nth(1)).toHaveAttribute('data-motion-inview', 'process-tickets-row-stagger-dynamic-v1');
+    await expect(foraTicketRows.nth(1)).toHaveAttribute(
+      'data-motion-sequence-after',
+      'case-process-fora-tickets-row-0-stagger-complete-v1',
+    );
+    await expect(foraTicketRows.nth(1)).toHaveAttribute(
+      'data-motion-sequence-source',
+      'case-process-fora-tickets-row-1-stagger-complete-v1',
+    );
+    await assertProcessTicketsRowsRevealSequentially(page, '.case-process-section--fora');
 
     await assertCriticalMockupsAreStable(page, 4);
     await assertIntroScreensMockupDimensions(page, 'phone', {
@@ -204,9 +299,17 @@ test.describe('Case details smoke', () => {
 
     const kissaProcessSection = page.locator('.case-process-section--kissa');
     const kissaFirstTicket = kissaProcessSection.locator('.case-process-ticket').first();
+    const kissaTicketRows = kissaProcessSection.locator('.case-process-section__tickets-row');
     await expect(kissaProcessSection).toHaveAttribute('data-case-process-ticket-variant', 'circle-24');
     await expect(kissaFirstTicket).toHaveAttribute('data-perimeter-shape', 'circle');
     await expect(kissaFirstTicket).toHaveAttribute('data-perimeter-step', '24');
+    await expect(kissaTicketRows).toHaveCount(1);
+    await expect(kissaTicketRows.first()).toHaveAttribute('data-motion-inview', 'process-tickets-row-stagger-dynamic-v1');
+    await expect(kissaTicketRows.first()).toHaveAttribute(
+      'data-motion-sequence-source',
+      'case-process-kissa-tickets-row-0-stagger-complete-v1',
+    );
+    expect(await kissaTicketRows.first().getAttribute('data-motion-sequence-after')).toBeNull();
 
     await expect(page.locator('.section-stack')).toHaveCount(0);
     await expect(page.locator('.metrics-grid')).toHaveCount(0);
