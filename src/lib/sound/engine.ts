@@ -7,6 +7,10 @@ type ThemeToggleSoundRuntime = {
   compressor: DynamicsCompressorNode | null;
   noiseBuffer: AudioBuffer | null;
   supported: boolean;
+  isPrimed: boolean;
+  prewarmBound: boolean;
+  needsExtendedLeadTime: boolean;
+  warmupPromise: Promise<void> | null;
 };
 
 declare global {
@@ -19,6 +23,9 @@ declare global {
 const runtimeKey = '__themeToggleSoundRuntime';
 const minGain = 0.0001;
 const masterGainValue = 0.38;
+const defaultLeadTimeSeconds = 0.006;
+const extendedLeadTimeSeconds = 0.026;
+const warmupDurationSeconds = 0.024;
 
 const createRuntime = (): ThemeToggleSoundRuntime => ({
   context: null,
@@ -26,6 +33,10 @@ const createRuntime = (): ThemeToggleSoundRuntime => ({
   compressor: null,
   noiseBuffer: null,
   supported: typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext) != null,
+  isPrimed: false,
+  prewarmBound: false,
+  needsExtendedLeadTime: false,
+  warmupPromise: null,
 });
 
 const installThemeToggleSoundRuntime = () => {
@@ -36,6 +47,36 @@ const installThemeToggleSoundRuntime = () => {
   if (!window[runtimeKey]) {
     window[runtimeKey] = createRuntime();
   }
+
+  const runtime = window[runtimeKey];
+  if (!runtime || runtime.prewarmBound) {
+    return;
+  }
+
+  runtime.prewarmBound = true;
+
+  const unbindPrewarm = () => {
+    document.removeEventListener('pointerdown', onFirstGesture, prewarmOptions);
+    document.removeEventListener('touchstart', onFirstGesture, prewarmOptions);
+    document.removeEventListener('keydown', onFirstGesture, prewarmKeydownOptions);
+  };
+
+  const onFirstGesture = () => {
+    unbindPrewarm();
+    void primeSoundRuntime();
+  };
+
+  const prewarmOptions: AddEventListenerOptions = {
+    capture: true,
+    passive: true,
+  };
+  const prewarmKeydownOptions: AddEventListenerOptions = {
+    capture: true,
+  };
+
+  document.addEventListener('pointerdown', onFirstGesture, prewarmOptions);
+  document.addEventListener('touchstart', onFirstGesture, prewarmOptions);
+  document.addEventListener('keydown', onFirstGesture, prewarmKeydownOptions);
 };
 
 const getRuntime = (): ThemeToggleSoundRuntime | null => {
@@ -57,7 +98,12 @@ const ensureContext = async (runtime: ThemeToggleSoundRuntime): Promise<AudioCon
     runtime.masterGain = null;
     runtime.compressor = null;
     runtime.noiseBuffer = null;
+    runtime.isPrimed = false;
+    runtime.needsExtendedLeadTime = true;
   }
+
+  let didCreateContext = false;
+  let didResumeContext = false;
 
   if (!runtime.context) {
     const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
@@ -78,6 +124,7 @@ const ensureContext = async (runtime: ThemeToggleSoundRuntime): Promise<AudioCon
       runtime.compressor.release.value = 0.07;
       runtime.masterGain.connect(runtime.compressor);
       runtime.compressor.connect(runtime.context.destination);
+      didCreateContext = true;
     } catch {
       return null;
     }
@@ -86,12 +133,68 @@ const ensureContext = async (runtime: ThemeToggleSoundRuntime): Promise<AudioCon
   if (runtime.context.state === 'suspended') {
     try {
       await runtime.context.resume();
+      didResumeContext = true;
     } catch {
       return null;
     }
   }
 
+  if (didCreateContext || didResumeContext) {
+    runtime.needsExtendedLeadTime = true;
+  }
+
   return runtime.context;
+};
+
+const runSilentWarmup = (context: AudioContext, destination: AudioNode) =>
+  new Promise<void>((resolve) => {
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    const startAt = context.currentTime + 0.001;
+    const stopAt = startAt + warmupDurationSeconds;
+
+    gain.gain.setValueAtTime(minGain, startAt);
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(220, startAt);
+
+    oscillator.connect(gain);
+    gain.connect(destination);
+
+    oscillator.addEventListener('ended', () => {
+      oscillator.disconnect();
+      gain.disconnect();
+      resolve();
+    });
+
+    oscillator.start(startAt);
+    oscillator.stop(stopAt);
+  });
+
+const primeSoundRuntime = async () => {
+  const runtime = getRuntime();
+  if (!runtime || runtime.isPrimed) {
+    return;
+  }
+
+  if (runtime.warmupPromise) {
+    await runtime.warmupPromise;
+    return;
+  }
+
+  runtime.warmupPromise = (async () => {
+    const context = await ensureContext(runtime);
+    if (!context || !runtime.masterGain) {
+      return;
+    }
+
+    await runSilentWarmup(context, runtime.masterGain as AudioNode);
+    runtime.isPrimed = true;
+    runtime.needsExtendedLeadTime = false;
+  })().finally(() => {
+    runtime.warmupPromise = null;
+  });
+
+  await runtime.warmupPromise;
 };
 
 const getNoiseBuffer = (context: AudioContext, runtime: ThemeToggleSoundRuntime) => {
@@ -187,7 +290,10 @@ const playPreset = async (preset: LayerPreset[]) => {
     return;
   }
 
-  const startAt = context.currentTime + 0.005;
+  const leadTime = runtime.needsExtendedLeadTime || !runtime.isPrimed ? extendedLeadTimeSeconds : defaultLeadTimeSeconds;
+  const startAt = context.currentTime + leadTime;
+  runtime.needsExtendedLeadTime = false;
+  runtime.isPrimed = true;
   preset.forEach((layer) => {
     scheduleLayer(context, runtime, runtime.masterGain as AudioNode, startAt, layer);
   });
