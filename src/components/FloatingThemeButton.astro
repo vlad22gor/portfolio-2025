@@ -17,8 +17,11 @@
 
 <script>
   import { animate } from 'motion';
+  import { installThemeToggleSoundRuntime, playThemeToggleSound } from '../lib/theme-toggle-sound';
 
   (() => {
+    installThemeToggleSoundRuntime();
+
     const runtimeKey = '__floatingThemeButtonRuntime';
     if (window[runtimeKey]) {
       window[runtimeKey].mount();
@@ -198,6 +201,7 @@
 
       button.addEventListener('click', () => {
         toggleTheme();
+        void playThemeToggleSound();
       });
     };
 

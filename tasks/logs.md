@@ -1475,3 +1475,74 @@
   Файлы: `src/styles/global.css`, `tests/smoke/theme-tokens.spec.ts`, `tasks/logs.md`, `tasks/lessons.md`.
   Что сделано: (1) dark `text/secondary` и `text/tertiary` синхронизированы на `#faf6f2a6` и `#faf6f28c`; (2) dark `bg/darkened`, `button-floating/bg`, `footer/bg` синхронизированы на `#234978`; (3) dark `ticket/bg/orange/*` и `ticket/bg/blue/*` синхронизированы на `#6a9ecf/#5c8dbd/#4d7baa/#3e6998/#305885`; (4) обновлены smoke-ожидания для dark `ticketOrangeCritical`, `buttonFloatingBg`, `footerBg` и computed footer color.
   Проверки: `npm run build` — успешно; `npx playwright test tests/smoke/theme-tokens.spec.ts` — успешно (`7/7`).
+
+- 2026-03-19: Добавлено исследование по звуку переключения темы и рекомендуемому sound-пайплайну без внедрения.
+  Причина: потребовалось оценить, как уместно подойти к sound design для `light/dark` toggle на основе статьи про AI sound generation и доступных локальных/внешних материалов; дополнительно новый `docs/*.md` нужно было сделать trackable, потому что `docs/` был целиком в `.gitignore`.
+  Файлы: `.gitignore`, `docs/theme-toggle-sound-research.md`, `tasks/logs.md`.
+  Что сделано: (1) исследована текущая точка интеграции темы в репозитории (`FloatingThemeButton` + bootstrap в `BaseLayout`); (2) сверены внешние материалы по статье, Web Audio best practices, autoplay ограничениям и OpenAI audio docs; (3) в `docs` зафиксирован рекомендуемый подход: `Web Audio API + AI-assisted prototyping`, а также краткие best practices и оценка прикладной ценности CLI/GH/skills; (4) `.gitignore` скорректирован точечно: `docs/*.md` теперь можно трекать, остальные локальные материалы в `docs/` по-прежнему игнорируются.
+  Проверки: (1) `test -f docs/theme-toggle-sound-research.md` — успешно; (2) `rg -n "Web Audio API|OpenAI docs|theme toggle|Best practices" docs/theme-toggle-sound-research.md` — ключевые секции присутствуют; (3) `git check-ignore -v docs/theme-toggle-sound-research.md` возвращает allow-исключение `!/docs/*.md`, а `git status --short -- docs/theme-toggle-sound-research.md .gitignore tasks/logs.md` показывает trackable-изменения.
+- 2026-03-19: Возвращён локальный режим для `docs/`.
+  Причина: пользователь попросил снова игнорировать `docs`, чтобы новый исследовательский markdown оставался только локальным.
+  Файлы: `.gitignore`, `tasks/logs.md`.
+  Что сделано: правило для `docs` возвращено к целиком игнорируемой директории; исследовательский файл остаётся на диске, но снова не предназначен для трекинга Git.
+  Проверки: `git check-ignore -v docs/theme-toggle-sound-research.md` снова показывает правило `/docs/`.
+- 2026-03-19: Добавлен базовый runtime-звук для `FloatingThemeButton` по подходу A (`Web Audio synthesis-first`).
+  Причина: пользователь попросил стартовать с первого звука и уточнил, нужно ли «глобально устанавливать» Web Audio API.
+  Файлы: `src/lib/theme-toggle-sound.ts`, `src/components/FloatingThemeButton.astro`, `tasks/logs.md`.
+  Что сделано: (1) подтверждено, что `Web Audio API` не требует npm-установки и используется как встроенный browser API; (2) добавлен shared runtime `__themeToggleSoundRuntime` с ленивым созданием одного `AudioContext` и `resume()` только в user gesture; (3) реализованы два коротких пресета (`light->dark` и `dark->light`) с длительностью <120ms и консервативной громкостью; (4) `FloatingThemeButton` теперь вызывает `playThemeToggleSound(nextTheme)` после `toggleTheme()` и не блокирует UI при ошибке аудио.
+  Проверки: `npm run build` — успешно (включая `verify-themed-svg-icons: OK`).
+- 2026-03-19: Увеличена громкость theme-toggle sound по запросу пользователя.
+  Причина: первый вариант звучал слишком тихо в реальном UI-контексте.
+  Файлы: `src/lib/theme-toggle-sound.ts`, `tasks/logs.md`.
+  Что сделано: повышен общий выходной уровень `masterGainValue` в sound runtime (`0.24 -> 0.38`) без изменения формы пресетов, чтобы сохранить тембр и только поднять loudness.
+  Проверки: `npm run build` — успешно (включая `verify-themed-svg-icons: OK`).
+- 2026-03-19: Добавлен практический гайд по sound design и формулированию фидбека для итераций.
+  Причина: пользователь попросил отдельный markdown в `docs/` на базе статьи и best practices, чтобы удобнее описывать желаемый звук и правки.
+  Файлы: `docs/ui-sound-design-feedback-guide.md`, `tasks/logs.md`.
+  Что сделано: создан структурированный гайд с (1) анатомией UI-звука (`oscillator/noise/filter/envelope/gain/pitch contour`), (2) словарём описания характера, (3) шаблоном `Sound Brief`, (4) шаблоном `Sound Feedback`, (5) картой `симптом -> параметры`, (6) циклом итераций и guardrails для Web Audio в браузере.
+  Проверки: (1) `test -f docs/ui-sound-design-feedback-guide.md` — успешно; (2) `rg -n "Шаблон ТЗ|Шаблон фидбека|симптом -> что крутить|Источники" docs/ui-sound-design-feedback-guide.md` — ключевые разделы присутствуют.
+- 2026-03-19: Переведён theme-toggle звук с двух пресетов на один нейтральный `toggle-click` по новому референсу пользователя.
+  Причина: пользователь уточнил желаемый характер: быстрый, резкий и близкий «щелбан по плотному пластику», но при этом достаточно глухой и нейтральный; для первой итерации попросил один общий звук вместо `light/dark`-пары.
+  Файлы: `src/lib/theme-toggle-sound.ts`, `src/components/FloatingThemeButton.astro`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) удалены раздельные `darkPreset/lightPreset`, введён единый `togglePreset` из трёх слоёв (краткий transient + приглушённое low-mid тело); (2) `playThemeToggleSound` переведён на вызов без параметра темы; (3) в `FloatingThemeButton` клик теперь всегда запускает один и тот же sound-паттерн; (4) `masterGainValue` скорректирован до `0.34` для контролируемой громкости с новым более резким transient.
+  Проверки: (1) `rg -n "darkPreset|lightPreset|togglePreset|playThemeToggleSound\(" ...` подтверждает отсутствие парных пресетов и единый вызов; (2) `npm run build` — успешно; (3) `verify-themed-svg-icons: OK` в prebuild.
+- 2026-03-19: Громкость единого `toggle-click` увеличена в 2 раза по прямому запросу пользователя.
+  Причина: пользователь попросил сделать звук ощутимо громче без изменения характера.
+  Файлы: `src/lib/theme-toggle-sound.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: `masterGainValue` увеличен `0.34 -> 0.68` (ровно x2), пресет и его тембр/огибающие оставлены без изменений.
+  Проверки: `npm run build` — успешно (включая `verify-themed-svg-icons: OK`).
+- 2026-03-19: Смягчён характер `toggle-click` — от «цифрового/техничного» к более тёплому и домашнему.
+  Причина: пользователь отметил, что текущий звук слишком цифровой и попросил сделать его мягче и теплее.
+  Файлы: `src/lib/theme-toggle-sound.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) transient-слой переведён с `square+bandpass` на более мягкий `triangle+lowpass`; (2) понижены `filterFrequency`/`Q` по слоям для более глухого low-mid характера; (3) `attack` увеличен до `2ms` и удлинены хвосты тела, чтобы убрать «жёсткий техничный клик»; (4) мастер-громкость сохранена (`0.68`) по предыдущему запросу.
+  Проверки: `npm run build` — успешно (включая `verify-themed-svg-icons: OK`).
+- 2026-03-19: Смещён характер звука к «точному механическому щелчку» с более явным кликом и без «старого системного» оттенка.
+  Причина: пользователь отметил, что клика почти нет и звук напоминает старый Windows; запросил более выверенный single-click как у механического переключателя.
+  Файлы: `src/lib/theme-toggle-sound.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) усилен и укорочен transient-слой (`triangle + bandpass`, `~1.8kHz`, `decay 14ms`); (2) тело переведено в более компактный damped lowpass-контур (`decay 34/46ms`) без длинного хвоста; (3) снижена «винтажная системность» за счёт уменьшения длительного low-mid резонанса.
+  Проверки: `npm run build` — успешно (включая `verify-themed-svg-icons: OK`).
+- 2026-03-19: Звук `toggle-click` сделан значительно менее глухим по запросу пользователя.
+  Причина: пользователь попросил явно раскрыть звук по верху и убрать избыточную глухоту.
+  Файлы: `src/lib/theme-toggle-sound.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) transient-слой раскрыт по верху (`bandpass 1780 -> 2180`, усилен gain); (2) оба body-слоя осветлены повышением `lowpass` cutoff (`1080 -> 1640` и `640 -> 1080`); (3) тоновые контуры слегка подняты в частоте для более читаемого механического клика без удлинения хвоста.
+  Проверки: `npm run build` — успешно (включая `verify-themed-svg-icons: OK`).
+- 2026-03-19: Звук смещён в более «живой/бытовой» характер (как механический переключатель лампы), с меньшей компьютерностью.
+  Причина: пользователь попросил сделать звук более живым и домашним, а не синтетически-компьютерным.
+  Файлы: `src/lib/theme-toggle-sound.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) в пресет добавлен отдельный короткий `noise`-транзиент (bandpass), который даёт естественную микро-текстуру механического щелчка; (2) тональные слои осцилляторов сохранены компактными и демпфированными, чтобы звук оставался единичным «выверенным щелком» без винтажного хвоста; (3) runtime расширен кэшируемым noise-buffer в shared audio runtime.
+  Проверки: `npm run build` — успешно (включая `verify-themed-svg-icons: OK`).
+- 2026-03-19: Перестроен `toggle-click` под сценарий «жесткий переключатель: усилие -> самодвижение -> финальный щелчок».
+  Причина: пользователь попросил больше звонкого щелчка и меньше «удара», с физикой механического лампового переключателя, где snap происходит в конце хода.
+  Файлы: `src/lib/theme-toggle-sound.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) в layer-модель добавлен `startOffsetMs` для пофазного запуска источников; (2) добавлена preload-фаза (`triangle lowpass`, offset 0ms) с коротким усилием; (3) основной щелчок перенесён в delayed snap-фазу (`noise + triangle bandpass`, offset ~12ms) с более звонким верхом; (4) добавлен короткий settle-layer (`sine lowpass`, offset ~15ms) для реалистичной остановки механизма без длинного хвоста.
+  Проверки: `npm run build` — успешно (включая `verify-themed-svg-icons: OK`).
+- 2026-03-19: Возврат к более синтезаторному и мгновенному звонкому snap-click без задержек и без noise-фазы.
+  Причина: пользователь отметил, что предыдущая версия звучит странно; попросил более компьютерный/синтезаторный характер, но с ощущением реального резкого щелчка, без удара и без задержки.
+  Файлы: `src/lib/theme-toggle-sound.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) убраны delay-фазы (`startOffsetMs`) и пофазный сценарий; (2) удалён `noise`-слой и связанный runtime (`noiseBuffer`), возвращён чистый oscillator-only пресет; (3) пресет пересобран в мгновенный звонкий snap (`bandpass`-ориентированный верх + короткое поддерживающее тело) без отдельного «удара».
+  Проверки: `npm run build` — успешно (включая `verify-themed-svg-icons: OK`).
+- 2026-03-19: Возвращён курс на «живой» реальный щелчок выключателя (noise обязателен), с максимальным приближением к бытовому звуку.
+  Причина: пользователь уточнил, что нужна именно живость и реалистичность, а не синтезаторная/компьютерная подача.
+  Файлы: `src/lib/theme-toggle-sound.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) возвращена гибридная модель слоёв (`noise` + `oscillator`) и кэшируемый `noiseBuffer` в runtime; (2) пресет настроен под «реальный выключатель»: короткий bandpass-noise transient + компактное механическое тело; (3) добавлена лёгкая humanization (`gain/frequency` jitter в малом диапазоне) для живости между нажатиями без заметного дрейфа характера.
+  Проверки: `npm run build` — успешно (включая `verify-themed-svg-icons: OK`).
