@@ -125,8 +125,11 @@ const arrowAssetPath =
 
 <script>
   import { animate } from 'motion';
+  import { installThemeToggleSoundRuntime, playButtonClickSound } from '../lib/sound/engine';
 
   (() => {
+    installThemeToggleSoundRuntime();
+
     const runtimeKey = '__caseCardHoverRuntime';
     if (window[runtimeKey]) {
       window[runtimeKey].mountNewCards();
@@ -143,7 +146,9 @@ const arrowAssetPath =
     const hoverSpringOut = { type: 'spring', duration: 0.6, bounce: 0.2 };
     const assetStaggerStep = 0.08;
     const designWidthFallback = 874;
+    const pressScaleTarget = 0.95;
     const supportsHoverPointer = () => window.matchMedia('(pointer: fine)').matches;
+    const scaleControls = new WeakMap();
 
     const readNumber = (value, fallback) => {
       const parsed = Number.parseFloat(value);
@@ -164,6 +169,56 @@ const arrowAssetPath =
       asset.style.opacity = '0';
       asset.style.pointerEvents = 'none';
       setTransform(asset, 0, 0, 0);
+    };
+
+    const setScale = (card, value) => {
+      card.style.setProperty('--case-card-scale', `${value}`);
+    };
+
+    const readScale = (card) => {
+      const value = getComputedStyle(card).getPropertyValue('--case-card-scale').trim();
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : 1;
+    };
+
+    const stopScale = (card) => {
+      const control = scaleControls.get(card);
+      if (!control) {
+        return;
+      }
+      control.stop();
+      scaleControls.delete(card);
+    };
+
+    const animateScale = (card, target) => {
+      stopScale(card);
+      if (prefersReducedMotion.matches) {
+        setScale(card, target);
+        return;
+      }
+
+      const from = readScale(card);
+      const control = animate(from, target, {
+        type: 'spring',
+        stiffness: 480,
+        damping: 30,
+        mass: 0.42,
+        onUpdate: (latest) => {
+          setScale(card, latest);
+        },
+        onComplete: () => {
+          scaleControls.delete(card);
+        },
+      });
+      scaleControls.set(card, control);
+    };
+
+    const pressIn = (card) => {
+      animateScale(card, pressScaleTarget);
+    };
+
+    const pressOut = (card) => {
+      animateScale(card, 1);
     };
 
     const stopAnimations = (state) => {
@@ -312,6 +367,7 @@ const arrowAssetPath =
 
       runtime.cards.add(card);
       runtime.states.set(card, state);
+      setScale(card, 1);
       applyAssetDelays(state.assets);
       applyEffectiveAssetPositions(card, state);
       state.assets.forEach((asset) => {
@@ -335,6 +391,19 @@ const arrowAssetPath =
       const onPointerLeave = () => {
         state.pointerInside = false;
         syncInteractionState();
+        pressOut(card);
+      };
+      const onPointerDown = (event) => {
+        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
+          return;
+        }
+        pressIn(card);
+      };
+      const onPointerUp = () => {
+        pressOut(card);
+      };
+      const onPointerCancel = () => {
+        pressOut(card);
       };
       const onFocusIn = () => {
         state.focusInside = true;
@@ -347,6 +416,7 @@ const arrowAssetPath =
         }
         state.focusInside = false;
         syncInteractionState();
+        pressOut(card);
       };
       const onResize = () => {
         applyEffectiveAssetPositions(card, state);
@@ -354,20 +424,51 @@ const arrowAssetPath =
           syncInteractionState(true);
         }
       };
+      const onKeyDown = (event) => {
+        if (event.repeat) {
+          return;
+        }
+        if (event.key === 'Enter' || event.key === ' ') {
+          pressIn(card);
+        }
+      };
+      const onKeyUp = (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          pressOut(card);
+        }
+      };
+      const onClick = (event) => {
+        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
+          return;
+        }
+        void playButtonClickSound();
+      };
 
       if (supportsHoverPointer()) {
         card.addEventListener('pointerenter', onPointerEnter);
         card.addEventListener('pointerleave', onPointerLeave);
       }
+      card.addEventListener('pointerdown', onPointerDown);
+      card.addEventListener('pointerup', onPointerUp);
+      card.addEventListener('pointercancel', onPointerCancel);
+      card.addEventListener('click', onClick);
       card.addEventListener('focusin', onFocusIn);
       card.addEventListener('focusout', onFocusOut);
+      card.addEventListener('keydown', onKeyDown);
+      card.addEventListener('keyup', onKeyUp);
       window.addEventListener('resize', onResize);
 
       state.unbind = () => {
         card.removeEventListener('pointerenter', onPointerEnter);
         card.removeEventListener('pointerleave', onPointerLeave);
+        card.removeEventListener('pointerdown', onPointerDown);
+        card.removeEventListener('pointerup', onPointerUp);
+        card.removeEventListener('pointercancel', onPointerCancel);
+        card.removeEventListener('click', onClick);
         card.removeEventListener('focusin', onFocusIn);
         card.removeEventListener('focusout', onFocusOut);
+        card.removeEventListener('keydown', onKeyDown);
+        card.removeEventListener('keyup', onKeyUp);
         window.removeEventListener('resize', onResize);
       };
     };
@@ -386,6 +487,8 @@ const arrowAssetPath =
         if (!state) {
           return;
         }
+        stopScale(card);
+        setScale(card, 1);
         deactivate(card, state, true);
       });
     });

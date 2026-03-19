@@ -90,6 +90,7 @@
 - Для `CaseCard` корневой элемент должен быть ссылкой на кейс: кликабельна вся карточка, а не только title.
 - Hover-ассеты `CaseCard` должны рендериться под слоями `cover/text` (за карточкой), а stagger задавать по вертикальному порядку `targetY` (верхний без задержки, нижний `+0.08s`).
 - Для `CaseCard` держать раздельные spring-длительности: mouse-in `duration: 0.4`, mouse-out `duration: 0.6`, `bounce: 0.2`.
+- Для `CaseCard` press-анимацию держать как у `Button`: press-in `scale: 0.95` и возврат к `1` на `pointerup/pointercancel/blur`.
 - Для `CaseCard` hover-ассетов в данных хранить размеры до rotation (`width/height` pre-rotation), а `targetX/targetY` — как top-left итогового позиционирования в runtime.
 - Для `CaseCard` с `coverSide='right'` нормализовать `targetX` в runtime по ширине карточки: `effectiveX = rawX - max(0, designWidth - cardWidth)` (чтобы figma-координаты из wider frame не уезжали вправо).
 - Для кубика в `more is coming (QScallop)` использовать `loader_light.webm` как autoplay/loop `video`, а `more-cases-cube.png` оставлять `poster` и fallback; прод-путь — `public/media/cases/section/`.

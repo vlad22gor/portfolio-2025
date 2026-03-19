@@ -18,7 +18,7 @@ declare global {
 
 const runtimeKey = '__themeToggleSoundRuntime';
 const minGain = 0.0001;
-const masterGainValue = 0.52;
+const masterGainValue = 0.38;
 
 const createRuntime = (): ThemeToggleSoundRuntime => ({
   context: null,

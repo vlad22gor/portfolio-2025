@@ -1911,6 +1911,7 @@ img.home-hero-asset {
 
 .case-card {
   --case-card-hover-border: transparent;
+  --case-card-scale: 1;
   position: relative;
   display: flex;
   align-items: center;
@@ -1924,6 +1925,8 @@ img.home-hero-asset {
   color: inherit;
   text-decoration: none;
   cursor: pointer;
+  transform: scale(var(--case-card-scale));
+  transform-origin: center;
 }
 
 .case-card-cover-shell {
