@@ -39,11 +39,18 @@ const rootClassName = ['fora-intro-section', className].filter(Boolean).join(' '
         data-motion-stage-item
         data-motion-stagger-index="2"
       >
-        <div class="fora-intro-divider-wrap" aria-hidden="true">
+        <div class="fora-intro-divider-wrap fora-intro-divider-wrap--overview" aria-hidden="true">
           <QuantizedWave
-            class="fora-intro-divider"
+            class="fora-intro-divider fora-intro-divider--desktop"
             size="medium"
             count={data.dividerCounts.overview}
+            align="left"
+            minCircles={1}
+          />
+          <QuantizedWave
+            class="fora-intro-divider fora-intro-divider--mobile"
+            size="medium"
+            fit="contain"
             align="left"
             minCircles={1}
           />
@@ -67,7 +74,7 @@ const rootClassName = ['fora-intro-section', className].filter(Boolean).join(' '
         data-motion-stage-item
         data-motion-stagger-index="3"
       >
-        <div class="fora-intro-divider-wrap" aria-hidden="true">
+        <div class="fora-intro-divider-wrap fora-intro-divider-wrap--scope" aria-hidden="true">
           <QuantizedWave
             class="fora-intro-divider"
             size="medium"
@@ -93,7 +100,7 @@ const rootClassName = ['fora-intro-section', className].filter(Boolean).join(' '
       data-motion-stage-item
       data-motion-stagger-index="4"
     >
-      <div class="fora-intro-divider-wrap" aria-hidden="true">
+      <div class="fora-intro-divider-wrap fora-intro-divider-wrap--results" aria-hidden="true">
         <QuantizedWave
           class="fora-intro-divider"
           size="medium"

@@ -185,6 +185,33 @@ const readFooterMotifSnapshot = () => {
   };
 };
 
+const readFinalCtaOrbSnapshot = () => {
+  const resolveColor = (value: string) => {
+    const probe = document.createElement('span');
+    probe.style.color = value;
+    document.body.appendChild(probe);
+    const resolved = getComputedStyle(probe).color;
+    probe.remove();
+    return resolved;
+  };
+
+  const rootStyles = getComputedStyle(document.documentElement);
+  const expectedAccentBlue = resolveColor(rootStyles.getPropertyValue('--color-accent-blue').trim());
+  const orb = document.querySelector('.final-cta-orb');
+  if (!(orb instanceof HTMLElement)) {
+    return null;
+  }
+
+  const orbStyles = getComputedStyle(orb);
+  return {
+    expectedAccentBlue,
+    actualColor: orbStyles.backgroundColor,
+    hasThemedClass: orb.classList.contains('themed-svg-icon'),
+    maskImage: orbStyles.maskImage,
+    webkitMaskImage: orbStyles.webkitMaskImage,
+  };
+};
+
 const readAboutArchSnapshot = () => {
   const resolveColor = (value: string) => {
     const probe = document.createElement('span');
@@ -343,6 +370,61 @@ const readFloatingButtonState = () => {
     activeTranslateX,
     buttonScale: Number.parseFloat(getComputedStyle(button).getPropertyValue('--floating-theme-button-scale').trim()),
     storedTheme,
+  };
+};
+
+const installVibrateMockInitScript = () => {
+  const calls: Array<number | number[]> = [];
+  const normalizePattern = (input: unknown): number | number[] => {
+    if (typeof input === 'number') {
+      return input;
+    }
+    if (Array.isArray(input)) {
+      return input.filter((value): value is number => Number.isFinite(value));
+    }
+    return [];
+  };
+
+  const mockVibrate = (input?: number | number[]) => {
+    calls.push(normalizePattern(input));
+    return true;
+  };
+
+  let installed = false;
+  try {
+    Object.defineProperty(window.navigator, 'vibrate', {
+      configurable: true,
+      writable: true,
+      value: mockVibrate,
+    });
+    installed = window.navigator.vibrate === mockVibrate;
+  } catch {
+    installed = false;
+  }
+
+  if (!installed) {
+    try {
+      Object.defineProperty(Navigator.prototype, 'vibrate', {
+        configurable: true,
+        writable: true,
+        value: mockVibrate,
+      });
+      installed = window.navigator.vibrate === mockVibrate;
+    } catch {
+      installed = false;
+    }
+  }
+
+  (window as typeof window & { __vibrateMockInstalled?: boolean; __vibrateMockCalls?: Array<number | number[]> })
+    .__vibrateMockInstalled = installed;
+  (window as typeof window & { __vibrateMockCalls?: Array<number | number[]> }).__vibrateMockCalls = calls;
+};
+
+const readVibrateMockSnapshot = () => {
+  const state = window as typeof window & { __vibrateMockInstalled?: boolean; __vibrateMockCalls?: Array<number | number[]> };
+  return {
+    installed: Boolean(state.__vibrateMockInstalled),
+    calls: Array.isArray(state.__vibrateMockCalls) ? state.__vibrateMockCalls : [],
   };
 };
 
@@ -816,6 +898,31 @@ test.describe('Theme tokens smoke', () => {
     expect(stateAfterReload!.label).toBe('Switch to light theme');
   });
 
+  test('floating theme button triggers haptic vibration on tap when supported', async ({ page }) => {
+    await page.addInitScript(installVibrateMockInitScript);
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.goto('/');
+    await expect(page.locator(floatingThemeButtonSelector)).toBeVisible();
+
+    const preClickSnapshot = await page.evaluate(readVibrateMockSnapshot);
+    expect(preClickSnapshot.installed).toBe(true);
+    expect(preClickSnapshot.calls).toHaveLength(0);
+
+    await page.click(floatingThemeButtonSelector);
+
+    await expect
+      .poll(() => page.evaluate(readVibrateMockSnapshot), { timeout: 2000 })
+      .toMatchObject({
+        installed: true,
+      });
+
+    const postClickSnapshot = await page.evaluate(readVibrateMockSnapshot);
+    expect(postClickSnapshot.calls.length).toBeGreaterThan(0);
+    const latestPattern = postClickSnapshot.calls.at(-1);
+    expect(Array.isArray(latestPattern)).toBe(true);
+    expect((latestPattern as number[]).length).toBeGreaterThan(0);
+  });
+
   test('dark soft navigation keeps html theme and floating button state stable', async ({ page }) => {
     await page.emulateMedia({ colorScheme: 'light' });
     await page.goto('/');
@@ -911,6 +1018,11 @@ test.describe('Theme tokens smoke', () => {
       expect(entry.present).toBe(true);
       expect(entry.color).toBe(homeWaveLight.expectedColor);
     });
+    const finalCtaOrbLight = await page.evaluate(readFinalCtaOrbSnapshot);
+    expect(finalCtaOrbLight).not.toBeNull();
+    expect(finalCtaOrbLight!.hasThemedClass).toBe(true);
+    expect(finalCtaOrbLight!.actualColor).toBe(finalCtaOrbLight!.expectedAccentBlue);
+    expect(finalCtaOrbLight!.maskImage === 'none' && finalCtaOrbLight!.webkitMaskImage === 'none').toBe(false);
 
     const homeDefaultLight = await page.evaluate(readButtonTokenSnapshot, '.home-hero-cta .ui-button--default');
     expect(homeDefaultLight.present).toBe(true);
@@ -960,6 +1072,11 @@ test.describe('Theme tokens smoke', () => {
       expect(entry.present).toBe(true);
       expect(entry.color).toBe(homeWaveDark.expectedColor);
     });
+    const finalCtaOrbDark = await page.evaluate(readFinalCtaOrbSnapshot);
+    expect(finalCtaOrbDark).not.toBeNull();
+    expect(finalCtaOrbDark!.hasThemedClass).toBe(true);
+    expect(finalCtaOrbDark!.actualColor).toBe(finalCtaOrbDark!.expectedAccentBlue);
+    expect(finalCtaOrbDark!.maskImage === 'none' && finalCtaOrbDark!.webkitMaskImage === 'none').toBe(false);
 
     const homeDefaultDark = await page.evaluate(readButtonTokenSnapshot, '.home-hero-cta .ui-button--default');
     expect(homeDefaultDark.present).toBe(true);
@@ -1045,7 +1162,7 @@ test.describe('Theme tokens smoke', () => {
 
   test('floating theme button is hidden in temporary adaptive mode on mobile viewport', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 855 });
-    await page.goto('/');
+    await page.goto('/temp-adaptive');
 
     await expect(page.locator('.temporary-adaptive-notice')).toBeVisible();
     await expect(page.locator('.site-desktop-shell')).toBeHidden();

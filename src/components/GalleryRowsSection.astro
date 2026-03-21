@@ -1,7 +1,7 @@
 ---
 import GalleryCard from './GalleryCard.astro';
 import { GALLERY_ROWS } from '../data/gallery';
-import type { GalleryDeviceLoadPriority, GalleryRowItem } from '../data/gallery';
+import type { GalleryCardType, GalleryDeviceLoadPriority, GalleryRowItem } from '../data/gallery';
 
 const isDeviceCard = (item: GalleryRowItem) => item.type === 'phone' || item.type === 'tablet';
 const resolvePriorityForRow = (rowIndex: number, item: GalleryRowItem): GalleryDeviceLoadPriority | undefined => {
@@ -13,6 +13,65 @@ const resolvePriorityForRow = (rowIndex: number, item: GalleryRowItem): GalleryD
   }
   return item.priority;
 };
+
+type MobileGalleryCardKind = 'device' | 'illustration' | 'image';
+
+const MOBILE_GALLERY_GAP_MATRIX: Record<MobileGalleryCardKind, Record<MobileGalleryCardKind, number>> = {
+  device: { device: 120, illustration: 92, image: 92 },
+  illustration: { device: 92, illustration: 64, image: 64 },
+  image: { device: 92, illustration: 64, image: 64 },
+};
+
+const MOBILE_GALLERY_BASE_BOTTOM_PAD: Record<MobileGalleryCardKind, number> = {
+  device: 60,
+  illustration: 32,
+  image: 32,
+};
+
+const resolveMobileGalleryKind = (type: GalleryCardType): MobileGalleryCardKind => {
+  if (type === 'image') {
+    return 'image';
+  }
+  if (type === 'illustration') {
+    return 'illustration';
+  }
+  return 'device';
+};
+
+const flattenedItems = GALLERY_ROWS.flatMap((row) => row.items);
+const flattenedKinds = flattenedItems.map((item) => resolveMobileGalleryKind(item.type));
+const lastFlatIndex = flattenedItems.length - 1;
+const entryByCardId = new Map<
+  string,
+  {
+    kind: MobileGalleryCardKind;
+    prevKind: MobileGalleryCardKind | null;
+    nextKind: MobileGalleryCardKind | null;
+    mobilePadTop: number;
+    mobilePadBottom: number;
+    flatIndex: number;
+  }
+>();
+
+flattenedItems.forEach((item, flatIndex) => {
+  const kind = flattenedKinds[flatIndex] ?? 'device';
+  const prevKind = flatIndex > 0 ? flattenedKinds[flatIndex - 1] ?? null : null;
+  const nextKind = flatIndex < lastFlatIndex ? flattenedKinds[flatIndex + 1] ?? null : null;
+  const bottomBase = MOBILE_GALLERY_BASE_BOTTOM_PAD[kind];
+  const topFromPair = prevKind
+    ? MOBILE_GALLERY_GAP_MATRIX[prevKind][kind] - MOBILE_GALLERY_BASE_BOTTOM_PAD[prevKind]
+    : 0;
+  const mobilePadTop = flatIndex === 0 ? 0 : Math.max(0, topFromPair);
+  const mobilePadBottom = flatIndex === lastFlatIndex ? 0 : bottomBase;
+  entryByCardId.set(item.id, {
+    kind,
+    prevKind,
+    nextKind,
+    mobilePadTop,
+    mobilePadBottom,
+    flatIndex,
+  });
+});
 ---
 
 <section class="gallery-rows-section" aria-labelledby="gallery-page-title">
@@ -20,9 +79,26 @@ const resolvePriorityForRow = (rowIndex: number, item: GalleryRowItem): GalleryD
   <div class="gallery-rows">
     {GALLERY_ROWS.map((row, rowIndex) => (
       <div class="gallery-row" data-gallery-row-id={row.id} data-motion-inview="process-tickets-row-stagger-v1">
-        {row.items.map((item, itemIndex) => (
-          <GalleryCard item={item} priorityOverride={resolvePriorityForRow(rowIndex, item)} staggerIndex={itemIndex} />
-        ))}
+        {row.items.map((item, itemIndex) => {
+          const cardEntry = entryByCardId.get(item.id);
+          const mobilePadTop = cardEntry?.mobilePadTop ?? 0;
+          const mobilePadBottom = cardEntry?.mobilePadBottom ?? 0;
+          const inlineStyle = `--gallery-mobile-card-pad-top:${mobilePadTop}px; --gallery-mobile-card-pad-bottom:${mobilePadBottom}px;`;
+          return (
+            <div
+              class={`gallery-card-container gallery-card-container--span-${item.colSpan}`.trim()}
+              data-gallery-card-kind={cardEntry?.kind ?? resolveMobileGalleryKind(item.type)}
+              data-gallery-prev-kind={cardEntry?.prevKind ?? undefined}
+              data-gallery-next-kind={cardEntry?.nextKind ?? undefined}
+              data-gallery-mobile-pad-top={String(mobilePadTop)}
+              data-gallery-mobile-pad-bottom={String(mobilePadBottom)}
+              data-gallery-flat-index={cardEntry ? String(cardEntry.flatIndex) : undefined}
+              style={inlineStyle}
+            >
+              <GalleryCard item={item} priorityOverride={resolvePriorityForRow(rowIndex, item)} staggerIndex={itemIndex} />
+            </div>
+          );
+        })}
       </div>
     ))}
   </div>

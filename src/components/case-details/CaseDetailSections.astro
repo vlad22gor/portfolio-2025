@@ -32,6 +32,7 @@ const { config, currentCase, prevCase, nextCase } = Astro.props as Props;
       {section.type === 'introScreens' && (
         <IntroScreensQuantizedPerimeterSection
           variant={section.variant}
+          mobileLayout={section.mobileLayout}
           screens={section.screens}
           inViewPreset={section.inViewPreset}
           class={section.className}
@@ -46,6 +47,7 @@ const { config, currentCase, prevCase, nextCase } = Astro.props as Props;
           device={section.data.device}
           screen={section.data.screen}
           notes={section.data.notes}
+          mobile={section.data.mobile}
           inViewPreset={section.inViewPreset}
         />
       )}

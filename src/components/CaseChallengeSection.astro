@@ -21,17 +21,49 @@ export type CaseChallengeNote = {
   arrowHeight: number;
 };
 
+export type CaseChallengeMobileDeviceGeometry = {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  screenLeft: number;
+  screenRight: number;
+};
+
+export type CaseChallengeMobileNote = {
+  id: string;
+  text: string;
+  side: 'left' | 'right';
+  top: number;
+  width: number;
+  textOffsetFromAnchor: number;
+  arrowSrc: string;
+  arrowTop: number;
+  arrowWidth: number;
+  arrowHeight: number;
+  arrowOffsetFromAnchor: number;
+};
+
+export type CaseChallengeMobileData = {
+  sceneWidth: number;
+  sceneHeight: number;
+  deviceSize?: 'default' | 'compact';
+  device: CaseChallengeMobileDeviceGeometry;
+  notes: CaseChallengeMobileNote[];
+};
+
 interface Props {
   title: string;
   columns: [string, string];
   device: 'phone' | 'tablet';
   screen: CaseChallengeScreen;
   notes: CaseChallengeNote[];
+  mobile?: CaseChallengeMobileData;
   inViewPreset?: InViewPreset;
   class?: string;
 }
 
-const { title, columns, device, screen, notes, inViewPreset, class: className = '' } = Astro.props as Props;
+const { title, columns, device, screen, notes, mobile, inViewPreset, class: className = '' } = Astro.props as Props;
 const rootClassName = ['case-challenge-section', className].filter(Boolean).join(' ');
 const resolvedInViewPreset =
   inViewPreset === 'appear-v1' ||
@@ -40,6 +72,33 @@ const resolvedInViewPreset =
     ? inViewPreset
     : undefined;
 const resolvedDevice = device === 'tablet' ? 'tablet' : 'phone';
+const resolvedMobile =
+  mobile &&
+  Number.isFinite(mobile.sceneWidth) &&
+  Number.isFinite(mobile.sceneHeight) &&
+  mobile.sceneWidth > 0 &&
+  mobile.sceneHeight > 0 &&
+  mobile.notes.length > 0
+    ? mobile
+    : null;
+const resolvedMobileDeviceSize: 'default' | 'compact' =
+  resolvedMobile?.deviceSize === 'compact' ? 'compact' : 'default';
+const MOBILE_CHALLENGE_NOTE_WIDTH_PX = 184;
+const toPercent = (value: number, total: number): string => `${(value / total) * 100}%`;
+const mobileSceneStyle = resolvedMobile
+  ? `--case-mobile-scene-width:${resolvedMobile.sceneWidth}px;--case-mobile-scene-height:${resolvedMobile.sceneHeight}px;--case-mobile-scene-height-ratio:${resolvedMobile.sceneHeight / resolvedMobile.sceneWidth};--case-mobile-scene-max-width:480px;--case-mobile-device-left:${toPercent(resolvedMobile.device.left, resolvedMobile.sceneWidth)};--case-mobile-device-top:${toPercent(resolvedMobile.device.top, resolvedMobile.sceneHeight)};--case-mobile-device-width:${toPercent(resolvedMobile.device.width, resolvedMobile.sceneWidth)};--case-mobile-device-height:${toPercent(resolvedMobile.device.height, resolvedMobile.sceneHeight)};--case-mobile-screen-left:${toPercent(resolvedMobile.device.screenLeft, resolvedMobile.sceneWidth)};--case-mobile-screen-right:${toPercent(resolvedMobile.device.screenRight, resolvedMobile.sceneWidth)};`
+  : '';
+const mobileNotes =
+  resolvedMobile?.notes.map((note) => ({
+    ...note,
+    textTopPercent: toPercent(note.top, resolvedMobile.sceneHeight),
+    textWidthPx: `${MOBILE_CHALLENGE_NOTE_WIDTH_PX}px`,
+    textOffsetPercent: toPercent(note.textOffsetFromAnchor, resolvedMobile.sceneWidth),
+    arrowTopPercent: toPercent(note.arrowTop, resolvedMobile.sceneHeight),
+    arrowWidthPercent: toPercent(note.arrowWidth, resolvedMobile.sceneWidth),
+    arrowHeightPercent: toPercent(note.arrowHeight, resolvedMobile.sceneHeight),
+    arrowOffsetPercent: toPercent(note.arrowOffsetFromAnchor, resolvedMobile.sceneWidth),
+  })) ?? [];
 const titleIdBase = title
   .toLowerCase()
   .trim()
@@ -58,7 +117,7 @@ const titleId = `case-challenge-title-${titleIdBase || 'section'}`;
     </div>
   </div>
 
-  <div class="case-challenge-scene-wrap">
+  <div class="case-challenge-scene-wrap case-challenge-scene-wrap--desktop">
     <div class="case-challenge-scene" aria-label={`${title} details`}>
       <div class:list={['case-challenge-device', `case-challenge-device--${resolvedDevice}`]}>
         <DeviceMockup
@@ -92,6 +151,53 @@ const titleId = `case-challenge-title-${titleIdBase || 'section'}`;
       }
     </div>
   </div>
+
+  {
+    resolvedMobile && (
+      <div
+        class="case-challenge-scene-wrap case-challenge-scene-wrap--mobile"
+        style={mobileSceneStyle}
+      >
+        <div class="case-challenge-scene-viewport case-challenge-scene-viewport--mobile">
+          <div class="case-challenge-scene case-challenge-scene--mobile" aria-label={`${title} details mobile`}>
+            <div class="case-challenge-device case-challenge-device--mobile">
+              <DeviceMockup
+                device={resolvedDevice}
+                size={resolvedMobileDeviceSize}
+                screenKind="image"
+                screenSrc={screen.src}
+                screenAlt={screen.alt}
+                priority="lazy"
+              />
+            </div>
+
+            {mobileNotes.map((note) => (
+              <>
+                <p
+                  class="type-description-medium case-challenge-mobile-note"
+                  data-note-id={note.id}
+                  data-mobile-anchor-side={note.side}
+                  style={`--case-mobile-note-top:${note.textTopPercent};--case-mobile-note-width:${note.textWidthPx};--case-mobile-note-offset:${note.textOffsetPercent};`}
+                >
+                  {note.text}
+                </p>
+
+                <ThemedSvgIcon
+                  class="case-challenge-mobile-arrow"
+                  src={note.arrowSrc}
+                  color="var(--color-ink-bg)"
+                  aria-hidden="true"
+                  data-note-id={note.id}
+                  data-mobile-anchor-side={note.side}
+                  style={`--case-mobile-arrow-top:${note.arrowTopPercent};--case-mobile-arrow-width:${note.arrowWidthPercent};--case-mobile-arrow-height:${note.arrowHeightPercent};--case-mobile-arrow-offset:${note.arrowOffsetPercent};`}
+                />
+              </>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 </section>
 
 <style>
@@ -155,6 +261,10 @@ const titleId = `case-challenge-title-${titleIdBase || 'section'}`;
     transform: scale(var(--case-challenge-scene-scale));
   }
 
+  .case-challenge-scene-wrap--mobile {
+    display: none;
+  }
+
   .case-challenge-device {
     position: absolute;
     top: 0;
@@ -196,6 +306,11 @@ const titleId = `case-challenge-title-${titleIdBase || 'section'}`;
     user-select: none;
   }
 
+  .case-challenge-mobile-note,
+  .case-challenge-mobile-arrow {
+    display: none;
+  }
+
   @media (min-width: 848px) {
     .case-challenge-scene-wrap {
       --case-challenge-scene-scale: 1;
@@ -214,6 +329,105 @@ const titleId = `case-challenge-title-${titleIdBase || 'section'}`;
       width: 100%;
       max-width: none;
       flex: 1 1 auto;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .case-challenge-section {
+      min-height: 0;
+      height: auto;
+      gap: 72px;
+    }
+
+    .case-challenge-top {
+      gap: 12px;
+      padding-inline: 10px;
+      box-sizing: border-box;
+    }
+
+    .case-challenge-columns {
+      gap: 10px;
+    }
+
+    .case-challenge-scene-wrap--desktop {
+      display: none;
+    }
+
+    .case-challenge-scene-wrap--mobile {
+      --case-mobile-scene-available-width: calc(100vw - 40px);
+      --case-mobile-scene-current-width: min(
+        var(--case-mobile-scene-width, 350px),
+        var(--case-mobile-scene-available-width)
+      );
+      --case-mobile-scene-scale: calc(var(--case-mobile-scene-current-width) / var(--case-mobile-scene-width, 350px));
+      display: flex;
+      width: 100%;
+      min-width: 0;
+      align-items: flex-start;
+      justify-content: center;
+      overflow: visible;
+    }
+
+    .case-challenge-scene-viewport--mobile {
+      position: relative;
+      width: var(--case-mobile-scene-current-width);
+      max-width: 100%;
+      height: calc(var(--case-mobile-scene-current-width) * var(--case-mobile-scene-height-ratio));
+      margin-inline: auto;
+      overflow: visible;
+    }
+
+    .case-challenge-scene--mobile {
+      width: var(--case-mobile-scene-width, 350px);
+      height: var(--case-mobile-scene-height, 823px);
+      transform: scale(var(--case-mobile-scene-scale, 1));
+      transform-origin: top left;
+    }
+
+    .case-challenge-device--mobile {
+      left: var(--case-mobile-device-left);
+      top: var(--case-mobile-device-top);
+      width: var(--case-mobile-device-width);
+      height: var(--case-mobile-device-height);
+    }
+
+    .case-challenge-device--mobile :global(.device-mockup) {
+      --device-scale: 1;
+    }
+
+    .case-challenge-mobile-note {
+      position: absolute;
+      top: var(--case-mobile-note-top);
+      width: var(--case-mobile-note-width);
+      margin: 0;
+      color: var(--color-text-tertiary);
+      display: block;
+    }
+
+    .case-challenge-mobile-note[data-mobile-anchor-side='left'] {
+      left: calc(var(--case-mobile-screen-left) + var(--case-mobile-note-offset));
+    }
+
+    .case-challenge-mobile-note[data-mobile-anchor-side='right'] {
+      left: calc(var(--case-mobile-screen-right) + var(--case-mobile-note-offset));
+    }
+
+    .case-challenge-mobile-arrow {
+      position: absolute;
+      top: var(--case-mobile-arrow-top);
+      width: var(--case-mobile-arrow-width);
+      height: var(--case-mobile-arrow-height);
+      display: block;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .case-challenge-mobile-arrow[data-mobile-anchor-side='left'] {
+      left: calc(var(--case-mobile-screen-left) + var(--case-mobile-arrow-offset));
+    }
+
+    .case-challenge-mobile-arrow[data-mobile-anchor-side='right'] {
+      left: calc(var(--case-mobile-screen-right) + var(--case-mobile-arrow-offset));
     }
   }
 </style>

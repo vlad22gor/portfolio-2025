@@ -469,3 +469,160 @@ test.describe('Gallery smoke', () => {
     expect(uniqueAnimations).toContain('contentFadeOut|::view-transition-old(page-content)');
   });
 });
+
+test.describe('Gallery mobile smoke', () => {
+  const resolveExpectedStep = (viewportWidth: number, sectionWidth: number) => {
+    const inferredMarginX = Math.max(0, Math.floor((viewportWidth - sectionWidth) / 2));
+    const availableWidth = Math.max(40, viewportWidth - inferredMarginX * 2);
+    const idealCols = Math.max(6, Math.min(24, Math.round(availableWidth / 40)));
+    return Math.max(8, Math.floor(availableWidth / idealCols));
+  };
+
+  const resolveQuantizedHeight = (step: number, targetHeight: number, minRows: number) => {
+    const rows = Math.max(minRows, Math.round(targetHeight / step));
+    return rows * step;
+  };
+
+  test('390x844 renders real gallery shell with D-runtime and pair-gap matrix', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/gallery');
+
+    await expect(page.locator('.temporary-adaptive-notice')).toBeHidden();
+    await expect(page.locator('.site-desktop-shell')).toBeVisible();
+    await expect(page.locator('.gallery-card')).toHaveCount(21);
+
+    const snapshot = await page.evaluate(() => {
+      const rowsSection = document.querySelector('.gallery-rows-section');
+      const containers = Array.from(document.querySelectorAll('.gallery-card-container'));
+      const cards = Array.from(document.querySelectorAll('.gallery-card'));
+      if (!(rowsSection instanceof HTMLElement) || containers.length !== cards.length) {
+        return null;
+      }
+
+      const pairs = containers.map((container, index) => {
+        const card = cards[index];
+        if (!(container instanceof HTMLElement) || !(card instanceof HTMLElement)) {
+          return null;
+        }
+        const type = (card.getAttribute('data-gallery-card-type') ?? '').trim();
+        const kind = type === 'image' ? 'image' : type === 'illustration' ? 'illustration' : 'device';
+        const rect = card.getBoundingClientRect();
+        const stepNode = card.querySelector('.gallery-card__surface[data-quantized-perimeter]');
+        const step = stepNode instanceof HTMLElement ? Number.parseFloat(stepNode.dataset.perimeterStep ?? '') : NaN;
+        return {
+          type,
+          kind,
+          top: rect.top,
+          bottom: rect.bottom,
+          height: rect.height,
+          step: Number.isFinite(step) ? step : null,
+        };
+      });
+
+      if (pairs.some((entry) => entry === null)) {
+        return null;
+      }
+
+      const cardEntries = pairs as Array<{
+        type: string;
+        kind: 'device' | 'illustration' | 'image';
+        top: number;
+        bottom: number;
+        height: number;
+        step: number | null;
+      }>;
+      const adjacentGaps = cardEntries.slice(1).map((entry, index) => {
+        const prev = cardEntries[index];
+        const prevPadBottom = Number.parseFloat(containers[index]?.getAttribute('data-gallery-mobile-pad-bottom') ?? '');
+        const nextPadTop = Number.parseFloat(containers[index + 1]?.getAttribute('data-gallery-mobile-pad-top') ?? '');
+        const resolvedGap = Number.isFinite(prevPadBottom) && Number.isFinite(nextPadTop) ? prevPadBottom + nextPadTop : NaN;
+        return {
+          fromKind: prev.kind,
+          toKind: entry.kind,
+          gap: Number.isFinite(resolvedGap) ? Number(resolvedGap.toFixed(2)) : Number((entry.top - prev.bottom).toFixed(2)),
+        };
+      });
+      const surfaceSteps = cardEntries.map((entry) => entry.step).filter((value): value is number => value !== null);
+
+      return {
+        viewportWidth: Math.floor(window.innerWidth),
+        pageWidth: Number(document.querySelector('.page-shell--gallery')?.getBoundingClientRect().width.toFixed(2) ?? 0),
+        rowsSectionWidth: Number(rowsSection.getBoundingClientRect().width.toFixed(2)),
+        hasHorizontalOverflow: document.documentElement.scrollWidth - Math.floor(window.innerWidth) > 0,
+        surfaceSteps,
+        firstFiveIds: cardEntries.slice(0, 5).map((entry, index) => cards[index]?.getAttribute('data-gallery-card-id')),
+        cardEntries: cardEntries.map((entry) => ({ kind: entry.kind, height: Number(entry.height.toFixed(2)) })),
+        adjacentGaps,
+      };
+    });
+
+    expect(snapshot).not.toBeNull();
+    expect(snapshot!.hasHorizontalOverflow).toBe(false);
+    expect(snapshot!.pageWidth).toBeGreaterThanOrEqual(389.5);
+    expect(snapshot!.pageWidth).toBeLessThanOrEqual(390.5);
+    expect(snapshot!.rowsSectionWidth).toBeGreaterThanOrEqual(349.5);
+    expect(snapshot!.rowsSectionWidth).toBeLessThanOrEqual(350.5);
+    expect(snapshot!.firstFiveIds).toEqual(['51:5263', '51:5269', '51:5274', '51:5279', '51:5286']);
+
+    const expectedStep = resolveExpectedStep(snapshot!.viewportWidth, snapshot!.rowsSectionWidth);
+    const expectedMockHeight = resolveQuantizedHeight(expectedStep, 384, 8);
+    const expectedImageHeight = resolveQuantizedHeight(expectedStep, 224, 4);
+
+    expect(snapshot!.surfaceSteps.length).toBe(21);
+    expect(snapshot!.surfaceSteps.every((step) => Math.abs(step - expectedStep) <= 0.01)).toBe(true);
+    expect(
+      snapshot!.cardEntries
+        .filter((entry) => entry.kind !== 'image')
+        .every((entry) => Math.abs(entry.height - expectedMockHeight) <= 1),
+    ).toBe(true);
+    expect(
+      snapshot!.cardEntries
+        .filter((entry) => entry.kind === 'image')
+        .every((entry) => Math.abs(entry.height - expectedImageHeight) <= 1),
+    ).toBe(true);
+
+    const expectedGapMatrix: Record<
+      'device' | 'illustration' | 'image',
+      Record<'device' | 'illustration' | 'image', number>
+    > = {
+      device: { device: 120, illustration: 92, image: 92 },
+      illustration: { device: 92, illustration: 64, image: 64 },
+      image: { device: 92, illustration: 64, image: 64 },
+    };
+    expect(
+      snapshot!.adjacentGaps.every((entry) => {
+        const expectedGap = expectedGapMatrix[entry.fromKind][entry.toKind];
+        return Math.abs(entry.gap - expectedGap) <= 1.1;
+      }),
+    ).toBe(true);
+  });
+
+  test('767 keeps real gallery shell and grid-width contract', async ({ page }) => {
+    await page.setViewportSize({ width: 767, height: 1024 });
+    await page.goto('/gallery');
+
+    await expect(page.locator('.temporary-adaptive-notice')).toBeHidden();
+    await expect(page.locator('.site-desktop-shell')).toBeVisible();
+
+    const snapshot = await page.evaluate(() => {
+      const pageShell = document.querySelector('.page-shell--gallery');
+      const rowsSection = document.querySelector('.gallery-rows-section');
+      if (!(pageShell instanceof HTMLElement) || !(rowsSection instanceof HTMLElement)) {
+        return null;
+      }
+      return {
+        viewportWidth: Math.floor(window.innerWidth),
+        pageWidth: Number(pageShell.getBoundingClientRect().width.toFixed(2)),
+        rowsWidth: Number(rowsSection.getBoundingClientRect().width.toFixed(2)),
+        hasOverflow: document.documentElement.scrollWidth - Math.floor(window.innerWidth) > 0,
+      };
+    });
+
+    expect(snapshot).not.toBeNull();
+    expect(snapshot!.hasOverflow).toBe(false);
+    expect(snapshot!.pageWidth).toBeGreaterThanOrEqual(766.5);
+    expect(snapshot!.pageWidth).toBeLessThanOrEqual(767.5);
+    expect(snapshot!.rowsWidth).toBeGreaterThanOrEqual(726.5);
+    expect(snapshot!.rowsWidth).toBeLessThanOrEqual(727.5);
+  });
+});

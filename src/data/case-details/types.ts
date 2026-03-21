@@ -42,12 +42,44 @@ export interface CaseDetailChallengeNote {
   arrowHeight: number;
 }
 
+export interface CaseDetailChallengeMobileDeviceGeometry {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  screenLeft: number;
+  screenRight: number;
+}
+
+export interface CaseDetailChallengeMobileNote {
+  id: string;
+  text: string;
+  side: 'left' | 'right';
+  top: number;
+  width: number;
+  textOffsetFromAnchor: number;
+  arrowSrc: string;
+  arrowTop: number;
+  arrowWidth: number;
+  arrowHeight: number;
+  arrowOffsetFromAnchor: number;
+}
+
+export interface CaseDetailChallengeMobileData {
+  sceneWidth: number;
+  sceneHeight: number;
+  deviceSize?: 'default' | 'compact';
+  device: CaseDetailChallengeMobileDeviceGeometry;
+  notes: CaseDetailChallengeMobileNote[];
+}
+
 export interface CaseDetailChallengeData {
   title: string;
   columns: [string, string];
   device: 'phone' | 'tablet';
   screen: CaseDetailImage;
   notes: CaseDetailChallengeNote[];
+  mobile?: CaseDetailChallengeMobileData;
 }
 
 export type CaseFeatureCardBadgeTone = 'blue' | 'gray' | 'orange' | 'green';
@@ -113,6 +145,7 @@ export type CaseDetailSection =
   | {
       type: 'introScreens';
       variant: 'phone' | 'tablet';
+      mobileLayout?: 'slider';
       screens: readonly [CaseDetailImage, CaseDetailImage, CaseDetailImage];
       inViewPreset?: InViewPreset;
       className?: string;

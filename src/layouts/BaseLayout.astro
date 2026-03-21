@@ -6,6 +6,7 @@ import InViewMotionRuntime from '../components/InViewMotionRuntime.astro';
 import TemporaryAdaptiveNotice from '../components/TemporaryAdaptiveNotice.astro';
 import CriticalMediaWarmupRuntime from '../components/CriticalMediaWarmupRuntime.astro';
 import FloatingThemeButton from '../components/FloatingThemeButton.astro';
+import MobilePerimeterRuntime from '../components/MobilePerimeterRuntime.astro';
 import { resolveCriticalRouteIdFromPath } from '../data/critical-media';
 
 export interface Props {
@@ -23,6 +24,12 @@ const socialCoverUrl = new URL(socialCoverPath, siteBaseUrl).toString();
 const socialCoverWidth = 2400;
 const socialCoverHeight = 1260;
 const socialCoverAlt = 'Vlad Horovyy portfolio cover';
+const normalizedCanonicalPath =
+  canonicalPath.length > 1 && canonicalPath.endsWith('/') ? canonicalPath.slice(0, -1) : canonicalPath;
+const isHomeRoute = normalizedCanonicalPath === '/';
+const isCasesRoute = normalizedCanonicalPath === '/cases';
+const isGalleryRoute = normalizedCanonicalPath === '/gallery';
+const isCaseDetailRoute = criticalRouteId === 'fora' || criticalRouteId === 'kissa';
 const isAgentationEnabled = import.meta.env.DEV && import.meta.env.PUBLIC_AGENTATION_ENABLED === 'true';
 const agentationEndpoint =
   (typeof import.meta.env.PUBLIC_AGENTATION_ENDPOINT === 'string' &&
@@ -192,7 +199,12 @@ const agentationEndpoint =
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content={socialCoverUrl} />
   </head>
-  <body>
+  <body
+    data-route-home={isHomeRoute ? 'true' : 'false'}
+    data-route-cases={isCasesRoute ? 'true' : 'false'}
+    data-route-gallery={isGalleryRoute ? 'true' : 'false'}
+    data-route-case-detail={isCaseDetailRoute ? 'true' : 'false'}
+  >
     <a href="#content" class="skip-link">Skip to content</a>
     <div class="temporary-adaptive-shell">
       <TemporaryAdaptiveNotice />
@@ -201,6 +213,7 @@ const agentationEndpoint =
       <slot />
       <FloatingThemeButton />
       <InViewMotionRuntime />
+      <MobilePerimeterRuntime />
       <CriticalMediaWarmupRuntime routeId={criticalRouteId} />
       {
         isAgentationEnabled && (

@@ -17,6 +17,18 @@ const resolvedInViewPreset =
   inViewPreset === 'appear-stagger-dynamic-v1'
     ? inViewPreset
     : undefined;
+const sliderItems = [
+  {
+    id: 'new-navigation',
+    photo: data.leftPhoto,
+    caption: data.topCaption,
+  },
+  {
+    id: 'tested-prototype',
+    photo: data.rightPhoto,
+    caption: data.bottomCaption,
+  },
+];
 ---
 
 <section class={rootClassName} aria-label="Kissa artifact photos section" data-motion-inview={resolvedInViewPreset}>
@@ -93,4 +105,297 @@ const resolvedInViewPreset =
     src={data.rightArrowSrc}
     aria-hidden="true"
   />
+
+  <div class="kissa-artifact-photos-slider" data-kissa-artifact-slider-root data-artifact-slider-active-index="0">
+    <div class="kissa-artifact-photos-slider__viewport" data-kissa-artifact-slider-viewport>
+      <div class="kissa-artifact-photos-slider__track" data-kissa-artifact-slider-track>
+        {
+          sliderItems.map((item, index) => (
+            <article
+              class="kissa-artifact-photos-slider__item"
+              data-kissa-artifact-slider-item
+              data-artifact-slider-index={String(index)}
+              data-artifact-slider-active={index === 0 ? 'true' : 'false'}
+              aria-label={`Kissa artifact slide ${index + 1}`}
+            >
+              <QuantizedPerimeter
+                class="kissa-artifact-photos-slider__surface"
+                shape="rectangle"
+                edgePattern="scallop"
+                step={40}
+                bg="var(--color-bg-darkened)"
+                pad="0"
+                exportShapeMask
+                label={item.photo.alt}
+              >
+                <img
+                  class="kissa-artifact-photos-slider__image"
+                  src={item.photo.src}
+                  alt={item.photo.alt}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </QuantizedPerimeter>
+              <p class="type-description-medium kissa-artifact-photos-slider__caption">{item.caption}</p>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </div>
 </section>
+
+<script>
+  (() => {
+    const runtimeKey = '__kissaArtifactMobileSliderRuntime';
+    if (window[runtimeKey]) {
+      window[runtimeKey].mount();
+      return;
+    }
+
+    const sliderSelector = '[data-kissa-artifact-slider-root]';
+    const initAttr = 'kissaArtifactSliderInit';
+    const mobileMedia = window.matchMedia('(max-width: 767px)');
+    const states = new Map();
+    const TRANSITION_DURATION_MS = 320;
+    const CARD_ASPECT_RATIO = 532 / 310;
+    const CARD_MAX_WIDTH = 310;
+    const CARD_MIN_WIDTH = 220;
+    const GAP = 16;
+
+    const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+    const readTrackGap = (track) => {
+      const style = window.getComputedStyle(track);
+      const value = Number.parseFloat(style.columnGap || style.gap || String(GAP));
+      return Number.isFinite(value) && value >= 0 ? value : GAP;
+    };
+
+    const resolveOffsetByIndex = (state, index) => {
+      const viewportWidth = state.viewport.clientWidth;
+      const itemCenter = index * state.slot + state.cardWidth / 2;
+      return viewportWidth / 2 - itemCenter;
+    };
+
+    const resolveIndexByOffset = (state, offset) => {
+      const viewportWidth = state.viewport.clientWidth;
+      const centerX = viewportWidth / 2;
+      const raw = (centerX - offset - state.cardWidth / 2) / state.slot;
+      return clamp(Math.round(raw), 0, state.maxIndex);
+    };
+
+    const applyActiveState = (state) => {
+      state.root.dataset.artifactSliderActiveIndex = String(state.activeIndex);
+      state.items.forEach((item, index) => {
+        item.dataset.artifactSliderActive = index === state.activeIndex ? 'true' : 'false';
+      });
+    };
+
+    const render = (state, animated = true) => {
+      if (!mobileMedia.matches) {
+        state.track.style.transition = '';
+        state.track.style.transform = '';
+        return;
+      }
+      state.track.style.transition = animated
+        ? `transform ${TRANSITION_DURATION_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`
+        : 'none';
+      state.track.style.transform = `translate3d(${state.offset.toFixed(3)}px, 0px, 0px)`;
+      applyActiveState(state);
+    };
+
+    const syncGeometry = (state) => {
+      const viewportWidth = Math.max(1, state.viewport.clientWidth);
+      const cardWidth = clamp(Math.floor(viewportWidth - 40), CARD_MIN_WIDTH, CARD_MAX_WIDTH);
+      const cardHeight = Math.round(cardWidth * CARD_ASPECT_RATIO);
+      const gap = readTrackGap(state.track);
+
+      state.cardWidth = cardWidth;
+      state.cardHeight = cardHeight;
+      state.gap = gap;
+      state.slot = state.cardWidth + state.gap;
+      state.maxIndex = Math.max(0, state.items.length - 1);
+
+      state.root.style.setProperty('--kissa-artifact-slider-card-width', `${state.cardWidth}px`);
+      state.root.style.setProperty('--kissa-artifact-slider-card-height', `${state.cardHeight}px`);
+      state.root.style.setProperty('--kissa-artifact-slider-gap', `${state.gap}px`);
+
+      state.items.forEach((item) => {
+        const surface = item.querySelector('.kissa-artifact-photos-slider__surface[data-quantized-perimeter]');
+        if (!(surface instanceof HTMLElement)) {
+          return;
+        }
+        surface.style.width = `${state.cardWidth}px`;
+        surface.style.minWidth = `${state.cardWidth}px`;
+        surface.style.maxWidth = `${state.cardWidth}px`;
+        surface.style.height = `${state.cardHeight}px`;
+        surface.style.minHeight = `${state.cardHeight}px`;
+        surface.style.maxHeight = `${state.cardHeight}px`;
+      });
+
+      window.__quantizedPerimeterRuntime?.scheduleAll?.();
+    };
+
+    const snapTo = (state, index, animated) => {
+      state.activeIndex = clamp(index, 0, state.maxIndex);
+      state.offset = resolveOffsetByIndex(state, state.activeIndex);
+      render(state, animated);
+    };
+
+    const initSlider = (root) => {
+      if (!(root instanceof HTMLElement)) {
+        return;
+      }
+      if (root.dataset[initAttr] === 'true') {
+        return;
+      }
+
+      const viewport = root.querySelector('[data-kissa-artifact-slider-viewport]');
+      const track = root.querySelector('[data-kissa-artifact-slider-track]');
+      const items = Array.from(root.querySelectorAll('[data-kissa-artifact-slider-item]')).filter(
+        (item) => item instanceof HTMLElement,
+      );
+      if (!(viewport instanceof HTMLElement) || !(track instanceof HTMLElement) || items.length < 2) {
+        return;
+      }
+
+      root.dataset[initAttr] = 'true';
+      const state = {
+        root,
+        viewport,
+        track,
+        items,
+        activeIndex: 0,
+        maxIndex: Math.max(0, items.length - 1),
+        offset: 0,
+        cardWidth: CARD_MAX_WIDTH,
+        cardHeight: Math.round(CARD_MAX_WIDTH * CARD_ASPECT_RATIO),
+        gap: GAP,
+        slot: CARD_MAX_WIDTH + GAP,
+        dragging: false,
+        pointerId: null,
+        startPointerX: 0,
+        startOffset: 0,
+        cleanups: [],
+      };
+
+      const onPointerDown = (event) => {
+        if (!(event instanceof PointerEvent)) {
+          return;
+        }
+        if (!mobileMedia.matches) {
+          return;
+        }
+        if (event.pointerType === 'mouse' && event.button !== 0) {
+          return;
+        }
+        state.dragging = true;
+        state.pointerId = event.pointerId;
+        state.startPointerX = event.clientX;
+        state.startOffset = state.offset;
+        state.track.style.transition = 'none';
+        viewport.dataset.dragging = 'true';
+        try {
+          viewport.setPointerCapture(event.pointerId);
+        } catch {
+          // Ignore capture failures for synthetic/test pointer events.
+        }
+      };
+
+      const onPointerMove = (event) => {
+        if (!(event instanceof PointerEvent)) {
+          return;
+        }
+        if (!state.dragging || state.pointerId !== event.pointerId || !mobileMedia.matches) {
+          return;
+        }
+        const dx = event.clientX - state.startPointerX;
+        state.offset = state.startOffset + dx;
+        render(state, false);
+      };
+
+      const finishPointer = (event) => {
+        if (!(event instanceof PointerEvent)) {
+          return;
+        }
+        if (!state.dragging || state.pointerId !== event.pointerId) {
+          return;
+        }
+        state.dragging = false;
+        state.pointerId = null;
+        viewport.dataset.dragging = 'false';
+        if (viewport.hasPointerCapture(event.pointerId)) {
+          try {
+            viewport.releasePointerCapture(event.pointerId);
+          } catch {
+            // Ignore release failures for synthetic/test pointer events.
+          }
+        }
+        snapTo(state, resolveIndexByOffset(state, state.offset), true);
+      };
+
+      const onResize = () => {
+        syncGeometry(state);
+        snapTo(state, state.activeIndex, false);
+      };
+
+      viewport.addEventListener('pointerdown', onPointerDown);
+      viewport.addEventListener('pointermove', onPointerMove);
+      viewport.addEventListener('pointerup', finishPointer);
+      viewport.addEventListener('pointercancel', finishPointer);
+      window.addEventListener('pointermove', onPointerMove);
+      window.addEventListener('pointerup', finishPointer);
+      window.addEventListener('pointercancel', finishPointer);
+      window.addEventListener('resize', onResize);
+
+      state.cleanups.push(() => viewport.removeEventListener('pointerdown', onPointerDown));
+      state.cleanups.push(() => viewport.removeEventListener('pointermove', onPointerMove));
+      state.cleanups.push(() => viewport.removeEventListener('pointerup', finishPointer));
+      state.cleanups.push(() => viewport.removeEventListener('pointercancel', finishPointer));
+      state.cleanups.push(() => window.removeEventListener('pointermove', onPointerMove));
+      state.cleanups.push(() => window.removeEventListener('pointerup', finishPointer));
+      state.cleanups.push(() => window.removeEventListener('pointercancel', finishPointer));
+      state.cleanups.push(() => window.removeEventListener('resize', onResize));
+
+      states.set(root, state);
+      syncGeometry(state);
+      snapTo(state, state.activeIndex, false);
+    };
+
+    const mount = () => {
+      document.querySelectorAll(sliderSelector).forEach((root) => {
+        initSlider(root);
+      });
+    };
+
+    const syncAll = () => {
+      states.forEach((state, root) => {
+        if (!root.isConnected) {
+          state.cleanups.forEach((cleanup) => cleanup());
+          states.delete(root);
+          return;
+        }
+        syncGeometry(state);
+        snapTo(state, state.activeIndex, false);
+      });
+    };
+
+    const onMediaChange = () => {
+      syncAll();
+    };
+
+    mobileMedia.addEventListener?.('change', onMediaChange);
+    document.addEventListener('astro:page-load', mount);
+    window[runtimeKey] = {
+      mount,
+      destroy() {
+        mobileMedia.removeEventListener?.('change', onMediaChange);
+        states.forEach((state) => {
+          state.cleanups.forEach((cleanup) => cleanup());
+        });
+        states.clear();
+      },
+    };
+
+    mount();
+  })();
+</script>

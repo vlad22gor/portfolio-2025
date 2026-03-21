@@ -1,0 +1,336 @@
+<script>
+  import {
+    quantizeHeightByStep,
+    quantizeHeightCeilByStep,
+    resolveDivisibleStepByWidth,
+    resolveMobilePerimeterGrid,
+    resolveProximityStepByWidth,
+  } from '../lib/layout/mobilePerimeter';
+
+  (() => {
+    const runtimeKey = '__mobilePerimeterRuntime';
+    if (window[runtimeKey]) {
+      window[runtimeKey].sync();
+      return;
+    }
+
+    const defaultStep = 48;
+    const defaultCardCoverHeight = 288;
+    const defaultMoreHeight = 432;
+    const defaultAboutHeight = 1216;
+    const defaultProcessSquareStep = 36;
+    const defaultProcessCircleStep = 24;
+    const defaultFeatureCardStep = 48;
+    const defaultFeatureCardMockHeight = 432;
+    const defaultGalleryMockStep = 48;
+    const defaultGalleryImageStep = 50;
+    const defaultGalleryMockHeight = 384;
+    const defaultGalleryImageHeight = 224;
+    const galleryBaseStep = 40;
+    const defaultTeamPhotoBaseStep = 40;
+    const defaultTeamPhotoPhotoHeight = 240;
+    const defaultTeamPhotoPhotoWidth = 350;
+    const defaultTeamPhotoCaptionHeight = 44;
+    const defaultTeamPhotoGap = 24;
+    const defaultTeamPhotoSectionHeight =
+      defaultTeamPhotoPhotoHeight + defaultTeamPhotoGap + defaultTeamPhotoCaptionHeight;
+    const caseDetailFeatureBaseStep = 40;
+    const caseDetailMarginX = 20;
+    const caseDetailTicketGap = 20;
+    const mobileMedia = window.matchMedia('(max-width: 767px)');
+
+    const applyPerimeterStep = (selector, step) => {
+      document.querySelectorAll(selector).forEach((node) => {
+        if (!(node instanceof HTMLElement)) {
+          return;
+        }
+        node.dataset.perimeterStep = String(step);
+      });
+    };
+
+    const resolveAboutContentHeight = () => {
+      const content = document.querySelector('.about-me-section .scallop-content');
+      if (!(content instanceof HTMLElement)) {
+        return null;
+      }
+      return Math.ceil(content.scrollHeight);
+    };
+
+    const resolveProcessTicketConfig = (section) => {
+      const variant = section.dataset.caseProcessTicketVariant === 'circle-24' ? 'circle-24' : 'square-36';
+      const defaultStepForVariant = variant === 'circle-24' ? defaultProcessCircleStep : defaultProcessSquareStep;
+      const defaultCols = variant === 'circle-24' ? 6 : 4;
+      return { variant, defaultStepForVariant, defaultCols };
+    };
+
+    const applyProcessStepToSection = (section, step, ticketSize) => {
+      section.style.setProperty('--case-process-mobile-ticket-size', `${ticketSize}px`);
+      section.querySelectorAll('.case-process-ticket[data-quantized-perimeter]').forEach((ticket) => {
+        if (!(ticket instanceof HTMLElement)) {
+          return;
+        }
+        ticket.dataset.perimeterStep = String(step);
+      });
+    };
+
+    const syncCaseDetailProcessSections = (isMobile, viewportWidth) => {
+      const sections = document.querySelectorAll('.case-process-section');
+      if (sections.length === 0) {
+        return;
+      }
+
+      if (!isMobile) {
+        sections.forEach((section) => {
+          if (!(section instanceof HTMLElement)) {
+            return;
+          }
+          const { defaultStepForVariant, defaultCols } = resolveProcessTicketConfig(section);
+          applyProcessStepToSection(section, defaultStepForVariant, defaultStepForVariant * defaultCols);
+        });
+        return;
+      }
+
+      const availableWidth = Math.max(1, Math.min(viewportWidth - caseDetailMarginX * 2, 480));
+      const ticketTarget = Math.max(8, Math.floor((availableWidth - caseDetailTicketGap) / 2));
+
+      sections.forEach((section) => {
+        if (!(section instanceof HTMLElement)) {
+          return;
+        }
+        const { defaultStepForVariant, defaultCols } = resolveProcessTicketConfig(section);
+        const contract = resolveProximityStepByWidth({
+          width: ticketTarget,
+          baseStep: defaultStepForVariant,
+          defaultCols,
+          minStep: 8,
+          minCols: 2,
+          maxCols: 12,
+          maxStepDelta: 6,
+        });
+        const step = contract.step;
+        const ticketSize = contract.step * contract.cols;
+        applyProcessStepToSection(section, step, ticketSize);
+      });
+    };
+
+    const syncCaseDetailFeatureCards = (isMobile, viewportWidth) => {
+      const html = document.documentElement;
+      const sections = document.querySelectorAll('main.page-shell--case-detail .fora-feature-cards-section');
+      const featurePerimeterSelector =
+        'main.page-shell--case-detail .fora-feature-card__mock-perimeter[data-quantized-perimeter]';
+
+      if (sections.length === 0) {
+        html.style.setProperty('--fora-feature-card-mobile-step', String(defaultFeatureCardStep));
+        html.style.setProperty('--fora-feature-card-mobile-mock-height', `${defaultFeatureCardMockHeight}px`);
+        return;
+      }
+
+      if (!isMobile) {
+        html.style.setProperty('--fora-feature-card-mobile-step', String(defaultFeatureCardStep));
+        html.style.setProperty('--fora-feature-card-mobile-mock-height', `${defaultFeatureCardMockHeight}px`);
+        applyPerimeterStep(featurePerimeterSelector, defaultFeatureCardStep);
+        return;
+      }
+
+      const section = Array.from(sections).find(
+        (node) => node instanceof HTMLElement,
+      ) as HTMLElement | undefined;
+      const sectionWidth =
+        section instanceof HTMLElement
+          ? Math.max(1, Math.round(section.getBoundingClientRect().width))
+          : Math.max(1, viewportWidth - caseDetailMarginX * 2);
+      const inferredMarginX = Math.max(0, Math.floor((viewportWidth - sectionWidth) / 2));
+
+      const grid = resolveMobilePerimeterGrid({
+        viewportWidth,
+        marginX: inferredMarginX,
+        baseStep: caseDetailFeatureBaseStep,
+        minCols: 6,
+        maxCols: 24,
+      });
+      const mockHeight = quantizeHeightByStep(grid.step, {
+        targetHeight: defaultFeatureCardMockHeight,
+        minRows: 8,
+      });
+
+      html.style.setProperty('--fora-feature-card-mobile-step', String(grid.step));
+      html.style.setProperty('--fora-feature-card-mobile-mock-height', `${mockHeight.height}px`);
+      applyPerimeterStep(featurePerimeterSelector, grid.step);
+    };
+
+    const syncCaseDetailForaTeamPhoto = (isMobile, viewportWidth) => {
+      const html = document.documentElement;
+      const section = document.querySelector('main.page-shell--fora .fora-team-photo-section');
+      const teamPhotoPerimeterSelector =
+        'main.page-shell--fora .fora-team-photo-surface--mobile[data-quantized-perimeter]';
+
+      if (!(section instanceof HTMLElement)) {
+        html.style.setProperty('--fora-team-photo-mobile-step', String(defaultTeamPhotoBaseStep));
+        html.style.setProperty('--fora-team-photo-mobile-photo-height', `${defaultTeamPhotoPhotoHeight}px`);
+        html.style.setProperty('--fora-team-photo-mobile-section-height', `${defaultTeamPhotoSectionHeight}px`);
+        return;
+      }
+
+      if (!isMobile) {
+        html.style.setProperty('--fora-team-photo-mobile-step', String(defaultTeamPhotoBaseStep));
+        html.style.setProperty('--fora-team-photo-mobile-photo-height', `${defaultTeamPhotoPhotoHeight}px`);
+        html.style.setProperty('--fora-team-photo-mobile-section-height', `${defaultTeamPhotoSectionHeight}px`);
+        applyPerimeterStep(teamPhotoPerimeterSelector, defaultTeamPhotoBaseStep);
+        return;
+      }
+
+      const sectionWidth = Math.max(1, Math.round(section.getBoundingClientRect().width || viewportWidth - caseDetailMarginX * 2));
+      const grid = resolveDivisibleStepByWidth({
+        width: sectionWidth,
+        baseStep: defaultTeamPhotoBaseStep,
+        minStep: 8,
+        minCols: 6,
+        maxCols: 24,
+      });
+      const targetPhotoHeight = (sectionWidth * defaultTeamPhotoPhotoHeight) / defaultTeamPhotoPhotoWidth;
+      const photoHeight = quantizeHeightByStep(grid.step, { targetHeight: targetPhotoHeight, minRows: 4 });
+      const sectionHeight = photoHeight.height + defaultTeamPhotoGap + defaultTeamPhotoCaptionHeight;
+
+      html.style.setProperty('--fora-team-photo-mobile-step', String(grid.step));
+      html.style.setProperty('--fora-team-photo-mobile-photo-height', `${photoHeight.height}px`);
+      html.style.setProperty('--fora-team-photo-mobile-section-height', `${sectionHeight}px`);
+      applyPerimeterStep(teamPhotoPerimeterSelector, grid.step);
+    };
+
+    const syncGalleryCards = (isMobile, viewportWidth) => {
+      const html = document.documentElement;
+      const galleryRowsSection = document.querySelector('main.page-shell--gallery .gallery-rows-section');
+      const mockPerimeterSelector = 'main.page-shell--gallery .gallery-card__surface--mock[data-quantized-perimeter]';
+      const imagePerimeterSelector = 'main.page-shell--gallery .gallery-card__surface--image[data-quantized-perimeter]';
+
+      html.style.setProperty('--gallery-mobile-step', String(defaultGalleryMockStep));
+      html.style.setProperty('--gallery-mobile-card-height-mock', `${defaultGalleryMockHeight}px`);
+      html.style.setProperty('--gallery-mobile-card-height-image', `${defaultGalleryImageHeight}px`);
+
+      if (!(galleryRowsSection instanceof HTMLElement)) {
+        return;
+      }
+
+      if (!isMobile) {
+        applyPerimeterStep(mockPerimeterSelector, defaultGalleryMockStep);
+        applyPerimeterStep(imagePerimeterSelector, defaultGalleryImageStep);
+        return;
+      }
+
+      const sectionWidth = Math.max(1, Math.round(galleryRowsSection.getBoundingClientRect().width));
+      const inferredMarginX = Math.max(0, Math.floor((viewportWidth - sectionWidth) / 2));
+      const grid = resolveMobilePerimeterGrid({
+        viewportWidth,
+        marginX: inferredMarginX,
+        baseStep: galleryBaseStep,
+        minCols: 6,
+        maxCols: 24,
+      });
+      const mockHeight = quantizeHeightByStep(grid.step, {
+        targetHeight: defaultGalleryMockHeight,
+        minRows: 8,
+      });
+      const imageHeight = quantizeHeightByStep(grid.step, {
+        targetHeight: defaultGalleryImageHeight,
+        minRows: 4,
+      });
+
+      html.style.setProperty('--gallery-mobile-step', String(grid.step));
+      html.style.setProperty('--gallery-mobile-card-height-mock', `${mockHeight.height}px`);
+      html.style.setProperty('--gallery-mobile-card-height-image', `${imageHeight.height}px`);
+      applyPerimeterStep(mockPerimeterSelector, grid.step);
+      applyPerimeterStep(imagePerimeterSelector, grid.step);
+    };
+
+    const sync = () => {
+      const html = document.documentElement;
+      const isMobile = mobileMedia.matches;
+      const viewportWidth = Math.floor(window.innerWidth);
+      const isHomeRoute = document.body?.dataset.routeHome === 'true';
+      const isCasesRoute = document.body?.dataset.routeCases === 'true';
+      const isGalleryRoute = document.body?.dataset.routeGallery === 'true';
+      const isCaseDetailRoute = document.body?.dataset.routeCaseDetail === 'true';
+      const isHomeOrCasesRoute = isHomeRoute || isCasesRoute;
+
+      if (isCaseDetailRoute) {
+        syncCaseDetailProcessSections(isMobile, viewportWidth);
+        syncCaseDetailFeatureCards(isMobile, viewportWidth);
+        syncCaseDetailForaTeamPhoto(isMobile, viewportWidth);
+      }
+
+      if (isGalleryRoute) {
+        syncGalleryCards(isMobile, viewportWidth);
+      }
+
+      if (!isHomeOrCasesRoute) {
+        if (isCaseDetailRoute || isGalleryRoute) {
+          window.__quantizedPerimeterRuntime?.scheduleAll?.();
+        }
+        return;
+      }
+
+      if (!isMobile) {
+        html.style.setProperty('--home-mobile-perimeter-step', String(defaultStep));
+        html.style.setProperty('--home-mobile-perimeter-width', '100%');
+        html.style.setProperty('--home-mobile-case-cover-height', `${defaultCardCoverHeight}px`);
+        html.style.setProperty('--home-mobile-more-height', `${defaultMoreHeight}px`);
+        applyPerimeterStep('.case-card-cover[data-quantized-perimeter]', defaultStep);
+        applyPerimeterStep('.cases-more-card[data-quantized-perimeter]', defaultStep);
+
+        if (isHomeRoute) {
+          html.style.setProperty('--home-mobile-about-height', `${defaultAboutHeight}px`);
+          applyPerimeterStep('.about-me-section[data-quantized-perimeter]', defaultStep);
+        }
+
+        window.__quantizedPerimeterRuntime?.scheduleAll?.();
+        return;
+      }
+
+      const grid = resolveMobilePerimeterGrid({
+        viewportWidth,
+        marginX: 20,
+        baseStep: 40,
+        minCols: 6,
+        maxCols: 18,
+      });
+      const cardCover = quantizeHeightByStep(grid.step, { targetHeight: defaultCardCoverHeight, minRows: 6 });
+      const moreCard = quantizeHeightByStep(grid.step, { targetHeight: defaultMoreHeight, minRows: 8 });
+
+      html.style.setProperty('--home-mobile-perimeter-step', String(grid.step));
+      html.style.setProperty('--home-mobile-perimeter-width', `${grid.width}px`);
+      html.style.setProperty('--home-mobile-case-cover-height', `${cardCover.height}px`);
+      html.style.setProperty('--home-mobile-more-height', `${moreCard.height}px`);
+
+      applyPerimeterStep('.case-card-cover[data-quantized-perimeter]', grid.step);
+      applyPerimeterStep('.cases-more-card[data-quantized-perimeter]', grid.step);
+
+      if (isHomeRoute) {
+        const aboutContentHeight = resolveAboutContentHeight();
+        const aboutHeightTarget = aboutContentHeight ?? defaultAboutHeight;
+        const about = quantizeHeightCeilByStep(grid.step, { targetHeight: aboutHeightTarget });
+        html.style.setProperty('--home-mobile-about-height', `${about.height}px`);
+        applyPerimeterStep('.about-me-section[data-quantized-perimeter]', grid.step);
+      }
+
+      window.__quantizedPerimeterRuntime?.scheduleAll?.();
+    };
+
+    let resizeRaf = 0;
+    const scheduleSync = () => {
+      if (resizeRaf !== 0) {
+        return;
+      }
+      resizeRaf = window.requestAnimationFrame(() => {
+        resizeRaf = 0;
+        sync();
+      });
+    };
+
+    window.addEventListener('resize', scheduleSync);
+    document.addEventListener('astro:page-load', scheduleSync);
+    mobileMedia.addEventListener?.('change', scheduleSync);
+
+    window[runtimeKey] = { sync };
+    sync();
+  })();
+</script>

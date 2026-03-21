@@ -1,6 +1,7 @@
 ---
 import QuantizedWave from './QuantizedWave.astro';
 import Button from './Button.astro';
+import ThemedSvgIcon from './ThemedSvgIcon.astro';
 ---
 
 <section class="final-cta-section" aria-labelledby="final-cta-title" data-motion-inview="final-cta-morph-v1">
@@ -12,12 +13,11 @@ import Button from './Button.astro';
     <p class="final-cta-subtitle type-t2">match the vibe?</p>
 
     <div class="final-cta-title-wrap">
-      <img
+      <ThemedSvgIcon
         class="final-cta-orb"
-        src="/media/motifs/motif-stack-orb-3-blue.svg"
-        alt=""
-        loading="lazy"
-        decoding="async"
+        src="/media/motifs/motif-stack-orb-3.svg"
+        color="var(--color-accent-blue)"
+        aria-hidden="true"
       />
       <h2 id="final-cta-title" class="final-cta-title type-t1">
         <span>creating</span>

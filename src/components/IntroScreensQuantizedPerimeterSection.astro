@@ -1,6 +1,8 @@
 ---
 import QuantizedPerimeter from './QuantizedPerimeter.astro';
 import DeviceMockup from './DeviceMockup.astro';
+import GalleryCard from './GalleryCard.astro';
+import type { GalleryPhoneCard, GalleryTabletCard } from '../data/gallery';
 
 type IntroScreensVariant = 'phone' | 'tablet';
 type IntroScreenPosition = 'left' | 'center' | 'right';
@@ -12,6 +14,7 @@ interface IntroScreenSource {
 
 interface Props {
   variant?: IntroScreensVariant;
+  mobileLayout?: 'slider';
   screens: readonly [IntroScreenSource, IntroScreenSource, IntroScreenSource];
   inViewPreset?: 'appear-v1';
   class?: string;
@@ -19,6 +22,7 @@ interface Props {
 
 const {
   variant = 'phone',
+  mobileLayout,
   screens,
   inViewPreset = 'appear-v1',
   class: className = '',
@@ -26,9 +30,11 @@ const {
 
 const resolvedVariant: IntroScreensVariant = variant === 'tablet' ? 'tablet' : 'phone';
 const orderedPositions: IntroScreenPosition[] = ['left', 'center', 'right'];
+const hasMobileSlider = mobileLayout === 'slider';
 const rootClassName = [
   'fora-intro-screens-section',
   `fora-intro-screens-section--${resolvedVariant}`,
+  hasMobileSlider ? 'fora-intro-screens-section--mobile-slider' : '',
   className,
 ];
 const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefined;
@@ -36,6 +42,33 @@ const sideScaleByVariant: Record<IntroScreensVariant, number> = {
   phone: 174 / 244,
   tablet: 211 / 296,
 };
+const sliderCardType = resolvedVariant === 'tablet' ? 'tablet' : 'phone';
+const sliderCardShellSrc =
+  sliderCardType === 'tablet'
+    ? '/media/gallery/device-shells/tablet-shell.webp'
+    : '/media/gallery/device-shells/phone-shell.webp';
+const sliderLogicalCards: Array<GalleryPhoneCard | GalleryTabletCard> = hasMobileSlider
+  ? screens.map((screen, index) => ({
+      id: `fora-intro-slider-${index}`,
+      type: sliderCardType,
+      colSpan: 2,
+      screen: {
+        kind: 'image',
+        src: screen.src,
+      },
+      shellSrc: sliderCardShellSrc,
+      priority: 'lazy',
+      alt: screen.alt ?? `Case intro slide ${index + 1}`,
+    }))
+  : [];
+const sliderPhysicalOrder = [2, 0, 1, 2, 0];
+const sliderPhysicalCards = hasMobileSlider
+  ? sliderPhysicalOrder.map((logicalIndex, physicalIndex) => ({
+      logicalIndex,
+      physicalIndex,
+      item: sliderLogicalCards[logicalIndex],
+    }))
+  : [];
 ---
 
 <section
@@ -107,4 +140,435 @@ const sideScaleByVariant: Record<IntroScreensVariant, number> = {
       )
     }
   </QuantizedPerimeter>
+
+  {
+    hasMobileSlider && (
+      <div class="fora-intro-screens-slider" data-fora-intro-slider-root data-intro-slider-active-index="1">
+        <div class="fora-intro-screens-slider__viewport" data-fora-intro-slider-viewport>
+          <div class="fora-intro-screens-slider__track" data-fora-intro-slider-track>
+            {
+              sliderPhysicalCards.map(({ item, logicalIndex, physicalIndex }) => (
+                <div
+                  class="fora-intro-screens-slider__item"
+                  data-fora-intro-slider-item
+                  data-intro-slider-logical-index={String(logicalIndex)}
+                  data-intro-slider-physical-index={String(physicalIndex)}
+                  data-intro-slider-active={physicalIndex === 2 ? 'true' : 'false'}
+                >
+                  <div class="fora-intro-screens-slider__item-inner">
+                    <GalleryCard item={item} priorityOverride="lazy" />
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      </div>
+    )
+  }
 </section>
+
+{
+  hasMobileSlider && (
+    <script>
+      import { quantizeHeightByStep, resolveMobilePerimeterGrid } from '../lib/layout/mobilePerimeter';
+
+      (() => {
+        const runtimeKey = '__foraIntroMobileSliderRuntime';
+        if (window[runtimeKey]) {
+          window[runtimeKey].mount();
+          return;
+        }
+
+        const sliderSelector = '[data-fora-intro-slider-root]';
+        const initAttr = 'foraIntroSliderInit';
+        const mobileMedia = window.matchMedia('(max-width: 767px)');
+        const states = new Map();
+        const LOGICAL_COUNT = 3;
+        const REAL_PHYSICAL_START = 1;
+        const REAL_PHYSICAL_END = REAL_PHYSICAL_START + LOGICAL_COUNT - 1;
+        const TRANSITION_DURATION_MS = 320;
+        const LAYOUT_GAP = 16;
+        const VISUAL_GAP_TARGET = 16;
+        const SIDE_SCALE = 0.9;
+
+        const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+        const wrapLogicalIndex = (value) => ((value % LOGICAL_COUNT) + LOGICAL_COUNT) % LOGICAL_COUNT;
+        const toLogicalIndex = (physicalIndex) => wrapLogicalIndex(physicalIndex - REAL_PHYSICAL_START);
+
+        const resolveTrackGap = (track) => {
+          const style = window.getComputedStyle(track);
+          const gap = Number.parseFloat(style.columnGap || style.gap || String(LAYOUT_GAP));
+          return Number.isFinite(gap) && gap >= 0 ? gap : LAYOUT_GAP;
+        };
+
+        const resolveOffsetByIndex = (state, index) => {
+          const viewportWidth = state.viewport.clientWidth;
+          const itemCenter = index * state.slot + state.cardWidth / 2;
+          return viewportWidth / 2 - itemCenter;
+        };
+
+        const resolvePhysicalIndexByOffset = (state, offset) => {
+          const viewportWidth = state.viewport.clientWidth;
+          const centerX = viewportWidth / 2;
+          const rawIndex = (centerX - offset - state.cardWidth / 2) / state.slot;
+          return clamp(Math.round(rawIndex), 0, state.maxPhysical);
+        };
+
+        const applyPerimeterLayout = (state) => {
+          const signature = [
+            state.perimeterStep,
+            state.perimeterWidth,
+          ].join(':');
+          if (state.lastPerimeterSignature === signature) {
+            return;
+          }
+          state.lastPerimeterSignature = signature;
+
+          state.items.forEach((item) => {
+            if (!(item instanceof HTMLElement)) {
+              return;
+            }
+            const surface = item.querySelector('.gallery-card__surface--mock[data-quantized-perimeter]');
+            if (!(surface instanceof HTMLElement)) {
+              return;
+            }
+            surface.dataset.perimeterStep = String(state.perimeterStep);
+            surface.style.width = `${state.perimeterWidth}px`;
+            surface.style.minWidth = `${state.perimeterWidth}px`;
+            surface.style.maxWidth = `${state.perimeterWidth}px`;
+          });
+          window.__quantizedPerimeterRuntime?.scheduleAll?.();
+        };
+
+        const syncGeometry = (state) => {
+          const viewportWidth = Math.floor(window.innerWidth);
+          const grid = resolveMobilePerimeterGrid({
+            viewportWidth,
+            marginX: 20,
+            baseStep: 40,
+            minCols: 6,
+            maxCols: 18,
+          });
+          const cardWidth = Math.max(grid.step * 6, grid.width - 40);
+          const quantizedHeight = quantizeHeightByStep(grid.step, {
+            targetHeight: 384,
+            minRows: 8,
+          });
+          const layoutGap = resolveTrackGap(state.track);
+          const perimeterWidth = Math.max(grid.step * 6, Math.round(cardWidth / grid.step) * grid.step);
+          const scaleInset = (1 - SIDE_SCALE) * cardWidth * 0.5;
+          const perimeterInsetDelta = cardWidth - perimeterWidth;
+          const compensation = scaleInset + perimeterInsetDelta + (layoutGap - VISUAL_GAP_TARGET);
+
+          state.cardWidth = cardWidth;
+          state.cardHeight = quantizedHeight.height;
+          state.gap = layoutGap;
+          state.slot = state.cardWidth + state.gap;
+          state.maxPhysical = Math.max(0, state.items.length - 1);
+          state.perimeterStep = grid.step;
+          state.perimeterWidth = perimeterWidth;
+          state.sideCompensation = compensation;
+
+          state.root.style.setProperty('--fora-intro-slider-card-width', `${state.cardWidth}px`);
+          state.root.style.setProperty('--fora-intro-slider-card-height', `${state.cardHeight}px`);
+          state.root.style.setProperty('--intro-slider-layout-gap', `${state.gap}px`);
+          state.root.style.setProperty('--intro-slider-side-scale', String(SIDE_SCALE));
+          state.root.dataset.introSliderStep = String(grid.step);
+          state.root.dataset.introSliderGridWidth = String(grid.width);
+          state.root.dataset.introSliderCardWidth = String(state.cardWidth);
+          state.root.dataset.introSliderCardHeight = String(state.cardHeight);
+          state.root.dataset.introSliderPerimeterWidth = String(state.perimeterWidth);
+          state.root.dataset.introSliderLayoutGap = String(state.gap);
+          state.root.dataset.introSliderVisualGapTarget = String(VISUAL_GAP_TARGET);
+          state.root.dataset.introSliderCompensation = state.sideCompensation.toFixed(3);
+          applyPerimeterLayout(state);
+        };
+
+        const applyActiveState = (state) => {
+          state.root.dataset.introSliderActiveIndex = String(state.activeLogical);
+          state.items.forEach((item, index) => {
+            const isActive = index === state.activePhysical;
+            const sideSign = index < state.activePhysical ? 1 : index > state.activePhysical ? -1 : 0;
+            const shift = sideSign * state.sideCompensation;
+            const scale = isActive ? 1 : SIDE_SCALE;
+            const shiftForTransform = isActive ? 0 : shift / SIDE_SCALE;
+            item.dataset.introSliderActive = isActive ? 'true' : 'false';
+            item.style.setProperty('--intro-slider-scale', String(scale));
+            item.style.setProperty('--intro-slider-shift-x', `${shiftForTransform.toFixed(3)}px`);
+          });
+        };
+
+        const render = (
+          state,
+          {
+            animateTrack = true,
+            animateItems = true,
+          } = {},
+        ) => {
+          if (!mobileMedia.matches) {
+            state.track.style.transition = '';
+            state.track.style.transform = '';
+            delete state.root.dataset.introSliderInstantRebase;
+            return;
+          }
+          state.track.style.transition = animateTrack ? 'transform 320ms cubic-bezier(0.22, 1, 0.36, 1)' : 'none';
+          state.track.style.transform = `translate3d(${state.offset.toFixed(3)}px, 0px, 0px)`;
+          if (animateItems) {
+            delete state.root.dataset.introSliderInstantRebase;
+          } else {
+            state.root.dataset.introSliderInstantRebase = 'true';
+          }
+          applyActiveState(state);
+          applyPerimeterLayout(state);
+          if (!animateItems) {
+            window.requestAnimationFrame(() => {
+              window.requestAnimationFrame(() => {
+                if (!state.root.isConnected) {
+                  return;
+                }
+                if (state.root.dataset.introSliderInstantRebase === 'true') {
+                  delete state.root.dataset.introSliderInstantRebase;
+                }
+              });
+            });
+          }
+        };
+
+        const clearLoopNormalizeTimer = (state) => {
+          if (state.loopNormalizeTimer !== null) {
+            window.clearTimeout(state.loopNormalizeTimer);
+            state.loopNormalizeTimer = null;
+          }
+        };
+
+        const normalizeLoopPosition = (
+          state,
+          {
+            animateTrack = false,
+            animateItems = false,
+          } = {},
+        ) => {
+          if (state.activePhysical === 0) {
+            state.activePhysical = REAL_PHYSICAL_END;
+          } else if (state.activePhysical === state.maxPhysical) {
+            state.activePhysical = REAL_PHYSICAL_START;
+          } else {
+            return;
+          }
+          state.activeLogical = toLogicalIndex(state.activePhysical);
+          state.offset = resolveOffsetByIndex(state, state.activePhysical);
+          state.pendingLoopNormalize = false;
+          clearLoopNormalizeTimer(state);
+          render(state, { animateTrack, animateItems });
+        };
+
+        const scheduleLoopNormalize = (state) => {
+          const needsNormalize = state.activePhysical === 0 || state.activePhysical === state.maxPhysical;
+          state.pendingLoopNormalize = needsNormalize;
+          clearLoopNormalizeTimer(state);
+          if (!needsNormalize) {
+            return;
+          }
+          state.loopNormalizeTimer = window.setTimeout(() => {
+            normalizeLoopPosition(state);
+          }, TRANSITION_DURATION_MS + 40);
+        };
+
+        const snapToPhysical = (state, physicalIndex, animated) => {
+          state.activePhysical = clamp(physicalIndex, 0, state.maxPhysical);
+          state.activeLogical = toLogicalIndex(state.activePhysical);
+          state.offset = resolveOffsetByIndex(state, state.activePhysical);
+          render(state, {
+            animateTrack: animated,
+            animateItems: animated,
+          });
+          if (animated) {
+            scheduleLoopNormalize(state);
+          } else {
+            state.pendingLoopNormalize = false;
+            clearLoopNormalizeTimer(state);
+          }
+        };
+
+        const initSlider = (root) => {
+          if (!(root instanceof HTMLElement)) {
+            return;
+          }
+          if (root.dataset[initAttr] === 'true') {
+            return;
+          }
+
+          const viewport = root.querySelector('[data-fora-intro-slider-viewport]');
+          const track = root.querySelector('[data-fora-intro-slider-track]');
+          const items = Array.from(root.querySelectorAll('[data-fora-intro-slider-item]')).filter(
+            (item) => item instanceof HTMLElement,
+          );
+
+          if (!(viewport instanceof HTMLElement) || !(track instanceof HTMLElement) || items.length < 3) {
+            return;
+          }
+
+          root.dataset[initAttr] = 'true';
+          const state = {
+            root,
+            viewport,
+            track,
+            items,
+            cardWidth: 0,
+            cardHeight: 0,
+            gap: LAYOUT_GAP,
+            slot: 326,
+            maxPhysical: Math.max(0, items.length - 1),
+            activePhysical: 2,
+            activeLogical: 1,
+            offset: 0,
+            dragging: false,
+            pointerId: null,
+            startPointerX: 0,
+            startOffset: 0,
+            perimeterStep: 40,
+            perimeterWidth: 320,
+            sideCompensation: 0,
+            lastPerimeterSignature: '',
+            pendingLoopNormalize: false,
+            loopNormalizeTimer: null,
+            cleanups: [],
+          };
+
+          const onPointerDown = (event) => {
+            if (!(event instanceof PointerEvent)) {
+              return;
+            }
+            if (!mobileMedia.matches) {
+              return;
+            }
+            if (event.pointerType === 'mouse' && event.button !== 0) {
+              return;
+            }
+            state.dragging = true;
+            state.pointerId = event.pointerId;
+            state.startPointerX = event.clientX;
+            state.startOffset = state.offset;
+            state.track.style.transition = 'none';
+            viewport.dataset.dragging = 'true';
+            state.pendingLoopNormalize = false;
+            clearLoopNormalizeTimer(state);
+            try {
+              viewport.setPointerCapture(event.pointerId);
+            } catch {
+              // Ignore capture failures for synthetic/test pointer events.
+            }
+          };
+
+          const onPointerMove = (event) => {
+            if (!(event instanceof PointerEvent)) {
+              return;
+            }
+            if (!state.dragging || state.pointerId !== event.pointerId || !mobileMedia.matches) {
+              return;
+            }
+            const dx = event.clientX - state.startPointerX;
+            state.offset = state.startOffset + dx;
+            render(state, false);
+          };
+
+          const finishPointer = (event) => {
+            if (!(event instanceof PointerEvent)) {
+              return;
+            }
+            if (!state.dragging || state.pointerId !== event.pointerId) {
+              return;
+            }
+            state.dragging = false;
+            state.pointerId = null;
+            viewport.dataset.dragging = 'false';
+            if (viewport.hasPointerCapture(event.pointerId)) {
+              try {
+                viewport.releasePointerCapture(event.pointerId);
+              } catch {
+                // Ignore release failures for synthetic/test pointer events.
+              }
+            }
+            const nextIndex = resolvePhysicalIndexByOffset(state, state.offset);
+            snapToPhysical(state, nextIndex, true);
+          };
+
+          const onResize = () => {
+            syncGeometry(state);
+            normalizeLoopPosition(state);
+            snapToPhysical(state, state.activePhysical, false);
+          };
+
+          const onTrackTransitionEnd = (event) => {
+            if (!(event instanceof TransitionEvent)) {
+              return;
+            }
+            if (event.target !== state.track || event.propertyName !== 'transform' || !state.pendingLoopNormalize) {
+              return;
+            }
+            normalizeLoopPosition(state);
+          };
+
+          viewport.addEventListener('pointerdown', onPointerDown);
+          viewport.addEventListener('pointermove', onPointerMove);
+          viewport.addEventListener('pointerup', finishPointer);
+          viewport.addEventListener('pointercancel', finishPointer);
+          track.addEventListener('transitionend', onTrackTransitionEnd);
+          window.addEventListener('resize', onResize);
+
+          state.cleanups.push(() => viewport.removeEventListener('pointerdown', onPointerDown));
+          state.cleanups.push(() => viewport.removeEventListener('pointermove', onPointerMove));
+          state.cleanups.push(() => viewport.removeEventListener('pointerup', finishPointer));
+          state.cleanups.push(() => viewport.removeEventListener('pointercancel', finishPointer));
+          state.cleanups.push(() => track.removeEventListener('transitionend', onTrackTransitionEnd));
+          state.cleanups.push(() => window.removeEventListener('resize', onResize));
+          state.cleanups.push(() => clearLoopNormalizeTimer(state));
+
+          states.set(root, state);
+          syncGeometry(state);
+          snapToPhysical(state, state.activePhysical, false);
+        };
+
+        const mount = () => {
+          document.querySelectorAll(sliderSelector).forEach((root) => {
+            initSlider(root);
+          });
+        };
+
+        const syncAll = () => {
+          states.forEach((state, root) => {
+            if (!root.isConnected) {
+              state.cleanups.forEach((cleanup) => cleanup());
+              states.delete(root);
+              return;
+            }
+            syncGeometry(state);
+            normalizeLoopPosition(state);
+            snapToPhysical(state, state.activePhysical, false);
+          });
+        };
+
+        const onMediaChange = () => {
+          syncAll();
+        };
+
+        mobileMedia.addEventListener?.('change', onMediaChange);
+        document.addEventListener('astro:page-load', mount);
+
+        window[runtimeKey] = {
+          mount,
+          destroy() {
+            mobileMedia.removeEventListener?.('change', onMediaChange);
+            states.forEach((state) => {
+              state.cleanups.forEach((cleanup) => cleanup());
+            });
+            states.clear();
+          },
+        };
+
+        mount();
+      })();
+    </script>
+  )
+}

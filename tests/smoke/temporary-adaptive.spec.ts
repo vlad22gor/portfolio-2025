@@ -28,7 +28,7 @@ const readTrackX = async (page: import('@playwright/test').Page) =>
 test.describe('Temporary adaptive notice', () => {
   test('390x855 shows temporary screen with centered text and moving slider', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 855 });
-    await page.goto('/');
+    await page.goto('/temp-adaptive');
 
     await expect(page.locator('.temporary-adaptive-notice')).toBeVisible();
     await expect(page.locator('.site-desktop-shell')).toBeHidden();
@@ -53,10 +53,21 @@ test.describe('Temporary adaptive notice', () => {
     expect(Math.abs((secondX ?? 0) - (firstX ?? 0))).toBeGreaterThan(0.5);
   });
 
+  test('390x855 shows case detail intro and hides temporary screen for /fora and /kissa', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 855 });
+
+    for (const pathname of ['/fora', '/kissa']) {
+      await page.goto(pathname);
+      await expect(page.locator('.temporary-adaptive-shell')).toBeHidden();
+      await expect(page.locator('.site-desktop-shell')).toBeVisible();
+      await expect(page.locator('.fora-intro-section')).toBeVisible();
+    }
+  });
+
   test('1024x1366 keeps temporary screen with explicit phone small size', async ({ page }) => {
     test.setTimeout(60_000);
     await page.setViewportSize({ width: 1024, height: 1366 });
-    await page.goto('/gallery');
+    await page.goto('/temp-adaptive');
 
     await expect(page.locator('.temporary-adaptive-notice')).toBeVisible();
     await expect(page.locator('.site-desktop-shell')).toBeHidden();
@@ -272,7 +283,7 @@ test.describe('Temporary adaptive notice', () => {
   test('reduced motion disables auto movement for temporary slider', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.setViewportSize({ width: 390, height: 855 });
-    await page.goto('/');
+    await page.goto('/temp-adaptive');
 
     const firstX = await readTrackX(page);
     await page.waitForTimeout(500);
@@ -284,7 +295,7 @@ test.describe('Temporary adaptive notice', () => {
 
   test('slider arc uses only translate+rotate with fixed opacity', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 855 });
-    await page.goto('/');
+    await page.goto('/temp-adaptive');
 
     const transformState = await page.evaluate(() => {
       const items = Array.from(document.querySelectorAll('.temporary-adaptive-notice__screens-item')).slice(0, 6);
@@ -381,7 +392,7 @@ test.describe('Temporary adaptive notice', () => {
 
   test('tablet arc scales proportionally and avoids early plateau', async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 1366 });
-    await page.goto('/gallery');
+    await page.goto('/temp-adaptive');
 
     const arcProfile = await page.evaluate(() => {
       const viewport = document.querySelector('.temporary-adaptive-notice__screens-viewport');
@@ -453,7 +464,7 @@ test.describe('Temporary adaptive notice', () => {
 
   test('mobile arc has smooth outer-quarter entry without visible circle seam', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 855 });
-    await page.goto('/');
+    await page.goto('/temp-adaptive');
     await page.waitForTimeout(180);
 
     const seamProfile = await page.evaluate(() => {
@@ -539,7 +550,7 @@ test.describe('Temporary adaptive notice', () => {
 
   test('drag interaction moves the track in temporary slider', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 855 });
-    await page.goto('/');
+    await page.goto('/temp-adaptive');
 
     const viewport = page.locator('[data-temp-slider]');
     await expect(viewport).toBeVisible();

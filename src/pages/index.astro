@@ -8,6 +8,7 @@ import DesignToolsSection from '../components/DesignToolsSection.astro';
 import QuotesSection from '../components/QuotesSection.astro';
 import FinalCtaSection from '../components/FinalCtaSection.astro';
 import Button from '../components/Button.astro';
+import AdaptivePhoneArcSlider from '../components/AdaptivePhoneArcSlider.astro';
 
 const isDev = import.meta.env.DEV;
 const coinInlineStyle = [
@@ -76,6 +77,23 @@ const coinInlineStyle = [
         <div data-home-hero-cta-stage="button">
           <Button href="https://linktr.ee/vladhorovyy" target="_blank" variant="default">message me</Button>
         </div>
+      </div>
+    </section>
+
+    <section class="home-hero-mobile" aria-labelledby="home-hero-mobile-title">
+      <AdaptivePhoneArcSlider class="home-hero-mobile-screens" viewportClass="home-hero-mobile-screens-viewport" />
+
+      <div class="home-hero-mobile-text">
+        <h1 id="home-hero-mobile-title" class="home-hero-mobile-title">
+          <span class="home-hero-mobile-title--tertiary">i’m Vlad —</span>
+          <span> product designer </span>
+          <span class="home-hero-mobile-title--tertiary">crafting standout</span>
+          <span> mobile apps</span>
+        </h1>
+        <p class="home-hero-mobile-subtitle">
+          I make apps people love return to. Shaped by product vision, fresh ideas, and an enjoyable teamwork
+        </p>
+        <Button href="https://linktr.ee/vladhorovyy" target="_blank" variant="default">message me</Button>
       </div>
     </section>
 

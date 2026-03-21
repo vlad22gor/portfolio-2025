@@ -17,9 +17,11 @@
 
 <script>
   import { animate } from 'motion';
+  import { installHapticsRuntime, playLightTapHaptic } from '../lib/haptics/engine';
   import { installThemeToggleSoundRuntime, playThemeToggleSound } from '../lib/sound/engine';
 
   (() => {
+    installHapticsRuntime();
     installThemeToggleSoundRuntime();
 
     const runtimeKey = '__floatingThemeButtonRuntime';
@@ -201,6 +203,7 @@
 
       button.addEventListener('click', () => {
         toggleTheme();
+        void playLightTapHaptic();
         void playThemeToggleSound();
       });
     };

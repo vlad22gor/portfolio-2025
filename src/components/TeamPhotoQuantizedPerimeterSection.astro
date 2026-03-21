@@ -29,7 +29,7 @@ const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefi
 
 <section class={rootClassName} aria-label="Fora team photo section" data-motion-inview={resolvedInViewPreset}>
   <QuantizedPerimeter
-    class="fora-team-photo-surface"
+    class="fora-team-photo-surface fora-team-photo-surface--desktop"
     shape="rectangle"
     edgePattern="scallop"
     step={48}
@@ -41,17 +41,32 @@ const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefi
     <img class="fora-team-photo-image" src={photoSrc} alt={photoAlt} loading="lazy" decoding="async" />
   </QuantizedPerimeter>
 
-  <p class="type-description-medium fora-team-photo-caption">{caption}</p>
+  <QuantizedPerimeter
+    class="fora-team-photo-surface fora-team-photo-surface--mobile"
+    shape="rectangle"
+    edgePattern="scallop"
+    step={40}
+    bg="var(--color-bg-darkened)"
+    pad="0"
+    clipContentToShape={true}
+    label="Fora team photo"
+  >
+    <img class="fora-team-photo-image" src={photoSrc} alt={photoAlt} loading="lazy" decoding="async" />
+  </QuantizedPerimeter>
 
-  <ThemedSvgIcon
-    class="fora-team-photo-heart fora-team-photo-heart--right"
-    src={heartRightSrc}
-    aria-hidden="true"
-  />
+  <div class="fora-team-photo-caption-group">
+    <p class="type-description-medium fora-team-photo-caption">{caption}</p>
 
-  <ThemedSvgIcon
-    class="fora-team-photo-heart fora-team-photo-heart--left"
-    src={heartLeftSrc}
-    aria-hidden="true"
-  />
+    <ThemedSvgIcon
+      class="fora-team-photo-heart fora-team-photo-heart--right"
+      src={heartRightSrc}
+      aria-hidden="true"
+    />
+
+    <ThemedSvgIcon
+      class="fora-team-photo-heart fora-team-photo-heart--left"
+      src={heartLeftSrc}
+      aria-hidden="true"
+    />
+  </div>
 </section>

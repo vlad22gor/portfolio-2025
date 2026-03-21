@@ -37,31 +37,29 @@ const arrowAssetPath =
   data-motion-inview={resolvedInViewPreset}
   style={`--case-card-hover-border: ${item.cardHover.borderColor};`}
 >
-  {!isCoverRight && (
-    <div class="case-card-cover-shell" data-case-card-cover>
-      <QuantizedScallop
-        class="case-card-cover"
-        pad="0"
-        bg="var(--surface-base)"
-        clipContentToShape={false}
-        exportShapeMask
-        outlineEnabled
-        outlineMode="geometric"
-        outlinePlacement="outside"
-        outlineWidth={5}
-        outlineColor={item.cardHover.borderColor}
-        label={`${item.title} case cover`}
-      >
-        <img
-          class="case-card-cover-image"
-          src={item.cardCover.src}
-          alt={item.cardCover.alt}
-          loading="lazy"
-          decoding="async"
-        />
-      </QuantizedScallop>
-    </div>
-  )}
+  <div class="case-card-cover-shell" data-case-card-cover>
+    <QuantizedScallop
+      class="case-card-cover"
+      pad="0"
+      bg="var(--surface-base)"
+      clipContentToShape={false}
+      exportShapeMask
+      outlineEnabled
+      outlineMode="geometric"
+      outlinePlacement="outside"
+      outlineWidth={5}
+      outlineColor={item.cardHover.borderColor}
+      label={`${item.title} case cover`}
+    >
+      <img
+        class="case-card-cover-image"
+        src={item.cardCover.src}
+        alt={item.cardCover.alt}
+        loading="lazy"
+        decoding="async"
+      />
+    </QuantizedScallop>
+  </div>
 
   <div class="case-card-content" data-case-card-content>
     {visibleTags.length > 0 && (
@@ -79,32 +77,6 @@ const arrowAssetPath =
 
     <ThemedSvgIcon class="case-card-arrow" src={arrowAssetPath} aria-hidden="true" />
   </div>
-
-  {isCoverRight && (
-    <div class="case-card-cover-shell" data-case-card-cover>
-      <QuantizedScallop
-        class="case-card-cover"
-        pad="0"
-        bg="var(--surface-base)"
-        clipContentToShape={false}
-        exportShapeMask
-        outlineEnabled
-        outlineMode="geometric"
-        outlinePlacement="outside"
-        outlineWidth={5}
-        outlineColor={item.cardHover.borderColor}
-        label={`${item.title} case cover`}
-      >
-        <img
-          class="case-card-cover-image"
-          src={item.cardCover.src}
-          alt={item.cardCover.alt}
-          loading="lazy"
-          decoding="async"
-        />
-      </QuantizedScallop>
-    </div>
-  )}
 
   {item.cardHover.assets.map((asset, index) => (
     <span
