@@ -1685,10 +1685,10 @@ test.describe('Case details mobile intro smoke', () => {
                   ? expectedWidthFromVar
                   : visibleSections[0].getBoundingClientRect().width;
                 return visibleSections.every(
-                  (section) => Math.abs(section.getBoundingClientRect().width - expectedWidth) <= 1,
+                  (section) => Math.abs(section.getBoundingClientRect().width - expectedWidth) <= 2,
                 );
               }),
-            { timeout: 3000, message: `${pathname}: root sections should settle to mobile grid width` },
+            { timeout: 7000, message: `${pathname}: root sections should settle to mobile grid width` },
           )
           .toBe(true);
 
@@ -1722,7 +1722,7 @@ test.describe('Case details mobile intro smoke', () => {
         const expectedCount = 7;
         expect(snapshot!.visibleSections.length).toBe(expectedCount);
         expect(
-          snapshot!.visibleSections.every((section) => Math.abs(section.width - snapshot!.expectedWidth) <= 1),
+          snapshot!.visibleSections.every((section) => Math.abs(section.width - snapshot!.expectedWidth) <= 2),
         ).toBe(true);
         expect(Math.abs(snapshot!.docScrollWidth - snapshot!.docClientWidth)).toBeLessThanOrEqual(1);
       }

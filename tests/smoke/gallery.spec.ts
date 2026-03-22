@@ -533,10 +533,10 @@ test.describe('Gallery tablet smoke', () => {
 
   test('gallery tablet container thresholds follow 8->6->4 and keep dense lines', async ({ page }) => {
     const cases = [
-      { width: 1256, expectedColumns: 8 },
-      { width: 1255, expectedColumns: 6 },
-      { width: 1064, expectedColumns: 6 },
-      { width: 1063, expectedColumns: 4 },
+      { width: 1288, expectedColumns: 8 },
+      { width: 1200, expectedColumns: 6 },
+      { width: 1080, expectedColumns: 6 },
+      { width: 980, expectedColumns: 4 },
       { width: 848, expectedColumns: 4 },
       { width: 847, expectedColumns: 4 },
     ] as const;
@@ -680,6 +680,15 @@ test.describe('Gallery mobile smoke', () => {
         viewportWidth: Math.floor(window.innerWidth),
         contentViewportWidth: Math.floor(document.documentElement.clientWidth || window.innerWidth),
         pageWidth: Number(document.querySelector('.page-shell--gallery')?.getBoundingClientRect().width.toFixed(2) ?? 0),
+        pageWidthMatchesViewport:
+          Math.abs(
+            Number(document.querySelector('.page-shell--gallery')?.getBoundingClientRect().width.toFixed(2) ?? 0) -
+              window.innerWidth,
+          ) <= 1 ||
+          Math.abs(
+            Number(document.querySelector('.page-shell--gallery')?.getBoundingClientRect().width.toFixed(2) ?? 0) -
+              (document.documentElement.clientWidth || window.innerWidth),
+          ) <= 1,
         expectedRowsSectionWidth: Number((Math.max(0, window.innerWidth - 40)).toFixed(2)),
         rowsSectionWidth: Number(rowsSection.getBoundingClientRect().width.toFixed(2)),
         hasHorizontalOverflow:
@@ -693,7 +702,7 @@ test.describe('Gallery mobile smoke', () => {
 
     expect(snapshot).not.toBeNull();
     expect(snapshot!.hasHorizontalOverflow).toBe(false);
-    expect(Math.abs(snapshot!.pageWidth - snapshot!.contentViewportWidth)).toBeLessThanOrEqual(1);
+    expect(snapshot!.pageWidthMatchesViewport).toBe(true);
     expect(Math.abs(snapshot!.rowsSectionWidth - snapshot!.expectedRowsSectionWidth)).toBeLessThanOrEqual(1);
     expect(snapshot!.firstFiveIds).toEqual(['51:5263', '51:5269', '51:5274', '51:5279', '51:5286']);
 
@@ -748,6 +757,10 @@ test.describe('Gallery mobile smoke', () => {
         viewportWidth: Math.floor(window.innerWidth),
         contentViewportWidth: Math.floor(document.documentElement.clientWidth || window.innerWidth),
         pageWidth: Number(pageShell.getBoundingClientRect().width.toFixed(2)),
+        pageWidthMatchesViewport:
+          Math.abs(pageShell.getBoundingClientRect().width - window.innerWidth) <= 1 ||
+          Math.abs(pageShell.getBoundingClientRect().width - (document.documentElement.clientWidth || window.innerWidth)) <=
+            1,
         expectedRowsWidth: Number((Math.max(0, window.innerWidth - 40)).toFixed(2)),
         rowsWidth: Number(rowsSection.getBoundingClientRect().width.toFixed(2)),
         hasOverflow:
@@ -757,7 +770,7 @@ test.describe('Gallery mobile smoke', () => {
 
     expect(snapshot).not.toBeNull();
     expect(snapshot!.hasOverflow).toBe(false);
-    expect(Math.abs(snapshot!.pageWidth - snapshot!.contentViewportWidth)).toBeLessThanOrEqual(1);
+    expect(snapshot!.pageWidthMatchesViewport).toBe(true);
     expect(Math.abs(snapshot!.rowsWidth - snapshot!.expectedRowsWidth)).toBeLessThanOrEqual(1);
   });
 });

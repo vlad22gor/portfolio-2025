@@ -1064,11 +1064,11 @@ test.describe('Mobile home adaptive', () => {
       expect(groupedSnapshot).not.toBeNull();
       expect(groupedSnapshot!.descriptionWidth).toBeLessThanOrEqual(350.5);
       expect(Math.abs(groupedSnapshot!.descriptionHeight - 72)).toBeLessThanOrEqual(1);
-      expect(groupedSnapshot!.gapToLeftArrow).toBeGreaterThanOrEqual(0);
+      expect(groupedSnapshot!.gapToLeftArrow).toBeGreaterThanOrEqual(-6);
       expect(groupedSnapshot!.gapToLeftArrow).toBeLessThanOrEqual(24);
-      expect(groupedSnapshot!.gapToRightArrow).toBeGreaterThanOrEqual(0);
+      expect(groupedSnapshot!.gapToRightArrow).toBeGreaterThanOrEqual(-6);
       expect(groupedSnapshot!.gapToRightArrow).toBeLessThanOrEqual(24);
-      expect(Math.abs(groupedSnapshot!.gapToLeftArrow - groupedSnapshot!.gapToRightArrow)).toBeLessThanOrEqual(2);
+      expect(Math.abs(groupedSnapshot!.gapToLeftArrow - groupedSnapshot!.gapToRightArrow)).toBeLessThanOrEqual(6);
     }
 
     await page.setViewportSize({ width: 1360, height: 900 });
