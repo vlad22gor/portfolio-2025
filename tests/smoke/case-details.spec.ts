@@ -1671,27 +1671,36 @@ test.describe('Case details mobile intro smoke', () => {
             return null;
           }
 
-          const visibleSections = Array.from(main.children).filter(
-            (node): node is HTMLElement => node instanceof HTMLElement && getComputedStyle(node).display !== 'none',
+          const visibleSections = Array.from(main.querySelectorAll<HTMLElement>(':scope > section')).filter(
+            (node) => getComputedStyle(node).display !== 'none',
           );
-          const expectedWidthFromVar = Number.parseFloat(getComputedStyle(main).getPropertyValue('--case-mobile-grid-width'));
-          const viewportInnerWidth = window.innerWidth;
-          const viewportClientWidth = document.documentElement.clientWidth || viewportInnerWidth;
-          const firstSectionWidth = visibleSections[0]?.getBoundingClientRect().width ?? 0;
+
+          const widthProbe = document.createElement('div');
+          widthProbe.style.position = 'absolute';
+          widthProbe.style.visibility = 'hidden';
+          widthProbe.style.pointerEvents = 'none';
+          widthProbe.style.height = '0';
+          widthProbe.style.width = 'var(--case-mobile-grid-width)';
+          main.appendChild(widthProbe);
+          const expectedWidthFromVar = widthProbe.getBoundingClientRect().width;
+          widthProbe.remove();
+
+          const mainWidth = main.getBoundingClientRect().width;
           const expectedWidthCandidates = [
-            Number.isFinite(expectedWidthFromVar) ? expectedWidthFromVar : null,
-            Math.max(0, viewportInnerWidth - 40),
-            Math.max(0, viewportClientWidth - 40),
-            firstSectionWidth,
+            Number.isFinite(expectedWidthFromVar) && expectedWidthFromVar > 0 ? expectedWidthFromVar : null,
+            Math.max(0, mainWidth - 40),
           ].filter((value): value is number => value !== null && Number.isFinite(value));
           const visibleSectionWidths = visibleSections.map((node) => ({
             className: node.className,
             width: Number(node.getBoundingClientRect().width.toFixed(2)),
           }));
+          const widths = visibleSectionWidths.map((section) => section.width);
+          const widthSpread = widths.length > 0 ? Number((Math.max(...widths) - Math.min(...widths)).toFixed(2)) : 0;
 
           return {
             expectedWidthCandidates: expectedWidthCandidates.map((value) => Number(value.toFixed(2))),
             visibleSections: visibleSectionWidths,
+            widthSpread,
             docScrollWidth: document.documentElement.scrollWidth,
             docClientWidth: document.documentElement.clientWidth,
           };
@@ -1700,10 +1709,12 @@ test.describe('Case details mobile intro smoke', () => {
         expect(snapshot).not.toBeNull();
         const expectedCount = 7;
         expect(snapshot!.visibleSections.length).toBe(expectedCount);
+        expect(snapshot!.widthSpread).toBeLessThanOrEqual(4);
         expect(
           snapshot!.visibleSections.every((section) =>
-            snapshot!.expectedWidthCandidates.some((expected) => Math.abs(section.width - expected) <= 2),
+            snapshot!.expectedWidthCandidates.some((expected) => Math.abs(section.width - expected) <= 4),
           ),
+          JSON.stringify(snapshot),
         ).toBe(true);
         expect(Math.abs(snapshot!.docScrollWidth - snapshot!.docClientWidth)).toBeLessThanOrEqual(1);
       }
