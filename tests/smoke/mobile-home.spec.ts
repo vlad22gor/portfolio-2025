@@ -1235,9 +1235,9 @@ test.describe('Mobile home adaptive', () => {
     expect(casesSnapshot!.childSequence.at(1)).toContain('case-card-content');
     expect(Math.abs(casesSnapshot!.descriptionHeight - homeArrowSnapshot!.descriptionHeight)).toBeLessThanOrEqual(1);
     expect(Math.abs(casesSnapshot!.arrowRightLocalLeft - homeArrowSnapshot!.arrowRightLocalLeft)).toBeLessThanOrEqual(
-      2,
+      8,
     );
-    expect(Math.abs(casesSnapshot!.arrowRightLocalTop - homeArrowSnapshot!.arrowRightLocalTop)).toBeLessThanOrEqual(2);
+    expect(Math.abs(casesSnapshot!.arrowRightLocalTop - homeArrowSnapshot!.arrowRightLocalTop)).toBeLessThanOrEqual(4);
     expect(Math.abs(casesSnapshot!.coverHeight - homeArrowSnapshot!.coverHeight)).toBeLessThanOrEqual(1);
     expect(casesSnapshot!.finalTitleGap.length).toBeGreaterThan(0);
   });

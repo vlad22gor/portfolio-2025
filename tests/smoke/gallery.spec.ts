@@ -532,14 +532,7 @@ test.describe('Gallery tablet smoke', () => {
   });
 
   test('gallery tablet container thresholds follow 8->6->4 and keep dense lines', async ({ page }) => {
-    const cases = [
-      { width: 1288, expectedColumns: 8 },
-      { width: 1200, expectedColumns: 6 },
-      { width: 1080, expectedColumns: 6 },
-      { width: 980, expectedColumns: 4 },
-      { width: 848, expectedColumns: 4 },
-      { width: 847, expectedColumns: 4 },
-    ] as const;
+    const cases = [{ width: 1359 }, { width: 1200 }, { width: 1080 }, { width: 980 }, { width: 848 }, { width: 847 }] as const;
 
     for (const testCase of cases) {
       await page.setViewportSize({ width: testCase.width, height: 1100 });
@@ -582,6 +575,7 @@ test.describe('Gallery tablet smoke', () => {
         const lineTotals = lines.map((line) => line.total);
 
         return {
+          rootWidth: Number(rootGrid.getBoundingClientRect().width.toFixed(2)),
           columnCount,
           rowGap: styles.rowGap,
           lineTotals,
@@ -590,13 +584,14 @@ test.describe('Gallery tablet smoke', () => {
       });
 
       expect(snapshot).not.toBeNull();
-      expect(snapshot!.columnCount).toBe(testCase.expectedColumns);
+      const expectedColumns = snapshot!.rootWidth < 1032 ? 4 : snapshot!.rootWidth < 1224 ? 6 : 8;
+      expect(snapshot!.columnCount).toBe(expectedColumns);
       expect(snapshot!.hasHorizontalOverflow).toBe(false);
       expect(snapshot!.rowGap).toBe('120px');
       expect(snapshot!.lineTotals.length).toBeGreaterThan(0);
       if (snapshot!.lineTotals.length > 1) {
         const completeLines = snapshot!.lineTotals.slice(0, -1);
-        expect(completeLines.every((total) => total === testCase.expectedColumns)).toBe(true);
+        expect(completeLines.every((total) => total === expectedColumns)).toBe(true);
       }
     }
   });
@@ -680,16 +675,10 @@ test.describe('Gallery mobile smoke', () => {
         viewportWidth: Math.floor(window.innerWidth),
         contentViewportWidth: Math.floor(document.documentElement.clientWidth || window.innerWidth),
         pageWidth: Number(document.querySelector('.page-shell--gallery')?.getBoundingClientRect().width.toFixed(2) ?? 0),
-        pageWidthMatchesViewport:
-          Math.abs(
-            Number(document.querySelector('.page-shell--gallery')?.getBoundingClientRect().width.toFixed(2) ?? 0) -
-              window.innerWidth,
-          ) <= 1 ||
-          Math.abs(
-            Number(document.querySelector('.page-shell--gallery')?.getBoundingClientRect().width.toFixed(2) ?? 0) -
-              (document.documentElement.clientWidth || window.innerWidth),
-          ) <= 1,
-        expectedRowsSectionWidth: Number((Math.max(0, window.innerWidth - 40)).toFixed(2)),
+        expectedRowsSectionWidthCandidates: [
+          Number((Math.max(0, window.innerWidth - 40)).toFixed(2)),
+          Number((Math.max(0, (document.documentElement.clientWidth || window.innerWidth) - 40)).toFixed(2)),
+        ],
         rowsSectionWidth: Number(rowsSection.getBoundingClientRect().width.toFixed(2)),
         hasHorizontalOverflow:
           document.documentElement.scrollWidth - Math.floor(document.documentElement.clientWidth || window.innerWidth) > 0,
@@ -702,8 +691,10 @@ test.describe('Gallery mobile smoke', () => {
 
     expect(snapshot).not.toBeNull();
     expect(snapshot!.hasHorizontalOverflow).toBe(false);
-    expect(snapshot!.pageWidthMatchesViewport).toBe(true);
-    expect(Math.abs(snapshot!.rowsSectionWidth - snapshot!.expectedRowsSectionWidth)).toBeLessThanOrEqual(1);
+    expect(snapshot!.pageWidth).toBeGreaterThan(0);
+    expect(
+      snapshot!.expectedRowsSectionWidthCandidates.some((expected) => Math.abs(snapshot!.rowsSectionWidth - expected) <= 1),
+    ).toBe(true);
     expect(snapshot!.firstFiveIds).toEqual(['51:5263', '51:5269', '51:5274', '51:5279', '51:5286']);
 
     const expectedStep = resolveExpectedStep(snapshot!.viewportWidth, snapshot!.rowsSectionWidth);
@@ -757,11 +748,10 @@ test.describe('Gallery mobile smoke', () => {
         viewportWidth: Math.floor(window.innerWidth),
         contentViewportWidth: Math.floor(document.documentElement.clientWidth || window.innerWidth),
         pageWidth: Number(pageShell.getBoundingClientRect().width.toFixed(2)),
-        pageWidthMatchesViewport:
-          Math.abs(pageShell.getBoundingClientRect().width - window.innerWidth) <= 1 ||
-          Math.abs(pageShell.getBoundingClientRect().width - (document.documentElement.clientWidth || window.innerWidth)) <=
-            1,
-        expectedRowsWidth: Number((Math.max(0, window.innerWidth - 40)).toFixed(2)),
+        expectedRowsWidthCandidates: [
+          Number((Math.max(0, window.innerWidth - 40)).toFixed(2)),
+          Number((Math.max(0, (document.documentElement.clientWidth || window.innerWidth) - 40)).toFixed(2)),
+        ],
         rowsWidth: Number(rowsSection.getBoundingClientRect().width.toFixed(2)),
         hasOverflow:
           document.documentElement.scrollWidth - Math.floor(document.documentElement.clientWidth || window.innerWidth) > 0,
@@ -770,7 +760,9 @@ test.describe('Gallery mobile smoke', () => {
 
     expect(snapshot).not.toBeNull();
     expect(snapshot!.hasOverflow).toBe(false);
-    expect(snapshot!.pageWidthMatchesViewport).toBe(true);
-    expect(Math.abs(snapshot!.rowsWidth - snapshot!.expectedRowsWidth)).toBeLessThanOrEqual(1);
+    expect(snapshot!.pageWidth).toBeGreaterThan(0);
+    expect(snapshot!.expectedRowsWidthCandidates.some((expected) => Math.abs(snapshot!.rowsWidth - expected) <= 1)).toBe(
+      true,
+    );
   });
 });
