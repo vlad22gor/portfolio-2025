@@ -777,34 +777,6 @@ test.describe('Mobile home adaptive', () => {
       expect(quoteSnapshot!.hasHorizontalOverflow).toBe(false);
     }
 
-    for (const width of [1024, 1280]) {
-      await page.setViewportSize({ width, height: 900 });
-      await page.goto('/');
-
-      const shellSnapshot = await page.evaluate(() => {
-        const desktopShell = document.querySelector('.site-desktop-shell');
-        const temporaryShell = document.querySelector('.temporary-adaptive-shell');
-        const quotesSection = document.querySelector('.quotes-section');
-
-        const quotesVisible =
-          quotesSection instanceof HTMLElement &&
-          getComputedStyle(quotesSection).display !== 'none' &&
-          quotesSection.getBoundingClientRect().height > 0;
-
-        return {
-          quotesVisible,
-          desktopShellDisplay:
-            desktopShell instanceof HTMLElement ? getComputedStyle(desktopShell).display : null,
-          temporaryShellDisplay:
-            temporaryShell instanceof HTMLElement ? getComputedStyle(temporaryShell).display : null,
-        };
-      });
-
-      expect(shellSnapshot).not.toBeNull();
-      expect(shellSnapshot!.quotesVisible).toBe(false);
-      expect(shellSnapshot!.desktopShellDisplay).toBe('none');
-      expect(shellSnapshot!.temporaryShellDisplay).toBe('block');
-    }
   });
 
   test('final cta mobile morph matches figma initial/final states for inView', async ({ page }) => {
@@ -1225,6 +1197,7 @@ test.describe('Mobile home adaptive', () => {
       { width: 847, expectMobileProfile: true },
       { width: 848, expectMobileProfile: false },
       { width: 1024, expectMobileProfile: false },
+      { width: 1280, expectMobileProfile: false },
       { width: 1359, expectMobileProfile: false },
       { width: 1360, expectMobileProfile: false },
     ] as const;
@@ -1252,6 +1225,7 @@ test.describe('Mobile home adaptive', () => {
       { width: 847, expectMobileProfile: true },
       { width: 848, expectMobileProfile: false },
       { width: 1024, expectMobileProfile: false },
+      { width: 1280, expectMobileProfile: false },
       { width: 1359, expectMobileProfile: false },
       { width: 1360, expectMobileProfile: false },
     ] as const;
