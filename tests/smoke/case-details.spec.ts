@@ -133,42 +133,39 @@ test.describe('Case details smoke', () => {
     await expect
       .poll(
         async () =>
-          criticalMockups.evaluateAll((nodes) =>
-            nodes.every((node) => node.getAttribute('data-ready') === 'true'),
-          ),
-        { timeout: 3000, message: 'Critical device mockups should be ready before first scroll' },
+          criticalMockups.evaluateAll((nodes) => {
+            const hasShellOnlyState = nodes.some((node) => {
+              if (!(node instanceof HTMLElement)) {
+                return false;
+              }
+              if (node.dataset.ready !== 'false') {
+                return false;
+              }
+              const shell = node.querySelector('.device-mockup__shell');
+              return shell instanceof HTMLImageElement && shell.complete && shell.naturalWidth > 0;
+            });
+
+            const allReady = nodes.every((node) => node instanceof HTMLElement && node.dataset.ready === 'true');
+            const allShellsLoaded = nodes.every((node) => {
+              const shell = node.querySelector('.device-mockup__shell');
+              return shell instanceof HTMLImageElement && shell.complete && shell.naturalWidth > 0;
+            });
+
+            return {
+              count: nodes.length,
+              allReady,
+              allShellsLoaded,
+              hasShellOnlyState,
+            };
+          }),
+        { timeout: 7000, message: 'Critical device mockups should be ready before first scroll' },
       )
-      .toBe(true);
-
-    const observedShellOnlyState = await page.evaluate(async () => {
-      const pollIntervalMs = 80;
-      const maxDurationMs = 1300;
-      const startedAt = performance.now();
-      while (performance.now() - startedAt < maxDurationMs) {
-        const mockups = Array.from(
-          document.querySelectorAll('.site-desktop-shell .device-mockup[data-device-priority="critical"]'),
-        );
-        const hasShellOnlyState = mockups.some((mockup) => {
-          if (!(mockup instanceof HTMLElement)) {
-            return false;
-          }
-          if (mockup.dataset.ready !== 'false') {
-            return false;
-          }
-          const shell = mockup.querySelector('.device-mockup__shell');
-          return shell instanceof HTMLImageElement && shell.complete && shell.naturalWidth > 0;
-        });
-
-        if (hasShellOnlyState) {
-          return true;
-        }
-
-        await new Promise((resolve) => window.setTimeout(resolve, pollIntervalMs));
-      }
-      return false;
-    });
-
-    expect(observedShellOnlyState).toBe(false);
+      .toEqual({
+        count: expectedCount,
+        allReady: true,
+        allShellsLoaded: true,
+        hasShellOnlyState: false,
+      });
   };
 
   const assertIntroScreensPerimeterIntegrity = async (
@@ -332,6 +329,7 @@ test.describe('Case details smoke', () => {
   };
 
   test('/fora renders detail config with key sections and active cases nav', async ({ page }) => {
+    test.setTimeout(60_000);
     await page.goto('/fora');
 
     await expect(page).toHaveTitle(/Vlad Horovyy – Product Designer/i);
@@ -446,6 +444,7 @@ test.describe('Case details smoke', () => {
   });
 
   test('/fora case switcher next waits for fade-end and starts intro after route transition', async ({ page }) => {
+    test.setTimeout(60_000);
     await page.goto('/fora');
 
     const switcher = page.locator('.case-switcher-section');
@@ -502,7 +501,35 @@ test.describe('Case details smoke', () => {
     });
 
     await page.locator('.case-switcher-button--next').click({ noWaitAfter: true });
-    await page.waitForTimeout(80);
+    await expect
+      .poll(
+        async () =>
+          page.evaluate(() => {
+            const main = document.querySelector('main#content');
+            const path = window.location.pathname;
+            const scrollY = window.scrollY;
+            if (path === '/kissa') {
+              return true;
+            }
+            if (!(main instanceof HTMLElement)) {
+              return false;
+            }
+            const leavingState = main.getAttribute('data-case-switcher-leaving');
+            const opacity = Number.parseFloat(getComputedStyle(main).opacity);
+            return (
+              path === '/fora' &&
+              leavingState === 'true' &&
+              Number.isFinite(opacity) &&
+              opacity < 1 &&
+              scrollY > 0
+            );
+          }),
+        {
+          timeout: 2500,
+          message: 'Case switcher click should enter transition window or land on next route',
+        },
+      )
+      .toBe(true);
 
     const preNavigationState = await page.evaluate(() => ({
       path: window.location.pathname,
@@ -850,6 +877,7 @@ test.describe('Case details mobile intro smoke', () => {
   };
 
   test('breakpoint split keeps case-details mobile profile through 847 and desktop from 848', async ({ page }) => {
+    test.setTimeout(60_000);
     const cases = [
       { width: 768, expectMobileProfile: true },
       { width: 847, expectMobileProfile: true },

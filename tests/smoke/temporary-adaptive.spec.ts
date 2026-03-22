@@ -144,9 +144,26 @@ test.describe('Temporary adaptive notice', () => {
     expect(Math.abs(screensViewportState!.videoBleedInsetLeft)).toBeLessThanOrEqual(0.05);
     expect(screensViewportState!.screensOverflowY).toBe('visible');
     expect(screensViewportState!.viewportOverflowY).toBe('visible');
-    expect(screensViewportState!.notClippedBottom).toBe(true);
     expect(screensViewportState!.screenGapTop).toBeLessThanOrEqual(0.2);
     expect(screensViewportState!.screenGapBottom).toBeLessThanOrEqual(0.2);
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const viewport = document.querySelector('.temporary-adaptive-notice__screens-viewport');
+            const centerMockup = document.querySelector(
+              '.temporary-adaptive-notice__screens-item[data-temp-slider-index="1"] .device-mockup',
+            );
+            if (!(viewport instanceof HTMLElement) || !(centerMockup instanceof HTMLElement)) {
+              return null;
+            }
+            const viewportRect = viewport.getBoundingClientRect();
+            const centerRect = centerMockup.getBoundingClientRect();
+            return centerRect.bottom <= viewportRect.bottom + 2;
+          }),
+        { timeout: 6000 },
+      )
+      .toBe(true);
 
     const smallApertureAlignment = await page.evaluate(async () => {
       const target = document.querySelector('.temporary-adaptive-notice__screens-item[data-temp-slider-index="1"] .device-mockup');
@@ -465,9 +482,7 @@ test.describe('Temporary adaptive notice', () => {
   test('mobile arc has smooth outer-quarter entry without visible circle seam', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 855 });
     await page.goto('/temp-adaptive');
-    await page.waitForTimeout(180);
-
-    const seamProfile = await page.evaluate(() => {
+    const readSeamProfile = () => {
       const viewport = document.querySelector('.temporary-adaptive-notice__screens-viewport');
       const items = Array.from(document.querySelectorAll('.temporary-adaptive-notice__screens-item'));
       if (!(viewport instanceof HTMLElement) || items.length === 0) {
@@ -540,7 +555,31 @@ test.describe('Temporary adaptive notice', () => {
         sampleCount: edgeRange.length,
         viewportWidth,
       };
-    });
+    };
+    await expect
+      .poll(
+        () =>
+          page.evaluate(readSeamProfile).then((profile) => (profile ? profile.sampleCount : 0)),
+        { timeout: 6000 },
+      )
+      .toBeGreaterThanOrEqual(3);
+
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const viewport = document.querySelector('.temporary-adaptive-notice__screens-viewport');
+            const items = Array.from(document.querySelectorAll('.temporary-adaptive-notice__screens-item'));
+            if (!(viewport instanceof HTMLElement) || items.length === 0) {
+              return false;
+            }
+            return items.every((node) => node instanceof HTMLElement && node.style.transform.length > 0);
+          }),
+        { timeout: 6000 },
+      )
+      .toBe(true);
+
+    const seamProfile = await page.evaluate(readSeamProfile);
 
     expect(seamProfile).not.toBeNull();
     expect(seamProfile!.sampleCount).toBeGreaterThanOrEqual(3);

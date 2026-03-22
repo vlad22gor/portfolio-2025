@@ -2,6 +2,28 @@ import { expect, test } from '@playwright/test';
 
 const floatingThemeButtonSelector = '.floating-theme-button[data-floating-theme-button]';
 
+const waitForGalleryCriticalReady = async (
+  page: import('@playwright/test').Page,
+  timeout: number = 8_000,
+) => {
+  await expect(page.locator('.gallery-card')).toHaveCount(21, { timeout });
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const criticalMockups = Array.from(
+            document.querySelectorAll('.gallery-row:nth-child(-n+2) .device-mockup[data-device-priority="critical"]'),
+          );
+          return {
+            count: criticalMockups.length,
+            allReady: criticalMockups.every((mockup) => mockup.getAttribute('data-ready') === 'true'),
+          };
+        }),
+      { timeout, message: 'Gallery critical mockups should be fully ready' },
+    )
+    .toEqual({ count: 5, allReady: true });
+};
+
 test.describe('Gallery smoke', () => {
   test.use({ viewport: { width: 1440, height: 1100 } });
 
@@ -9,6 +31,7 @@ test.describe('Gallery smoke', () => {
     await page.goto('/gallery');
 
     await expect(page).toHaveTitle(/Vlad Horovyy – Product Designer/i);
+    await waitForGalleryCriticalReady(page);
 
     const rows = page.locator('.gallery-row');
     await expect(rows).toHaveCount(6);
@@ -356,6 +379,7 @@ test.describe('Gallery smoke', () => {
 
   test('/gallery preloads critical media and keeps critical mockups ready on repeat entry', async ({ page }) => {
     await page.goto('/gallery');
+    await waitForGalleryCriticalReady(page);
 
     const preloadSummary = await page.evaluate(() => {
       const links = Array.from(document.querySelectorAll('head link[rel="preload"]'));
@@ -386,27 +410,14 @@ test.describe('Gallery smoke', () => {
     expect(preloadSummary.hasCriticalVideoR2).toBe(true);
     expect(preloadSummary.allImagePreloadsAreHigh).toBe(true);
 
-    await page.waitForTimeout(1200);
     await page.click('.site-desktop-shell a[data-nav-id="home"]');
     await page.waitForURL('**/');
-    await page.waitForTimeout(250);
+    await expect
+      .poll(() => page.evaluate(() => document.body.getAttribute('data-route-home')), { timeout: 3000 })
+      .toBe('true');
     await page.click('.site-desktop-shell a[data-nav-id="gallery"]');
     await page.waitForURL('**/gallery');
-
-    await page.waitForTimeout(200);
-    const criticalReadyState = await page.evaluate(() => {
-      const criticalMockups = Array.from(
-        document.querySelectorAll('.gallery-row:nth-child(-n+2) .device-mockup[data-device-priority="critical"]'),
-      );
-
-      return {
-        count: criticalMockups.length,
-        allReady: criticalMockups.every((mockup) => mockup.getAttribute('data-ready') === 'true'),
-      };
-    });
-
-    expect(criticalReadyState.count).toBe(5);
-    expect(criticalReadyState.allReady).toBe(true);
+    await waitForGalleryCriticalReady(page);
   });
 
   test('gallery content transition is isolated from shared page-content transition', async ({ page }) => {
@@ -451,7 +462,17 @@ test.describe('Gallery smoke', () => {
     });
 
     await page.click('a[data-nav-id="home"]');
-    await page.waitForTimeout(1100);
+    await page.waitForURL('**/');
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const all = (window.__routeTransitionAnimations || []).flat();
+            return Array.from(new Set(all.map((entry) => `${entry.name}|${entry.pseudoElement}`))).sort();
+          }),
+        { timeout: 3000 },
+      )
+      .toContain('contentFadeIn|::view-transition-new(page-content)');
 
     const uniqueAnimations = await page.evaluate(() => {
       const all = (window.__routeTransitionAnimations || []).flat();
@@ -710,6 +731,7 @@ test.describe('Gallery mobile smoke', () => {
   test('767 keeps real gallery shell and grid-width contract', async ({ page }) => {
     await page.setViewportSize({ width: 767, height: 1024 });
     await page.goto('/gallery');
+    await waitForGalleryCriticalReady(page);
 
     await expect(page.locator('.temporary-adaptive-notice')).toBeHidden();
     await expect(page.locator('.site-desktop-shell')).toBeVisible();

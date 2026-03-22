@@ -1,6 +1,23 @@
 import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
+const waitForLayoutReadiness = async (page: import('@playwright/test').Page) => {
+  await page.evaluate(async () => {
+    if (document.fonts && 'ready' in document.fonts) {
+      try {
+        await document.fonts.ready;
+      } catch {
+        // Ignore if fonts API fails in restricted environment.
+      }
+    }
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => resolve());
+      });
+    });
+  });
+};
+
 test.describe('Mobile home adaptive', () => {
   test('footer keeps desktop structure on mobile with gap 12 and preserves desktop gap 148', async ({ page }) => {
     await page.setViewportSize({ width: 767, height: 1024 });
@@ -372,6 +389,7 @@ test.describe('Mobile home adaptive', () => {
     for (const width of [360, 390, 430, 440, 767]) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto('/');
+      await waitForLayoutReadiness(page);
 
       const aboutSnapshot = await page.evaluate(() => {
         const hero = document.querySelector('.about-me-hero');
@@ -944,6 +962,7 @@ test.describe('Mobile home adaptive', () => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');
+    await waitForLayoutReadiness(page);
 
     const mobileCasesSnapshot = await page.evaluate(() => {
       const rightCoverCard = document.querySelector(".cases-cards-list .case-card[href='/kissa']");
@@ -994,6 +1013,7 @@ test.describe('Mobile home adaptive', () => {
     for (const width of [360, 390, 430, 520, 767]) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto('/');
+      await waitForLayoutReadiness(page);
 
       const groupedSnapshot = await page.evaluate(() => {
         const container = document.querySelector('.cases-cards-description');
@@ -1032,6 +1052,7 @@ test.describe('Mobile home adaptive', () => {
 
     await page.setViewportSize({ width: 1360, height: 900 });
     await page.goto('/');
+    await waitForLayoutReadiness(page);
 
     const desktopArrowSnapshot = await page.evaluate(() => {
       const container = document.querySelector('.cases-cards-description');
@@ -1116,6 +1137,7 @@ test.describe('Mobile home adaptive', () => {
   test('/cases mobile renders real sections and hides temporary shell', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');
+    await waitForLayoutReadiness(page);
     const homeArrowSnapshot = await page.evaluate(() => {
       const description = document.querySelector('.cases-cards-description');
       const rightArrow = document.querySelector('.cases-cards-description-arrow--right');
@@ -1135,6 +1157,7 @@ test.describe('Mobile home adaptive', () => {
     expect(homeArrowSnapshot).not.toBeNull();
 
     await page.goto('/cases');
+    await waitForLayoutReadiness(page);
 
     await expect(page.locator('.temporary-adaptive-shell')).toBeHidden();
     await expect(page.locator('.site-desktop-shell')).toBeVisible();

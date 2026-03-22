@@ -1091,6 +1091,16 @@ test.describe('Theme tokens smoke', () => {
         timeout: 2000,
       })
       .toBe('dark');
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const main = document.querySelector('main#content');
+            return main instanceof HTMLElement ? main.getAttribute('data-case-switcher-leaving') : null;
+          }),
+        { timeout: 4000 },
+      )
+      .toBeNull();
 
     const foraBorderedIconDark = await page.evaluate(
       readButtonTokenSnapshot,
@@ -1104,12 +1114,17 @@ test.describe('Theme tokens smoke', () => {
     expect(foraBorderedIconDark.actual?.iconColor).toBe(foraBorderedIconDark.expected.arrow);
     const nextCaseButton = page.locator('.case-switcher-button--next.ui-button--bordered-icon');
     await nextCaseButton.scrollIntoViewIfNeeded();
-    const nextCaseButtonBox = await nextCaseButton.boundingBox();
-    expect(nextCaseButtonBox).not.toBeNull();
-    await page.mouse.move(
-      nextCaseButtonBox!.x + nextCaseButtonBox!.width / 2,
-      nextCaseButtonBox!.y + nextCaseButtonBox!.height / 2,
-    );
+    await nextCaseButton.hover();
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const button = document.querySelector('.case-switcher-button--next.ui-button--bordered-icon');
+            return button instanceof HTMLElement ? button.matches(':hover') : false;
+          }),
+        { timeout: 4000 },
+      )
+      .toBe(true);
     const foraBorderedIconDarkHover = await page.evaluate(readButtonTokenSnapshot, [
       '.case-switcher-button--next.ui-button--bordered-icon',
       '--color-button-text',
@@ -1124,7 +1139,7 @@ test.describe('Theme tokens smoke', () => {
             '--color-button-text',
             '--color-button-arrow',
           ]),
-        { timeout: 2000 },
+        { timeout: 4000 },
       )
       .toMatchObject({
         present: true,

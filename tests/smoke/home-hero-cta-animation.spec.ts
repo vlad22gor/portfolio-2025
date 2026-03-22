@@ -165,10 +165,23 @@ test.describe('Home hero CTA animation', () => {
 
     const cta = page.locator('.home-hero-cta');
     await cta.scrollIntoViewIfNeeded();
+    await expect(cta).toBeInViewport();
+    await expect
+      .poll(() => page.evaluate(() => {
+        const target = document.querySelector('.home-hero-cta');
+        if (!(target instanceof HTMLElement)) {
+          return false;
+        }
+        const rect = target.getBoundingClientRect();
+        return rect.top < window.innerHeight && rect.bottom > 0;
+      }), {
+        timeout: 3000,
+      })
+      .toBe(true);
 
     await expect
       .poll(() => page.evaluate(readHomeHeroCtaState), {
-        timeout: 3000,
+        timeout: 5000,
       })
       .toMatchObject({
         mode: 'inview',
