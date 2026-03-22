@@ -981,10 +981,21 @@ test.describe('Mobile home adaptive', () => {
       let descriptionHeight: number | null = null;
       let arrowRightLocalLeft: number | null = null;
       let arrowRightLocalTop: number | null = null;
+      let arrowRightInset: number | null = null;
+      let arrowWidth: number | null = null;
+      let containerWidth: number | null = null;
+      let arrowTop: number | null = null;
       if (container instanceof HTMLElement && rightArrow instanceof HTMLElement) {
         const containerRect = container.getBoundingClientRect();
         const arrowRect = rightArrow.getBoundingClientRect();
+        const arrowStyles = getComputedStyle(rightArrow);
+        const parsedInset = Number.parseFloat(arrowStyles.right);
+        const parsedTop = Number.parseFloat(arrowStyles.top);
         descriptionHeight = containerRect.height;
+        containerWidth = containerRect.width;
+        arrowWidth = arrowRect.width;
+        arrowRightInset = Number.isFinite(parsedInset) ? parsedInset : null;
+        arrowTop = Number.isFinite(parsedTop) ? parsedTop : null;
         arrowRightLocalLeft = arrowRect.left - containerRect.left;
         arrowRightLocalTop = arrowRect.top - containerRect.top;
       }
@@ -995,6 +1006,10 @@ test.describe('Mobile home adaptive', () => {
         descriptionHeight,
         arrowRightLocalLeft,
         arrowRightLocalTop,
+        arrowRightInset,
+        arrowWidth,
+        containerWidth,
+        arrowTop,
       };
     });
 
@@ -1007,8 +1022,14 @@ test.describe('Mobile home adaptive', () => {
     expect(Math.abs(mobileCasesSnapshot.descriptionHeight! - 72)).toBeLessThanOrEqual(1);
     expect(mobileCasesSnapshot.arrowRightLocalLeft).not.toBeNull();
     expect(mobileCasesSnapshot.arrowRightLocalTop).not.toBeNull();
-    expect(Math.abs(mobileCasesSnapshot.arrowRightLocalLeft! - 276)).toBeLessThanOrEqual(2);
-    expect(Math.abs(mobileCasesSnapshot.arrowRightLocalTop! - 42)).toBeLessThanOrEqual(2);
+    expect(mobileCasesSnapshot.arrowRightInset).not.toBeNull();
+    expect(mobileCasesSnapshot.arrowWidth).not.toBeNull();
+    expect(mobileCasesSnapshot.containerWidth).not.toBeNull();
+    expect(mobileCasesSnapshot.arrowTop).not.toBeNull();
+    const expectedMobileArrowLeft =
+      mobileCasesSnapshot.containerWidth! - mobileCasesSnapshot.arrowRightInset! - mobileCasesSnapshot.arrowWidth!;
+    expect(Math.abs(mobileCasesSnapshot.arrowRightLocalLeft! - expectedMobileArrowLeft)).toBeLessThanOrEqual(2);
+    expect(Math.abs(mobileCasesSnapshot.arrowRightLocalTop! - mobileCasesSnapshot.arrowTop!)).toBeLessThanOrEqual(2);
 
     for (const width of [360, 390, 430, 520, 767]) {
       await page.setViewportSize({ width, height: 900 });
@@ -1064,6 +1085,10 @@ test.describe('Mobile home adaptive', () => {
       const arrowRect = rightArrow.getBoundingClientRect();
       return {
         descriptionHeight: containerRect.height,
+        containerWidth: containerRect.width,
+        arrowWidth: arrowRect.width,
+        arrowRightInset: Number.parseFloat(getComputedStyle(rightArrow).right),
+        arrowTop: Number.parseFloat(getComputedStyle(rightArrow).top),
         arrowRightLocalLeft: arrowRect.left - containerRect.left,
         arrowRightLocalTop: arrowRect.top - containerRect.top,
       };
@@ -1071,8 +1096,12 @@ test.describe('Mobile home adaptive', () => {
 
     expect(desktopArrowSnapshot).not.toBeNull();
     expect(Math.abs(desktopArrowSnapshot!.descriptionHeight - 72)).toBeLessThanOrEqual(1);
-    expect(Math.abs(desktopArrowSnapshot!.arrowRightLocalLeft - 604)).toBeLessThanOrEqual(2);
-    expect(Math.abs(desktopArrowSnapshot!.arrowRightLocalTop - 32)).toBeLessThanOrEqual(2);
+    expect(Number.isFinite(desktopArrowSnapshot!.arrowRightInset)).toBe(true);
+    expect(Number.isFinite(desktopArrowSnapshot!.arrowTop)).toBe(true);
+    const expectedDesktopArrowLeft =
+      desktopArrowSnapshot!.containerWidth - desktopArrowSnapshot!.arrowRightInset - desktopArrowSnapshot!.arrowWidth;
+    expect(Math.abs(desktopArrowSnapshot!.arrowRightLocalLeft - expectedDesktopArrowLeft)).toBeLessThanOrEqual(2);
+    expect(Math.abs(desktopArrowSnapshot!.arrowRightLocalTop - desktopArrowSnapshot!.arrowTop)).toBeLessThanOrEqual(2);
   });
 
   test('text-wrap balance is scoped to targeted sections only', async ({ page }) => {

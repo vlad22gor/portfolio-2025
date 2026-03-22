@@ -544,6 +544,7 @@ test.describe('Gallery tablet smoke', () => {
     for (const testCase of cases) {
       await page.setViewportSize({ width: testCase.width, height: 1100 });
       await page.goto('/gallery');
+      await waitForGalleryCriticalReady(page);
 
       await expect(page.locator('.temporary-adaptive-shell')).toBeHidden();
       await expect(page.locator('.site-desktop-shell')).toBeVisible();
@@ -584,7 +585,7 @@ test.describe('Gallery tablet smoke', () => {
           columnCount,
           rowGap: styles.rowGap,
           lineTotals,
-          hasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth + 1,
+          hasHorizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
         };
       });
 
@@ -677,9 +678,12 @@ test.describe('Gallery mobile smoke', () => {
 
       return {
         viewportWidth: Math.floor(window.innerWidth),
+        contentViewportWidth: Math.floor(document.documentElement.clientWidth || window.innerWidth),
         pageWidth: Number(document.querySelector('.page-shell--gallery')?.getBoundingClientRect().width.toFixed(2) ?? 0),
+        expectedRowsSectionWidth: Number((Math.max(0, window.innerWidth - 40)).toFixed(2)),
         rowsSectionWidth: Number(rowsSection.getBoundingClientRect().width.toFixed(2)),
-        hasHorizontalOverflow: document.documentElement.scrollWidth - Math.floor(window.innerWidth) > 0,
+        hasHorizontalOverflow:
+          document.documentElement.scrollWidth - Math.floor(document.documentElement.clientWidth || window.innerWidth) > 0,
         surfaceSteps,
         firstFiveIds: cardEntries.slice(0, 5).map((entry, index) => cards[index]?.getAttribute('data-gallery-card-id')),
         cardEntries: cardEntries.map((entry) => ({ kind: entry.kind, height: Number(entry.height.toFixed(2)) })),
@@ -689,10 +693,8 @@ test.describe('Gallery mobile smoke', () => {
 
     expect(snapshot).not.toBeNull();
     expect(snapshot!.hasHorizontalOverflow).toBe(false);
-    expect(snapshot!.pageWidth).toBeGreaterThanOrEqual(389.5);
-    expect(snapshot!.pageWidth).toBeLessThanOrEqual(390.5);
-    expect(snapshot!.rowsSectionWidth).toBeGreaterThanOrEqual(349.5);
-    expect(snapshot!.rowsSectionWidth).toBeLessThanOrEqual(350.5);
+    expect(Math.abs(snapshot!.pageWidth - snapshot!.contentViewportWidth)).toBeLessThanOrEqual(1);
+    expect(Math.abs(snapshot!.rowsSectionWidth - snapshot!.expectedRowsSectionWidth)).toBeLessThanOrEqual(1);
     expect(snapshot!.firstFiveIds).toEqual(['51:5263', '51:5269', '51:5274', '51:5279', '51:5286']);
 
     const expectedStep = resolveExpectedStep(snapshot!.viewportWidth, snapshot!.rowsSectionWidth);
@@ -744,17 +746,18 @@ test.describe('Gallery mobile smoke', () => {
       }
       return {
         viewportWidth: Math.floor(window.innerWidth),
+        contentViewportWidth: Math.floor(document.documentElement.clientWidth || window.innerWidth),
         pageWidth: Number(pageShell.getBoundingClientRect().width.toFixed(2)),
+        expectedRowsWidth: Number((Math.max(0, window.innerWidth - 40)).toFixed(2)),
         rowsWidth: Number(rowsSection.getBoundingClientRect().width.toFixed(2)),
-        hasOverflow: document.documentElement.scrollWidth - Math.floor(window.innerWidth) > 0,
+        hasOverflow:
+          document.documentElement.scrollWidth - Math.floor(document.documentElement.clientWidth || window.innerWidth) > 0,
       };
     });
 
     expect(snapshot).not.toBeNull();
     expect(snapshot!.hasOverflow).toBe(false);
-    expect(snapshot!.pageWidth).toBeGreaterThanOrEqual(766.5);
-    expect(snapshot!.pageWidth).toBeLessThanOrEqual(767.5);
-    expect(snapshot!.rowsWidth).toBeGreaterThanOrEqual(726.5);
-    expect(snapshot!.rowsWidth).toBeLessThanOrEqual(727.5);
+    expect(Math.abs(snapshot!.pageWidth - snapshot!.contentViewportWidth)).toBeLessThanOrEqual(1);
+    expect(Math.abs(snapshot!.rowsWidth - snapshot!.expectedRowsWidth)).toBeLessThanOrEqual(1);
   });
 });

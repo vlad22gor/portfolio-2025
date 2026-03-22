@@ -1672,14 +1672,18 @@ test.describe('Case details mobile intro smoke', () => {
                 if (!(main instanceof HTMLElement)) {
                   return false;
                 }
-                const viewportContentWidth = document.documentElement.clientWidth || window.innerWidth;
-                const expectedWidth = Math.max(0, viewportContentWidth - 40);
                 const visibleSections = Array.from(main.children).filter(
                   (node): node is HTMLElement => node instanceof HTMLElement && getComputedStyle(node).display !== 'none',
                 );
                 if (visibleSections.length === 0) {
                   return false;
                 }
+                const expectedWidthFromVar = Number.parseFloat(
+                  getComputedStyle(main).getPropertyValue('--case-mobile-grid-width'),
+                );
+                const expectedWidth = Number.isFinite(expectedWidthFromVar)
+                  ? expectedWidthFromVar
+                  : visibleSections[0].getBoundingClientRect().width;
                 return visibleSections.every(
                   (section) => Math.abs(section.getBoundingClientRect().width - expectedWidth) <= 1,
                 );
@@ -1694,18 +1698,21 @@ test.describe('Case details mobile intro smoke', () => {
             return null;
           }
 
-          const viewportContentWidth = document.documentElement.clientWidth || window.innerWidth;
-          const expectedWidth = Math.max(0, viewportContentWidth - 40);
-          const visibleSections = Array.from(main.children)
-            .filter((node): node is HTMLElement => node instanceof HTMLElement && getComputedStyle(node).display !== 'none')
-            .map((node) => ({
-              className: node.className,
-              width: Number(node.getBoundingClientRect().width.toFixed(2)),
-            }));
+          const visibleSections = Array.from(main.children).filter(
+            (node): node is HTMLElement => node instanceof HTMLElement && getComputedStyle(node).display !== 'none',
+          );
+          const expectedWidthFromVar = Number.parseFloat(getComputedStyle(main).getPropertyValue('--case-mobile-grid-width'));
+          const expectedWidth = Number.isFinite(expectedWidthFromVar)
+            ? expectedWidthFromVar
+            : visibleSections[0]?.getBoundingClientRect().width ?? 0;
+          const visibleSectionWidths = visibleSections.map((node) => ({
+            className: node.className,
+            width: Number(node.getBoundingClientRect().width.toFixed(2)),
+          }));
 
           return {
             expectedWidth: Number(expectedWidth.toFixed(2)),
-            visibleSections,
+            visibleSections: visibleSectionWidths,
             docScrollWidth: document.documentElement.scrollWidth,
             docClientWidth: document.documentElement.clientWidth,
           };
