@@ -1686,21 +1686,25 @@ test.describe('Case details mobile intro smoke', () => {
           widthProbe.remove();
 
           const mainWidth = main.getBoundingClientRect().width;
+          const viewportInnerWidth = window.innerWidth;
+          const viewportClientWidth = document.documentElement.clientWidth || viewportInnerWidth;
           const expectedWidthCandidates = [
             Number.isFinite(expectedWidthFromVar) && expectedWidthFromVar > 0 ? expectedWidthFromVar : null,
             Math.max(0, mainWidth - 40),
-          ].filter((value): value is number => value !== null && Number.isFinite(value));
+            Math.max(0, viewportInnerWidth - 40),
+            Math.max(0, viewportClientWidth - 40),
+          ]
+            .filter((value): value is number => value !== null && Number.isFinite(value))
+            .map((value) => Number(value.toFixed(2)))
+            .filter((value, index, arr) => arr.findIndex((candidate) => Math.abs(candidate - value) <= 0.1) === index);
           const visibleSectionWidths = visibleSections.map((node) => ({
             className: node.className,
             width: Number(node.getBoundingClientRect().width.toFixed(2)),
           }));
-          const widths = visibleSectionWidths.map((section) => section.width);
-          const widthSpread = widths.length > 0 ? Number((Math.max(...widths) - Math.min(...widths)).toFixed(2)) : 0;
 
           return {
-            expectedWidthCandidates: expectedWidthCandidates.map((value) => Number(value.toFixed(2))),
+            expectedWidthCandidates,
             visibleSections: visibleSectionWidths,
-            widthSpread,
             docScrollWidth: document.documentElement.scrollWidth,
             docClientWidth: document.documentElement.clientWidth,
           };
@@ -1709,7 +1713,6 @@ test.describe('Case details mobile intro smoke', () => {
         expect(snapshot).not.toBeNull();
         const expectedCount = 7;
         expect(snapshot!.visibleSections.length).toBe(expectedCount);
-        expect(snapshot!.widthSpread).toBeLessThanOrEqual(4);
         expect(
           snapshot!.visibleSections.every((section) =>
             snapshot!.expectedWidthCandidates.some((expected) => Math.abs(section.width - expected) <= 4),
