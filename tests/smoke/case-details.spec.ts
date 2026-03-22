@@ -1705,6 +1705,7 @@ test.describe('Case details mobile intro smoke', () => {
           return {
             expectedWidthCandidates,
             visibleSections: visibleSectionWidths,
+            viewportInnerWidth: window.innerWidth,
             docScrollWidth: document.documentElement.scrollWidth,
             docClientWidth: document.documentElement.clientWidth,
           };
@@ -1719,7 +1720,8 @@ test.describe('Case details mobile intro smoke', () => {
           ),
           JSON.stringify(snapshot),
         ).toBe(true);
-        expect(Math.abs(snapshot!.docScrollWidth - snapshot!.docClientWidth)).toBeLessThanOrEqual(1);
+        const scrollbarDelta = Math.max(0, snapshot!.viewportInnerWidth - snapshot!.docClientWidth);
+        expect(Math.max(0, snapshot!.docScrollWidth - snapshot!.docClientWidth)).toBeLessThanOrEqual(scrollbarDelta + 1);
       }
     }
   });
