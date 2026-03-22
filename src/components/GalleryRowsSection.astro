@@ -76,9 +76,9 @@ flattenedItems.forEach((item, flatIndex) => {
 
 <section class="gallery-rows-section" aria-labelledby="gallery-page-title">
   <h1 id="gallery-page-title" class="gallery-page-title">Gallery</h1>
-  <div class="gallery-rows">
+  <div class="gallery-rows" data-motion-inview="appear-v1">
     {GALLERY_ROWS.map((row, rowIndex) => (
-      <div class="gallery-row" data-gallery-row-id={row.id} data-motion-inview="process-tickets-row-stagger-v1">
+      <div class="gallery-row" data-gallery-row-id={row.id}>
         {row.items.map((item, itemIndex) => {
           const cardEntry = entryByCardId.get(item.id);
           const mobilePadTop = cardEntry?.mobilePadTop ?? 0;

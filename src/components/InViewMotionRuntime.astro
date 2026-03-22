@@ -1,5 +1,6 @@
 <script>
   import { animate, inView } from 'motion';
+  import { MEDIA_QUERY_NON_GALLERY_MOBILE } from '../lib/layout/breakpoints';
 
   (() => {
     const runtimeKey = '__inViewAppearRuntime';
@@ -112,7 +113,7 @@
         resolveVariables: () => {
           const isCasesMobileRoute =
             (document.body.dataset.routeHome === 'true' || document.body.dataset.routeCases === 'true') &&
-            window.matchMedia('(max-width: 767px)').matches;
+            window.matchMedia(MEDIA_QUERY_NON_GALLERY_MOBILE).matches;
           if (!isCasesMobileRoute) {
             return null;
           }

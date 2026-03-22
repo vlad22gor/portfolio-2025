@@ -298,6 +298,39 @@ test.describe('Case details smoke', () => {
     expect(measured?.deltaMs ?? 0).toBeGreaterThanOrEqual(250);
   };
 
+  const assertDesktopOverviewHasSingleWave = async (page: Page, introSelector: string) => {
+    const measured = await page.evaluate((selector) => {
+      const intro = document.querySelector(selector);
+      if (!(intro instanceof HTMLElement)) {
+        return null;
+      }
+
+      const waves = Array.from(
+        intro.querySelectorAll('.fora-intro-column--overview .fora-intro-divider-wrap .quantized-wave'),
+      ).filter((node): node is HTMLElement => node instanceof HTMLElement);
+      const visibleWaves = waves.filter((wave) => {
+        const style = getComputedStyle(wave);
+        const rect = wave.getBoundingClientRect();
+        return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+      });
+      const desktopWave = intro.querySelector('.fora-intro-column--overview .fora-intro-divider--desktop');
+      const mobileWave = intro.querySelector('.fora-intro-column--overview .fora-intro-divider--mobile');
+
+      return {
+        totalWaves: waves.length,
+        visibleWaves: visibleWaves.length,
+        desktopDisplay: desktopWave instanceof HTMLElement ? getComputedStyle(desktopWave).display : null,
+        mobileDisplay: mobileWave instanceof HTMLElement ? getComputedStyle(mobileWave).display : null,
+      };
+    }, introSelector);
+
+    expect(measured).not.toBeNull();
+    expect(measured?.totalWaves).toBe(2);
+    expect(measured?.visibleWaves).toBe(1);
+    expect(measured?.desktopDisplay).toBe('block');
+    expect(measured?.mobileDisplay).toBe('none');
+  };
+
   test('/fora renders detail config with key sections and active cases nav', async ({ page }) => {
     await page.goto('/fora');
 
@@ -311,6 +344,7 @@ test.describe('Case details smoke', () => {
     await expect(page.locator('.fora-design-system-section')).toBeVisible();
     await expect(page.locator('.fora-team-photo-section')).toBeVisible();
     await expect(page.locator('.case-switcher-section')).toBeVisible();
+    await assertDesktopOverviewHasSingleWave(page, '.fora-intro-section');
 
     const desktopIntroTypography = await page.evaluate(() => {
       const title = document.querySelector('.fora-intro-title');
@@ -378,6 +412,7 @@ test.describe('Case details smoke', () => {
     await expect(page.locator('.kissa-artifact-photos-section')).toBeVisible();
     await expect(page.locator('.kissa-feature-cards')).toBeVisible();
     await expect(page.locator('.case-switcher-section')).toBeVisible();
+    await assertDesktopOverviewHasSingleWave(page, '.kissa-intro-section');
 
     const kissaProcessSection = page.locator('.case-process-section--kissa');
     const kissaFirstTicket = kissaProcessSection.locator('.case-process-ticket').first();
@@ -813,6 +848,41 @@ test.describe('Case details mobile intro smoke', () => {
     expect(snapshot!.firstTicketWidth).not.toBeNull();
     expect(Math.abs((snapshot!.firstTicketWidth ?? 0) - expected.step * expected.cols)).toBeLessThanOrEqual(1);
   };
+
+  test('breakpoint split keeps case-details mobile profile through 847 and desktop from 848', async ({ page }) => {
+    const cases = [
+      { width: 768, expectMobileProfile: true },
+      { width: 847, expectMobileProfile: true },
+      { width: 848, expectMobileProfile: false },
+      { width: 1024, expectMobileProfile: false },
+      { width: 1359, expectMobileProfile: false },
+      { width: 1360, expectMobileProfile: false },
+    ] as const;
+    const routes = ['/fora', '/kissa'] as const;
+
+    for (const viewport of cases) {
+      await page.setViewportSize({ width: viewport.width, height: 900 });
+      for (const pathname of routes) {
+        await page.goto(pathname);
+
+        await expect(page.locator('.temporary-adaptive-shell')).toBeHidden();
+        await expect(page.locator('.site-desktop-shell')).toBeVisible();
+
+        if (viewport.expectMobileProfile) {
+          await expect(page.locator('.fora-intro-screens-section--mobile-slider .fora-intro-screens-slider')).toBeVisible();
+          await expect(page.locator('.fora-intro-screens-section--mobile-slider .fora-intro-screens-surface')).toBeHidden();
+          await expect(page.locator('.case-challenge-scene-wrap--mobile')).toBeVisible();
+          await expect(page.locator('.case-challenge-scene-wrap--desktop')).toBeHidden();
+          continue;
+        }
+
+        await expect(page.locator('.fora-intro-screens-section--mobile-slider .fora-intro-screens-slider')).toBeHidden();
+        await expect(page.locator('.fora-intro-screens-section--mobile-slider .fora-intro-screens-surface')).toBeVisible();
+        await expect(page.locator('.case-challenge-scene-wrap--mobile')).toBeHidden();
+        await expect(page.locator('.case-challenge-scene-wrap--desktop')).toBeVisible();
+      }
+    }
+  });
 
   test('/fora mobile intro slider keeps visual gap 16, scale contract and loop', async ({ page }) => {
     await page.goto('/fora');
@@ -1371,7 +1441,7 @@ test.describe('Case details mobile intro smoke', () => {
       { pathname: '/kissa' as const, selector: '.case-process-section--kissa', baseStep: 24, defaultCols: 6 },
     ] as const;
 
-    for (const viewportWidth of [430, 767] as const) {
+    for (const viewportWidth of [430, 767, 847] as const) {
       await page.setViewportSize({ width: viewportWidth, height: 900 });
       for (const currentCase of cases) {
         await page.goto(currentCase.pathname);
@@ -1394,6 +1464,7 @@ test.describe('Case details mobile intro smoke', () => {
     const viewports = [
       { width: 390, height: 844 },
       { width: 767, height: 900 },
+      { width: 847, height: 900 },
     ] as const;
 
     for (const viewport of viewports) {
@@ -1537,6 +1608,7 @@ test.describe('Case details mobile intro smoke', () => {
     const viewports = [
       { width: 390, height: 844 },
       { width: 767, height: 900 },
+      { width: 847, height: 900 },
     ] as const;
 
     for (const viewport of viewports) {
@@ -1558,65 +1630,67 @@ test.describe('Case details mobile intro smoke', () => {
     }
   });
 
-  test('mobile root sections keep grid width contract at 767px for /fora and /kissa', async ({ page }) => {
-    await page.setViewportSize({ width: 767, height: 900 });
+  test('mobile root sections keep grid width contract at 767px and 847px for /fora and /kissa', async ({ page }) => {
+    for (const viewportWidth of [767, 847] as const) {
+      await page.setViewportSize({ width: viewportWidth, height: 900 });
 
-    for (const pathname of ['/fora', '/kissa'] as const) {
-      await page.goto(pathname);
-      await expect
-        .poll(
-          async () =>
-            page.evaluate(() => {
-              const main = document.querySelector('main.page-shell--case-detail');
-              if (!(main instanceof HTMLElement)) {
-                return false;
-              }
-              const viewportContentWidth = document.documentElement.clientWidth || window.innerWidth;
-              const expectedWidth = Math.max(0, viewportContentWidth - 40);
-              const visibleSections = Array.from(main.children).filter(
-                (node): node is HTMLElement => node instanceof HTMLElement && getComputedStyle(node).display !== 'none',
-              );
-              if (visibleSections.length === 0) {
-                return false;
-              }
-              return visibleSections.every(
-                (section) => Math.abs(section.getBoundingClientRect().width - expectedWidth) <= 1,
-              );
-            }),
-          { timeout: 3000, message: `${pathname}: root sections should settle to mobile grid width` },
-        )
-        .toBe(true);
+      for (const pathname of ['/fora', '/kissa'] as const) {
+        await page.goto(pathname);
+        await expect
+          .poll(
+            async () =>
+              page.evaluate(() => {
+                const main = document.querySelector('main.page-shell--case-detail');
+                if (!(main instanceof HTMLElement)) {
+                  return false;
+                }
+                const viewportContentWidth = document.documentElement.clientWidth || window.innerWidth;
+                const expectedWidth = Math.max(0, viewportContentWidth - 40);
+                const visibleSections = Array.from(main.children).filter(
+                  (node): node is HTMLElement => node instanceof HTMLElement && getComputedStyle(node).display !== 'none',
+                );
+                if (visibleSections.length === 0) {
+                  return false;
+                }
+                return visibleSections.every(
+                  (section) => Math.abs(section.getBoundingClientRect().width - expectedWidth) <= 1,
+                );
+              }),
+            { timeout: 3000, message: `${pathname}: root sections should settle to mobile grid width` },
+          )
+          .toBe(true);
 
-      const snapshot = await page.evaluate(() => {
-        const main = document.querySelector('main.page-shell--case-detail');
-        if (!(main instanceof HTMLElement)) {
-          return null;
-        }
+        const snapshot = await page.evaluate(() => {
+          const main = document.querySelector('main.page-shell--case-detail');
+          if (!(main instanceof HTMLElement)) {
+            return null;
+          }
 
-        const viewportContentWidth = document.documentElement.clientWidth || window.innerWidth;
-        const expectedWidth = Math.max(0, viewportContentWidth - 40);
-        const visibleSections = Array.from(main.children)
-          .filter((node): node is HTMLElement => node instanceof HTMLElement && getComputedStyle(node).display !== 'none')
-          .map((node) => ({
-            className: node.className,
-            width: Number(node.getBoundingClientRect().width.toFixed(2)),
-          }));
+          const viewportContentWidth = document.documentElement.clientWidth || window.innerWidth;
+          const expectedWidth = Math.max(0, viewportContentWidth - 40);
+          const visibleSections = Array.from(main.children)
+            .filter((node): node is HTMLElement => node instanceof HTMLElement && getComputedStyle(node).display !== 'none')
+            .map((node) => ({
+              className: node.className,
+              width: Number(node.getBoundingClientRect().width.toFixed(2)),
+            }));
 
-        return {
-          expectedWidth: Number(expectedWidth.toFixed(2)),
-          visibleSections,
-          docScrollWidth: document.documentElement.scrollWidth,
-          docClientWidth: document.documentElement.clientWidth,
-        };
-      });
+          return {
+            expectedWidth: Number(expectedWidth.toFixed(2)),
+            visibleSections,
+            docScrollWidth: document.documentElement.scrollWidth,
+            docClientWidth: document.documentElement.clientWidth,
+          };
+        });
 
-      expect(snapshot).not.toBeNull();
-      const expectedCount = 7;
-      expect(snapshot!.visibleSections.length).toBe(expectedCount);
-      expect(
-        snapshot!.visibleSections.every((section) => Math.abs(section.width - snapshot!.expectedWidth) <= 1),
-      ).toBe(true);
-      expect(Math.abs(snapshot!.docScrollWidth - snapshot!.docClientWidth)).toBeLessThanOrEqual(1);
+        expect(snapshot).not.toBeNull();
+        const expectedCount = 7;
+        expect(snapshot!.visibleSections.length).toBe(expectedCount);
+        expect(
+          snapshot!.visibleSections.every((section) => Math.abs(section.width - snapshot!.expectedWidth) <= 1),
+        ).toBe(true);
+        expect(Math.abs(snapshot!.docScrollWidth - snapshot!.docClientWidth)).toBeLessThanOrEqual(1);
+      }
     }
   });
 });
@@ -1624,6 +1698,7 @@ test.describe('Case details mobile case switcher smoke', () => {
   const viewports = [
     { width: 390, height: 844 },
     { width: 767, height: 900 },
+    { width: 847, height: 900 },
   ] as const;
 
   for (const viewport of viewports) {

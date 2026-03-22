@@ -172,6 +172,7 @@ const sliderPhysicalCards = hasMobileSlider
   hasMobileSlider && (
     <script>
       import { quantizeHeightByStep, resolveMobilePerimeterGrid } from '../lib/layout/mobilePerimeter';
+      import { MEDIA_QUERY_NON_GALLERY_MOBILE } from '../lib/layout/breakpoints';
 
       (() => {
         const runtimeKey = '__foraIntroMobileSliderRuntime';
@@ -182,7 +183,7 @@ const sliderPhysicalCards = hasMobileSlider
 
         const sliderSelector = '[data-fora-intro-slider-root]';
         const initAttr = 'foraIntroSliderInit';
-        const mobileMedia = window.matchMedia('(max-width: 767px)');
+        const mobileMedia = window.matchMedia(MEDIA_QUERY_NON_GALLERY_MOBILE);
         const states = new Map();
         const LOGICAL_COUNT = 3;
         const REAL_PHYSICAL_START = 1;

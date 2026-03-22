@@ -146,6 +146,8 @@ const sliderItems = [
 </section>
 
 <script>
+  import { MEDIA_QUERY_NON_GALLERY_MOBILE } from '../lib/layout/breakpoints';
+
   (() => {
     const runtimeKey = '__kissaArtifactMobileSliderRuntime';
     if (window[runtimeKey]) {
@@ -155,7 +157,7 @@ const sliderItems = [
 
     const sliderSelector = '[data-kissa-artifact-slider-root]';
     const initAttr = 'kissaArtifactSliderInit';
-    const mobileMedia = window.matchMedia('(max-width: 767px)');
+    const mobileMedia = window.matchMedia(MEDIA_QUERY_NON_GALLERY_MOBILE);
     const states = new Map();
     const TRANSITION_DURATION_MS = 320;
     const CARD_ASPECT_RATIO = 532 / 310;

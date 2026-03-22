@@ -129,6 +129,12 @@ const screensAttrs = stageItem
   }
 </style>
 <script>
+  import {
+    BREAKPOINT_MOBILE_MAX,
+    BREAKPOINT_TABLET_LOW_MAX,
+    MEDIA_QUERY_ADAPTIVE,
+  } from '../lib/layout/breakpoints';
+
   (() => {
     const runtimeKey = '__temporaryAdaptiveSliderRuntime';
     if (window[runtimeKey]) {
@@ -140,7 +146,7 @@ const screensAttrs = stageItem
     const initAttr = 'tempSliderInit';
     const states = new Map();
     const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const adaptiveQuery = window.matchMedia('(max-width: 1359px)');
+    const adaptiveQuery = window.matchMedia(MEDIA_QUERY_ADAPTIVE);
     let rafId = 0;
     let lastFrameTs = 0;
 
@@ -190,7 +196,8 @@ const screensAttrs = stageItem
 
     const resolveAutoSpeed = (state) => {
       const width = state.viewport.clientWidth;
-      return width <= 767 ? 42 : 58;
+      const mobileMax = state.isHomeRoute ? BREAKPOINT_TABLET_LOW_MAX : BREAKPOINT_MOBILE_MAX;
+      return width <= mobileMax ? 42 : 58;
     };
 
     const computeArcTransform = (state, itemIndex) => {
@@ -232,7 +239,9 @@ const screensAttrs = stageItem
       state.slot = slot > 1 ? slot : firstRect.width + fallbackGap;
       state.loopWidth = state.slot * state.baseCount;
       state.totalWidth = state.slot * state.items.length;
-      const isTabletViewport = state.viewportWidth >= 768;
+      const isTabletViewport = state.isHomeRoute
+        ? state.viewportWidth > BREAKPOINT_TABLET_LOW_MAX
+        : state.viewportWidth > BREAKPOINT_MOBILE_MAX;
       const profile = isTabletViewport ? ARC_PROFILE.tablet : ARC_PROFILE.phone;
       state.arcMaxDx = clamp(
         state.viewportWidth * profile.kInfluence,
@@ -411,6 +420,7 @@ const screensAttrs = stageItem
 
       const state = {
         root,
+        isHomeRoute: document.body?.dataset.routeHome === 'true' && Boolean(root.closest('.home-hero-mobile')),
         viewport,
         track,
         items,

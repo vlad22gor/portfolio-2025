@@ -5,14 +5,15 @@ const floatingThemeButtonSelector = '.floating-theme-button[data-floating-theme-
 test.describe('Gallery smoke', () => {
   test.use({ viewport: { width: 1440, height: 1100 } });
 
-  test('/gallery renders webm cards, row-stagger, and critical priority contract', async ({ page }) => {
+  test('/gallery renders webm cards, grid-appear, and critical priority contract', async ({ page }) => {
     await page.goto('/gallery');
 
     await expect(page).toHaveTitle(/Vlad Horovyy – Product Designer/i);
 
     const rows = page.locator('.gallery-row');
     await expect(rows).toHaveCount(6);
-    await expect(page.locator('.gallery-row[data-motion-inview="process-tickets-row-stagger-v1"]')).toHaveCount(6);
+    await expect(page.locator('.gallery-rows[data-motion-inview="appear-v1"]')).toHaveCount(1);
+    await expect(page.locator('.gallery-row[data-motion-inview]')).toHaveCount(0);
 
     const cards = page.locator('.gallery-card');
     await expect(cards).toHaveCount(21);
@@ -467,6 +468,115 @@ test.describe('Gallery smoke', () => {
 
     expect(uniqueAnimations).toContain('contentFadeIn|::view-transition-new(page-content)');
     expect(uniqueAnimations).toContain('contentFadeOut|::view-transition-old(page-content)');
+  });
+});
+
+test.describe('Gallery tablet smoke', () => {
+  test('1024x1100 renders real gallery shell and hides temporary adaptive shell', async ({ page }) => {
+    await page.setViewportSize({ width: 1024, height: 1100 });
+    await page.goto('/gallery');
+
+    await expect(page.locator('.temporary-adaptive-shell')).toBeHidden();
+    await expect(page.locator('.site-desktop-shell')).toBeVisible();
+  });
+
+  test('gallery header and page-shell top stay compact through 847 and switch at 848', async ({ page }) => {
+    const cases = [
+      { width: 768, expectedHeaderPaddingTop: '24px', expectedShellPaddingTop: '64px' },
+      { width: 820, expectedHeaderPaddingTop: '24px', expectedShellPaddingTop: '64px' },
+      { width: 847, expectedHeaderPaddingTop: '24px', expectedShellPaddingTop: '64px' },
+      { width: 848, expectedHeaderPaddingTop: '56px', expectedShellPaddingTop: '144px' },
+    ] as const;
+
+    for (const currentCase of cases) {
+      await page.setViewportSize({ width: currentCase.width, height: 1100 });
+      await page.goto('/gallery');
+
+      const snapshot = await page.evaluate(() => {
+        const header = document.querySelector('.site-header-inner');
+        const shell = document.querySelector('main.page-shell--gallery');
+        if (!(header instanceof HTMLElement) || !(shell instanceof HTMLElement)) {
+          return null;
+        }
+        return {
+          headerPaddingTop: getComputedStyle(header).paddingTop,
+          shellPaddingTop: getComputedStyle(shell).paddingTop,
+        };
+      });
+
+      expect(snapshot).not.toBeNull();
+      expect(snapshot!.headerPaddingTop).toBe(currentCase.expectedHeaderPaddingTop);
+      expect(snapshot!.shellPaddingTop).toBe(currentCase.expectedShellPaddingTop);
+    }
+  });
+
+  test('gallery tablet container thresholds follow 8->6->4 and keep dense lines', async ({ page }) => {
+    const cases = [
+      { width: 1256, expectedColumns: 8 },
+      { width: 1255, expectedColumns: 6 },
+      { width: 1064, expectedColumns: 6 },
+      { width: 1063, expectedColumns: 4 },
+      { width: 848, expectedColumns: 4 },
+      { width: 847, expectedColumns: 4 },
+    ] as const;
+
+    for (const testCase of cases) {
+      await page.setViewportSize({ width: testCase.width, height: 1100 });
+      await page.goto('/gallery');
+
+      await expect(page.locator('.temporary-adaptive-shell')).toBeHidden();
+      await expect(page.locator('.site-desktop-shell')).toBeVisible();
+
+      const snapshot = await page.evaluate(() => {
+        const rootGrid = document.querySelector('.gallery-rows');
+        const containers = Array.from(document.querySelectorAll('.gallery-card-container'));
+        if (!(rootGrid instanceof HTMLElement) || containers.length === 0) {
+          return null;
+        }
+
+        const styles = getComputedStyle(rootGrid);
+        const template = styles.gridTemplateColumns.trim();
+        const columnCount = template.length === 0 || template === 'none' ? 0 : template.split(/\s+/).length;
+        const spanByTop: Array<{ top: number; span: number }> = [];
+        containers.forEach((container) => {
+          if (!(container instanceof HTMLElement)) {
+            return;
+          }
+          const rect = container.getBoundingClientRect();
+          const span = container.classList.contains('gallery-card-container--span-4') ? 4 : 2;
+          spanByTop.push({ top: rect.top, span });
+        });
+        spanByTop.sort((left, right) => left.top - right.top);
+        const lines: Array<{ top: number; total: number }> = [];
+        const epsilon = 2;
+        for (const entry of spanByTop) {
+          const lastLine = lines.at(-1);
+          if (lastLine && Math.abs(entry.top - lastLine.top) <= epsilon) {
+            lastLine.total += entry.span;
+          } else {
+            lines.push({ top: entry.top, total: entry.span });
+          }
+        }
+        const lineTotals = lines.map((line) => line.total);
+
+        return {
+          columnCount,
+          rowGap: styles.rowGap,
+          lineTotals,
+          hasHorizontalOverflow: document.documentElement.scrollWidth > window.innerWidth + 1,
+        };
+      });
+
+      expect(snapshot).not.toBeNull();
+      expect(snapshot!.columnCount).toBe(testCase.expectedColumns);
+      expect(snapshot!.hasHorizontalOverflow).toBe(false);
+      expect(snapshot!.rowGap).toBe('120px');
+      expect(snapshot!.lineTotals.length).toBeGreaterThan(0);
+      if (snapshot!.lineTotals.length > 1) {
+        const completeLines = snapshot!.lineTotals.slice(0, -1);
+        expect(completeLines.every((total) => total === testCase.expectedColumns)).toBe(true);
+      }
+    }
   });
 });
 

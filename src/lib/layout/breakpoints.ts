@@ -1,0 +1,7 @@
+export const BREAKPOINT_MOBILE_MAX = 767;
+export const BREAKPOINT_TABLET_LOW_MAX = 847;
+export const BREAKPOINT_TABLET_MAX = 1359;
+
+export const MEDIA_QUERY_GALLERY_MOBILE = `(max-width: ${BREAKPOINT_MOBILE_MAX}px)`;
+export const MEDIA_QUERY_NON_GALLERY_MOBILE = `(max-width: ${BREAKPOINT_TABLET_LOW_MAX}px)`;
+export const MEDIA_QUERY_ADAPTIVE = `(max-width: ${BREAKPOINT_TABLET_MAX}px)`;

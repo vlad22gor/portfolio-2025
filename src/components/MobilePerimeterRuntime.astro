@@ -6,6 +6,7 @@
     resolveMobilePerimeterGrid,
     resolveProximityStepByWidth,
   } from '../lib/layout/mobilePerimeter';
+  import { MEDIA_QUERY_GALLERY_MOBILE, MEDIA_QUERY_NON_GALLERY_MOBILE } from '../lib/layout/breakpoints';
 
   (() => {
     const runtimeKey = '__mobilePerimeterRuntime';
@@ -37,7 +38,8 @@
     const caseDetailFeatureBaseStep = 40;
     const caseDetailMarginX = 20;
     const caseDetailTicketGap = 20;
-    const mobileMedia = window.matchMedia('(max-width: 767px)');
+    const nonGalleryMobileMedia = window.matchMedia(MEDIA_QUERY_NON_GALLERY_MOBILE);
+    const galleryMobileMedia = window.matchMedia(MEDIA_QUERY_GALLERY_MOBILE);
 
     const applyPerimeterStep = (selector, step) => {
       document.querySelectorAll(selector).forEach((node) => {
@@ -244,7 +246,8 @@
 
     const sync = () => {
       const html = document.documentElement;
-      const isMobile = mobileMedia.matches;
+      const isNonGalleryMobile = nonGalleryMobileMedia.matches;
+      const isGalleryMobile = galleryMobileMedia.matches;
       const viewportWidth = Math.floor(window.innerWidth);
       const isHomeRoute = document.body?.dataset.routeHome === 'true';
       const isCasesRoute = document.body?.dataset.routeCases === 'true';
@@ -253,13 +256,13 @@
       const isHomeOrCasesRoute = isHomeRoute || isCasesRoute;
 
       if (isCaseDetailRoute) {
-        syncCaseDetailProcessSections(isMobile, viewportWidth);
-        syncCaseDetailFeatureCards(isMobile, viewportWidth);
-        syncCaseDetailForaTeamPhoto(isMobile, viewportWidth);
+        syncCaseDetailProcessSections(isNonGalleryMobile, viewportWidth);
+        syncCaseDetailFeatureCards(isNonGalleryMobile, viewportWidth);
+        syncCaseDetailForaTeamPhoto(isNonGalleryMobile, viewportWidth);
       }
 
       if (isGalleryRoute) {
-        syncGalleryCards(isMobile, viewportWidth);
+        syncGalleryCards(isGalleryMobile, viewportWidth);
       }
 
       if (!isHomeOrCasesRoute) {
@@ -269,7 +272,7 @@
         return;
       }
 
-      if (!isMobile) {
+      if (!isNonGalleryMobile) {
         html.style.setProperty('--home-mobile-perimeter-step', String(defaultStep));
         html.style.setProperty('--home-mobile-perimeter-width', '100%');
         html.style.setProperty('--home-mobile-case-cover-height', `${defaultCardCoverHeight}px`);
@@ -328,7 +331,8 @@
 
     window.addEventListener('resize', scheduleSync);
     document.addEventListener('astro:page-load', scheduleSync);
-    mobileMedia.addEventListener?.('change', scheduleSync);
+    nonGalleryMobileMedia.addEventListener?.('change', scheduleSync);
+    galleryMobileMedia.addEventListener?.('change', scheduleSync);
 
     window[runtimeKey] = { sync };
     sync();

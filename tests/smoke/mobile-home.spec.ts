@@ -1218,6 +1218,93 @@ test.describe('Mobile home adaptive', () => {
     expect(casesSnapshot!.finalTitleGap.length).toBeGreaterThan(0);
   });
 
+  test('home breakpoint split keeps mobile profile through 847 and desktop from 848', async ({ page }) => {
+    const cases = [
+      { width: 767, expectMobileProfile: true },
+      { width: 768, expectMobileProfile: true },
+      { width: 847, expectMobileProfile: true },
+      { width: 848, expectMobileProfile: false },
+      { width: 1024, expectMobileProfile: false },
+      { width: 1359, expectMobileProfile: false },
+      { width: 1360, expectMobileProfile: false },
+    ] as const;
+
+    for (const currentCase of cases) {
+      await page.setViewportSize({ width: currentCase.width, height: 900 });
+      await page.goto('/');
+
+      await expect(page.locator('.temporary-adaptive-shell')).toBeHidden();
+      await expect(page.locator('.site-desktop-shell')).toBeVisible();
+
+      if (currentCase.expectMobileProfile) {
+        await expect(page.locator('.home-hero-mobile')).toBeVisible();
+        await expect(page.locator('.home-hero')).toBeHidden();
+      } else {
+        await expect(page.locator('.home-hero-mobile')).toBeHidden();
+        await expect(page.locator('.home-hero')).toBeVisible();
+      }
+    }
+  });
+
+  test('/cases breakpoint split keeps mobile profile through 847 and desktop from 848', async ({ page }) => {
+    const cases = [
+      { width: 768, expectMobileProfile: true },
+      { width: 847, expectMobileProfile: true },
+      { width: 848, expectMobileProfile: false },
+      { width: 1024, expectMobileProfile: false },
+      { width: 1359, expectMobileProfile: false },
+      { width: 1360, expectMobileProfile: false },
+    ] as const;
+
+    for (const currentCase of cases) {
+      await page.setViewportSize({ width: currentCase.width, height: 900 });
+      await page.goto('/cases');
+
+      await expect(page.locator('.temporary-adaptive-shell')).toBeHidden();
+      await expect(page.locator('.site-desktop-shell')).toBeVisible();
+      await expect(page.locator('.cases-cards-section')).toBeVisible();
+
+      const cardFlexDirection = await page.evaluate(() => {
+        const card = document.querySelector('.cases-cards-list .case-card');
+        if (!(card instanceof HTMLElement)) {
+          return null;
+        }
+        return getComputedStyle(card).flexDirection;
+      });
+
+      expect(cardFlexDirection).not.toBeNull();
+      expect(cardFlexDirection).toBe(currentCase.expectMobileProfile ? 'column' : 'row');
+    }
+  });
+
+  test('/gallery and /cases keep compact header + page-shell top sync on 768-847', async ({ page }) => {
+    const widths = [768, 820, 847] as const;
+    const routes = ['/cases', '/gallery'] as const;
+
+    for (const width of widths) {
+      for (const route of routes) {
+        await page.setViewportSize({ width, height: 900 });
+        await page.goto(route);
+
+        const snapshot = await page.evaluate(() => {
+          const header = document.querySelector('.site-header-inner');
+          const shell = document.querySelector('main.page-shell');
+          if (!(header instanceof HTMLElement) || !(shell instanceof HTMLElement)) {
+            return null;
+          }
+          return {
+            headerPaddingTop: getComputedStyle(header).paddingTop,
+            shellPaddingTop: getComputedStyle(shell).paddingTop,
+          };
+        });
+
+        expect(snapshot).not.toBeNull();
+        expect(snapshot!.headerPaddingTop).toBe('24px');
+        expect(snapshot!.shellPaddingTop).toBe('64px');
+      }
+    }
+  });
+
   test('/gallery mobile uses real shell and hides temporary adaptive screen', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/gallery');
