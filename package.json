@@ -13,6 +13,7 @@
     "assets:optimize-svg-safe": "npx --yes svgo@4 -r -f public/media --config=.svgo.safe.config.mjs",
     "verify:svg-icons": "node scripts/verify-themed-svg-icons.mjs",
     "generate:posters": "node scripts/generate-video-posters.mjs",
+    "generate:transparent-mov": "node scripts/generate-transparent-mov-variants.mjs",
     "verify:posters": "node scripts/verify-video-posters.mjs",
     "predev": "npm run generate:posters",
     "dev": "astro dev",

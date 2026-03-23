@@ -3,6 +3,7 @@ import CaseCard from './CaseCard.astro';
 import Badge from './Badge.astro';
 import QuantizedPerimeter from './QuantizedPerimeter.astro';
 import ThemedSvgIcon from './ThemedSvgIcon.astro';
+import TransparentVideo from './TransparentVideo.astro';
 import { CASES } from '../data/cases';
 
 const foraCase = CASES.find((item) => item.slug === 'fora');
@@ -52,28 +53,20 @@ const kissaCase = CASES.find((item) => item.slug === 'kissa');
   >
     <div class="cases-more-card-content">
       <div class="cases-more-card-cube-wrap" aria-hidden="true">
-        <video
+        <TransparentVideo
           class="cases-more-card-cube"
           data-more-cases-loader
+          webmSrc="/media/cases/section/loader_light.webm"
+          movSrc="/media/cases/section/loader_light.mov"
           autoplay
           loop
           muted
           playsinline
           preload="metadata"
           poster="/media/cases/section/more-cases-cube.webp"
-          aria-hidden="true"
+          ariaHidden="true"
           tabindex="-1"
-        >
-          <source src="/media/cases/section/loader_light.webm" type="video/webm" />
-          <img
-            class="cases-more-card-cube-fallback"
-            src="/media/cases/section/more-cases-cube.webp"
-            alt=""
-            aria-hidden="true"
-            loading="lazy"
-            decoding="async"
-          />
-        </video>
+        />
       </div>
 
       <div class="cases-more-card-text">
