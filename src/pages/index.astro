@@ -80,24 +80,28 @@ const coinInlineStyle = [
       </div>
     </section>
 
-    <section class="home-hero-mobile" aria-labelledby="home-hero-mobile-title">
+    <section class="home-hero-mobile" aria-labelledby="home-hero-mobile-title" data-motion-inview="appear-stagger-v1">
       <AdaptivePhoneArcSlider
         class="home-hero-mobile-screens"
         viewportClass="home-hero-mobile-screens-viewport"
         mediaMode="poster-only"
+        stageItem={true}
+        motionStaggerIndex={0}
       />
 
       <div class="home-hero-mobile-text">
-        <h1 id="home-hero-mobile-title" class="home-hero-mobile-title">
+        <h1 id="home-hero-mobile-title" class="home-hero-mobile-title" data-motion-stage-item data-motion-stagger-index="1">
           <span class="home-hero-mobile-title--tertiary">i’m Vlad —</span>
           <span> product designer </span>
           <span class="home-hero-mobile-title--tertiary">crafting standout</span>
           <span> mobile apps</span>
         </h1>
-        <p class="home-hero-mobile-subtitle">
+        <p class="home-hero-mobile-subtitle" data-motion-stage-item data-motion-stagger-index="2">
           I make apps people love return to. Shaped by product vision, fresh ideas, and an enjoyable teamwork
         </p>
-        <Button href="https://linktr.ee/vladhorovyy" target="_blank" variant="default">message me</Button>
+        <div data-motion-stage-item data-motion-stagger-index="3">
+          <Button href="https://linktr.ee/vladhorovyy" target="_blank" variant="default">message me</Button>
+        </div>
       </div>
     </section>
 

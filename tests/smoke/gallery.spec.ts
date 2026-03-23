@@ -100,6 +100,17 @@ test.describe('Gallery smoke', () => {
     );
     expect(allVideosUseBleedWrapper).toBe(true);
 
+    const allMockupVideosHavePosterOverlay = await webmVideos.evaluateAll((nodes) =>
+      nodes.every((node) => {
+        if (!(node instanceof HTMLVideoElement)) {
+          return false;
+        }
+        const overlay = node.parentElement?.querySelector('.device-mockup__video-poster');
+        return overlay instanceof HTMLImageElement && overlay.getAttribute('src')?.length > 0;
+      }),
+    );
+    expect(allMockupVideosHavePosterOverlay).toBe(true);
+
     const allVideoTransformsAreDisabled = await webmVideos.evaluateAll((nodes) =>
       nodes.every((node) => getComputedStyle(node).transform === 'none'),
     );
@@ -976,6 +987,59 @@ test.describe('Gallery mobile smoke', () => {
     expect(playbackSnapshot!.offscreenPlaying).toBe(0);
     expect(playbackSnapshot!.inviewPolicyCount).toBeGreaterThan(0);
     expect(playbackSnapshot!.inviewWithAutoplayCount).toBe(0);
+  });
+
+  test('390x844 keeps poster overlay visible until frame-ready for lazy mockup video', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/gallery');
+    await waitForGalleryCriticalReady(page);
+
+    const transitionSnapshot = await page.evaluate(async () => {
+      const targetCard = document.querySelector('.gallery-card[data-gallery-card-id="53:5327"]');
+      if (!(targetCard instanceof HTMLElement)) {
+        return null;
+      }
+      const mockup = targetCard.querySelector('.device-mockup');
+      const video = targetCard.querySelector('video.device-mockup__media--video');
+      const poster = targetCard.querySelector('.device-mockup__video-poster');
+      if (!(mockup instanceof HTMLElement) || !(video instanceof HTMLVideoElement) || !(poster instanceof HTMLImageElement)) {
+        return null;
+      }
+
+      const targetTop = Math.max(0, Math.round(targetCard.getBoundingClientRect().top + window.scrollY - 120));
+      window.scrollTo({ top: targetTop, behavior: 'instant' });
+      await new Promise((resolve) => window.setTimeout(resolve, 80));
+
+      const samples = [];
+      const start = performance.now();
+      while (performance.now() - start < 3500) {
+        const styles = getComputedStyle(poster);
+        const posterVisible = styles.display !== 'none' && Number.parseFloat(styles.opacity || '1') > 0.05;
+        const frameReady = mockup.getAttribute('data-video-frame-ready') === 'true';
+        samples.push({
+          frameReady,
+          posterVisible,
+          readyState: video.readyState,
+          paused: video.paused,
+        });
+        await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
+      }
+
+      const hasGapBeforeFrameReady = samples.some((sample) => !sample.frameReady && !sample.posterVisible);
+      const reachedFrameReady = samples.some((sample) => sample.frameReady);
+      const playedAfterFrameReady = samples.some((sample) => sample.frameReady && !sample.paused);
+
+      return {
+        hasGapBeforeFrameReady,
+        reachedFrameReady,
+        playedAfterFrameReady,
+      };
+    });
+
+    expect(transitionSnapshot).not.toBeNull();
+    expect(transitionSnapshot!.hasGapBeforeFrameReady).toBe(false);
+    expect(transitionSnapshot!.reachedFrameReady).toBe(true);
+    expect(transitionSnapshot!.playedAfterFrameReady).toBe(true);
   });
 
   test('mobile home <-> gallery soft-nav keeps bounded video budget for 10 cycles', async ({ page }) => {

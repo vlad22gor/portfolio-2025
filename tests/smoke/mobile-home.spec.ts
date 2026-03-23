@@ -75,6 +75,7 @@ test.describe('Mobile home adaptive', () => {
     await expect(page.locator('.temporary-adaptive-shell')).toHaveCount(0);
     await expect(page.locator('.site-desktop-shell')).toBeVisible();
     await expect(page.locator('.home-hero-mobile')).toBeVisible();
+    await expect(page.locator('.home-hero-mobile')).toHaveAttribute('data-motion-inview', 'appear-stagger-v1');
     await expect(page.locator('.home-hero')).toBeHidden();
     await expect(page.locator('.home-hero-mobile [data-temp-slider]')).toBeVisible();
     await expect(page.locator('.home-hero-mobile [data-temp-slider-item]')).toHaveCount(18);
@@ -126,6 +127,56 @@ test.describe('Mobile home adaptive', () => {
     for (const color of tertiarySnapshot!.nodeColors) {
       expect(color).toBe(tertiarySnapshot!.tokenColor);
     }
+
+    const heroStageOrderSnapshot = await page.evaluate(() => {
+      const hero = document.querySelector('.home-hero-mobile');
+      if (!(hero instanceof HTMLElement)) {
+        return null;
+      }
+      const screens = hero.querySelector('.home-hero-mobile-screens');
+      const title = hero.querySelector('.home-hero-mobile-title');
+      const subtitle = hero.querySelector('.home-hero-mobile-subtitle');
+      const buttonWrap = hero.querySelector('[data-motion-stage-item][data-motion-stagger-index="3"]');
+
+      return {
+        motionPreset: hero.getAttribute('data-motion-inview'),
+        stageNodes: [
+          {
+            role: 'screens',
+            index: screens?.getAttribute('data-motion-stagger-index') ?? '',
+            isStageItem: screens?.hasAttribute('data-motion-stage-item') ?? false,
+          },
+          {
+            role: 'title',
+            index: title?.getAttribute('data-motion-stagger-index') ?? '',
+            isStageItem: title?.hasAttribute('data-motion-stage-item') ?? false,
+          },
+          {
+            role: 'subtitle',
+            index: subtitle?.getAttribute('data-motion-stagger-index') ?? '',
+            isStageItem: subtitle?.hasAttribute('data-motion-stage-item') ?? false,
+          },
+          {
+            role: 'button',
+            index: buttonWrap?.getAttribute('data-motion-stagger-index') ?? '',
+            isStageItem: buttonWrap?.hasAttribute('data-motion-stage-item') ?? false,
+          },
+        ],
+      };
+    });
+
+    expect(heroStageOrderSnapshot).not.toBeNull();
+    expect(heroStageOrderSnapshot!.motionPreset).toBe('appear-stagger-v1');
+    expect(heroStageOrderSnapshot!.stageNodes).toEqual([
+      { index: '0', role: 'screens', isStageItem: true },
+      { index: '1', role: 'title', isStageItem: true },
+      { index: '2', role: 'subtitle', isStageItem: true },
+      { index: '3', role: 'button', isStageItem: true },
+    ]);
+
+    await page.setViewportSize({ width: 1360, height: 900 });
+    await page.goto('/');
+    await expect(page.locator('.home-hero-mobile')).toBeHidden();
   });
 
   test('cases more-card transparent loader exposes webm+mov and selects supported codec', async ({

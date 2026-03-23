@@ -210,6 +210,7 @@ const styleVars = [
   data-device-media-poster={screenPoster ?? ''}
   data-device-size={resolvedSize}
   data-device-screen-calibration={screenCalibrationMarker}
+  data-video-frame-ready={screenKind === 'video' ? 'false' : undefined}
   data-ready="false"
 >
   <div class="device-mockup__screen" data-layer="screen">
@@ -229,6 +230,19 @@ const styleVars = [
             data-video-playback={videoPlaybackPolicy}
             aria-hidden="true"
           />
+          {
+            screenPoster ? (
+              <img
+                class="device-mockup__video-poster"
+                src={screenPoster}
+                alt=""
+                aria-hidden="true"
+                loading={mediaLoading}
+                decoding={mediaDecoding}
+                fetchpriority={mediaFetchPriority}
+              />
+            ) : null
+          }
         </div>
       ) : (
         <img
@@ -306,7 +320,25 @@ const styleVars = [
     width: 100%;
     height: 100%;
     object-fit: cover;
+    z-index: 0;
     transform: none;
+  }
+
+  .device-mockup__video-poster {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity 0.16s ease;
+  }
+
+  .device-mockup[data-video-frame-ready='true'] .device-mockup__video-poster {
+    opacity: 0;
   }
 
   .device-mockup__shell {
@@ -323,6 +355,10 @@ const styleVars = [
 
   @media (prefers-reduced-motion: reduce) {
     .device-mockup {
+      transition: none;
+    }
+
+    .device-mockup__video-poster {
       transition: none;
     }
   }
@@ -432,6 +468,7 @@ const styleVars = [
 
     const mockupSelector = '.device-mockup[data-device-mockup]';
     const initAttr = 'data-device-mockup-ready-init';
+    const frameReadyAttr = 'data-video-frame-ready';
     const fallbackDelayMs = 1200;
 
     const markReady = (mockup) => {
@@ -442,6 +479,29 @@ const styleVars = [
         return;
       }
       mockup.dataset.ready = 'true';
+    };
+
+    const markVideoFramePending = (mockup) => {
+      if (!(mockup instanceof HTMLElement)) {
+        return;
+      }
+      if (mockup.dataset.deviceMediaKind !== 'video') {
+        return;
+      }
+      mockup.setAttribute(frameReadyAttr, 'false');
+    };
+
+    const markVideoFrameReady = (mockup) => {
+      if (!(mockup instanceof HTMLElement)) {
+        return;
+      }
+      if (mockup.dataset.deviceMediaKind !== 'video') {
+        return;
+      }
+      if (mockup.getAttribute(frameReadyAttr) === 'true') {
+        return;
+      }
+      mockup.setAttribute(frameReadyAttr, 'true');
     };
 
     const initMockup = (mockup) => {
@@ -507,6 +567,32 @@ const styleVars = [
           });
         }
       } else if (media instanceof HTMLVideoElement) {
+        markVideoFramePending(mockup);
+        const frameReadyNow = media.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA;
+        if (frameReadyNow) {
+          markVideoFrameReady(mockup);
+        } else {
+          let firstFrameResolved = false;
+          const resolveFirstFrame = () => {
+            if (firstFrameResolved) {
+              return;
+            }
+            firstFrameResolved = true;
+            markVideoFrameReady(mockup);
+          };
+          if (typeof media.requestVideoFrameCallback === 'function') {
+            const callbackId = media.requestVideoFrameCallback(() => {
+              resolveFirstFrame();
+            });
+            cleanups.push(() => {
+              if (typeof media.cancelVideoFrameCallback === 'function') {
+                media.cancelVideoFrameCallback(callbackId);
+              }
+            });
+          }
+          bindOnce(media, 'loadeddata', resolveFirstFrame);
+          bindOnce(media, 'canplay', resolveFirstFrame);
+        }
         mediaReady =
           media.readyState >= HTMLMediaElement.HAVE_METADATA ||
           isVideoWarm(mockup, media);
@@ -522,6 +608,9 @@ const styleVars = [
           bindOnce(media, 'loadeddata', () => {
             mediaReady = true;
             markVideoWarm(mockup, media);
+            trySettle();
+          });
+          bindOnce(media, 'canplay', () => {
             trySettle();
           });
           bindOnce(media, 'error', () => {

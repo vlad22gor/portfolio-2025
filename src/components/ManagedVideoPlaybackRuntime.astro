@@ -10,8 +10,25 @@
     const selector = 'video[data-video-playback="inview"]';
     const initAttr = 'data-video-playback-init';
     const mobileDowngradedAttr = 'data-video-mobile-downgraded';
+    const frameReadyAttr = 'data-video-frame-ready';
     const managed = new Map();
     let observer = null;
+
+    const hasCurrentFrameData = (video) => video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA;
+
+    const markMockupFrameReady = (video) => {
+      if (!(video instanceof HTMLVideoElement)) {
+        return;
+      }
+      const mockup = video.closest('.device-mockup[data-device-mockup]');
+      if (!(mockup instanceof HTMLElement)) {
+        return;
+      }
+      if (mockup.dataset.deviceMediaKind !== 'video') {
+        return;
+      }
+      mockup.setAttribute(frameReadyAttr, 'true');
+    };
 
     const shouldDowngradeAlwaysPlaybackForMobileGallery = () => {
       const isGalleryRoute = document.body?.dataset.routeGallery === 'true';
@@ -27,6 +44,15 @@
     const unregisterManagedVideo = (video) => {
       if (!(video instanceof HTMLVideoElement)) {
         return;
+      }
+      const state = managed.get(video);
+      if (state) {
+        if (typeof state.onLoadedData === 'function') {
+          video.removeEventListener('loadeddata', state.onLoadedData);
+        }
+        if (typeof state.onCanPlay === 'function') {
+          video.removeEventListener('canplay', state.onCanPlay);
+        }
       }
       if (observer) {
         observer.unobserve(video);
@@ -86,9 +112,32 @@
         return;
       }
       const state = managed.get(video);
+      if (!state) {
+        return;
+      }
+      if (!state.hasFrameData && hasCurrentFrameData(video)) {
+        state.hasFrameData = true;
+      }
+      if (state.hasFrameData) {
+        markMockupFrameReady(video);
+      }
       const shouldPlay = Boolean(state?.inView) && !document.hidden && video.isConnected;
       if (!shouldPlay) {
         video.pause();
+        return;
+      }
+      if (!state.hasFrameData) {
+        if (!state.warmupRequested) {
+          state.warmupRequested = true;
+          video.preload = 'auto';
+          if (video.networkState === HTMLMediaElement.NETWORK_EMPTY) {
+            try {
+              video.load();
+            } catch {
+              // Ignore media load errors here; playback gate will remain closed.
+            }
+          }
+        }
         return;
       }
       const playPromise = video.play();
@@ -141,9 +190,29 @@
       video.setAttribute(initAttr, 'true');
       video.muted = true;
       video.playsInline = true;
-      managed.set(video, { inView: false });
+      const initialHasFrameData = hasCurrentFrameData(video);
+      const onFrameDataReady = () => {
+        const state = managed.get(video);
+        if (!state) {
+          return;
+        }
+        state.hasFrameData = true;
+        markMockupFrameReady(video);
+        syncVideoPlayback(video);
+      };
+      managed.set(video, {
+        inView: false,
+        hasFrameData: initialHasFrameData,
+        warmupRequested: initialHasFrameData || video.preload === 'auto',
+        onLoadedData: onFrameDataReady,
+        onCanPlay: onFrameDataReady,
+      });
+      if (initialHasFrameData) {
+        markMockupFrameReady(video);
+      }
+      video.addEventListener('loadeddata', onFrameDataReady);
+      video.addEventListener('canplay', onFrameDataReady);
       observer.observe(video);
-      video.addEventListener('loadedmetadata', () => syncVideoPlayback(video), { once: true });
       syncVideoPlayback(video);
     };
 
