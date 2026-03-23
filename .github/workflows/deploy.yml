@@ -45,10 +45,33 @@ jobs:
       - name: Run smoke tests
         run: npm run test:smoke
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      # Custom packaging avoids transitive Node20 runtime from upload-pages-artifact.
+      - name: Archive Pages artifact (Node24-safe)
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar \
+            --dereference --hard-dereference \
+            --directory ./dist \
+            -cvf "$RUNNER_TEMP/artifact.tar" \
+            --exclude=.git \
+            --exclude=.github \
+            --exclude=".[^/]*" \
+            .
+
+      - name: Compress Pages artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          gzip -9 "$RUNNER_TEMP/artifact.tar"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-artifact@v6
         with:
-          path: ./dist
+          name: github-pages
+          path: ${{ runner.temp }}/artifact.tar.gz
+          retention-days: 1
+          if-no-files-found: error
 
   deploy:
     environment:
