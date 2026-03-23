@@ -317,12 +317,14 @@ const sliderPhysicalCards = hasMobileSlider
           state.track.style.transform = `translate3d(${state.offset.toFixed(3)}px, 0px, 0px)`;
           if (animateItems) {
             delete state.root.dataset.introSliderInstantRebase;
+          } else if (state.dragging) {
+            delete state.root.dataset.introSliderInstantRebase;
           } else {
             state.root.dataset.introSliderInstantRebase = 'true';
           }
           applyActiveState(state);
           applyPerimeterLayout(state);
-          if (!animateItems) {
+          if (!animateItems && !state.dragging) {
             window.requestAnimationFrame(() => {
               window.requestAnimationFrame(() => {
                 if (!state.root.isConnected) {
@@ -428,6 +430,9 @@ const sliderPhysicalCards = hasMobileSlider
             pointerId: null,
             startPointerX: 0,
             startOffset: 0,
+            pendingDragDx: 0,
+            hasPendingDragFrame: false,
+            dragRafId: null,
             perimeterStep: 40,
             perimeterWidth: 320,
             sideCompensation: 0,
@@ -435,6 +440,44 @@ const sliderPhysicalCards = hasMobileSlider
             pendingLoopNormalize: false,
             loopNormalizeTimer: null,
             cleanups: [],
+          };
+
+          const clearDragFrame = () => {
+            if (state.dragRafId !== null) {
+              window.cancelAnimationFrame(state.dragRafId);
+              state.dragRafId = null;
+            }
+          };
+
+          const flushPendingDragFrame = () => {
+            clearDragFrame();
+            if (!state.hasPendingDragFrame) {
+              return;
+            }
+            state.offset = state.startOffset + state.pendingDragDx;
+            state.hasPendingDragFrame = false;
+            render(state, {
+              animateTrack: false,
+              animateItems: false,
+            });
+          };
+
+          const scheduleDragFrame = () => {
+            if (state.dragRafId !== null) {
+              return;
+            }
+            state.dragRafId = window.requestAnimationFrame(() => {
+              state.dragRafId = null;
+              if (!state.dragging || !state.hasPendingDragFrame || !mobileMedia.matches) {
+                return;
+              }
+              state.offset = state.startOffset + state.pendingDragDx;
+              state.hasPendingDragFrame = false;
+              render(state, {
+                animateTrack: false,
+                animateItems: false,
+              });
+            });
           };
 
           const onPointerDown = (event) => {
@@ -451,6 +494,9 @@ const sliderPhysicalCards = hasMobileSlider
             state.pointerId = event.pointerId;
             state.startPointerX = event.clientX;
             state.startOffset = state.offset;
+            state.pendingDragDx = 0;
+            state.hasPendingDragFrame = false;
+            clearDragFrame();
             state.track.style.transition = 'none';
             viewport.dataset.dragging = 'true';
             state.pendingLoopNormalize = false;
@@ -470,8 +516,9 @@ const sliderPhysicalCards = hasMobileSlider
               return;
             }
             const dx = event.clientX - state.startPointerX;
-            state.offset = state.startOffset + dx;
-            render(state, false);
+            state.pendingDragDx = dx;
+            state.hasPendingDragFrame = true;
+            scheduleDragFrame();
           };
 
           const finishPointer = (event) => {
@@ -481,6 +528,7 @@ const sliderPhysicalCards = hasMobileSlider
             if (!state.dragging || state.pointerId !== event.pointerId) {
               return;
             }
+            flushPendingDragFrame();
             state.dragging = false;
             state.pointerId = null;
             viewport.dataset.dragging = 'false';
@@ -496,6 +544,8 @@ const sliderPhysicalCards = hasMobileSlider
           };
 
           const onResize = () => {
+            state.hasPendingDragFrame = false;
+            clearDragFrame();
             syncGeometry(state);
             normalizeLoopPosition(state);
             snapToPhysical(state, state.activePhysical, false);
@@ -524,6 +574,7 @@ const sliderPhysicalCards = hasMobileSlider
           state.cleanups.push(() => viewport.removeEventListener('pointercancel', finishPointer));
           state.cleanups.push(() => track.removeEventListener('transitionend', onTrackTransitionEnd));
           state.cleanups.push(() => window.removeEventListener('resize', onResize));
+          state.cleanups.push(clearDragFrame);
           state.cleanups.push(() => clearLoopNormalizeTimer(state));
 
           states.set(root, state);

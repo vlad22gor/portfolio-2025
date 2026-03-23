@@ -2442,6 +2442,10 @@ html[data-theme='dark'] .case-badge[data-badge-type='default'] {
   cursor: grabbing;
 }
 
+.fora-intro-screens-slider__viewport[data-dragging='true'] .fora-intro-screens-slider__item {
+  transition: none;
+}
+
 .fora-intro-screens-slider__track {
   position: absolute;
   top: 0;

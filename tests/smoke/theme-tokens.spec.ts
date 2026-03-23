@@ -428,6 +428,131 @@ const readVibrateMockSnapshot = () => {
   };
 };
 
+const installSwitchFallbackProbeInitScript = () => {
+  const disableVibrate = () => {
+    try {
+      Object.defineProperty(window.navigator, 'vibrate', {
+        configurable: true,
+        writable: true,
+        value: undefined,
+      });
+      return typeof window.navigator.vibrate !== 'function';
+    } catch {
+      return false;
+    }
+  };
+
+  let overrideInstalled = disableVibrate();
+  if (!overrideInstalled) {
+    try {
+      Object.defineProperty(Navigator.prototype, 'vibrate', {
+        configurable: true,
+        writable: true,
+        value: undefined,
+      });
+      overrideInstalled = typeof window.navigator.vibrate !== 'function';
+    } catch {
+      overrideInstalled = false;
+    }
+  }
+
+  const state = {
+    overrideInstalled,
+    created: 0,
+    removed: 0,
+    current: 0,
+  };
+
+  const selector = 'label[data-haptics-switch-fallback="true"]';
+  const countMatches = (node: Node) => {
+    if (!(node instanceof Element)) {
+      return 0;
+    }
+    let count = node.matches(selector) ? 1 : 0;
+    count += node.querySelectorAll(selector).length;
+    return count;
+  };
+
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        const count = countMatches(node);
+        if (count === 0) {
+          return;
+        }
+        state.created += count;
+        state.current += count;
+      });
+
+      mutation.removedNodes.forEach((node) => {
+        const count = countMatches(node);
+        if (count === 0) {
+          return;
+        }
+        state.removed += count;
+        state.current = Math.max(0, state.current - count);
+      });
+    });
+  });
+
+  const startObserver = () => {
+    if (!document.documentElement) {
+      return false;
+    }
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+    return true;
+  };
+
+  if (!startObserver()) {
+    window.addEventListener(
+      'DOMContentLoaded',
+      () => {
+        startObserver();
+      },
+      { once: true },
+    );
+  }
+
+  (window as typeof window & { __hapticsSwitchFallbackState?: typeof state }).__hapticsSwitchFallbackState = state;
+};
+
+const readSwitchFallbackProbeSnapshot = () => {
+  const state = window as typeof window & {
+    __hapticsSwitchFallbackState?: {
+      overrideInstalled: boolean;
+      created: number;
+      removed: number;
+      current: number;
+    };
+  };
+  const snapshot = state.__hapticsSwitchFallbackState;
+  return {
+    overrideInstalled: Boolean(snapshot?.overrideInstalled),
+    vibrateAvailable: typeof window.navigator.vibrate === 'function',
+    created: snapshot?.created ?? 0,
+    removed: snapshot?.removed ?? 0,
+    current: snapshot?.current ?? 0,
+  };
+};
+
+const readSwitchFallbackProbeReady = () => {
+  const state = window as typeof window & {
+    __hapticsSwitchFallbackState?: {
+      created: number;
+      removed: number;
+      current: number;
+    };
+  };
+  const snapshot = state.__hapticsSwitchFallbackState;
+  if (!snapshot) {
+    return false;
+  }
+  return snapshot.created > 0 && snapshot.removed > 0 && snapshot.current === 0;
+};
+
 const readThemedGlyphSnapshot = (selectors: string[]) => {
   const resolveColor = (value: string) => {
     const probe = document.createElement('span');
@@ -921,6 +1046,44 @@ test.describe('Theme tokens smoke', () => {
     const latestPattern = postClickSnapshot.calls.at(-1);
     expect(Array.isArray(latestPattern)).toBe(true);
     expect((latestPattern as number[]).length).toBeGreaterThan(0);
+  });
+
+  test('floating theme button triggers switch fallback haptic when vibrate is unavailable', async ({ browser }, testInfo) => {
+    const context = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      isMobile: true,
+      hasTouch: true,
+    });
+    const page = await context.newPage();
+
+    try {
+      await page.addInitScript(installSwitchFallbackProbeInitScript);
+      await page.emulateMedia({ colorScheme: 'light' });
+
+      const baseUrl = typeof testInfo.project.use.baseURL === 'string' ? testInfo.project.use.baseURL : '';
+      await page.goto(`${baseUrl}/`);
+      await expect(page.locator(floatingThemeButtonSelector)).toBeVisible();
+
+      const preClickSnapshot = await page.evaluate(readSwitchFallbackProbeSnapshot);
+      expect(preClickSnapshot.overrideInstalled).toBe(true);
+      expect(preClickSnapshot.vibrateAvailable).toBe(false);
+      expect(preClickSnapshot.created).toBe(0);
+      expect(preClickSnapshot.removed).toBe(0);
+      expect(preClickSnapshot.current).toBe(0);
+
+      await page.click(floatingThemeButtonSelector);
+
+      await expect.poll(() => page.evaluate(readSwitchFallbackProbeReady), { timeout: 2000 }).toBe(true);
+
+      const postClickSnapshot = await page.evaluate(readSwitchFallbackProbeSnapshot);
+      expect(postClickSnapshot.overrideInstalled).toBe(true);
+      expect(postClickSnapshot.vibrateAvailable).toBe(false);
+      expect(postClickSnapshot.created).toBeGreaterThan(0);
+      expect(postClickSnapshot.removed).toBeGreaterThan(0);
+      expect(postClickSnapshot.current).toBe(0);
+    } finally {
+      await context.close();
+    }
   });
 
   test('dark soft navigation keeps html theme and floating button state stable', async ({ page }) => {
