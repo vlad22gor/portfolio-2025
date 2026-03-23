@@ -180,7 +180,11 @@ const mediaByRoute = getCriticalMediaByRoute();
     };
 
     const warmCurrentRoute = async () => {
-      await warmAssets(resolveRouteAssets(activeRouteId), maxCurrentConcurrency);
+      const skipCurrentRouteVideos = isMobileViewport();
+      const assets = resolveRouteAssets(activeRouteId).filter(
+        (asset) => !(skipCurrentRouteVideos && asset.kind === 'video'),
+      );
+      await warmAssets(assets, maxCurrentConcurrency);
     };
 
     const warmBackgroundRoutes = async () => {

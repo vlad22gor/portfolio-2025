@@ -2,6 +2,7 @@
 
 - Для маршрутов, где `TemporaryAdaptiveNotice` по контракту всегда скрыт (`/`, `/cases`, `/gallery`, `/fora`, `/kissa`), не монтировать `temporary-adaptive-shell` в DOM: скрытый CSS-блок с видео/slider runtime даёт лишний decode/RAF и ухудшает mobile-навигацию.
 - Для mobile-стабильности: `home`-версия `AdaptivePhoneArcSlider` должна работать в `mediaMode='poster-only'`; lazy-видео (`device mockups` и gallery-illustrations) переводить на `data-video-playback='inview'` с `pause` вне viewport и на `astro:before-swap`.
+- Для `/gallery` на mobile (`<=767`) снижать decode-пик: `critical` только у первого ряда device-card, route-level `video preload` ограничивать `media='(min-width: 768px)'`, а runtime-policy `data-video-playback='always'` для gallery-видео понижать до `inview`.
 - Держать заметки краткими, без дублей и противоречий.
 - Для сложных scallop-форм использовать quantized SVG-компонент вместо mask-пересечений.
 - Для Figma handoff scallop: `pad` брать из padding контейнера, `shape` выводить из corner radius (`9999` -> `circle`, иначе `rectangle`).

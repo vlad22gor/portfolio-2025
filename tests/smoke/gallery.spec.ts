@@ -21,7 +21,7 @@ const waitForGalleryCriticalReady = async (
         }),
       { timeout, message: 'Gallery critical mockups should be fully ready' },
     )
-    .toEqual({ count: 5, allReady: true });
+    .toEqual({ count: 3, allReady: true });
 };
 
 test.describe('Gallery smoke', () => {
@@ -81,8 +81,8 @@ test.describe('Gallery smoke', () => {
       });
       return { always, inview, inviewWithAutoplay };
     });
-    expect(playbackPolicySummary.always).toBe(2);
-    expect(playbackPolicySummary.inview).toBe(5);
+    expect(playbackPolicySummary.always).toBe(1);
+    expect(playbackPolicySummary.inview).toBe(6);
     expect(playbackPolicySummary.inviewWithAutoplay).toBe(0);
 
     const allVideosUseSafeMode = await webmVideos.evaluateAll((nodes) =>
@@ -194,23 +194,24 @@ test.describe('Gallery smoke', () => {
     expect(loaderLightContract!.srcAttr).toBe(loaderLightContract!.activeSrc);
     expect(loaderLightContract!.currentSrc.endsWith(loaderLightContract!.activeSrc)).toBe(true);
 
-    const criticalDeviceCards = page.locator(
-      '.gallery-row:nth-child(-n+2) .gallery-card[data-gallery-card-type="phone"], .gallery-row:nth-child(-n+2) .gallery-card[data-gallery-card-type="tablet"]',
-    );
-    await expect(criticalDeviceCards).toHaveCount(5);
-    await expect(page.locator('.gallery-row:nth-child(-n+2) .gallery-card[data-gallery-card-priority="critical"]')).toHaveCount(5);
+    const criticalDeviceCards = page.locator('.gallery-card[data-gallery-card-priority="critical"]');
+    await expect(criticalDeviceCards).toHaveCount(3);
 
-    const lazyDeviceCards = page.locator('.gallery-row:nth-child(n+3) .gallery-card[data-gallery-card-priority="lazy"]');
-    await expect(lazyDeviceCards).toHaveCount(9);
-
-    const criticalShellsAreEager = await page.locator('.gallery-row:nth-child(-n+2) .gallery-card .device-mockup__shell').evaluateAll((nodes) =>
-      nodes.every((node) => {
-        if (!(node instanceof HTMLImageElement)) {
-          return false;
-        }
-        return node.loading === 'eager' && node.getAttribute('fetchpriority') === 'high';
-      }),
+    const lazyDeviceCards = page.locator(
+      '.gallery-card[data-gallery-card-priority="lazy"][data-gallery-card-type="phone"], .gallery-card[data-gallery-card-priority="lazy"][data-gallery-card-type="tablet"]',
     );
+    await expect(lazyDeviceCards).toHaveCount(11);
+
+    const criticalShellsAreEager = await page
+      .locator('.gallery-card[data-gallery-card-priority="critical"] .device-mockup__shell')
+      .evaluateAll((nodes) =>
+        nodes.every((node) => {
+          if (!(node instanceof HTMLImageElement)) {
+            return false;
+          }
+          return node.loading === 'eager' && node.getAttribute('fetchpriority') === 'high';
+        }),
+      );
     expect(criticalShellsAreEager).toBe(true);
 
     const allShellsUseFillFit = await page.locator('.gallery-card .device-mockup__shell').evaluateAll((nodes) =>
@@ -463,6 +464,7 @@ test.describe('Gallery smoke', () => {
           href: link.getAttribute('href') ?? '',
           as: link.getAttribute('as') ?? '',
           fetchpriority: link.getAttribute('fetchpriority') ?? '',
+          media: link.getAttribute('media') ?? '',
         }))
         .filter((link) => link.href.startsWith('/media/gallery/'));
 
@@ -470,8 +472,15 @@ test.describe('Gallery smoke', () => {
         count: galleryLinks.length,
         hasPhoneShell: galleryLinks.some((link) => link.href === '/media/gallery/device-shells/phone-shell.webp' && link.as === 'image'),
         hasTabletShell: galleryLinks.some((link) => link.href === '/media/gallery/device-shells/tablet-shell.webp' && link.as === 'image'),
-        hasCriticalVideoR1: galleryLinks.some((link) => link.href === '/media/gallery/flows/r1-c2-phone.webm' && link.as === 'video'),
-        hasCriticalVideoR2: galleryLinks.some((link) => link.href === '/media/gallery/flows/r2-c3-tablet.webm' && link.as === 'video'),
+        hasCriticalVideoR1: galleryLinks.some(
+          (link) => link.href === '/media/gallery/flows/r1-c2-phone.webm' && link.as === 'video',
+        ),
+        hasCriticalVideoR2: galleryLinks.some(
+          (link) => link.href === '/media/gallery/flows/r2-c3-tablet.webm' && link.as === 'video',
+        ),
+        allVideoPreloadsUseMobileGuard: galleryLinks
+          .filter((link) => link.as === 'video')
+          .every((link) => link.media === '(min-width: 768px)'),
         allImagePreloadsAreHigh: galleryLinks
           .filter((link) => link.as === 'image')
           .every((link) => link.fetchpriority === 'high'),
@@ -483,6 +492,7 @@ test.describe('Gallery smoke', () => {
     expect(preloadSummary.hasTabletShell).toBe(true);
     expect(preloadSummary.hasCriticalVideoR1).toBe(true);
     expect(preloadSummary.hasCriticalVideoR2).toBe(true);
+    expect(preloadSummary.allVideoPreloadsUseMobileGuard).toBe(true);
     expect(preloadSummary.allImagePreloadsAreHigh).toBe(true);
 
     await page.click('.site-desktop-shell a[data-nav-id="home"]');
@@ -1015,6 +1025,62 @@ test.describe('Gallery mobile smoke', () => {
     expect(homeSnapshots.every((snapshot) => snapshot.homeSliderVideos === 0)).toBe(true);
     expect(gallerySnapshots.every((snapshot) => snapshot.totalVideos <= 10)).toBe(true);
     expect(homeSnapshots.every((snapshot) => snapshot.totalVideos <= 3)).toBe(true);
+  });
+
+  test('webkit mobile stress route cycle keeps offscreen videos paused and budget bounded', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(browserName !== 'webkit', 'WebKit-only stress scenario for iOS-like behavior');
+    test.setTimeout(240_000);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+
+    const readRouteState = async () =>
+      page.evaluate(() => {
+        const allVideos = Array.from(document.querySelectorAll('video')).filter(
+          (node): node is HTMLVideoElement => node instanceof HTMLVideoElement,
+        );
+        const isOffscreen = (node: HTMLVideoElement) => {
+          const rect = node.getBoundingClientRect();
+          return (
+            rect.bottom <= 0 || rect.top >= window.innerHeight || rect.right <= 0 || rect.left >= window.innerWidth
+          );
+        };
+        return {
+          path: window.location.pathname,
+          totalVideos: allVideos.length,
+          tempShellVideos: document.querySelectorAll('.temporary-adaptive-shell video').length,
+          offscreenPlaying: allVideos.filter((video) => isOffscreen(video) && !video.paused && !video.ended).length,
+        };
+      });
+
+    const routeSequence = ['/', '/cases', '/fora', '/kissa', '/gallery', '/'] as const;
+    const snapshots: Array<{ path: string; totalVideos: number; tempShellVideos: number; offscreenPlaying: number }> = [];
+
+    await page.goto('/');
+    snapshots.push(await readRouteState());
+
+    for (let cycle = 0; cycle < 10; cycle += 1) {
+      for (const route of routeSequence.slice(1)) {
+        await page.goto(route);
+        if (route === '/gallery') {
+          await waitForGalleryCriticalReady(page);
+        }
+        snapshots.push(await readRouteState());
+      }
+    }
+
+    const gallerySnapshots = snapshots.filter((snapshot) => snapshot.path === '/gallery');
+    const homeSnapshots = snapshots.filter((snapshot) => snapshot.path === '/');
+    const allTempShellHidden = snapshots.every((snapshot) => snapshot.tempShellVideos === 0);
+
+    expect(gallerySnapshots.length).toBe(10);
+    expect(homeSnapshots.length).toBe(11);
+    expect(allTempShellHidden).toBe(true);
+    expect(gallerySnapshots.every((snapshot) => snapshot.totalVideos <= 10)).toBe(true);
+    expect(homeSnapshots.every((snapshot) => snapshot.totalVideos <= 3)).toBe(true);
+    expect(gallerySnapshots.every((snapshot) => snapshot.offscreenPlaying === 0)).toBe(true);
   });
 
   test('767 keeps real gallery shell and grid-width contract', async ({ page }) => {

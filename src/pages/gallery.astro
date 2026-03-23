@@ -8,6 +8,7 @@ import FinalCtaSection from '../components/FinalCtaSection.astro';
 import { getCriticalMediaForRoute } from '../data/critical-media';
 
 const criticalMediaPreloads = getCriticalMediaForRoute('gallery');
+const videoPreloadMediaQuery = '(min-width: 768px)';
 ---
 
 <BaseLayout
@@ -20,6 +21,7 @@ const criticalMediaPreloads = getCriticalMediaForRoute('gallery');
         as={asset.kind === 'video' ? 'video' : 'image'}
         href={asset.href}
         fetchpriority={asset.kind === 'video' ? undefined : 'high'}
+        media={asset.kind === 'video' ? videoPreloadMediaQuery : undefined}
       />
     ))}
   </Fragment>
