@@ -1,0 +1,167 @@
+---
+interface Props {
+  class?: string;
+  webmSrc: string;
+  movSrc?: string;
+  poster?: string;
+  preload?: 'none' | 'metadata' | 'auto';
+  autoplay?: boolean;
+  muted?: boolean;
+  loop?: boolean;
+  playsinline?: boolean;
+  ariaHidden?: 'true' | 'false';
+  tabindex?: number | string;
+}
+
+const {
+  class: className = '',
+  webmSrc,
+  movSrc,
+  poster,
+  preload = 'metadata',
+  autoplay = true,
+  muted = true,
+  loop = true,
+  playsinline = true,
+  ariaHidden = 'true',
+  tabindex,
+  ...rest
+} = Astro.props as Props & Record<string, unknown>;
+
+const resolvedTabIndex =
+  typeof tabindex === 'string' || typeof tabindex === 'number' ? tabindex : undefined;
+---
+
+<video
+  {...rest}
+  class={className}
+  src={webmSrc}
+  autoplay={autoplay}
+  muted={muted}
+  loop={loop}
+  playsinline={playsinline}
+  preload={preload}
+  poster={poster}
+  aria-hidden={ariaHidden}
+  tabindex={resolvedTabIndex}
+  data-transparent-video="true"
+  data-transparent-video-webm={webmSrc}
+  data-transparent-video-hevc={movSrc ?? ''}
+  data-transparent-video-codec="pending"
+/>
+
+<script is:inline>
+  (() => {
+    const supportPromiseKey = '__transparentVideoHevcAlphaSupportPromise';
+    const runtimeKey = '__transparentVideoRuntime';
+    const managedVideoPlaybackRuntimeKey = '__managedVideoPlaybackRuntime';
+
+    const decodeConfigCandidates = [
+      'video/quicktime; codecs="hvc1.1.6.L93.B0"',
+      'video/quicktime; codecs="hvc1"',
+    ];
+
+    const detectHevcAlphaSupport = async () => {
+      const mediaCapabilities = navigator.mediaCapabilities;
+      if (!mediaCapabilities || typeof mediaCapabilities.decodingInfo !== 'function') {
+        return false;
+      }
+
+      for (const contentType of decodeConfigCandidates) {
+        try {
+          const result = await mediaCapabilities.decodingInfo({
+            type: 'file',
+            video: {
+              contentType,
+              width: 720,
+              height: 720,
+              bitrate: 1_500_000,
+              framerate: 30,
+              hasAlphaChannel: true,
+            },
+          });
+          if (result?.supported) {
+            return true;
+          }
+        } catch {
+          // Ignore unsupported/invalid media capability queries and continue fallback chain.
+        }
+      }
+
+      return false;
+    };
+
+    const getHevcAlphaSupport = () => {
+      if (window[supportPromiseKey] instanceof Promise) {
+        return window[supportPromiseKey];
+      }
+
+      const supportPromise = detectHevcAlphaSupport().catch(() => false);
+      window[supportPromiseKey] = supportPromise;
+      return supportPromise;
+    };
+
+    const applyVideoSource = (video, shouldUseHevc) => {
+      if (!(video instanceof HTMLVideoElement)) {
+        return;
+      }
+
+      const webmSrc = video.dataset.transparentVideoWebm ?? '';
+      const hevcSrc = video.dataset.transparentVideoHevc ?? '';
+      const selectedSrc = shouldUseHevc && hevcSrc ? hevcSrc : webmSrc;
+      const selectedCodec = shouldUseHevc && hevcSrc ? 'hevc-alpha' : 'webm-vp9';
+
+      if (!selectedSrc) {
+        return;
+      }
+
+      if (video.dataset.transparentVideoActiveSrc !== selectedSrc) {
+        video.setAttribute('src', selectedSrc);
+        video.dataset.transparentVideoActiveSrc = selectedSrc;
+        video.load();
+      }
+
+      video.dataset.transparentVideoCodec = selectedCodec;
+      video.muted = true;
+
+      if (video.autoplay) {
+        const playPromise = video.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(() => {});
+        }
+      }
+    };
+
+    const refreshTransparentVideos = async () => {
+      const videos = Array.from(document.querySelectorAll('video[data-transparent-video="true"]')).filter(
+        (node) => node instanceof HTMLVideoElement,
+      );
+      if (videos.length === 0) {
+        const managedRuntime = window[managedVideoPlaybackRuntimeKey];
+        if (managedRuntime && typeof managedRuntime.mount === 'function') {
+          managedRuntime.mount();
+        }
+        return;
+      }
+
+      const supportsHevcAlpha = await getHevcAlphaSupport();
+      videos.forEach((video) => applyVideoSource(video, supportsHevcAlpha));
+      const managedRuntime = window[managedVideoPlaybackRuntimeKey];
+      if (managedRuntime && typeof managedRuntime.mount === 'function') {
+        managedRuntime.mount();
+      }
+      if (managedRuntime && typeof managedRuntime.sync === 'function') {
+        managedRuntime.sync();
+      }
+    };
+
+    if (window[runtimeKey]) {
+      window[runtimeKey].refresh();
+      return;
+    }
+
+    window[runtimeKey] = { refresh: refreshTransparentVideos };
+    refreshTransparentVideos();
+    document.addEventListener('astro:page-load', refreshTransparentVideos);
+  })();
+</script>

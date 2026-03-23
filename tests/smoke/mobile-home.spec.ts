@@ -72,7 +72,7 @@ test.describe('Mobile home adaptive', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');
 
-    await expect(page.locator('.temporary-adaptive-shell')).toBeHidden();
+    await expect(page.locator('.temporary-adaptive-shell')).toHaveCount(0);
     await expect(page.locator('.site-desktop-shell')).toBeVisible();
     await expect(page.locator('.home-hero-mobile')).toBeVisible();
     await expect(page.locator('.home-hero')).toBeHidden();
@@ -83,6 +83,17 @@ test.describe('Mobile home adaptive', () => {
     await expect(page.locator('.about-me-section')).toBeVisible();
     await expect(page.locator('.quotes-section')).toBeVisible();
     await expect(page.locator('.final-cta-section')).toBeVisible();
+
+    const videoBudgetSnapshot = await page.evaluate(() => {
+      const totalVideos = document.querySelectorAll('video').length;
+      const tempShellVideos = document.querySelectorAll('.temporary-adaptive-shell video').length;
+      const homeSliderVideos = document.querySelectorAll('.home-hero-mobile [data-temp-slider] video').length;
+      return { totalVideos, tempShellVideos, homeSliderVideos };
+    });
+
+    expect(videoBudgetSnapshot.totalVideos).toBeLessThanOrEqual(3);
+    expect(videoBudgetSnapshot.tempShellVideos).toBe(0);
+    expect(videoBudgetSnapshot.homeSliderVideos).toBe(0);
 
     const tertiarySnapshot = await page.evaluate(() => {
       const resolveTokenColor = (tokenExpression: string) => {
@@ -115,6 +126,52 @@ test.describe('Mobile home adaptive', () => {
     for (const color of tertiarySnapshot!.nodeColors) {
       expect(color).toBe(tertiarySnapshot!.tokenColor);
     }
+  });
+
+  test('cases more-card transparent loader exposes webm+mov and selects supported codec', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/cases');
+
+    const loaderSnapshot = await page.evaluate(() => {
+      const loader = document.querySelector('.cases-more-card-cube[data-transparent-video="true"]');
+      if (!(loader instanceof HTMLVideoElement)) {
+        return null;
+      }
+
+      return {
+        autoplay: loader.autoplay,
+        muted: loader.muted,
+        loop: loader.loop,
+        playsInline: loader.playsInline,
+        poster: loader.getAttribute('poster') ?? '',
+        webmSrc: loader.dataset.transparentVideoWebm ?? '',
+        hevcSrc: loader.dataset.transparentVideoHevc ?? '',
+        activeSrc: loader.dataset.transparentVideoActiveSrc ?? '',
+        selectedCodec: loader.dataset.transparentVideoCodec ?? '',
+        srcAttr: loader.getAttribute('src') ?? '',
+        currentSrc: loader.currentSrc ?? '',
+      };
+    });
+
+    expect(loaderSnapshot).not.toBeNull();
+    expect(loaderSnapshot!.autoplay).toBe(true);
+    expect(loaderSnapshot!.muted).toBe(true);
+    expect(loaderSnapshot!.loop).toBe(true);
+    expect(loaderSnapshot!.playsInline).toBe(true);
+    expect(loaderSnapshot!.poster).toBe('/media/cases/section/more-cases-cube.webp');
+    expect(loaderSnapshot!.webmSrc).toBe('/media/cases/section/loader_light.webm');
+    expect(loaderSnapshot!.hevcSrc).toBe('/media/cases/section/loader_light.mov');
+    expect(
+      ['webm-vp9', 'hevc-alpha'].includes(loaderSnapshot!.selectedCodec),
+      `Unexpected codec marker: ${loaderSnapshot!.selectedCodec}`,
+    ).toBe(true);
+    expect(
+      [loaderSnapshot!.webmSrc, loaderSnapshot!.hevcSrc].includes(loaderSnapshot!.activeSrc),
+    ).toBe(true);
+    expect(loaderSnapshot!.srcAttr).toBe(loaderSnapshot!.activeSrc);
+    expect(loaderSnapshot!.currentSrc.endsWith(loaderSnapshot!.activeSrc)).toBe(true);
   });
 
   test('home main quote keeps mobile t3 with line-height 38 and preserves desktop typography', async ({ page }) => {
@@ -1335,7 +1392,8 @@ test.describe('Mobile home adaptive', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/gallery');
 
-    await expect(page.locator('.temporary-adaptive-notice')).toBeHidden();
+    await expect(page.locator('.temporary-adaptive-shell')).toHaveCount(0);
+    await expect(page.locator('.temporary-adaptive-notice')).toHaveCount(0);
     await expect(page.locator('.site-desktop-shell')).toBeVisible();
   });
 });

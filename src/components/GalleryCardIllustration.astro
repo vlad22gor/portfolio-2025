@@ -1,5 +1,6 @@
 ---
 import type { GalleryIllustrationContent } from '../data/gallery';
+import TransparentVideo from './TransparentVideo.astro';
 
 interface Props {
   content: GalleryIllustrationContent;
@@ -16,6 +17,7 @@ type IllustrationAsset =
   | {
       kind: 'video';
       src: string;
+      movSrc?: string;
       className: string;
       poster?: string;
     };
@@ -24,12 +26,14 @@ const assetByContent: Record<GalleryIllustrationContent, IllustrationAsset> = {
   'coin-wheel': {
     kind: 'video',
     src: '/media/gallery/illustrations/coin-wheel.webm',
+    movSrc: '/media/gallery/illustrations/coin-wheel.mov',
     poster: '/media/gallery/illustrations/coin-wheel.webp',
     className: 'gallery-card-illustration__asset--coin-wheel',
   },
   cube: {
     kind: 'video',
     src: '/media/gallery/illustrations/loader-light.webm',
+    movSrc: '/media/gallery/illustrations/loader-light.mov',
     poster: '/media/gallery/illustrations/cube.webp',
     className: 'gallery-card-illustration__asset--cube',
   },
@@ -56,16 +60,18 @@ const resolvedAsset = assetByContent[content];
 <div class={`gallery-card-illustration gallery-card-illustration--${content}`.trim()} aria-hidden="true">
   {
     resolvedAsset.kind === 'video' ? (
-      <video
+      <TransparentVideo
         class={`gallery-card-illustration__asset ${resolvedAsset.className}`.trim()}
-        src={resolvedAsset.src}
-        autoplay
+        webmSrc={resolvedAsset.src}
+        movSrc={resolvedAsset.movSrc}
+        autoplay={false}
         muted
         loop
         playsinline
         preload="metadata"
         poster={resolvedAsset.poster}
-        aria-hidden="true"
+        ariaHidden="true"
+        data-video-playback="inview"
       />
     ) : (
       <img

@@ -37,6 +37,8 @@ const mediaByRoute = getCriticalMediaByRoute();
       const effectiveType = String(connection.effectiveType || '').toLowerCase();
       return effectiveType === 'slow-2g' || effectiveType === '2g';
     };
+    const isMobileViewport = () =>
+      typeof window.matchMedia === 'function' ? window.matchMedia('(max-width: 847px)').matches : false;
     const toUniqueAssets = (assets) => {
       const seen = new Set();
       const result = [];
@@ -186,9 +188,11 @@ const mediaByRoute = getCriticalMediaByRoute();
         return;
       }
 
+      const skipBackgroundVideos = isMobileViewport();
       const assets = routeIds
         .filter((routeId) => routeId !== activeRouteId)
-        .flatMap((routeId) => resolveRouteAssets(routeId));
+        .flatMap((routeId) => resolveRouteAssets(routeId))
+        .filter((asset) => !(skipBackgroundVideos && asset.kind === 'video'));
       await warmAssets(assets, maxBackgroundConcurrency);
     };
 

@@ -182,6 +182,7 @@ const mediaLoading = resolvedPriority === 'critical' ? 'eager' : 'lazy';
 const mediaDecoding = resolvedPriority === 'critical' ? 'sync' : 'async';
 const mediaFetchPriority = resolvedPriority === 'critical' ? 'high' : 'auto';
 const videoPreload = resolvedPriority === 'critical' ? 'auto' : 'metadata';
+const videoPlaybackPolicy = resolvedPriority === 'critical' ? 'always' : 'inview';
 const composedClassName = ['device-mockup', `device-mockup--${resolvedDevice}`, className].filter(Boolean).join(' ');
 const styleVars = [
   `--device-width: ${framePreset.width}px`,
@@ -218,13 +219,14 @@ const styleVars = [
           <video
             class="device-mockup__media device-mockup__media--video"
             src={screenSrc}
-            autoplay
+            autoplay={resolvedPriority === 'critical' ? true : undefined}
             muted
             loop
             playsinline
             preload={videoPreload}
             fetchpriority={mediaFetchPriority}
             poster={screenPoster}
+            data-video-playback={videoPlaybackPolicy}
             aria-hidden="true"
           />
         </div>
@@ -329,6 +331,7 @@ const styleVars = [
 <script>
   (() => {
     const runtimeKey = '__deviceMockupRevealRuntime';
+    const videoPlaybackRuntimeKey = '__managedVideoPlaybackRuntime';
     const warmVideoSrcsKey = '__deviceMockupWarmVideoSrcs';
     const warmVideoKeysKey = '__deviceMockupWarmVideoKeys';
     const warmedVideoSrcs =
@@ -401,7 +404,122 @@ const styleVars = [
       return typeof key === 'string' && warmedVideoKeys.has(key);
     };
 
+    const ensureManagedVideoPlaybackRuntime = () => {
+      if (window[videoPlaybackRuntimeKey]) {
+        window[videoPlaybackRuntimeKey].mount();
+        return window[videoPlaybackRuntimeKey];
+      }
+
+      const selector = 'video[data-video-playback="inview"]';
+      const initAttr = 'data-video-playback-init';
+      const managed = new Map();
+      let observer = null;
+
+      const cleanupStaleVideos = () => {
+        for (const [video] of managed.entries()) {
+          if (!(video instanceof HTMLVideoElement) || !video.isConnected) {
+            if (observer) {
+              observer.unobserve(video);
+            }
+            managed.delete(video);
+          }
+        }
+      };
+
+      const syncVideoPlayback = (video) => {
+        if (!(video instanceof HTMLVideoElement)) {
+          return;
+        }
+        if (video.dataset.videoPlayback !== 'inview') {
+          return;
+        }
+        const state = managed.get(video);
+        const shouldPlay = Boolean(state?.inView) && !document.hidden && video.isConnected;
+        if (!shouldPlay) {
+          video.pause();
+          return;
+        }
+        const playPromise = video.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(() => {});
+        }
+      };
+
+      const syncAllVideos = () => {
+        cleanupStaleVideos();
+        managed.forEach((_, video) => {
+          syncVideoPlayback(video);
+        });
+      };
+
+      const pauseAllVideos = () => {
+        managed.forEach((_, video) => {
+          video.pause();
+        });
+      };
+
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            const target = entry.target;
+            if (!(target instanceof HTMLVideoElement)) {
+              return;
+            }
+            const state = managed.get(target);
+            if (!state) {
+              return;
+            }
+            state.inView = entry.isIntersecting && entry.intersectionRatio > 0.15;
+            syncVideoPlayback(target);
+          });
+        },
+        { threshold: [0, 0.15, 0.35] },
+      );
+
+      const registerVideo = (video) => {
+        if (!(video instanceof HTMLVideoElement)) {
+          return;
+        }
+        if (video.dataset.videoPlayback !== 'inview') {
+          return;
+        }
+        if (video.getAttribute(initAttr) === 'true') {
+          return;
+        }
+        video.setAttribute(initAttr, 'true');
+        video.muted = true;
+        video.playsInline = true;
+        managed.set(video, { inView: false });
+        observer.observe(video);
+        video.addEventListener('loadedmetadata', () => syncVideoPlayback(video), { once: true });
+        syncVideoPlayback(video);
+      };
+
+      const mount = () => {
+        cleanupStaleVideos();
+        document.querySelectorAll(selector).forEach((node) => {
+          registerVideo(node);
+        });
+        syncAllVideos();
+      };
+
+      document.addEventListener('astro:page-load', mount);
+      document.addEventListener('astro:before-swap', pauseAllVideos);
+      document.addEventListener('visibilitychange', syncAllVideos);
+      window.addEventListener('pagehide', pauseAllVideos);
+
+      const runtime = {
+        mount,
+        sync: syncAllVideos,
+        pauseAll: pauseAllVideos,
+      };
+      window[videoPlaybackRuntimeKey] = runtime;
+      mount();
+      return runtime;
+    };
+
     if (window[runtimeKey]) {
+      ensureManagedVideoPlaybackRuntime();
       window[runtimeKey].mount();
       return;
     }
@@ -516,6 +634,7 @@ const styleVars = [
     };
 
     const mount = () => {
+      ensureManagedVideoPlaybackRuntime();
       document.querySelectorAll(mockupSelector).forEach((mockup) => {
         initMockup(mockup);
       });

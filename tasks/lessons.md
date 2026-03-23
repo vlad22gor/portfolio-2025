@@ -1,5 +1,7 @@
 # Lessons
 
+- Для маршрутов, где `TemporaryAdaptiveNotice` по контракту всегда скрыт (`/`, `/cases`, `/gallery`, `/fora`, `/kissa`), не монтировать `temporary-adaptive-shell` в DOM: скрытый CSS-блок с видео/slider runtime даёт лишний decode/RAF и ухудшает mobile-навигацию.
+- Для mobile-стабильности: `home`-версия `AdaptivePhoneArcSlider` должна работать в `mediaMode='poster-only'`; lazy-видео (`device mockups` и gallery-illustrations) переводить на `data-video-playback='inview'` с `pause` вне viewport и на `astro:before-swap`.
 - Держать заметки краткими, без дублей и противоречий.
 - Для сложных scallop-форм использовать quantized SVG-компонент вместо mask-пересечений.
 - Для Figma handoff scallop: `pad` брать из padding контейнера, `shape` выводить из corner radius (`9999` -> `circle`, иначе `rectangle`).
@@ -23,8 +25,7 @@
 - Для `/gallery` на desktop (`>=1360`) держать контракт `6` рядов с `row-gap: 120`, карточка `height: 384`; `phone/tablet/illustration` — `span 2` через `QuantizedPerimeter edgePattern='scallop' step=48`, `image` — `span 4` через `QuantizedPerimeter edgePattern='totem' step=50` с общей маской `--perimeter-content-mask` и для image-слоя, и для darkened bg-слоя.
 - Для `/gallery` на tablet (`768–1359`) использовать единый grid-контейнер (`.gallery-rows`) с `gap: 120 24`: `8` колонок по умолчанию, `6` при `container < 1224`, `4` при `container < 1032`; `.gallery-row` переводить в `display: contents`, включать `grid-auto-flow: row dense`, чтобы убрать внутренние пустые пролёты и сохранить ровный вертикальный ритм.
 - Для `/gallery` у второй `image`-карточки (`57:5450`) использовать подготовленный ассет `cube log in` из `assets/gallery/static/` через runtime-копию `public/media/gallery/images/r5-c3-cube-log-in.webp`.
-- Для `/gallery` карточку `51:5287` (`cube`) рендерить как `loader-light.webm` (`autoplay + loop + muted + playsinline`), а `cube.webp` использовать как `poster`/fallback.
-- Для `/gallery` карточку `51:5274` (`coin-wheel`) держать в типе `illustration`, но контент рендерить как `coin-wheel.webm` (`autoplay + loop + muted + playsinline`) через runtime-путь `public/media/gallery/illustrations/coin-wheel.webm`; `coin-wheel.webp` использовать как `poster`.
+- Для transparent video в `/gallery` (`51:5287 cube`, `51:5274 coin-wheel`) использовать dual-delivery через `TransparentVideo`: `webm (vp9 alpha)` + `mov (hvc1 alpha)` с runtime feature-detection через `MediaCapabilities.hasAlphaChannel`; при недоступности API/поддержки fallback — `webm`; `cube.webp`/`coin-wheel.webp` оставлять как `poster`.
 - Для `/gallery` держать порядок и Y-контракт секций из `51:5014`: `rows(240) -> to be more(3240, 144x144, circle D=24) -> final cta(3576)` и отступ к `footer(4656)`; в `page-shell` (`gap: 32`, `padding-bottom: 48`) это даёт `to-be-more margin-top: 64`, `final-cta margin-top: 160`, `final-cta margin-bottom: 138`.
 - Для `mobile <=767` на `/gallery`: карточки рендерить в один столбец в desktop-порядке (`21` шт.), ширину держать по grid (`viewport-40`), `D` считать runtime как в `feature cards` (`resolveMobilePerimeterGrid`, `base=40`) и обновлять `data-perimeter-step` для всех gallery-perimeter; высоты квантизовать от `D` (`device/illustration target=384`, `image target=224`), межкарточные отступы задавать через `card container` по матрице `device->device=120`, `device<->illustration=92`, `device<->image=92`, `illustration->illustration=64`, `illustration<->image=64`, `image->image=64`.
 - Для `/gallery` блока `to be more` переносы из Figma (`Shift+Enter`) фиксировать явным `<br>` в разметке; актуальный copy: `there will` + `be much more joyfull works!`.
@@ -125,7 +126,7 @@
 - Для `CaseCard` press-анимацию держать как у `Button`: press-in `scale: 0.95` и возврат к `1` на `pointerup/pointercancel/blur`.
 - Для `CaseCard` hover-ассетов в данных хранить размеры до rotation (`width/height` pre-rotation), а `targetX/targetY` — как top-left итогового позиционирования в runtime.
 - Для `CaseCard` с `coverSide='right'` нормализовать `targetX` в runtime по ширине карточки: `effectiveX = rawX - max(0, designWidth - cardWidth)` (чтобы figma-координаты из wider frame не уезжали вправо).
-- Для кубика в `more is coming (QScallop)` использовать `loader_light.webm` как autoplay/loop `video`, а `more-cases-cube.png` оставлять `poster` и fallback; прод-путь — `public/media/cases/section/`.
+- Для кубика в `more is coming (QScallop)` использовать `TransparentVideo` с `loader_light.webm + loader_light.mov (hvc1 alpha)` и runtime feature-detection через `MediaCapabilities.hasAlphaChannel`; `more-cases-cube.png`/`more-cases-cube.webp` оставлять как `poster`; прод-путь — `public/media/cases/section/`.
 - При обновлении hover-ассетов из Figma для `CaseCard` (`kissa`) сохранять raw-координаты/размеры 1:1 из фрейма `20:1323`; компенсацию ширины выполняет runtime-нормализация `effectiveX`.
 - При повторных коррекциях `kissa` сначала обновлять только raw `targetX/targetY/width/height` из Figma, а runtime-логику нормализации не трогать (она должна оставаться единственным местом компенсации).
 - Для ровной scallop-обводки в `CaseCard` использовать `QuantizedPerimeter outlineMode='geometric'` + `outlinePlacement='outside'`: внешний контур строится как doubled-stroke с inverse SVG-mask; `alpha`-outline оставлять fallback для неподдержанных паттернов/форм.

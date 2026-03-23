@@ -30,6 +30,7 @@ const isHomeRoute = normalizedCanonicalPath === '/';
 const isCasesRoute = normalizedCanonicalPath === '/cases';
 const isGalleryRoute = normalizedCanonicalPath === '/gallery';
 const isCaseDetailRoute = criticalRouteId === 'fora' || criticalRouteId === 'kissa';
+const shouldRenderTemporaryAdaptiveShell = !(isHomeRoute || isCasesRoute || isGalleryRoute || isCaseDetailRoute);
 const isAgentationEnabled = import.meta.env.DEV && import.meta.env.PUBLIC_AGENTATION_ENABLED === 'true';
 const agentationEndpoint =
   (typeof import.meta.env.PUBLIC_AGENTATION_ENDPOINT === 'string' &&
@@ -206,9 +207,13 @@ const agentationEndpoint =
     data-route-case-detail={isCaseDetailRoute ? 'true' : 'false'}
   >
     <a href="#content" class="skip-link">Skip to content</a>
-    <div class="temporary-adaptive-shell">
-      <TemporaryAdaptiveNotice />
-    </div>
+    {
+      shouldRenderTemporaryAdaptiveShell && (
+        <div class="temporary-adaptive-shell">
+          <TemporaryAdaptiveNotice />
+        </div>
+      )
+    }
     <div class="site-desktop-shell">
       <slot />
       <FloatingThemeButton />

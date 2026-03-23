@@ -45,21 +45,45 @@ test.describe('Gallery smoke', () => {
     const webmVideos = page.locator('.gallery-card .device-mockup video.device-mockup__media');
     await expect(webmVideos).toHaveCount(7);
 
-    const allVideosAreAutoplayReady = await webmVideos.evaluateAll((nodes) =>
+    const allVideosHavePlaybackContract = await webmVideos.evaluateAll((nodes) =>
       nodes.every((node) => {
         if (!(node instanceof HTMLVideoElement)) {
           return false;
         }
         return (
-          node.autoplay &&
           node.muted &&
           node.loop &&
           node.playsInline &&
+          ['always', 'inview'].includes(node.dataset.videoPlayback ?? '') &&
           node.getAttribute('src')?.endsWith('.webm') === true
         );
       }),
     );
-    expect(allVideosAreAutoplayReady).toBe(true);
+    expect(allVideosHavePlaybackContract).toBe(true);
+
+    const playbackPolicySummary = await webmVideos.evaluateAll((nodes) => {
+      let always = 0;
+      let inview = 0;
+      let inviewWithAutoplay = 0;
+      nodes.forEach((node) => {
+        if (!(node instanceof HTMLVideoElement)) {
+          return;
+        }
+        const policy = node.dataset.videoPlayback;
+        if (policy === 'always') {
+          always += 1;
+        } else if (policy === 'inview') {
+          inview += 1;
+          if (node.autoplay) {
+            inviewWithAutoplay += 1;
+          }
+        }
+      });
+      return { always, inview, inviewWithAutoplay };
+    });
+    expect(playbackPolicySummary.always).toBe(2);
+    expect(playbackPolicySummary.inview).toBe(5);
+    expect(playbackPolicySummary.inviewWithAutoplay).toBe(0);
 
     const allVideosUseSafeMode = await webmVideos.evaluateAll((nodes) =>
       nodes.every((node) => node.classList.contains('device-mockup__media--video')),
@@ -88,36 +112,87 @@ test.describe('Gallery smoke', () => {
       '.gallery-card-illustration--coin-wheel video.gallery-card-illustration__asset--coin-wheel',
     );
     await expect(coinWheelVideo).toHaveCount(1);
-    const coinWheelVideoIsAutoplayReady = await coinWheelVideo.evaluate((node) => {
+    const coinWheelVideoContract = await coinWheelVideo.evaluate((node) => {
       if (!(node instanceof HTMLVideoElement)) {
-        return false;
+        return null;
       }
       return (
-        node.autoplay &&
-        node.muted &&
-        node.loop &&
-        node.playsInline &&
-        node.getAttribute('src')?.endsWith('/media/gallery/illustrations/coin-wheel.webm') === true &&
-        node.getAttribute('poster')?.endsWith('/media/gallery/illustrations/coin-wheel.webp') === true
+        {
+          autoplay: node.autoplay,
+          muted: node.muted,
+          loop: node.loop,
+          playsInline: node.playsInline,
+          webmSrc: node.dataset.transparentVideoWebm ?? '',
+          hevcSrc: node.dataset.transparentVideoHevc ?? '',
+          activeSrc: node.dataset.transparentVideoActiveSrc ?? '',
+          selectedCodec: node.dataset.transparentVideoCodec ?? '',
+          srcAttr: node.getAttribute('src') ?? '',
+          poster: node.getAttribute('poster') ?? '',
+          currentSrc: node.currentSrc ?? '',
+        }
       );
     });
-    expect(coinWheelVideoIsAutoplayReady).toBe(true);
+    expect(coinWheelVideoContract).not.toBeNull();
+    expect(coinWheelVideoContract!.autoplay).toBe(false);
+    expect(coinWheelVideoContract!.muted).toBe(true);
+    expect(coinWheelVideoContract!.loop).toBe(true);
+    expect(coinWheelVideoContract!.playsInline).toBe(true);
+    expect(coinWheelVideoContract!.poster).toBe('/media/gallery/illustrations/coin-wheel.webp');
+    expect(coinWheelVideoContract!.webmSrc).toBe('/media/gallery/illustrations/coin-wheel.webm');
+    expect(coinWheelVideoContract!.hevcSrc).toBe('/media/gallery/illustrations/coin-wheel.mov');
+    expect(
+      ['webm-vp9', 'hevc-alpha'].includes(coinWheelVideoContract!.selectedCodec),
+      `Unexpected codec marker: ${coinWheelVideoContract!.selectedCodec}`,
+    ).toBe(true);
+    expect(
+      [coinWheelVideoContract!.webmSrc, coinWheelVideoContract!.hevcSrc].includes(
+        coinWheelVideoContract!.activeSrc,
+      ),
+    ).toBe(true);
+    expect(coinWheelVideoContract!.srcAttr).toBe(coinWheelVideoContract!.activeSrc);
+    expect(coinWheelVideoContract!.currentSrc.endsWith(coinWheelVideoContract!.activeSrc)).toBe(true);
 
     const loaderLight = page.locator('.gallery-card-illustration--cube video.gallery-card-illustration__asset--cube');
     await expect(loaderLight).toHaveCount(1);
-    const loaderLightIsAutoplayReady = await loaderLight.evaluate((node) => {
+    const loaderLightContract = await loaderLight.evaluate((node) => {
       if (!(node instanceof HTMLVideoElement)) {
-        return false;
+        return null;
       }
       return (
-        node.autoplay &&
-        node.muted &&
-        node.loop &&
-        node.playsInline &&
-        node.getAttribute('src')?.endsWith('/media/gallery/illustrations/loader-light.webm') === true
+        {
+          autoplay: node.autoplay,
+          muted: node.muted,
+          loop: node.loop,
+          playsInline: node.playsInline,
+          webmSrc: node.dataset.transparentVideoWebm ?? '',
+          hevcSrc: node.dataset.transparentVideoHevc ?? '',
+          activeSrc: node.dataset.transparentVideoActiveSrc ?? '',
+          selectedCodec: node.dataset.transparentVideoCodec ?? '',
+          srcAttr: node.getAttribute('src') ?? '',
+          poster: node.getAttribute('poster') ?? '',
+          currentSrc: node.currentSrc ?? '',
+        }
       );
     });
-    expect(loaderLightIsAutoplayReady).toBe(true);
+    expect(loaderLightContract).not.toBeNull();
+    expect(loaderLightContract!.autoplay).toBe(false);
+    expect(loaderLightContract!.muted).toBe(true);
+    expect(loaderLightContract!.loop).toBe(true);
+    expect(loaderLightContract!.playsInline).toBe(true);
+    expect(loaderLightContract!.poster).toBe('/media/gallery/illustrations/cube.webp');
+    expect(loaderLightContract!.webmSrc).toBe('/media/gallery/illustrations/loader-light.webm');
+    expect(loaderLightContract!.hevcSrc).toBe('/media/gallery/illustrations/loader-light.mov');
+    expect(
+      ['webm-vp9', 'hevc-alpha'].includes(loaderLightContract!.selectedCodec),
+      `Unexpected codec marker: ${loaderLightContract!.selectedCodec}`,
+    ).toBe(true);
+    expect(
+      [loaderLightContract!.webmSrc, loaderLightContract!.hevcSrc].includes(
+        loaderLightContract!.activeSrc,
+      ),
+    ).toBe(true);
+    expect(loaderLightContract!.srcAttr).toBe(loaderLightContract!.activeSrc);
+    expect(loaderLightContract!.currentSrc.endsWith(loaderLightContract!.activeSrc)).toBe(true);
 
     const criticalDeviceCards = page.locator(
       '.gallery-row:nth-child(-n+2) .gallery-card[data-gallery-card-type="phone"], .gallery-row:nth-child(-n+2) .gallery-card[data-gallery-card-type="tablet"]',
@@ -497,7 +572,7 @@ test.describe('Gallery tablet smoke', () => {
     await page.setViewportSize({ width: 1024, height: 1100 });
     await page.goto('/gallery');
 
-    await expect(page.locator('.temporary-adaptive-shell')).toBeHidden();
+    await expect(page.locator('.temporary-adaptive-shell')).toHaveCount(0);
     await expect(page.locator('.site-desktop-shell')).toBeVisible();
   });
 
@@ -531,6 +606,55 @@ test.describe('Gallery tablet smoke', () => {
     }
   });
 
+  test('820 keeps desktop initial final-cta morph vars on gallery', async ({ page }) => {
+    await page.setViewportSize({ width: 820, height: 900 });
+    await page.goto('/gallery');
+    await waitForGalleryCriticalReady(page);
+
+    const setSectionTop = async (targetTop: number) => {
+      await page.evaluate((nextTop) => {
+        const section = document.querySelector('.final-cta-section');
+        if (!(section instanceof HTMLElement)) {
+          return;
+        }
+        const currentTop = section.getBoundingClientRect().top;
+        window.scrollBy(0, currentTop - nextTop);
+      }, targetTop);
+    };
+
+    const snapshot = async () =>
+      page.evaluate(() => {
+        const section = document.querySelector('.final-cta-section');
+        const title = document.querySelector('.final-cta-title');
+        if (!(section instanceof HTMLElement) || !(title instanceof HTMLElement)) {
+          return null;
+        }
+        return {
+          triggerLineY: window.innerHeight * 0.3,
+          sectionTop: section.getBoundingClientRect().top,
+          titleFlexDirection: getComputedStyle(title).flexDirection,
+          titleGapVar: Number.parseFloat(section.style.getPropertyValue('--final-cta-title-gap') || '0'),
+          titleOffsetYVar: Number.parseFloat(section.style.getPropertyValue('--final-cta-title-offset-y') || '0'),
+          orbRotateVar: section.style.getPropertyValue('--final-cta-orb-rotate').trim(),
+        };
+      });
+
+    await setSectionTop(360);
+    await page.evaluate(() => {
+      window.dispatchEvent(new Event('resize'));
+    });
+    await page.waitForTimeout(120);
+
+    const initialSnapshot = await snapshot();
+    expect(initialSnapshot).not.toBeNull();
+    expect(initialSnapshot!.sectionTop).toBeGreaterThan(initialSnapshot!.triggerLineY);
+    expect(initialSnapshot!.titleFlexDirection).toBe('row');
+    expect(Math.abs(initialSnapshot!.titleGapVar - 350)).toBeLessThanOrEqual(2);
+    expect(Math.abs(initialSnapshot!.titleOffsetYVar)).toBeLessThanOrEqual(1);
+    expect(Math.abs(initialSnapshot!.titleGapVar - 210)).toBeGreaterThan(20);
+    expect(initialSnapshot!.orbRotateVar === '90deg' || initialSnapshot!.orbRotateVar === '-270deg').toBe(true);
+  });
+
   test('gallery tablet container thresholds follow 8->6->4 and keep dense lines', async ({ page }) => {
     const cases = [{ width: 1359 }, { width: 1200 }, { width: 1080 }, { width: 980 }, { width: 848 }, { width: 847 }] as const;
 
@@ -539,7 +663,7 @@ test.describe('Gallery tablet smoke', () => {
       await page.goto('/gallery');
       await waitForGalleryCriticalReady(page);
 
-      await expect(page.locator('.temporary-adaptive-shell')).toBeHidden();
+      await expect(page.locator('.temporary-adaptive-shell')).toHaveCount(0);
       await expect(page.locator('.site-desktop-shell')).toBeVisible();
 
       const snapshot = await page.evaluate(() => {
@@ -614,7 +738,8 @@ test.describe('Gallery mobile smoke', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/gallery');
 
-    await expect(page.locator('.temporary-adaptive-notice')).toBeHidden();
+    await expect(page.locator('.temporary-adaptive-shell')).toHaveCount(0);
+    await expect(page.locator('.temporary-adaptive-notice')).toHaveCount(0);
     await expect(page.locator('.site-desktop-shell')).toBeVisible();
     await expect(page.locator('.gallery-card')).toHaveCount(21);
 
@@ -730,12 +855,175 @@ test.describe('Gallery mobile smoke', () => {
     ).toBe(true);
   });
 
+  test('390x844 final cta morph matches home-consistent initial/final title states on gallery', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/gallery');
+    await waitForGalleryCriticalReady(page);
+    const routeDiagnostics = await page.evaluate(() => ({
+      pathname: window.location.pathname,
+      routeGallery: document.body.dataset.routeGallery ?? null,
+      routeHome: document.body.dataset.routeHome ?? null,
+      routeCases: document.body.dataset.routeCases ?? null,
+      innerWidth: window.innerWidth,
+      clientWidth: document.documentElement.clientWidth,
+      mq767: window.matchMedia('(max-width: 767px)').matches,
+      mq847: window.matchMedia('(max-width: 847px)').matches,
+    }));
+    expect(routeDiagnostics.pathname).toBe('/gallery');
+    expect(routeDiagnostics.routeGallery).toBe('true');
+    expect(routeDiagnostics.routeHome).toBe('false');
+    expect(routeDiagnostics.routeCases).toBe('false');
+    expect(routeDiagnostics.mq767).toBe(true);
+    expect(routeDiagnostics.mq847).toBe(true);
+
+    const readStateAtTop = async (targetTop: number) =>
+      page.evaluate((nextTop) => {
+        const section = document.querySelector('.final-cta-section');
+        const wrap = document.querySelector('.final-cta-title-wrap');
+        const title = document.querySelector('.final-cta-title');
+        if (!(section instanceof HTMLElement) || !(wrap instanceof HTMLElement) || !(title instanceof HTMLElement)) {
+          return null;
+        }
+
+        const currentTop = section.getBoundingClientRect().top;
+        window.scrollBy(0, currentTop - nextTop);
+        window.dispatchEvent(new Event('resize'));
+
+        return {
+          triggerLineY: window.innerHeight * 0.3,
+          sectionTop: section.getBoundingClientRect().top,
+          titleTopWithinWrap: title.getBoundingClientRect().top - wrap.getBoundingClientRect().top,
+          titleFlexDirection: getComputedStyle(title).flexDirection,
+          titleOffsetYVar: Number.parseFloat(section.style.getPropertyValue('--final-cta-title-offset-y') || '0'),
+          titleGapVar: Number.parseFloat(section.style.getPropertyValue('--final-cta-title-gap') || '0'),
+          orbRotateVar: section.style.getPropertyValue('--final-cta-orb-rotate').trim(),
+        };
+      }, targetTop);
+
+    const initialSnapshot = await readStateAtTop(360);
+    expect(initialSnapshot).not.toBeNull();
+    expect(initialSnapshot!.sectionTop).toBeGreaterThan(initialSnapshot!.triggerLineY);
+    expect(initialSnapshot!.titleFlexDirection).toBe('column');
+    expect(Math.abs(initialSnapshot!.titleGapVar - 210)).toBeLessThanOrEqual(2);
+    expect(Math.abs(initialSnapshot!.titleOffsetYVar - -109)).toBeLessThanOrEqual(2);
+    expect(initialSnapshot!.orbRotateVar === '90deg' || initialSnapshot!.orbRotateVar === '-270deg').toBe(true);
+
+    const finalSnapshot = await readStateAtTop(-260);
+    expect(finalSnapshot).not.toBeNull();
+    expect(finalSnapshot!.sectionTop).toBeLessThanOrEqual(finalSnapshot!.triggerLineY);
+    expect(finalSnapshot!.titleFlexDirection).toBe('column');
+    expect(Math.abs(finalSnapshot!.titleGapVar - -8)).toBeLessThanOrEqual(2);
+    expect(Math.abs(finalSnapshot!.titleOffsetYVar)).toBeLessThanOrEqual(2);
+    expect(Math.abs(finalSnapshot!.titleTopWithinWrap - 92)).toBeLessThanOrEqual(4);
+    expect(finalSnapshot!.orbRotateVar === '0deg' || finalSnapshot!.orbRotateVar === '-0deg').toBe(true);
+  });
+
+  test('390x844 keeps offscreen in-view videos paused', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/gallery');
+    await waitForGalleryCriticalReady(page);
+    await page.waitForTimeout(700);
+
+    const playbackSnapshot = await page.evaluate(() => {
+      const videos = Array.from(document.querySelectorAll('.gallery-row video')).filter(
+        (node): node is HTMLVideoElement => node instanceof HTMLVideoElement,
+      );
+      if (videos.length === 0) {
+        return null;
+      }
+      const isOffscreen = (node: HTMLVideoElement) => {
+        const rect = node.getBoundingClientRect();
+        return rect.bottom <= 0 || rect.top >= window.innerHeight || rect.right <= 0 || rect.left >= window.innerWidth;
+      };
+
+      let offscreenPlaying = 0;
+      let inviewPolicyCount = 0;
+      let inviewWithAutoplayCount = 0;
+
+      videos.forEach((video) => {
+        if (video.dataset.videoPlayback === 'inview') {
+          inviewPolicyCount += 1;
+          if (video.autoplay) {
+            inviewWithAutoplayCount += 1;
+          }
+        }
+        const isPlaying = !video.paused && !video.ended;
+        if (isOffscreen(video) && isPlaying) {
+          offscreenPlaying += 1;
+        }
+      });
+
+      return {
+        totalVideos: videos.length,
+        offscreenPlaying,
+        inviewPolicyCount,
+        inviewWithAutoplayCount,
+      };
+    });
+
+    expect(playbackSnapshot).not.toBeNull();
+    expect(playbackSnapshot!.totalVideos).toBe(9);
+    expect(playbackSnapshot!.offscreenPlaying).toBe(0);
+    expect(playbackSnapshot!.inviewPolicyCount).toBeGreaterThan(0);
+    expect(playbackSnapshot!.inviewWithAutoplayCount).toBe(0);
+  });
+
+  test('mobile home <-> gallery soft-nav keeps bounded video budget for 10 cycles', async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+
+    const routeBudget = async () =>
+      page.evaluate(() => {
+        const allVideos = Array.from(document.querySelectorAll('video')).filter(
+          (node): node is HTMLVideoElement => node instanceof HTMLVideoElement,
+        );
+        return {
+          path: window.location.pathname,
+          totalVideos: allVideos.length,
+          tempShellVideos: document.querySelectorAll('.temporary-adaptive-shell video').length,
+          homeSliderVideos: document.querySelectorAll('.home-hero-mobile [data-temp-slider] video').length,
+          playingVideos: allVideos.filter((video) => !video.paused && !video.ended).length,
+        };
+      });
+
+    const snapshots: Array<{
+      path: string;
+      totalVideos: number;
+      tempShellVideos: number;
+      homeSliderVideos: number;
+      playingVideos: number;
+    }> = [];
+
+    for (let cycle = 0; cycle < 10; cycle += 1) {
+      await page.click('.site-desktop-shell a[data-nav-id="gallery"]');
+      await page.waitForURL('**/gallery');
+      snapshots.push(await routeBudget());
+
+      await page.click('.site-desktop-shell a[data-nav-id="home"]');
+      await page.waitForURL('**/');
+      snapshots.push(await routeBudget());
+    }
+
+    const gallerySnapshots = snapshots.filter((snapshot) => snapshot.path === '/gallery');
+    const homeSnapshots = snapshots.filter((snapshot) => snapshot.path === '/');
+
+    expect(gallerySnapshots.length).toBe(10);
+    expect(homeSnapshots.length).toBe(10);
+    expect(gallerySnapshots.every((snapshot) => snapshot.tempShellVideos === 0)).toBe(true);
+    expect(homeSnapshots.every((snapshot) => snapshot.tempShellVideos === 0)).toBe(true);
+    expect(homeSnapshots.every((snapshot) => snapshot.homeSliderVideos === 0)).toBe(true);
+    expect(gallerySnapshots.every((snapshot) => snapshot.totalVideos <= 10)).toBe(true);
+    expect(homeSnapshots.every((snapshot) => snapshot.totalVideos <= 3)).toBe(true);
+  });
+
   test('767 keeps real gallery shell and grid-width contract', async ({ page }) => {
     await page.setViewportSize({ width: 767, height: 1024 });
     await page.goto('/gallery');
     await waitForGalleryCriticalReady(page);
 
-    await expect(page.locator('.temporary-adaptive-notice')).toBeHidden();
+    await expect(page.locator('.temporary-adaptive-shell')).toHaveCount(0);
+    await expect(page.locator('.temporary-adaptive-notice')).toHaveCount(0);
     await expect(page.locator('.site-desktop-shell')).toBeVisible();
 
     const snapshot = await page.evaluate(() => {

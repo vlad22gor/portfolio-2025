@@ -9,6 +9,7 @@ export interface Props {
   itemClass?: string;
   stageItem?: boolean;
   motionStaggerIndex?: number;
+  mediaMode?: 'mixed' | 'poster-only';
 }
 
 interface TemporaryAdaptiveSlide {
@@ -26,18 +27,30 @@ const {
   itemClass = '',
   stageItem = false,
   motionStaggerIndex,
+  mediaMode = 'mixed',
 } = Astro.props;
 
 const baseSlides: TemporaryAdaptiveSlide[] = GALLERY_ROWS.flatMap((row) => row.items)
   .filter((item): item is GalleryPhoneCard => item.type === 'phone')
   .slice(0, 9)
-  .map((item) => ({
-    id: item.id,
-    alt: item.alt,
-    screenKind: item.screen.kind,
-    screenSrc: item.screen.src,
-    screenPoster: item.screen.poster,
-  }));
+  .map((item) => {
+    if (mediaMode === 'poster-only' && item.screen.kind === 'video') {
+      return {
+        id: item.id,
+        alt: item.alt,
+        screenKind: 'image' as const,
+        screenSrc: item.screen.poster ?? item.screen.src,
+        screenPoster: undefined,
+      };
+    }
+    return {
+      id: item.id,
+      alt: item.alt,
+      screenKind: item.screen.kind,
+      screenSrc: item.screen.src,
+      screenPoster: item.screen.poster,
+    };
+  });
 
 const loopSlides = [...baseSlides, ...baseSlides];
 
@@ -55,7 +68,7 @@ const screensAttrs = stageItem
 ---
 
 <div class={screensClass} aria-hidden="true" {...screensAttrs}>
-  <div class={screensViewportClass} data-temp-slider data-temp-slider-count={baseSlides.length}>
+  <div class={screensViewportClass} data-temp-slider data-temp-slider-count={baseSlides.length} data-temp-slider-media-mode={mediaMode}>
     <div class={screensTrackClass} data-temp-slider-track>
       {
         loopSlides.map((slide, index) => (

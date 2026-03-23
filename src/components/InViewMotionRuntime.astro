@@ -1,6 +1,6 @@
 <script>
   import { animate, inView } from 'motion';
-  import { MEDIA_QUERY_NON_GALLERY_MOBILE } from '../lib/layout/breakpoints';
+  import { MEDIA_QUERY_GALLERY_MOBILE, MEDIA_QUERY_NON_GALLERY_MOBILE } from '../lib/layout/breakpoints';
 
   (() => {
     const runtimeKey = '__inViewAppearRuntime';
@@ -111,10 +111,19 @@
           '--final-cta-orb-rotate': '0deg',
         },
         resolveVariables: () => {
-          const isCasesMobileRoute =
-            (document.body.dataset.routeHome === 'true' || document.body.dataset.routeCases === 'true') &&
-            window.matchMedia(MEDIA_QUERY_NON_GALLERY_MOBILE).matches;
-          if (!isCasesMobileRoute) {
+          const normalizedPathname = window.location.pathname.replace(/\/+$/, '') || '/';
+          const isHomeRoute = document.body.dataset.routeHome === 'true' || normalizedPathname === '/';
+          const isCasesRoute = document.body.dataset.routeCases === 'true' || normalizedPathname === '/cases';
+          const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+          const isNonGalleryMobileViewport =
+            window.matchMedia(MEDIA_QUERY_NON_GALLERY_MOBILE).matches || viewportWidth <= 847;
+          const isGalleryMobileViewport = window.matchMedia(MEDIA_QUERY_GALLERY_MOBILE).matches || viewportWidth <= 767;
+          const isHomeOrCasesMobileRoute =
+            (isHomeRoute || isCasesRoute) && isNonGalleryMobileViewport;
+          const isGalleryMobileRoute =
+            (document.body.dataset.routeGallery === 'true' || normalizedPathname === '/gallery') &&
+            isGalleryMobileViewport;
+          if (!isHomeOrCasesMobileRoute && !isGalleryMobileRoute) {
             return null;
           }
           return {
