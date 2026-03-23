@@ -404,174 +404,28 @@ const styleVars = [
       return typeof key === 'string' && warmedVideoKeys.has(key);
     };
 
-    const ensureManagedVideoPlaybackRuntime = () => {
-      if (window[videoPlaybackRuntimeKey]) {
-        window[videoPlaybackRuntimeKey].mount();
-        return window[videoPlaybackRuntimeKey];
+    const requestManagedVideoPlaybackSync = () => {
+      const runtime = window[videoPlaybackRuntimeKey];
+      if (runtime && typeof runtime.mount === 'function') {
+        runtime.mount();
+        if (typeof runtime.sync === 'function') {
+          runtime.sync();
+        }
+        return;
       }
-
-      const selector = 'video[data-video-playback="inview"]';
-      const initAttr = 'data-video-playback-init';
-      const mobileDowngradedAttr = 'data-video-mobile-downgraded';
-      const managed = new Map();
-      let observer = null;
-
-      const shouldDowngradeAlwaysPlaybackForMobileGallery = () => {
-        const isGalleryRoute = document.body?.dataset.routeGallery === 'true';
-        if (!isGalleryRoute) {
-          return false;
-        }
-        if (typeof window.matchMedia !== 'function') {
-          return false;
-        }
-        return window.matchMedia('(max-width: 767px)').matches;
-      };
-
-      const syncMobileGalleryPlaybackPolicy = () => {
-        const forceInViewPolicy = shouldDowngradeAlwaysPlaybackForMobileGallery();
-        const galleryVideos = Array.from(document.querySelectorAll('.gallery-row video')).filter(
-          (node) => node instanceof HTMLVideoElement,
-        );
-        if (galleryVideos.length === 0) {
-          return;
-        }
-
-        galleryVideos.forEach((video) => {
-          const isDowngraded = video.getAttribute(mobileDowngradedAttr) === 'true';
-          if (forceInViewPolicy) {
-            if (video.dataset.videoPlayback !== 'always') {
-              return;
-            }
-            video.dataset.videoPlayback = 'inview';
-            video.setAttribute(mobileDowngradedAttr, 'true');
-            video.autoplay = false;
-            video.removeAttribute('autoplay');
-            video.pause();
-            return;
-          }
-
-          if (!isDowngraded) {
-            return;
-          }
-          video.dataset.videoPlayback = 'always';
-          video.removeAttribute(mobileDowngradedAttr);
-          video.autoplay = true;
-          video.setAttribute('autoplay', '');
-          if (observer) {
-            observer.unobserve(video);
-          }
-          managed.delete(video);
-          video.removeAttribute(initAttr);
-        });
-      };
-
-      const cleanupStaleVideos = () => {
-        for (const [video] of managed.entries()) {
-          if (!(video instanceof HTMLVideoElement) || !video.isConnected) {
-            if (observer) {
-              observer.unobserve(video);
-            }
-            managed.delete(video);
+      window.requestAnimationFrame(() => {
+        const deferredRuntime = window[videoPlaybackRuntimeKey];
+        if (deferredRuntime && typeof deferredRuntime.mount === 'function') {
+          deferredRuntime.mount();
+          if (typeof deferredRuntime.sync === 'function') {
+            deferredRuntime.sync();
           }
         }
-      };
-
-      const syncVideoPlayback = (video) => {
-        if (!(video instanceof HTMLVideoElement)) {
-          return;
-        }
-        if (video.dataset.videoPlayback !== 'inview') {
-          return;
-        }
-        const state = managed.get(video);
-        const shouldPlay = Boolean(state?.inView) && !document.hidden && video.isConnected;
-        if (!shouldPlay) {
-          video.pause();
-          return;
-        }
-        const playPromise = video.play();
-        if (playPromise && typeof playPromise.catch === 'function') {
-          playPromise.catch(() => {});
-        }
-      };
-
-      const syncAllVideos = () => {
-        cleanupStaleVideos();
-        managed.forEach((_, video) => {
-          syncVideoPlayback(video);
-        });
-      };
-
-      const pauseAllVideos = () => {
-        managed.forEach((_, video) => {
-          video.pause();
-        });
-      };
-
-      observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            const target = entry.target;
-            if (!(target instanceof HTMLVideoElement)) {
-              return;
-            }
-            const state = managed.get(target);
-            if (!state) {
-              return;
-            }
-            state.inView = entry.isIntersecting && entry.intersectionRatio > 0.15;
-            syncVideoPlayback(target);
-          });
-        },
-        { threshold: [0, 0.15, 0.35] },
-      );
-
-      const registerVideo = (video) => {
-        if (!(video instanceof HTMLVideoElement)) {
-          return;
-        }
-        if (video.dataset.videoPlayback !== 'inview') {
-          return;
-        }
-        if (video.getAttribute(initAttr) === 'true') {
-          return;
-        }
-        video.setAttribute(initAttr, 'true');
-        video.muted = true;
-        video.playsInline = true;
-        managed.set(video, { inView: false });
-        observer.observe(video);
-        video.addEventListener('loadedmetadata', () => syncVideoPlayback(video), { once: true });
-        syncVideoPlayback(video);
-      };
-
-      const mount = () => {
-        syncMobileGalleryPlaybackPolicy();
-        cleanupStaleVideos();
-        document.querySelectorAll(selector).forEach((node) => {
-          registerVideo(node);
-        });
-        syncAllVideos();
-      };
-
-      document.addEventListener('astro:page-load', mount);
-      document.addEventListener('astro:before-swap', pauseAllVideos);
-      document.addEventListener('visibilitychange', syncAllVideos);
-      window.addEventListener('pagehide', pauseAllVideos);
-      window.addEventListener('resize', mount);
-
-      const runtime = {
-        mount,
-        sync: syncAllVideos,
-        pauseAll: pauseAllVideos,
-      };
-      window[videoPlaybackRuntimeKey] = runtime;
-      mount();
-      return runtime;
+      });
     };
 
     if (window[runtimeKey]) {
-      ensureManagedVideoPlaybackRuntime();
+      requestManagedVideoPlaybackSync();
       window[runtimeKey].mount();
       return;
     }
@@ -686,7 +540,7 @@ const styleVars = [
     };
 
     const mount = () => {
-      ensureManagedVideoPlaybackRuntime();
+      requestManagedVideoPlaybackSync();
       document.querySelectorAll(mockupSelector).forEach((mockup) => {
         initMockup(mockup);
       });

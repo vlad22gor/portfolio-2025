@@ -26,6 +26,9 @@ const mediaByRoute = getCriticalMediaByRoute();
       return Array.isArray(assets) ? assets : [];
     };
     const shouldSkipBackgroundWarmup = () => {
+      if (isMobileViewport()) {
+        return true;
+      }
       const connection =
         navigator.connection || navigator.mozConnection || navigator.webkitConnection;
       if (!connection) {
@@ -192,16 +195,14 @@ const mediaByRoute = getCriticalMediaByRoute();
         return;
       }
 
-      const skipBackgroundVideos = isMobileViewport();
       const assets = routeIds
         .filter((routeId) => routeId !== activeRouteId)
-        .flatMap((routeId) => resolveRouteAssets(routeId))
-        .filter((asset) => !(skipBackgroundVideos && asset.kind === 'video'));
+        .flatMap((routeId) => resolveRouteAssets(routeId));
       await warmAssets(assets, maxBackgroundConcurrency);
     };
 
     const scheduleBackgroundWarmup = () => {
-      if (hasScheduledBackgroundWarmup) {
+      if (hasScheduledBackgroundWarmup || shouldSkipBackgroundWarmup()) {
         return;
       }
       hasScheduledBackgroundWarmup = true;

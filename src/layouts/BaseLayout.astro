@@ -7,6 +7,7 @@ import TemporaryAdaptiveNotice from '../components/TemporaryAdaptiveNotice.astro
 import CriticalMediaWarmupRuntime from '../components/CriticalMediaWarmupRuntime.astro';
 import FloatingThemeButton from '../components/FloatingThemeButton.astro';
 import MobilePerimeterRuntime from '../components/MobilePerimeterRuntime.astro';
+import ManagedVideoPlaybackRuntime from '../components/ManagedVideoPlaybackRuntime.astro';
 import { resolveCriticalRouteIdFromPath } from '../data/critical-media';
 
 export interface Props {
@@ -217,6 +218,7 @@ const agentationEndpoint =
     <div class="site-desktop-shell">
       <slot />
       <FloatingThemeButton />
+      <ManagedVideoPlaybackRuntime />
       <InViewMotionRuntime />
       <MobilePerimeterRuntime />
       <CriticalMediaWarmupRuntime routeId={criticalRouteId} />

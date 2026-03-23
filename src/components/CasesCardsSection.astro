@@ -58,7 +58,7 @@ const kissaCase = CASES.find((item) => item.slug === 'kissa');
           data-more-cases-loader
           webmSrc="/media/cases/section/loader_light.webm"
           movSrc="/media/cases/section/loader_light.mov"
-          autoplay
+          autoplay={false}
           loop
           muted
           playsinline
@@ -66,6 +66,7 @@ const kissaCase = CASES.find((item) => item.slug === 'kissa');
           poster="/media/cases/section/more-cases-cube.webp"
           ariaHidden="true"
           tabindex="-1"
+          data-video-playback="inview"
         />
       </div>
 
@@ -86,30 +87,3 @@ const kissaCase = CASES.find((item) => item.slug === 'kissa');
     </div>
   </QuantizedPerimeter>
 </section>
-
-<script>
-  (() => {
-    const runtimeKey = '__moreCasesLoaderRuntime';
-    const playAll = () => {
-      document.querySelectorAll('[data-more-cases-loader]').forEach((node) => {
-        if (!(node instanceof HTMLVideoElement)) {
-          return;
-        }
-        node.muted = true;
-        const playPromise = node.play();
-        if (playPromise && typeof playPromise.catch === 'function') {
-          playPromise.catch(() => {});
-        }
-      });
-    };
-
-    if (window[runtimeKey]) {
-      window[runtimeKey].playAll();
-      return;
-    }
-
-    window[runtimeKey] = { playAll };
-    playAll();
-    document.addEventListener('astro:page-load', playAll);
-  })();
-</script>

@@ -32,8 +32,11 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium webkit
 
       - name: Run smoke tests
         run: npm run test:smoke
+
+      - name: Run WebKit mobile stress smoke
+        run: npm run test:smoke:webkit-mobile

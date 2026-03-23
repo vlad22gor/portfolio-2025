@@ -1066,6 +1066,16 @@ test.describe('Gallery mobile smoke', () => {
         await page.goto(route);
         if (route === '/gallery') {
           await waitForGalleryCriticalReady(page);
+          await page.evaluate(() => {
+            window.scrollTo(0, document.body.scrollHeight);
+          });
+          await page.waitForTimeout(800);
+          snapshots.push(await readRouteState());
+          await page.evaluate(() => {
+            window.scrollTo(0, 0);
+          });
+          await page.waitForTimeout(250);
+          continue;
         }
         snapshots.push(await readRouteState());
       }
@@ -1073,6 +1083,10 @@ test.describe('Gallery mobile smoke', () => {
 
     const gallerySnapshots = snapshots.filter((snapshot) => snapshot.path === '/gallery');
     const homeSnapshots = snapshots.filter((snapshot) => snapshot.path === '/');
+    const casesSnapshots = snapshots.filter((snapshot) => snapshot.path === '/cases');
+    const monitoredSnapshots = snapshots.filter(
+      (snapshot) => snapshot.path === '/' || snapshot.path === '/cases' || snapshot.path === '/gallery',
+    );
     const allTempShellHidden = snapshots.every((snapshot) => snapshot.tempShellVideos === 0);
 
     expect(gallerySnapshots.length).toBe(10);
@@ -1080,7 +1094,8 @@ test.describe('Gallery mobile smoke', () => {
     expect(allTempShellHidden).toBe(true);
     expect(gallerySnapshots.every((snapshot) => snapshot.totalVideos <= 10)).toBe(true);
     expect(homeSnapshots.every((snapshot) => snapshot.totalVideos <= 3)).toBe(true);
-    expect(gallerySnapshots.every((snapshot) => snapshot.offscreenPlaying === 0)).toBe(true);
+    expect(casesSnapshots.every((snapshot) => snapshot.totalVideos <= 3)).toBe(true);
+    expect(monitoredSnapshots.every((snapshot) => snapshot.offscreenPlaying === 0)).toBe(true);
   });
 
   test('767 keeps real gallery shell and grid-width contract', async ({ page }) => {

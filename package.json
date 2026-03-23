@@ -22,6 +22,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "test:smoke": "playwright test",
+    "test:smoke:webkit-mobile": "playwright test tests/smoke/gallery.spec.ts -g \"webkit mobile stress\" --browser=webkit --workers=1",
     "astro": "astro"
   },
   "dependencies": {

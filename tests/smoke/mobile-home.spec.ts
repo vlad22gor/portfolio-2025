@@ -142,6 +142,7 @@ test.describe('Mobile home adaptive', () => {
 
       return {
         autoplay: loader.autoplay,
+        playbackPolicy: loader.dataset.videoPlayback ?? '',
         muted: loader.muted,
         loop: loader.loop,
         playsInline: loader.playsInline,
@@ -156,7 +157,8 @@ test.describe('Mobile home adaptive', () => {
     });
 
     expect(loaderSnapshot).not.toBeNull();
-    expect(loaderSnapshot!.autoplay).toBe(true);
+    expect(loaderSnapshot!.autoplay).toBe(false);
+    expect(loaderSnapshot!.playbackPolicy).toBe('inview');
     expect(loaderSnapshot!.muted).toBe(true);
     expect(loaderSnapshot!.loop).toBe(true);
     expect(loaderSnapshot!.playsInline).toBe(true);
