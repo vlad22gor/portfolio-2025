@@ -71,6 +71,7 @@ const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefi
 <script>
   import { navigate } from 'astro:transitions/client';
   import {
+    CASE_SWITCHER_INTRO_SYNC_MARKER_KEY,
     createLifecycle,
     getOrCreateWindowRuntime,
     getWindowRuntime,
@@ -88,7 +89,7 @@ const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefi
 
     const lifecycle = createLifecycle();
     const leavingMainAttribute = 'data-case-switcher-leaving';
-    const introSyncMarkerKey = '__case-switcher-intro-sync';
+    const introSyncMarkerKey = CASE_SWITCHER_INTRO_SYNC_MARKER_KEY;
     const preFadeDurationMs = 180;
     const preFadeFallbackDelayMs = 420;
     const fallbackCleanupMs = 3000;
