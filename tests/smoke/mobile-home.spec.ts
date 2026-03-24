@@ -1246,9 +1246,38 @@ test.describe('Mobile home adaptive', () => {
       return { supportsBalance, values, hasRuntimeBalance };
     });
 
-    const cssSource = readFileSync('src/styles/global.css', 'utf8');
+    const globalCssSource = readFileSync('src/styles/global.css', 'utf8');
+    const localImportedCss = Array.from(globalCssSource.matchAll(/@import\s+["'](\.\/[^"']+)["'];/g))
+      .map((match) => `src/styles/${match[1].replace(/^\.\//, '')}`)
+      .map((path) => readFileSync(path, 'utf8'))
+      .join('\n');
+    const cssSource = localImportedCss.length > 0 ? localImportedCss : globalCssSource;
     const supportsStart = cssSource.indexOf('@supports (text-wrap: balance)');
-    const supportsBlock = supportsStart >= 0 ? cssSource.slice(supportsStart) : '';
+    const supportsBlock = (() => {
+      if (supportsStart < 0) {
+        return '';
+      }
+
+      const blockStart = cssSource.indexOf('{', supportsStart);
+      if (blockStart < 0) {
+        return '';
+      }
+
+      let depth = 0;
+      for (let index = blockStart; index < cssSource.length; index += 1) {
+        const char = cssSource[index];
+        if (char === '{') {
+          depth += 1;
+        } else if (char === '}') {
+          depth -= 1;
+          if (depth === 0) {
+            return cssSource.slice(supportsStart, index + 1);
+          }
+        }
+      }
+
+      return cssSource.slice(supportsStart);
+    })();
     const hasTargetedBalanceBlock =
       supportsStart >= 0 &&
       supportsBlock.includes('.case-card-title') &&

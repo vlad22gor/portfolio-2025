@@ -1,0 +1,240 @@
+/* Base element styles, typography utilities, and accessibility primitives */
+
+.type-t1 {
+  font-family: var(--type-t1-family);
+  font-size: var(--type-t1-size);
+  line-height: var(--type-t1-line-height);
+  font-weight: var(--type-t1-weight);
+  letter-spacing: var(--type-t1-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-t1-font-variation);
+}
+
+.type-t1-tight {
+  font-family: var(--type-t1-tight-family);
+  font-size: var(--type-t1-tight-size);
+  line-height: var(--type-t1-tight-line-height);
+  font-weight: var(--type-t1-tight-weight);
+  letter-spacing: var(--type-t1-tight-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-t1-tight-font-variation);
+}
+
+.type-t1-compact {
+  font-family: var(--type-t1-compact-family);
+  font-size: var(--type-t1-compact-size);
+  line-height: var(--type-t1-compact-line-height);
+  font-weight: var(--type-t1-compact-weight);
+  letter-spacing: var(--type-t1-compact-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-t1-compact-font-variation);
+}
+
+.type-t2 {
+  font-family: var(--type-t2-family);
+  font-size: var(--type-t2-size);
+  line-height: var(--type-t2-line-height);
+  font-weight: var(--type-t2-weight);
+  letter-spacing: var(--type-t2-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-t2-font-variation);
+}
+
+.type-t3 {
+  font-family: var(--type-t3-family);
+  font-size: var(--type-t3-size);
+  line-height: var(--type-t3-line-height);
+  font-weight: var(--type-t3-weight);
+  letter-spacing: var(--type-t3-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-t3-font-variation);
+}
+
+.type-t4 {
+  font-family: var(--type-t4-family);
+  font-size: var(--type-t4-size);
+  line-height: var(--type-t4-line-height);
+  font-weight: var(--type-t4-weight);
+  letter-spacing: var(--type-t4-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-t4-font-variation);
+}
+
+.type-t5 {
+  font-family: var(--type-t5-family);
+  font-size: var(--type-t5-size);
+  line-height: var(--type-t5-line-height);
+  font-weight: var(--type-t5-weight);
+  letter-spacing: var(--type-t5-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-t5-font-variation);
+}
+
+.type-t6 {
+  font-family: var(--type-t6-family);
+  font-size: var(--type-t6-size);
+  line-height: var(--type-t6-line-height);
+  font-weight: var(--type-t6-weight);
+  letter-spacing: var(--type-t6-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-t6-font-variation);
+}
+
+.type-description-large {
+  font-family: var(--type-description-large-family);
+  font-size: var(--type-description-large-size);
+  line-height: var(--type-description-large-line-height);
+  font-weight: var(--type-description-large-weight);
+  letter-spacing: var(--type-description-large-letter-spacing);
+  text-transform: var(--type-description-large-text-transform);
+  font-optical-sizing: none;
+  font-variation-settings: "opsz" 14, "wght" var(--type-description-large-weight);
+}
+
+.type-description-medium {
+  font-family: var(--type-description-medium-family);
+  font-size: var(--type-description-medium-size);
+  line-height: var(--type-description-medium-line-height);
+  font-weight: var(--type-description-medium-weight);
+  letter-spacing: var(--type-description-medium-letter-spacing);
+  text-transform: var(--type-description-medium-text-transform);
+  font-optical-sizing: none;
+  font-variation-settings: "opsz" 14, "wght" var(--type-description-medium-weight);
+}
+
+.type-body {
+  font-family: var(--type-body-family);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line-height);
+  font-weight: var(--type-body-weight);
+  letter-spacing: var(--type-body-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-body-font-variation);
+}
+
+.type-body p+p {
+  margin-top: var(--type-body-paragraph-spacing);
+}
+
+.type-text-small {
+  font-family: var(--type-text-small-family);
+  font-size: var(--type-text-small-size);
+  line-height: var(--type-text-small-line-height);
+  font-weight: var(--type-text-small-weight);
+  letter-spacing: var(--type-text-small-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-text-small-font-variation);
+}
+
+.type-label-large {
+  font-family: var(--type-label-large-family);
+  font-size: var(--type-label-large-size);
+  line-height: var(--type-label-large-line-height);
+  font-weight: var(--type-label-large-weight);
+  letter-spacing: var(--type-label-large-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-label-large-font-variation);
+}
+
+.type-label-small {
+  font-family: var(--type-label-small-family);
+  font-size: var(--type-label-small-size);
+  line-height: var(--type-label-small-line-height);
+  font-weight: var(--type-label-small-weight);
+  letter-spacing: var(--type-label-small-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-label-small-font-variation);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: var(--text-primary);
+  background: var(--page-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: var(--type-body-family);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line-height);
+  font-weight: var(--type-body-weight);
+  letter-spacing: var(--type-body-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-body-font-variation);
+}
+
+html {
+  scrollbar-gutter: stable both-edges;
+}
+
+@supports not (scrollbar-gutter: stable) {
+  html {
+    overflow-y: scroll;
+  }
+}
+
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 1rem;
+  z-index: 1000;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  color: var(--color-text-default);
+  background: var(--color-accent-white);
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+#agentation-dev-root {
+  position: relative;
+  z-index: 1100;
+}
+
+h1 {
+  margin: 0;
+  font-family: var(--type-t2-family);
+  font-size: clamp(2rem, 5vw, var(--type-t2-size));
+  line-height: clamp(2.25rem, 5.6vw, var(--type-t2-line-height));
+  font-weight: var(--type-t2-weight);
+  letter-spacing: var(--type-t2-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-t2-font-variation);
+}
+
+h2 {
+  margin: 0;
+  font-family: var(--type-t3-family);
+  font-size: clamp(1.2rem, 3vw, var(--type-t3-size));
+  line-height: clamp(1.45rem, 3.4vw, var(--type-t3-line-height));
+  font-weight: var(--type-t3-weight);
+  letter-spacing: var(--type-t3-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-t3-font-variation);
+}
+
+h3 {
+  margin: 0;
+  font-family: var(--type-t4-family);
+  font-size: clamp(1.1rem, 2.2vw, var(--type-t4-size));
+  line-height: clamp(1.35rem, 2.6vw, var(--type-t4-line-height));
+  font-weight: var(--type-t4-weight);
+  letter-spacing: var(--type-t4-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-t4-font-variation);
+}
+
+p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-family: var(--type-body-family);
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line-height);
+  font-weight: var(--type-body-weight);
+  letter-spacing: var(--type-body-letter-spacing);
+  font-optical-sizing: none;
+  font-variation-settings: var(--type-body-font-variation);
+}
