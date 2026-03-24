@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { resolveGalleryMobileExpectations } from './helpers/perimeter-contracts';
 
 const floatingThemeButtonSelector = '.floating-theme-button[data-floating-theme-button]';
 
@@ -743,18 +744,6 @@ test.describe('Gallery tablet smoke', () => {
 });
 
 test.describe('Gallery mobile smoke', () => {
-  const resolveExpectedStep = (viewportWidth: number, sectionWidth: number) => {
-    const inferredMarginX = Math.max(0, Math.floor((viewportWidth - sectionWidth) / 2));
-    const availableWidth = Math.max(40, viewportWidth - inferredMarginX * 2);
-    const idealCols = Math.max(6, Math.min(24, Math.round(availableWidth / 40)));
-    return Math.max(8, Math.floor(availableWidth / idealCols));
-  };
-
-  const resolveQuantizedHeight = (step: number, targetHeight: number, minRows: number) => {
-    const rows = Math.max(minRows, Math.round(targetHeight / step));
-    return rows * step;
-  };
-
   test('390x844 renders real gallery shell with D-runtime and pair-gap matrix', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/gallery');
@@ -843,21 +832,22 @@ test.describe('Gallery mobile smoke', () => {
     ).toBe(true);
     expect(snapshot!.firstFiveIds).toEqual(['51:5263', '51:5269', '51:5274', '51:5279', '51:5286']);
 
-    const expectedStep = resolveExpectedStep(snapshot!.viewportWidth, snapshot!.rowsSectionWidth);
-    const expectedMockHeight = resolveQuantizedHeight(expectedStep, 384, 8);
-    const expectedImageHeight = resolveQuantizedHeight(expectedStep, 224, 4);
+    const expected = resolveGalleryMobileExpectations({
+      viewportWidth: snapshot!.viewportWidth,
+      sectionWidth: snapshot!.rowsSectionWidth,
+    });
 
     expect(snapshot!.surfaceSteps.length).toBe(21);
-    expect(snapshot!.surfaceSteps.every((step) => Math.abs(step - expectedStep) <= 0.01)).toBe(true);
+    expect(snapshot!.surfaceSteps.every((step) => Math.abs(step - expected.step) <= 0.01)).toBe(true);
     expect(
       snapshot!.cardEntries
         .filter((entry) => entry.kind !== 'image')
-        .every((entry) => Math.abs(entry.height - expectedMockHeight) <= 1),
+        .every((entry) => Math.abs(entry.height - expected.mockHeight) <= 1),
     ).toBe(true);
     expect(
       snapshot!.cardEntries
         .filter((entry) => entry.kind === 'image')
-        .every((entry) => Math.abs(entry.height - expectedImageHeight) <= 1),
+        .every((entry) => Math.abs(entry.height - expected.imageHeight) <= 1),
     ).toBe(true);
 
     const expectedGapMatrix: Record<

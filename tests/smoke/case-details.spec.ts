@@ -1,69 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
-
-const resolveProcessTicketProximity = ({
-  width,
-  baseStep,
-  defaultCols,
-  minStep = 8,
-  minCols = 2,
-  maxCols = 12,
-  maxStepDelta = 6,
-}: {
-  width: number;
-  baseStep: number;
-  defaultCols: number;
-  minStep?: number;
-  minCols?: number;
-  maxCols?: number;
-  maxStepDelta?: number;
-}) => {
-  const safeWidth = Math.max(1, Math.floor(width));
-  const safeBaseStep = Math.max(1, Math.floor(baseStep));
-  const safeDefaultCols = Math.max(1, Math.floor(defaultCols));
-  const safeMinStep = Math.max(1, Math.floor(minStep));
-  const safeMinCols = Math.max(1, Math.floor(minCols));
-  const safeMaxCols = Math.max(safeMinCols, Math.floor(maxCols));
-  const safeMaxStepDelta = Math.max(0, Math.floor(maxStepDelta));
-  const minCandidateStep = Math.max(safeMinStep, safeBaseStep - safeMaxStepDelta);
-  const maxCandidateStep = Math.min(safeWidth, safeBaseStep + safeMaxStepDelta);
-
-  let best: { step: number; cols: number; size: number } | null = null;
-  let bestScore: [number, number, number, number] | null = null;
-
-  for (let step = minCandidateStep; step <= maxCandidateStep; step += 1) {
-    for (let cols = safeMinCols; cols <= safeMaxCols; cols += 1) {
-      const size = step * cols;
-      if (size > safeWidth) {
-        continue;
-      }
-      const score: [number, number, number, number] = [
-        Math.abs(step - safeBaseStep),
-        safeWidth - size,
-        Math.abs(cols - safeDefaultCols),
-        -size,
-      ];
-      if (
-        bestScore === null ||
-        score[0] < bestScore[0] ||
-        (score[0] === bestScore[0] &&
-          (score[1] < bestScore[1] ||
-            (score[1] === bestScore[1] &&
-              (score[2] < bestScore[2] || (score[2] === bestScore[2] && score[3] < bestScore[3])))))
-      ) {
-        best = { step, cols, size };
-        bestScore = score;
-      }
-    }
-  }
-
-  if (best) {
-    return { step: best.step, cols: best.cols };
-  }
-
-  const fallbackCols = Math.max(safeMinCols, Math.min(safeMaxCols, Math.round(safeWidth / safeBaseStep)));
-  const fallbackStep = Math.max(safeMinStep, Math.floor(safeWidth / fallbackCols));
-  return { step: fallbackStep, cols: Math.max(1, Math.floor(safeWidth / fallbackStep)) };
-};
+import {
+  resolveCaseProcessTicketExpectations,
+  resolveIntroSliderExpectations,
+} from './helpers/perimeter-contracts';
 
 test.describe('Case details smoke', () => {
   test.use({ viewport: { width: 1440, height: 1100 } });
@@ -858,10 +797,8 @@ test.describe('Case details mobile intro smoke', () => {
     expect(snapshot!.uniqueRowCount).toBe(2);
     expect(snapshot!.rowCounts).toEqual([2, 2]);
 
-    const available = Math.max(1, Math.min(snapshot!.viewportWidth - 40, 480));
-    const ticketTarget = Math.max(8, Math.floor((available - 20) / 2));
-    const expected = resolveProcessTicketProximity({
-      width: ticketTarget,
+    const expected = resolveCaseProcessTicketExpectations({
+      viewportWidth: snapshot!.viewportWidth,
       baseStep,
       defaultCols,
       minStep: 8,
@@ -873,7 +810,7 @@ test.describe('Case details mobile intro smoke', () => {
     expect(snapshot!.firstTicketStep).toBe(expected.step);
     expect(Math.abs((snapshot!.firstTicketStep ?? 0) - baseStep)).toBeLessThanOrEqual(6);
     expect(snapshot!.firstTicketWidth).not.toBeNull();
-    expect(Math.abs((snapshot!.firstTicketWidth ?? 0) - expected.step * expected.cols)).toBeLessThanOrEqual(1);
+    expect(Math.abs((snapshot!.firstTicketWidth ?? 0) - expected.ticketWidth)).toBeLessThanOrEqual(1);
   };
 
   test('breakpoint split keeps case-details mobile profile through 847 and desktop from 848', async ({ page }) => {
@@ -1036,19 +973,15 @@ test.describe('Case details mobile intro smoke', () => {
     expect(initialSnapshot!.leftItem).not.toBeNull();
     expect(initialSnapshot!.rightItem).not.toBeNull();
 
-    const availableWidth = Math.max(40, Math.floor(initialSnapshot!.viewportWidth) - 40);
-    const expectedCols = Math.max(6, Math.min(18, Math.round(availableWidth / 40)));
-    const expectedStep = Math.max(8, Math.floor(availableWidth / expectedCols));
-    const expectedGridWidth = expectedStep * expectedCols;
-    const expectedCardWidth = Math.max(expectedStep * 6, expectedGridWidth - 40);
-    const expectedCardHeight = Math.max(expectedStep * 8, Math.round(384 / expectedStep) * expectedStep);
-    const expectedPerimeterWidth = Math.max(expectedStep * 6, Math.round(expectedCardWidth / expectedStep) * expectedStep);
+    const expected = resolveIntroSliderExpectations({
+      viewportWidth: initialSnapshot!.viewportWidth,
+    });
 
-    expect(initialSnapshot!.step).toBe(expectedStep);
-    expect(Math.abs((initialSnapshot!.gridWidth ?? 0) - expectedGridWidth)).toBeLessThanOrEqual(1);
-    expect(Math.abs((initialSnapshot!.cardWidth ?? 0) - expectedCardWidth)).toBeLessThanOrEqual(1);
-    expect(Math.abs((initialSnapshot!.cardHeight ?? 0) - expectedCardHeight)).toBeLessThanOrEqual(1);
-    expect(Math.abs((initialSnapshot!.perimeterWidth ?? 0) - expectedPerimeterWidth)).toBeLessThanOrEqual(1);
+    expect(initialSnapshot!.step).toBe(expected.step);
+    expect(Math.abs((initialSnapshot!.gridWidth ?? 0) - expected.gridWidth)).toBeLessThanOrEqual(1);
+    expect(Math.abs((initialSnapshot!.cardWidth ?? 0) - expected.cardWidth)).toBeLessThanOrEqual(1);
+    expect(Math.abs((initialSnapshot!.cardHeight ?? 0) - expected.cardHeight)).toBeLessThanOrEqual(1);
+    expect(Math.abs((initialSnapshot!.perimeterWidth ?? 0) - expected.perimeterWidth)).toBeLessThanOrEqual(1);
 
     expect(Math.abs((initialSnapshot!.activeItem?.scaleX ?? 0) - 1)).toBeLessThanOrEqual(0.02);
     expect(Math.abs((initialSnapshot!.leftItem?.scaleX ?? 0) - 0.9)).toBeLessThanOrEqual(0.03);
