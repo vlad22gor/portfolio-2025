@@ -28,16 +28,144 @@ const waitForGalleryCriticalReady = async (
 test.describe('Gallery smoke', () => {
   test.use({ viewport: { width: 1440, height: 1100 } });
 
-  test('/gallery renders webm cards, grid-appear, and critical priority contract', async ({ page }) => {
+  test('/gallery renders webm cards, desktop row-stagger, and critical priority contract', async ({ page }) => {
+    await page.addInitScript(() => {
+      const timeline = {
+        row1Card4StartAt: null as number | null,
+        row2Card1StartAt: null as number | null,
+      };
+      (window as Window & { __galleryRowStaggerTimeline?: typeof timeline }).__galleryRowStaggerTimeline = timeline;
+
+      const waitForTargets = () => {
+        const row1Card4 = document.querySelector('.gallery-card-container[data-gallery-flat-index="3"]');
+        const row2Card1 = document.querySelector('.gallery-card-container[data-gallery-flat-index="4"]');
+        if (!(row1Card4 instanceof HTMLElement) || !(row2Card1 instanceof HTMLElement)) {
+          window.requestAnimationFrame(waitForTargets);
+          return;
+        }
+
+        const watchStart = (element: HTMLElement, key: 'row1Card4StartAt' | 'row2Card1StartAt') => {
+          const readScheduledStart = () => {
+            const animation = element.getAnimations()[0];
+            if (!animation || typeof animation.startTime !== 'number') {
+              return null;
+            }
+            const delay = Number(animation.effect?.getTiming?.().delay ?? 0);
+            if (!Number.isFinite(delay)) {
+              return null;
+            }
+            return animation.startTime + delay;
+          };
+
+          const tick = () => {
+            if (timeline[key] !== null) {
+              return;
+            }
+            const scheduledStart = readScheduledStart();
+            if (typeof scheduledStart === 'number') {
+              timeline[key] = scheduledStart;
+              return;
+            }
+            window.requestAnimationFrame(tick);
+          };
+          tick();
+
+          const observer = new MutationObserver(() => {
+            if (timeline[key] !== null) {
+              return;
+            }
+            const scheduledStart = readScheduledStart();
+            if (typeof scheduledStart === 'number') {
+              timeline[key] = scheduledStart;
+            }
+          });
+          observer.observe(element, { attributes: true, attributeFilter: ['style'] });
+        };
+
+        watchStart(row1Card4, 'row1Card4StartAt');
+        watchStart(row2Card1, 'row2Card1StartAt');
+      };
+
+      waitForTargets();
+    });
+
     await page.goto('/gallery');
 
     await expect(page).toHaveTitle(/Vlad Horovyy – Product Designer/i);
     await waitForGalleryCriticalReady(page);
 
+    const desktopDiagnostics = await page.evaluate(() => ({
+      innerWidth: window.innerWidth,
+      desktopMq1360: window.matchMedia('(min-width: 1360px)').matches,
+      rowMotionCount: document.querySelectorAll('.gallery-row[data-motion-inview]').length,
+      rootMotionPreset: document.querySelector('.gallery-rows')?.getAttribute('data-motion-inview') ?? null,
+      hasDesktopRuntime: typeof window.__galleryDesktopRowStaggerRuntime !== 'undefined',
+    }));
+    expect(desktopDiagnostics.desktopMq1360).toBe(true);
+    expect(desktopDiagnostics.hasDesktopRuntime).toBe(true);
+    expect(desktopDiagnostics.rootMotionPreset).toBe('gallery-first-two-rows-stagger-v1');
+
     const rows = page.locator('.gallery-row');
     await expect(rows).toHaveCount(6);
-    await expect(page.locator('.gallery-rows[data-motion-inview="appear-v1"]')).toHaveCount(1);
-    await expect(page.locator('.gallery-row[data-motion-inview]')).toHaveCount(0);
+    await expect(page.locator('.gallery-rows[data-motion-inview="gallery-first-two-rows-stagger-v1"]')).toHaveCount(1);
+    await expect(page.locator('.gallery-row[data-motion-inview="gallery-row-stagger-v1"]')).toHaveCount(4);
+
+    const rowMotionMatrix = await rows.evaluateAll((nodes) =>
+      nodes.map((node) => ({
+        index: node.getAttribute('data-gallery-row-index'),
+        motion: node.getAttribute('data-motion-inview'),
+        sequenceAfter: node.getAttribute('data-motion-sequence-after'),
+      })),
+    );
+    expect(rowMotionMatrix[0]?.motion ?? null).toBeNull();
+    expect(rowMotionMatrix[1]?.motion ?? null).toBeNull();
+    expect(rowMotionMatrix[2]?.motion ?? null).toBe('gallery-row-stagger-v1');
+    expect(rowMotionMatrix[3]?.motion ?? null).toBe('gallery-row-stagger-v1');
+    expect(rowMotionMatrix[4]?.motion ?? null).toBe('gallery-row-stagger-v1');
+    expect(rowMotionMatrix[5]?.motion ?? null).toBe('gallery-row-stagger-v1');
+    expect(rowMotionMatrix[0]?.sequenceAfter ?? null).toBeNull();
+    expect(rowMotionMatrix[1]?.sequenceAfter ?? null).toBeNull();
+
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const state = (
+              window as Window & {
+                __galleryRowStaggerTimeline?: {
+                  row1Card4StartAt: number | null;
+                  row2Card1StartAt: number | null;
+                };
+              }
+            ).__galleryRowStaggerTimeline;
+            if (!state) {
+              return null;
+            }
+            if (state.row1Card4StartAt === null || state.row2Card1StartAt === null) {
+              return null;
+            }
+            return state.row2Card1StartAt - state.row1Card4StartAt;
+          }),
+        { timeout: 8_000, message: 'Row-2 card-1 should start right after row-1 card-4 in one staged flow' },
+      )
+      .not.toBeNull();
+    const staggerDelta = await page.evaluate(() => {
+      const state = (
+        window as Window & {
+          __galleryRowStaggerTimeline?: {
+            row1Card4StartAt: number | null;
+            row2Card1StartAt: number | null;
+          };
+        }
+      ).__galleryRowStaggerTimeline;
+      if (!state || state.row1Card4StartAt === null || state.row2Card1StartAt === null) {
+        return null;
+      }
+      return state.row2Card1StartAt - state.row1Card4StartAt;
+    });
+    expect(staggerDelta).not.toBeNull();
+    expect(staggerDelta!).toBeGreaterThanOrEqual(40);
+    expect(staggerDelta!).toBeLessThanOrEqual(180);
 
     const cards = page.locator('.gallery-card');
     await expect(cards).toHaveCount(21);
@@ -596,6 +724,22 @@ test.describe('Gallery tablet smoke', () => {
 
     await expect(page.locator('.temporary-adaptive-shell')).toHaveCount(0);
     await expect(page.locator('.site-desktop-shell')).toBeVisible();
+    await expect(page.locator('.gallery-row[data-motion-inview]')).toHaveCount(0);
+
+    const tabletVisibilitySnapshot = await page.evaluate(() => {
+      const firstRow = document.querySelector('.gallery-row');
+      const firstCard = document.querySelector('.gallery-card');
+      if (!(firstRow instanceof HTMLElement) || !(firstCard instanceof HTMLElement)) {
+        return null;
+      }
+      return {
+        firstRowHasMotion: firstRow.hasAttribute('data-motion-inview'),
+        firstCardOpacity: getComputedStyle(firstCard).opacity,
+      };
+    });
+    expect(tabletVisibilitySnapshot).not.toBeNull();
+    expect(tabletVisibilitySnapshot!.firstRowHasMotion).toBe(false);
+    expect(tabletVisibilitySnapshot!.firstCardOpacity).toBe('1');
   });
 
   test('gallery header and page-shell top stay compact through 847 and switch at 848', async ({ page }) => {
@@ -751,13 +895,21 @@ test.describe('Gallery mobile smoke', () => {
     await expect(page.locator('.temporary-adaptive-shell')).toHaveCount(0);
     await expect(page.locator('.temporary-adaptive-notice')).toHaveCount(0);
     await expect(page.locator('.site-desktop-shell')).toBeVisible();
+    await expect(page.locator('.gallery-row[data-motion-inview]')).toHaveCount(0);
     await expect(page.locator('.gallery-card')).toHaveCount(21);
 
     const snapshot = await page.evaluate(() => {
       const rowsSection = document.querySelector('.gallery-rows-section');
+      const firstRow = document.querySelector('.gallery-row');
+      const firstCard = document.querySelector('.gallery-card');
       const containers = Array.from(document.querySelectorAll('.gallery-card-container'));
       const cards = Array.from(document.querySelectorAll('.gallery-card'));
-      if (!(rowsSection instanceof HTMLElement) || containers.length !== cards.length) {
+      if (
+        !(rowsSection instanceof HTMLElement) ||
+        !(firstRow instanceof HTMLElement) ||
+        !(firstCard instanceof HTMLElement) ||
+        containers.length !== cards.length
+      ) {
         return null;
       }
 
@@ -809,6 +961,8 @@ test.describe('Gallery mobile smoke', () => {
       return {
         viewportWidth: Math.floor(window.innerWidth),
         contentViewportWidth: Math.floor(document.documentElement.clientWidth || window.innerWidth),
+        firstRowHasMotion: firstRow.hasAttribute('data-motion-inview'),
+        firstCardOpacity: getComputedStyle(firstCard).opacity,
         pageWidth: Number(document.querySelector('.page-shell--gallery')?.getBoundingClientRect().width.toFixed(2) ?? 0),
         expectedRowsSectionWidthCandidates: [
           Number((Math.max(0, window.innerWidth - 40)).toFixed(2)),
@@ -826,6 +980,8 @@ test.describe('Gallery mobile smoke', () => {
 
     expect(snapshot).not.toBeNull();
     expect(snapshot!.hasHorizontalOverflow).toBe(false);
+    expect(snapshot!.firstRowHasMotion).toBe(false);
+    expect(snapshot!.firstCardOpacity).toBe('1');
     expect(snapshot!.pageWidth).toBeGreaterThan(0);
     expect(
       snapshot!.expectedRowsSectionWidthCandidates.some((expected) => Math.abs(snapshot!.rowsSectionWidth - expected) <= 1),

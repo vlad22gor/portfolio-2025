@@ -154,6 +154,22 @@ export const inViewPresets = {
     },
     resolveVariables: () => resolveFinalCtaMobileVariables(),
   },
+  'gallery-row-stagger-v1': {
+    mode: 'stagger-children',
+    childSelector: '[data-motion-stagger-item]',
+    initialTransform: 'translate3d(0px, 25px, 0px)',
+    finalTransform: 'translate3d(0px, 0px, 0px)',
+    transition: baseTransition,
+    childDelay: 0.08,
+  },
+  'gallery-first-two-rows-stagger-v1': {
+    mode: 'stagger-children',
+    childSelector: '[data-gallery-first-two-stage-item]',
+    initialTransform: 'translate3d(0px, 25px, 0px)',
+    finalTransform: 'translate3d(0px, 0px, 0px)',
+    transition: baseTransition,
+    childDelay: 0.08,
+  },
   'process-tickets-row-stagger-v1': {
     mode: 'stagger-children',
     childSelector: '[data-motion-stagger-item]',
