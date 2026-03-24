@@ -518,37 +518,6 @@ img.home-hero-asset {
   gap: 0.75rem;
 }
 
-/* Legacy CTA styles; candidate for cleanup after full consumer audit. */
-
-.button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.5rem;
-  padding: 0.55rem 1rem;
-  border-radius: 999px;
-  background: var(--color-text-default-highlighted);
-  color: var(--color-bg-default);
-  font-family: var(--type-label-large-family);
-  font-size: var(--type-label-large-size);
-  line-height: var(--type-label-large-line-height);
-  font-weight: var(--type-label-large-weight);
-  font-optical-sizing: none;
-  font-variation-settings: var(--type-label-large-font-variation);
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-.button:hover {
-  transform: translateY(-1px);
-  opacity: 0.92;
-}
-
-.button.ghost {
-  background: transparent;
-  color: var(--text-primary);
-  border: 1px solid var(--border-soft);
-}
-
 .content-grid {
   display: grid;
   gap: 1.4rem;
