@@ -1,14 +1,24 @@
 <script>
   import { animate, inView } from 'motion';
   import { MEDIA_QUERY_GALLERY_MOBILE, MEDIA_QUERY_NON_GALLERY_MOBILE } from '../lib/layout/breakpoints';
+  import {
+    createLifecycle,
+    getOrCreateWindowRuntime,
+    getRouteFlags,
+    getWindowRuntime,
+    onAstroPageLoad,
+    readDataInt,
+  } from '../lib/runtime';
 
   (() => {
     const runtimeKey = '__inViewAppearRuntime';
-    if (window[runtimeKey]) {
-      window[runtimeKey].mount();
+    const existingRuntime = getWindowRuntime(runtimeKey);
+    if (existingRuntime) {
+      existingRuntime.mount();
       return;
     }
 
+    const lifecycle = createLifecycle();
     const selector = '[data-motion-inview]';
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const observers = new Map();
@@ -112,8 +122,9 @@
         },
         resolveVariables: () => {
           const normalizedPathname = window.location.pathname.replace(/\/+$/, '') || '/';
-          const isHomeRoute = document.body.dataset.routeHome === 'true' || normalizedPathname === '/';
-          const isCasesRoute = document.body.dataset.routeCases === 'true' || normalizedPathname === '/cases';
+          const routeFlags = getRouteFlags();
+          const isHomeRoute = routeFlags.isHomeRoute || normalizedPathname === '/';
+          const isCasesRoute = routeFlags.isCasesRoute || normalizedPathname === '/cases';
           const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
           const isNonGalleryMobileViewport =
             window.matchMedia(MEDIA_QUERY_NON_GALLERY_MOBILE).matches || viewportWidth <= 847;
@@ -121,7 +132,7 @@
           const isHomeOrCasesMobileRoute =
             (isHomeRoute || isCasesRoute) && isNonGalleryMobileViewport;
           const isGalleryMobileRoute =
-            (document.body.dataset.routeGallery === 'true' || normalizedPathname === '/gallery') &&
+            (routeFlags.isGalleryRoute || normalizedPathname === '/gallery') &&
             isGalleryMobileViewport;
           if (!isHomeOrCasesMobileRoute && !isGalleryMobileRoute) {
             return null;
@@ -469,7 +480,7 @@
       });
     };
 
-    const isHomeRoute = () => document.body?.dataset.routeHome === 'true';
+    const isHomeRoute = () => getRouteFlags().isHomeRoute;
 
     const clearQuoteMarkPosition = (quoteMark) => {
       quoteMark.style.removeProperty('left');
@@ -1015,7 +1026,7 @@
       const childNodes = Array.from(element.querySelectorAll(selectorForChildren)).filter(isMotionNode);
       return childNodes
         .map((node, domIndex) => {
-          const explicitIndex = Number.parseInt(node.dataset.motionStaggerIndex ?? '', 10);
+          const explicitIndex = readDataInt(node, 'motionStaggerIndex', Number.NaN);
           const order = Number.isFinite(explicitIndex) ? explicitIndex : domIndex;
           const baseTransform = resolveBaseTransform(node);
           const motionTransform = resolveMotionTransform(node);
@@ -1188,7 +1199,7 @@
       }
 
       setPerCharInitial(charNodes, preset);
-      const rowIndex = Number.parseInt(element.dataset.motionRowIndex ?? '0', 10);
+      const rowIndex = readDataInt(element, 'motionRowIndex', 0);
       const rowDelay = Number.isFinite(rowIndex) && rowIndex > 0 ? rowIndex * preset.rowDelayStep : 0;
 
       const stop = inView(
@@ -1715,9 +1726,24 @@
       observers.clear();
     };
 
+    lifecycle.addCleanup(onAstroPageLoad(mount));
+    lifecycle.on(window, 'pagehide', stopAll);
+
+    const runtime = {
+      mount,
+      destroy() {
+        stopAll();
+        lifecycle.dispose();
+      },
+    };
+
+    const installedRuntime = getOrCreateWindowRuntime(runtimeKey, () => runtime);
+    if (installedRuntime !== runtime) {
+      runtime.destroy();
+      installedRuntime?.mount?.();
+      return;
+    }
+
     mount();
-    document.addEventListener('astro:page-load', mount);
-    window.addEventListener('pagehide', stopAll);
-    window[runtimeKey] = { mount };
   })();
 </script>

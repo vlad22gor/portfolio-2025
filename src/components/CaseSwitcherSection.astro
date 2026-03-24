@@ -70,14 +70,23 @@ const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefi
 
 <script>
   import { navigate } from 'astro:transitions/client';
+  import {
+    createLifecycle,
+    getOrCreateWindowRuntime,
+    getWindowRuntime,
+    onAstroPageLoad,
+    readDataEnum,
+  } from '../lib/runtime';
 
   (() => {
     const runtimeKey = '__caseSwitcherTransitionRuntime';
-    if (window[runtimeKey]) {
-      window[runtimeKey].mount();
+    const existingRuntime = getWindowRuntime(runtimeKey);
+    if (existingRuntime) {
+      existingRuntime.mount();
       return;
     }
 
+    const lifecycle = createLifecycle();
     const leavingMainAttribute = 'data-case-switcher-leaving';
     const introSyncMarkerKey = '__case-switcher-intro-sync';
     const preFadeDurationMs = 180;
@@ -86,18 +95,18 @@ const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefi
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const boundButtons = new WeakSet();
 
-    let preFadeFallbackTimeoutId = 0;
-    let fallbackTimeoutId = 0;
+    let preFadeFallbackTimeoutId = null;
+    let fallbackTimeoutId = null;
     let navigationLocked = false;
 
     const clearTimers = () => {
-      if (preFadeFallbackTimeoutId !== 0) {
-        window.clearTimeout(preFadeFallbackTimeoutId);
-        preFadeFallbackTimeoutId = 0;
+      if (preFadeFallbackTimeoutId != null) {
+        lifecycle.clearTimeout(preFadeFallbackTimeoutId);
+        preFadeFallbackTimeoutId = null;
       }
-      if (fallbackTimeoutId !== 0) {
-        window.clearTimeout(fallbackTimeoutId);
-        fallbackTimeoutId = 0;
+      if (fallbackTimeoutId != null) {
+        lifecycle.clearTimeout(fallbackTimeoutId);
+        fallbackTimeoutId = null;
       }
     };
 
@@ -163,7 +172,7 @@ const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefi
         return;
       }
 
-      const history = button.dataset.astroHistory === 'replace' ? 'replace' : 'auto';
+      const history = readDataEnum(button, 'astroHistory', ['auto', 'replace'], 'auto');
       navigate(button.href, {
         history,
         sourceElement: button,
@@ -230,12 +239,12 @@ const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefi
       main.addEventListener('transitioncancel', onTransitionCancel);
       main.setAttribute(leavingMainAttribute, 'true');
 
-      preFadeFallbackTimeoutId = window.setTimeout(
+      preFadeFallbackTimeoutId = lifecycle.setTimeout(
         finalizeNavigation,
         preFadeDurationMs + preFadeFallbackDelayMs,
       );
 
-      fallbackTimeoutId = window.setTimeout(() => {
+      fallbackTimeoutId = lifecycle.setTimeout(() => {
         clearLeavingState();
       }, fallbackCleanupMs);
     };
@@ -267,10 +276,25 @@ const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefi
       });
     };
 
+    lifecycle.addCleanup(onAstroPageLoad(mount));
+    lifecycle.on(window, 'pagehide', clearLeavingState);
+
+    const runtime = {
+      mount,
+      destroy() {
+        clearLeavingState();
+        lifecycle.dispose();
+      },
+    };
+
+    const installedRuntime = getOrCreateWindowRuntime(runtimeKey, () => runtime);
+    if (installedRuntime !== runtime) {
+      runtime.destroy();
+      installedRuntime?.mount?.();
+      return;
+    }
+
     mount();
-    document.addEventListener('astro:page-load', mount);
-    window.addEventListener('pagehide', clearLeavingState);
-    window[runtimeKey] = { mount };
   })();
 </script>
 

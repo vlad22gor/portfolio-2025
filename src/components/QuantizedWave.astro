@@ -141,68 +141,34 @@ const initialStyle = `${
 </div>
 
 <script>
+  import {
+    createLifecycle,
+    getOrCreateWindowRuntime,
+    getWindowRuntime,
+    onAstroPageLoad,
+    readDataEnum,
+    readDataInt,
+    readDataNumber,
+  } from '../lib/runtime';
+
   (() => {
     const runtimeKey = '__quantizedWaveRuntime';
-    if (window[runtimeKey]) {
-      window[runtimeKey].mountNewRoots({ scheduleExisting: false });
+    const existingRuntime = getWindowRuntime(runtimeKey);
+    if (existingRuntime) {
+      existingRuntime.mountNewRoots({ scheduleExisting: false });
       return;
     }
 
+    const lifecycle = createLifecycle();
     const runtime = {
       roots: new Set(),
       states: new WeakMap(),
-    };
-
-    const readNumber = (value, fallback) => {
-      const parsed = Number.parseFloat(value ?? '');
-      return Number.isFinite(parsed) ? parsed : fallback;
     };
 
     const clampNumber = (value, min, max) => Math.min(max, Math.max(min, value));
     const clampInt = (value, min) => Math.max(min, Math.floor(value));
     const clampUnit = (value) => Math.min(1, Math.max(0, value));
     const round3 = (value) => Math.round(value * 1000) / 1000;
-
-    const resolveAlign = (value) => {
-      if (value === 'center' || value === 'right') {
-        return value;
-      }
-      return 'left';
-    };
-
-    const resolvePhase = (value) => {
-      if (value === 'down') {
-        return 'down';
-      }
-      return 'up';
-    };
-
-    const resolveFit = (value) => {
-      if (value === 'cover-bleed') {
-        return 'cover-bleed';
-      }
-      if (value === 'cover-full') {
-        return 'cover-full';
-      }
-      if (value === 'cover') {
-        return 'cover';
-      }
-      return 'contain';
-    };
-
-    const resolveTrimMode = (value) => {
-      if (value === 'reveal') {
-        return 'reveal';
-      }
-      return 'none';
-    };
-
-    const resolveTrimDirection = (value) => {
-      if (value === 'end-to-start') {
-        return 'end-to-start';
-      }
-      return 'start-to-end';
-    };
 
     const applyTrimReveal = (path, mode, progress, direction) => {
       if (!path || mode !== 'reveal') {
@@ -244,14 +210,19 @@ const initialStyle = `${
     };
 
     const resolveCircleCount = (root, availableWidth, diameter) => {
-      const explicitCount = clampInt(readNumber(root.dataset.waveCount, 0), 0);
+      const explicitCount = clampInt(readDataInt(root, 'waveCount', 0), 0);
       if (explicitCount > 0) {
         return explicitCount;
       }
 
-      const minCircles = clampInt(readNumber(root.dataset.waveMinCircles, 4), 1);
-      const fit = resolveFit(root.dataset.waveFit);
-      const bleedCircles = clampInt(readNumber(root.dataset.waveBleedCircles, 0), 0);
+      const minCircles = clampInt(readDataInt(root, 'waveMinCircles', 4), 1);
+      const fit = readDataEnum(
+        root,
+        'waveFit',
+        ['contain', 'cover', 'cover-full', 'cover-bleed'],
+        'contain',
+      );
+      const bleedCircles = clampInt(readDataInt(root, 'waveBleedCircles', 0), 0);
 
       if (fit === 'cover-full') {
         const ceilCount = Math.ceil(availableWidth / diameter);
@@ -363,19 +334,29 @@ const initialStyle = `${
         return;
       }
 
-      const diameter = clampNumber(readNumber(root.dataset.waveDiameter, 8), 2, 512);
-      const strokeWidth = clampNumber(readNumber(root.dataset.waveStroke, 2), 1, diameter);
+      const diameter = clampNumber(readDataNumber(root, 'waveDiameter', 8), 2, 512);
+      const strokeWidth = clampNumber(readDataNumber(root, 'waveStroke', 2), 1, diameter);
       const availableWidth = resolveAvailableWidth(root, parent);
       const count = resolveCircleCount(root, availableWidth, diameter);
       const quantizedWidth = round3(count * diameter);
-      const phase = resolvePhase(root.dataset.wavePhase);
-      const align = resolveAlign(root.dataset.waveAlign);
-      const fit = resolveFit(root.dataset.waveFit);
-      const bleedCircles = clampInt(readNumber(root.dataset.waveBleedCircles, 0), 0);
+      const phase = readDataEnum(root, 'wavePhase', ['up', 'down'], 'up');
+      const align = readDataEnum(root, 'waveAlign', ['left', 'center', 'right'], 'left');
+      const fit = readDataEnum(
+        root,
+        'waveFit',
+        ['contain', 'cover', 'cover-full', 'cover-bleed'],
+        'contain',
+      );
+      const bleedCircles = clampInt(readDataInt(root, 'waveBleedCircles', 0), 0);
       const bleedOffsetPx = fit === 'cover-bleed' ? bleedCircles * diameter : 0;
-      const trimMode = resolveTrimMode(root.dataset.waveTrimMode);
-      const trimProgress = clampUnit(readNumber(root.dataset.waveTrimProgress, 1));
-      const trimDirection = resolveTrimDirection(root.dataset.waveTrimDirection);
+      const trimMode = readDataEnum(root, 'waveTrimMode', ['none', 'reveal'], 'none');
+      const trimProgress = clampUnit(readDataNumber(root, 'waveTrimProgress', 1));
+      const trimDirection = readDataEnum(
+        root,
+        'waveTrimDirection',
+        ['start-to-end', 'end-to-start'],
+        'start-to-end',
+      );
       const height = round3(diameter + strokeWidth);
 
       const signature = ['equator', quantizedWidth, diameter, strokeWidth, count, phase].join(':');
@@ -402,7 +383,7 @@ const initialStyle = `${
         return;
       }
 
-      state.rafId = window.requestAnimationFrame(() => {
+      state.rafId = lifecycle.requestAnimationFrame(() => {
         state.rafId = 0;
         update(root);
       });
@@ -412,7 +393,7 @@ const initialStyle = `${
       const state = runtime.states.get(root);
       if (state) {
         if (state.rafId !== 0) {
-          window.cancelAnimationFrame(state.rafId);
+          lifecycle.cancelAnimationFrame(state.rafId);
         }
         state.observer.disconnect();
         runtime.states.delete(root);
@@ -469,18 +450,31 @@ const initialStyle = `${
       });
     };
 
-    document.addEventListener('astro:page-load', () => {
-      mountNewRoots({ scheduleExisting: false });
-    });
-
-    window.addEventListener('resize', () => {
-      scheduleAll();
-    });
-
-    window[runtimeKey] = {
+    const runtimeApi = {
       mountNewRoots,
       scheduleAll,
+      destroy() {
+        for (const root of Array.from(runtime.roots)) {
+          unmount(root);
+        }
+        lifecycle.dispose();
+      },
     };
+
+    lifecycle.addCleanup(
+      onAstroPageLoad(() => {
+        mountNewRoots({ scheduleExisting: false });
+      }),
+    );
+    lifecycle.on(window, 'resize', scheduleAll);
+    lifecycle.on(window, 'pagehide', cleanupDisconnectedRoots);
+
+    const installedRuntime = getOrCreateWindowRuntime(runtimeKey, () => runtimeApi);
+    if (installedRuntime !== runtimeApi) {
+      runtimeApi.destroy();
+      installedRuntime?.mountNewRoots?.({ scheduleExisting: false });
+      return;
+    }
 
     mountNewRoots({ scheduleExisting: false });
   })();

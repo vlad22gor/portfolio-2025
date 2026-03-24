@@ -98,16 +98,26 @@ const arrowAssetPath =
 <script>
   import { animate } from 'motion';
   import { installThemeToggleSoundRuntime, playButtonClickSound } from '../lib/sound/engine';
+  import {
+    createLifecycle,
+    getOrCreateWindowRuntime,
+    getWindowRuntime,
+    onAstroPageLoad,
+    readDataEnum,
+    readDataNumber,
+  } from '../lib/runtime';
 
   (() => {
     installThemeToggleSoundRuntime();
 
     const runtimeKey = '__caseCardHoverRuntime';
-    if (window[runtimeKey]) {
-      window[runtimeKey].mountNewCards();
+    const existingRuntime = getWindowRuntime(runtimeKey);
+    if (existingRuntime) {
+      existingRuntime.mountNewCards();
       return;
     }
 
+    const lifecycle = createLifecycle();
     const runtime = {
       cards: new Set(),
       states: new WeakMap(),
@@ -121,11 +131,6 @@ const arrowAssetPath =
     const pressScaleTarget = 0.95;
     const supportsHoverPointer = () => window.matchMedia('(pointer: fine)').matches;
     const scaleControls = new WeakMap();
-
-    const readNumber = (value, fallback) => {
-      const parsed = Number.parseFloat(value);
-      return Number.isFinite(parsed) ? parsed : fallback;
-    };
 
     const setTransform = (asset, x, y, scale) => {
       asset.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
@@ -202,8 +207,8 @@ const arrowAssetPath =
 
     const applyAssetDelays = (assets) => {
       const ordered = [...assets].sort((left, right) => {
-        const leftY = readNumber(left.dataset.targetY, 0);
-        const rightY = readNumber(right.dataset.targetY, 0);
+        const leftY = readDataNumber(left, 'targetY', 0);
+        const rightY = readDataNumber(right, 'targetY', 0);
         return leftY - rightY;
       });
       ordered.forEach((asset, index) => {
@@ -212,10 +217,11 @@ const arrowAssetPath =
     };
 
     const resolveCardWidthDelta = (card) => {
-      if (card.dataset.coverSide !== 'right') {
+      const coverSide = readDataEnum(card, 'coverSide', ['left', 'right'], 'left');
+      if (coverSide !== 'right') {
         return 0;
       }
-      const designWidth = readNumber(card.dataset.caseCardDesignWidth, designWidthFallback);
+      const designWidth = readDataNumber(card, 'caseCardDesignWidth', designWidthFallback);
       const runtimeCardWidth = card.getBoundingClientRect().width;
       return Math.max(0, designWidth - runtimeCardWidth);
     };
@@ -224,8 +230,9 @@ const arrowAssetPath =
       const widthDelta = resolveCardWidthDelta(card);
       card.dataset.caseCardWidthDelta = String(widthDelta);
       state.assets.forEach((asset) => {
-        const rawTargetX = readNumber(asset.dataset.targetX, 0);
-        const effectiveTargetX = card.dataset.coverSide === 'right' ? rawTargetX - widthDelta : rawTargetX;
+        const rawTargetX = readDataNumber(asset, 'targetX', 0);
+        const coverSide = readDataEnum(card, 'coverSide', ['left', 'right'], 'left');
+        const effectiveTargetX = coverSide === 'right' ? rawTargetX - widthDelta : rawTargetX;
         asset.dataset.effectiveTargetX = String(effectiveTargetX);
         asset.style.left = `${effectiveTargetX}px`;
       });
@@ -236,13 +243,15 @@ const arrowAssetPath =
       const coverRect = cover.getBoundingClientRect();
       const centerX = coverRect.left - cardRect.left + coverRect.width / 2;
       const centerY = coverRect.top - cardRect.top + coverRect.height / 2;
-      const targetX = readNumber(asset.dataset.effectiveTargetX ?? asset.dataset.targetX, 0);
-      const targetY = readNumber(asset.dataset.targetY, 0);
-      const targetWidth = readNumber(asset.dataset.targetWidth, 0);
-      const targetHeight = readNumber(asset.dataset.targetHeight, 0);
+      const fallbackTargetX = readDataNumber(asset, 'targetX', 0);
+      const targetX = Number.parseFloat(asset.dataset.effectiveTargetX ?? '');
+      const resolvedTargetX = Number.isFinite(targetX) ? targetX : fallbackTargetX;
+      const targetY = readDataNumber(asset, 'targetY', 0);
+      const targetWidth = readDataNumber(asset, 'targetWidth', 0);
+      const targetHeight = readDataNumber(asset, 'targetHeight', 0);
 
       return {
-        fromX: centerX - (targetX + targetWidth / 2),
+        fromX: centerX - (resolvedTargetX + targetWidth / 2),
         fromY: centerY - (targetY + targetHeight / 2),
       };
     };
@@ -263,7 +272,7 @@ const arrowAssetPath =
         }
 
         const { fromX, fromY } = resolveFromCenter(card, state.cover, asset);
-        const delay = readNumber(asset.dataset.hoverDelay, 0);
+        const delay = readDataNumber(asset, 'hoverDelay', 0);
         asset.style.opacity = '1';
         asset.style.pointerEvents = 'auto';
         setTransform(asset, fromX, fromY, 0);
@@ -298,7 +307,7 @@ const arrowAssetPath =
         }
 
         const { fromX, fromY } = resolveFromCenter(card, state.cover, asset);
-        const delay = readNumber(asset.dataset.hoverDelay, 0);
+        const delay = readDataNumber(asset, 'hoverDelay', 0);
         const control = animate(
           asset,
           {
@@ -445,15 +454,36 @@ const arrowAssetPath =
       };
     };
 
+    const unmountCard = (card) => {
+      const state = runtime.states.get(card);
+      if (!state) {
+        runtime.cards.delete(card);
+        return;
+      }
+      stopScale(card);
+      setScale(card, 1);
+      deactivate(card, state, true);
+      state.unbind?.();
+      runtime.states.delete(card);
+      runtime.cards.delete(card);
+    };
+
+    const cleanupDisconnectedCards = () => {
+      for (const card of Array.from(runtime.cards)) {
+        if (!card.isConnected) {
+          unmountCard(card);
+        }
+      }
+    };
+
     runtime.mountNewCards = () => {
+      cleanupDisconnectedCards();
       document.querySelectorAll('[data-case-card]').forEach((card) => {
         mountCard(card);
       });
     };
 
-    runtime.mountNewCards();
-    document.addEventListener('astro:page-load', runtime.mountNewCards);
-    window.addEventListener('pagehide', () => {
+    const resetActiveStates = () => {
       runtime.cards.forEach((card) => {
         const state = runtime.states.get(card);
         if (!state) {
@@ -463,8 +493,28 @@ const arrowAssetPath =
         setScale(card, 1);
         deactivate(card, state, true);
       });
-    });
+    };
 
-    window[runtimeKey] = runtime;
+    lifecycle.addCleanup(onAstroPageLoad(runtime.mountNewCards));
+    lifecycle.on(window, 'pagehide', resetActiveStates);
+
+    const runtimeApi = {
+      mountNewCards: runtime.mountNewCards,
+      destroy() {
+        for (const card of Array.from(runtime.cards)) {
+          unmountCard(card);
+        }
+        lifecycle.dispose();
+      },
+    };
+
+    const installedRuntime = getOrCreateWindowRuntime(runtimeKey, () => runtimeApi);
+    if (installedRuntime !== runtimeApi) {
+      runtimeApi.destroy();
+      installedRuntime?.mountNewCards?.();
+      return;
+    }
+
+    runtime.mountNewCards();
   })();
 </script>

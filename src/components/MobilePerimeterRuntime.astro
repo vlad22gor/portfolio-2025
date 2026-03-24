@@ -7,14 +7,25 @@
     resolveProximityStepByWidth,
   } from '../lib/layout/mobilePerimeter';
   import { MEDIA_QUERY_GALLERY_MOBILE, MEDIA_QUERY_NON_GALLERY_MOBILE } from '../lib/layout/breakpoints';
+  import {
+    createLifecycle,
+    createRafScheduler,
+    getOrCreateWindowRuntime,
+    getRouteFlags,
+    getWindowRuntime,
+    onAstroPageLoad,
+    readDataEnum,
+  } from '../lib/runtime';
 
   (() => {
     const runtimeKey = '__mobilePerimeterRuntime';
-    if (window[runtimeKey]) {
-      window[runtimeKey].sync();
+    const existingRuntime = getWindowRuntime(runtimeKey);
+    if (existingRuntime) {
+      existingRuntime.sync();
       return;
     }
 
+    const lifecycle = createLifecycle();
     const defaultStep = 48;
     const defaultCardCoverHeight = 288;
     const defaultMoreHeight = 432;
@@ -59,7 +70,12 @@
     };
 
     const resolveProcessTicketConfig = (section) => {
-      const variant = section.dataset.caseProcessTicketVariant === 'circle-24' ? 'circle-24' : 'square-36';
+      const variant = readDataEnum(
+        section,
+        'caseProcessTicketVariant',
+        ['square-36', 'circle-24'],
+        'square-36',
+      );
       const defaultStepForVariant = variant === 'circle-24' ? defaultProcessCircleStep : defaultProcessSquareStep;
       const defaultCols = variant === 'circle-24' ? 6 : 4;
       return { variant, defaultStepForVariant, defaultCols };
@@ -249,10 +265,7 @@
       const isNonGalleryMobile = nonGalleryMobileMedia.matches;
       const isGalleryMobile = galleryMobileMedia.matches;
       const viewportWidth = Math.floor(window.innerWidth);
-      const isHomeRoute = document.body?.dataset.routeHome === 'true';
-      const isCasesRoute = document.body?.dataset.routeCases === 'true';
-      const isGalleryRoute = document.body?.dataset.routeGallery === 'true';
-      const isCaseDetailRoute = document.body?.dataset.routeCaseDetail === 'true';
+      const { isHomeRoute, isCasesRoute, isGalleryRoute, isCaseDetailRoute } = getRouteFlags();
       const isHomeOrCasesRoute = isHomeRoute || isCasesRoute;
 
       if (isCaseDetailRoute) {
@@ -318,23 +331,44 @@
       window.__quantizedPerimeterRuntime?.scheduleAll?.();
     };
 
-    let resizeRaf = 0;
+    const syncScheduler = createRafScheduler(sync);
     const scheduleSync = () => {
-      if (resizeRaf !== 0) {
-        return;
-      }
-      resizeRaf = window.requestAnimationFrame(() => {
-        resizeRaf = 0;
-        sync();
-      });
+      syncScheduler.schedule();
     };
 
-    window.addEventListener('resize', scheduleSync);
-    document.addEventListener('astro:page-load', scheduleSync);
-    nonGalleryMobileMedia.addEventListener?.('change', scheduleSync);
-    galleryMobileMedia.addEventListener?.('change', scheduleSync);
+    const bindMediaQueryChange = (mediaQuery, handler) => {
+      if (typeof mediaQuery.addEventListener === 'function') {
+        mediaQuery.addEventListener('change', handler);
+        return () => mediaQuery.removeEventListener('change', handler);
+      }
+      if (typeof mediaQuery.addListener === 'function') {
+        mediaQuery.addListener(handler);
+        return () => mediaQuery.removeListener(handler);
+      }
+      return () => {};
+    };
 
-    window[runtimeKey] = { sync };
+    lifecycle.on(window, 'resize', scheduleSync);
+    lifecycle.addCleanup(onAstroPageLoad(scheduleSync));
+    lifecycle.addCleanup(bindMediaQueryChange(nonGalleryMobileMedia, scheduleSync));
+    lifecycle.addCleanup(bindMediaQueryChange(galleryMobileMedia, scheduleSync));
+    lifecycle.addCleanup(() => syncScheduler.cancel());
+
+    const runtime = {
+      sync,
+      destroy() {
+        lifecycle.dispose();
+        syncScheduler.cancel();
+      },
+    };
+
+    const installedRuntime = getOrCreateWindowRuntime(runtimeKey, () => runtime);
+    if (installedRuntime !== runtime) {
+      runtime.destroy();
+      installedRuntime?.sync?.();
+      return;
+    }
+
     sync();
   })();
 </script>

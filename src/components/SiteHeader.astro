@@ -95,14 +95,25 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
 <script>
   import { navigate } from 'astro:transitions/client';
   import { animate } from 'motion';
+  import {
+    createLifecycle,
+    getOrCreateWindowRuntime,
+    getWindowRuntime,
+    onAstroPageLoad,
+    readDataEnum,
+    readDataJson,
+    readDataString,
+  } from '../lib/runtime';
 
   (() => {
     const runtimeKey = '__siteHeaderRuntime';
-    if (window[runtimeKey]) {
-      window[runtimeKey].sync({ animated: false });
+    const existingRuntime = getWindowRuntime(runtimeKey);
+    if (existingRuntime) {
+      existingRuntime.sync({ animated: false });
       return;
     }
 
+    const lifecycle = createLifecycle();
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const waveDiameter = 8;
     const waveMinCircles = 1;
@@ -128,20 +139,11 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
     };
 
     const parseCasePaths = (track) => {
-      const raw = track?.dataset.casePaths;
-      if (!raw) {
+      const parsed = readDataJson(track, 'casePaths', ['/cases']);
+      if (!Array.isArray(parsed)) {
         return ['/cases'];
       }
-
-      try {
-        const parsed = JSON.parse(raw);
-        if (!Array.isArray(parsed)) {
-          return ['/cases'];
-        }
-        return parsed.map((value) => normalizePath(String(value)));
-      } catch {
-        return ['/cases'];
-      }
+      return parsed.map((value) => normalizePath(String(value)));
     };
 
     const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -164,13 +166,13 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
       }
 
       if (pendingNavigation.rafId1 !== 0) {
-        window.cancelAnimationFrame(pendingNavigation.rafId1);
+        lifecycle.cancelAnimationFrame(pendingNavigation.rafId1);
       }
       if (pendingNavigation.rafId2 !== 0) {
-        window.cancelAnimationFrame(pendingNavigation.rafId2);
+        lifecycle.cancelAnimationFrame(pendingNavigation.rafId2);
       }
       if (pendingNavigation.timeoutId !== 0) {
-        window.clearTimeout(pendingNavigation.timeoutId);
+        lifecycle.clearTimeout(pendingNavigation.timeoutId);
       }
       pendingNavigation = null;
     };
@@ -269,7 +271,7 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
 
       const href = button.href;
       const delayMs = resolveAdaptiveNavigationDelayMs(button);
-      const history = button.dataset.astroHistory === 'replace' ? 'replace' : 'auto';
+      const history = readDataEnum(button, 'astroHistory', ['auto', 'replace'], 'auto');
       let settled = false;
       let rafId1 = 0;
       let rafId2 = 0;
@@ -282,13 +284,13 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
 
         settled = true;
         if (rafId1 !== 0) {
-          window.cancelAnimationFrame(rafId1);
+          lifecycle.cancelAnimationFrame(rafId1);
         }
         if (rafId2 !== 0) {
-          window.cancelAnimationFrame(rafId2);
+          lifecycle.cancelAnimationFrame(rafId2);
         }
         if (timeoutId !== 0) {
-          window.clearTimeout(timeoutId);
+          lifecycle.clearTimeout(timeoutId);
         }
         pendingNavigation = null;
 
@@ -309,12 +311,12 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
         });
       };
 
-      rafId1 = window.requestAnimationFrame(() => {
-        rafId2 = window.requestAnimationFrame(() => {
+      rafId1 = lifecycle.requestAnimationFrame(() => {
+        rafId2 = lifecycle.requestAnimationFrame(() => {
           // Warm up the next frame so navigation work does not start in the same click tick.
         });
       });
-      timeoutId = window.setTimeout(finalize, delayMs);
+      timeoutId = lifecycle.setTimeout(finalize, delayMs);
       pendingNavigation = { rafId1, rafId2, timeoutId };
     };
 
@@ -499,7 +501,7 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
     const scheduleTrimRetry = (track, retryUntilMs = window.performance.now() + railTrimRetryWindowMs) => {
       const state = getRailState(track);
       if (state.trimRafId !== 0) {
-        window.cancelAnimationFrame(state.trimRafId);
+        lifecycle.cancelAnimationFrame(state.trimRafId);
       }
 
       const tick = () => {
@@ -521,10 +523,10 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
           return;
         }
 
-        state.trimRafId = window.requestAnimationFrame(tick);
+        state.trimRafId = lifecycle.requestAnimationFrame(tick);
       };
 
-      state.trimRafId = window.requestAnimationFrame(tick);
+      state.trimRafId = lifecycle.requestAnimationFrame(tick);
     };
 
     const stopRail = (track) => {
@@ -541,7 +543,7 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
       stopRailHover(track);
 
       if (state.trimRafId !== 0) {
-        window.cancelAnimationFrame(state.trimRafId);
+        lifecycle.cancelAnimationFrame(state.trimRafId);
         state.trimRafId = 0;
       }
     };
@@ -644,13 +646,14 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
       }
 
       const activeId = button.dataset.navId ?? '';
+      const resolvedActiveId = readDataString(button, 'navId', activeId);
       const geometry = resolveButtonGeometry(track, button);
       if (!geometry) {
         return;
       }
 
       moveSegment(track, geometry, {
-        activeId,
+        activeId: resolvedActiveId,
         optimistic: options.optimistic === true,
         animated: options.animated !== false,
       });
@@ -827,7 +830,7 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
       if (resizeRafId !== 0) {
         return;
       }
-      resizeRafId = window.requestAnimationFrame(() => {
+      resizeRafId = lifecycle.requestAnimationFrame(() => {
         resizeRafId = 0;
         sync({ animated: false });
       });
@@ -838,7 +841,7 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
         return;
       }
 
-      railTrimSyncRafId = window.requestAnimationFrame(() => {
+      railTrimSyncRafId = lifecycle.requestAnimationFrame(() => {
         railTrimSyncRafId = 0;
         const tracks = Array.from(document.querySelectorAll('.site-nav-track[data-wave-variant="wave-rail"]'));
         tracks.forEach((track) => {
@@ -852,24 +855,6 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
       });
     };
 
-    const bindFontSync = () => {
-      if (!document.fonts) {
-        return;
-      }
-
-      document.fonts.ready
-        .then(() => {
-          scheduleResizeSync();
-        })
-        .catch(() => {
-          // Ignore font loading promise errors and keep runtime responsive.
-        });
-
-      if (typeof document.fonts.addEventListener === 'function') {
-        document.fonts.addEventListener('loadingdone', scheduleRailTrimSync);
-      }
-    };
-
     const resetAllRailHoverOffsets = () => {
       const tracks = Array.from(document.querySelectorAll('.site-nav-track[data-wave-variant="wave-rail"]'));
       tracks.forEach((track) => {
@@ -877,24 +862,41 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
       });
     };
 
-    document.addEventListener('astro:page-load', () => {
-      sync({ animated: true });
-    });
-    window.addEventListener('resize', scheduleResizeSync);
-    bindFontSync();
-    window.addEventListener('beforeunload', cancelPendingNavigation);
-    window.addEventListener('pagehide', cancelPendingNavigation);
-    window.addEventListener('blur', resetAllRailHoverOffsets);
-    document.addEventListener('visibilitychange', () => {
+    lifecycle.addCleanup(
+      onAstroPageLoad(() => {
+        sync({ animated: true });
+      }),
+    );
+    lifecycle.on(window, 'resize', scheduleResizeSync);
+    lifecycle.on(window, 'beforeunload', cancelPendingNavigation);
+    lifecycle.on(window, 'pagehide', cancelPendingNavigation);
+    lifecycle.on(window, 'blur', resetAllRailHoverOffsets);
+    lifecycle.on(document, 'visibilitychange', () => {
       if (document.visibilityState === 'hidden') {
         resetAllRailHoverOffsets();
       }
     });
-    window.addEventListener('pagehide', resetAllRailHoverOffsets);
+    lifecycle.on(window, 'pagehide', resetAllRailHoverOffsets);
+    lifecycle.onFontsLoadingDone(() => {
+      scheduleResizeSync();
+      scheduleRailTrimSync();
+    });
 
-    window[runtimeKey] = {
+    const runtime = {
       sync,
+      destroy() {
+        cancelPendingNavigation();
+        resetAllRailHoverOffsets();
+        lifecycle.dispose();
+      },
     };
+
+    const installedRuntime = getOrCreateWindowRuntime(runtimeKey, () => runtime);
+    if (installedRuntime !== runtime) {
+      runtime.destroy();
+      installedRuntime?.sync?.({ animated: false });
+      return;
+    }
 
     sync({ animated: false });
   })();

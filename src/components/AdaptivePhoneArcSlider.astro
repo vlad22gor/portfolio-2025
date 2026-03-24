@@ -148,21 +148,31 @@ const screensAttrs = stageItem
     BREAKPOINT_TABLET_LOW_MAX,
     MEDIA_QUERY_ADAPTIVE,
   } from '../lib/layout/breakpoints';
+  import {
+    createLifecycle,
+    createRafLoop,
+    getOrCreateWindowRuntime,
+    getWindowRuntime,
+    onAstroPageLoad,
+    onDomReady,
+    readDataBool,
+    readDataInt,
+  } from '../lib/runtime';
 
   (() => {
     const runtimeKey = '__temporaryAdaptiveSliderRuntime';
-    if (window[runtimeKey]) {
-      window[runtimeKey].mount();
+    const existingRuntime = getWindowRuntime(runtimeKey);
+    if (existingRuntime) {
+      existingRuntime.mount();
       return;
     }
 
+    const lifecycle = createLifecycle();
     const sliderSelector = '[data-temp-slider]';
     const initAttr = 'tempSliderInit';
     const states = new Map();
     const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     const adaptiveQuery = window.matchMedia(MEDIA_QUERY_ADAPTIVE);
-    let rafId = 0;
-    let lastFrameTs = 0;
 
     const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
     const wrap = (value, size) => {
@@ -314,23 +324,12 @@ const screensAttrs = stageItem
       return true;
     };
 
-    const stopLoop = () => {
-      if (rafId) {
-        window.cancelAnimationFrame(rafId);
-      }
-      rafId = 0;
-      lastFrameTs = 0;
-    };
-
-    const runLoop = (timestamp) => {
+    const loop = createRafLoop((deltaMs) => {
       if (states.size === 0) {
-        stopLoop();
-        return;
+        return false;
       }
 
-      const dtMs = lastFrameTs > 0 ? timestamp - lastFrameTs : 16.67;
-      lastFrameTs = timestamp;
-      const dtSec = clamp(dtMs / 1000, 0, 0.05);
+      const dtSec = clamp(deltaMs / 1000, 0, 0.05);
 
       for (const [root, state] of states) {
         if (stepState(state, dtSec)) {
@@ -340,14 +339,18 @@ const screensAttrs = stageItem
         states.delete(root);
       }
 
-      rafId = window.requestAnimationFrame(runLoop);
-    };
+      return states.size > 0;
+    });
 
     const startLoop = () => {
-      if (rafId || states.size === 0) {
+      if (states.size === 0) {
         return;
       }
-      rafId = window.requestAnimationFrame(runLoop);
+      loop.start();
+    };
+
+    const stopLoop = () => {
+      loop.stop();
     };
 
     const bindPointer = (state) => {
@@ -420,7 +423,7 @@ const screensAttrs = stageItem
 
       const viewport = root;
       const track = root.querySelector('[data-temp-slider-track]');
-      const count = Number(root.getAttribute('data-temp-slider-count'));
+      const count = readDataInt(root, 'tempSliderCount', 0);
       if (!(track instanceof HTMLElement) || !Number.isFinite(count) || count < 2) {
         return;
       }
@@ -434,7 +437,7 @@ const screensAttrs = stageItem
 
       const state = {
         root,
-        isHomeRoute: document.body?.dataset.routeHome === 'true' && Boolean(root.closest('.home-hero-mobile')),
+        isHomeRoute: readDataBool(document.body, 'routeHome', false) && Boolean(root.closest('.home-hero-mobile')),
         viewport,
         track,
         items,
@@ -534,17 +537,13 @@ const screensAttrs = stageItem
       stopLoop();
     };
 
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    reducedMotionQuery.addEventListener('change', onReducedMotionChange);
-    adaptiveQuery.addEventListener('change', onAdaptiveQueryChange);
-    document.addEventListener('astro:page-load', mount);
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', mount, { once: true });
-    } else {
-      mount();
-    }
+    lifecycle.on(document, 'visibilitychange', onVisibilityChange);
+    lifecycle.onMediaQueryChange(reducedMotionQuery, onReducedMotionChange);
+    lifecycle.onMediaQueryChange(adaptiveQuery, onAdaptiveQueryChange);
+    lifecycle.addCleanup(onAstroPageLoad(mount));
+    lifecycle.addCleanup(onDomReady(mount));
 
-    window[runtimeKey] = {
+    const runtime = {
       mount,
       destroy() {
         for (const [root, state] of states) {
@@ -552,7 +551,17 @@ const screensAttrs = stageItem
           states.delete(root);
         }
         stopLoop();
+        lifecycle.dispose();
       },
     };
+
+    const installedRuntime = getOrCreateWindowRuntime(runtimeKey, () => runtime);
+    if (installedRuntime !== runtime) {
+      runtime.destroy();
+      installedRuntime?.mount?.();
+      return;
+    }
+
+    mount();
   })();
 </script>

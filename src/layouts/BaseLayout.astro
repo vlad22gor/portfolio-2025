@@ -47,6 +47,32 @@ const agentationEndpoint =
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script is:inline>
       (() => {
+        const themeKey = 'vh-theme';
+        const normalizeTheme = (value) => (value === 'dark' ? 'dark' : 'light');
+        const resolveTheme = () => {
+          let storedTheme = null;
+          try {
+            storedTheme = window.localStorage.getItem(themeKey);
+          } catch {
+            storedTheme = null;
+          }
+
+          const prefersDark =
+            typeof window.matchMedia === 'function' &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches;
+          return storedTheme ? normalizeTheme(storedTheme) : prefersDark ? 'dark' : 'light';
+        };
+
+        const current = document.documentElement.dataset.theme;
+        if (current !== 'dark' && current !== 'light') {
+          document.documentElement.dataset.theme = resolveTheme();
+        }
+      })();
+    </script>
+    <script>
+      import { getOrCreateWindowRuntime, getWindowRuntime, onAstroBeforeSwap, onAstroPageLoad } from '../lib/runtime';
+
+      (() => {
         const runtimeKey = '__themeBootstrapRuntime';
         const themeKey = 'vh-theme';
         const normalizeTheme = (value) => (value === 'dark' ? 'dark' : 'light');
@@ -77,26 +103,37 @@ const agentationEndpoint =
         };
 
         const syncThemeBeforeSwap = (event) => {
-          const nextDocument = event?.newDocument;
-          const nextRoot = nextDocument?.documentElement;
+          const nextRoot = event?.newDocument?.documentElement;
           if (!nextRoot) {
             return;
           }
           nextRoot.setAttribute('data-theme', readCurrentTheme());
         };
 
-        if (window[runtimeKey]) {
-          window[runtimeKey].applyTheme();
+        const existingRuntime = getWindowRuntime(runtimeKey);
+        if (existingRuntime) {
+          existingRuntime.applyTheme();
           return;
         }
 
+        const offBeforeSwap = onAstroBeforeSwap(syncThemeBeforeSwap);
+        const offPageLoad = onAstroPageLoad(applyTheme);
+        const runtime = {
+          applyTheme,
+          syncThemeBeforeSwap,
+          destroy() {
+            offBeforeSwap();
+            offPageLoad();
+          },
+        };
+
+        getOrCreateWindowRuntime(runtimeKey, () => runtime);
         applyTheme();
-        document.addEventListener('astro:before-swap', syncThemeBeforeSwap);
-        document.addEventListener('astro:page-load', applyTheme);
-        window[runtimeKey] = { applyTheme, syncThemeBeforeSwap };
       })();
     </script>
-    <script is:inline>
+    <script>
+      import { createLifecycle, getOrCreateWindowRuntime, getWindowRuntime, onAstroPageLoad, readDataString } from '../lib/runtime';
+
       (() => {
         const runtimeKey = '__themedRasterRuntime';
         const imageSelector = 'img[data-theme-src-light], img[data-theme-src-dark]';
@@ -104,8 +141,8 @@ const agentationEndpoint =
         const readTheme = () => normalizeTheme(document.documentElement.dataset.theme);
 
         const resolveImageSrc = (image, theme) => {
-          const lightSrc = image.dataset.themeSrcLight?.trim();
-          const darkSrc = image.dataset.themeSrcDark?.trim();
+          const lightSrc = readDataString(image, 'themeSrcLight', '');
+          const darkSrc = readDataString(image, 'themeSrcDark', '');
 
           if (theme === 'dark' && darkSrc) {
             return darkSrc;
@@ -129,11 +166,13 @@ const agentationEndpoint =
           });
         };
 
-        if (window[runtimeKey]) {
-          window[runtimeKey].mount();
+        const existingRuntime = getWindowRuntime(runtimeKey);
+        if (existingRuntime) {
+          existingRuntime.mount();
           return;
         }
 
+        const lifecycle = createLifecycle();
         const onThemeMutation = (mutations) => {
           const themeChanged = mutations.some(
             (record) => record.type === 'attributes' && record.attributeName === 'data-theme',
@@ -144,8 +183,8 @@ const agentationEndpoint =
           syncAllThemedImages();
         };
 
-        const themeObserver = new MutationObserver(onThemeMutation);
-        themeObserver.observe(document.documentElement, {
+        const themeObserver = lifecycle.trackObserver(new MutationObserver(onThemeMutation));
+        themeObserver?.observe(document.documentElement, {
           attributes: true,
           attributeFilter: ['data-theme'],
         });
@@ -154,9 +193,16 @@ const agentationEndpoint =
           syncAllThemedImages();
         };
 
+        lifecycle.addCleanup(onAstroPageLoad(mount));
+        const runtime = {
+          mount,
+          destroy() {
+            lifecycle.dispose();
+          },
+        };
+
+        getOrCreateWindowRuntime(runtimeKey, () => runtime);
         mount();
-        document.addEventListener('astro:page-load', mount);
-        window[runtimeKey] = { mount };
       })();
     </script>
     <script is:inline>

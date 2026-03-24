@@ -172,14 +172,26 @@ const resolvedInViewPreset =
 
 <script>
   import { animate } from 'motion';
+  import {
+    createLifecycle,
+    getOrCreateWindowRuntime,
+    getWindowRuntime,
+    onAstroPageLoad,
+    readDataBool,
+    readDataEnum,
+    readDataInt,
+    readDataNumber,
+  } from '../lib/runtime';
 
   (() => {
     const runtimeKey = '__quantizedPerimeterRuntime';
-    if (window[runtimeKey]) {
-      window[runtimeKey].mountNewRoots({ scheduleExisting: false });
+    const existingRuntime = getWindowRuntime(runtimeKey);
+    if (existingRuntime) {
+      existingRuntime.mountNewRoots({ scheduleExisting: false });
       return;
     }
 
+    const lifecycle = createLifecycle();
     const runtime = {
       roots: new Set(),
       states: new WeakMap(),
@@ -637,12 +649,14 @@ const resolvedInViewPreset =
         return {
           supportsParamAnimation: true,
           resolveBaseParams: (dataset) => ({
-            waveAmplitudeRatio: clampTotemAmplitudeRatio(readNumber(dataset.perimeterWaveAmplitudeRatio, 0.28)),
-            waveTension: clampTotemTension(readNumber(dataset.perimeterWaveTension, 0.5)),
+            waveAmplitudeRatio: clampTotemAmplitudeRatio(
+              readDataNumber(dataset, 'perimeterWaveAmplitudeRatio', 0.28),
+            ),
+            waveTension: clampTotemTension(readDataNumber(dataset, 'perimeterWaveTension', 0.5)),
             scallopRadiusScale: 1,
           }),
           resolveHoverParams: (baseParams, dataset) => {
-            const preset = dataset.perimeterHoverMorphPreset === 'strong' ? 'strong' : 'default';
+            const preset = readDataEnum(dataset, 'perimeterHoverMorphPreset', ['default', 'strong'], 'default');
             const presetDeltas =
               preset === 'strong'
                 ? { amplitudeDelta: 0.16, tensionDelta: -0.38 }
@@ -650,12 +664,12 @@ const resolvedInViewPreset =
             const amplitudeDelta =
               typeof dataset.perimeterHoverWaveAmplitudeDelta === 'string' &&
               dataset.perimeterHoverWaveAmplitudeDelta.trim() !== ''
-                ? readNumber(dataset.perimeterHoverWaveAmplitudeDelta, presetDeltas.amplitudeDelta)
+                ? readDataNumber(dataset, 'perimeterHoverWaveAmplitudeDelta', presetDeltas.amplitudeDelta)
                 : presetDeltas.amplitudeDelta;
             const tensionDelta =
               typeof dataset.perimeterHoverWaveTensionDelta === 'string' &&
               dataset.perimeterHoverWaveTensionDelta.trim() !== ''
-                ? readNumber(dataset.perimeterHoverWaveTensionDelta, presetDeltas.tensionDelta)
+                ? readDataNumber(dataset, 'perimeterHoverWaveTensionDelta', presetDeltas.tensionDelta)
                 : presetDeltas.tensionDelta;
             return {
               waveAmplitudeRatio: clampTotemAmplitudeRatio(baseParams.waveAmplitudeRatio + amplitudeDelta),
@@ -691,7 +705,7 @@ const resolvedInViewPreset =
             scallopRadiusScale: 1,
           }),
           resolveHoverParams: (baseParams, dataset) => {
-            const preset = dataset.perimeterHoverMorphPreset === 'strong' ? 'strong' : 'default';
+            const preset = readDataEnum(dataset, 'perimeterHoverMorphPreset', ['default', 'strong'], 'default');
             const targetScale = preset === 'strong' ? 1.28 : 1.14;
             return {
               ...baseParams,
@@ -899,20 +913,25 @@ const resolvedInViewPreset =
         return;
       }
 
-      const shape = root.dataset.perimeterShape === 'circle' ? 'circle' : 'rectangle';
-      const shouldClipContent = root.dataset.perimeterClipContentToShape === 'true';
-      const shouldExportShapeMask = root.dataset.perimeterExportShapeMask === 'true';
+      const shape = readDataEnum(root, 'perimeterShape', ['rectangle', 'circle'], 'rectangle');
+      const shouldClipContent = readDataBool(root, 'perimeterClipContentToShape', false);
+      const shouldExportShapeMask = readDataBool(root, 'perimeterExportShapeMask', false);
       const shouldExposeMask = shouldClipContent || shouldExportShapeMask;
       if (!shouldExposeMask) {
         clearContentMask(root);
       }
-      const outlineEnabled = root.dataset.perimeterOutlineEnabled === 'true';
+      const outlineEnabled = readDataBool(root, 'perimeterOutlineEnabled', false);
       if (!outlineEnabled) {
         clearOutlineFrame(outlineSvg);
       }
       const rootStyles = outlineEnabled ? window.getComputedStyle(root) : null;
-      const requestedOutlineMode = root.dataset.perimeterOutlineMode === 'geometric' ? 'geometric' : 'alpha';
-      const requestedOutlinePlacement = root.dataset.perimeterOutlinePlacement === 'outside' ? 'outside' : 'center';
+      const requestedOutlineMode = readDataEnum(root, 'perimeterOutlineMode', ['alpha', 'geometric'], 'alpha');
+      const requestedOutlinePlacement = readDataEnum(
+        root,
+        'perimeterOutlinePlacement',
+        ['center', 'outside'],
+        'center',
+      );
       const outlineWidth = outlineEnabled
         ? Math.max(0, readNumber(rootStyles?.getPropertyValue('--perimeter-outline-width'), 0))
         : 0;
@@ -920,27 +939,29 @@ const resolvedInViewPreset =
         ? rootStyles?.getPropertyValue('--perimeter-outline-color').trim() || 'transparent'
         : 'transparent';
       const geometricOutlineSupported =
-        requestedOutlineMode === 'geometric' && shape === 'rectangle' && root.dataset.perimeterEdgePattern === 'scallop';
+        requestedOutlineMode === 'geometric' &&
+        shape === 'rectangle' &&
+        readDataEnum(root, 'perimeterEdgePattern', ['scallop', 'totem'], 'scallop') === 'scallop';
       const outlineMode = geometricOutlineSupported ? 'geometric' : 'alpha';
       const outlinePlacement = geometricOutlineSupported ? requestedOutlinePlacement : 'center';
       const shouldRenderOutline = outlineEnabled && outlineWidth > 0 && outlineColor !== 'transparent';
       if (outlineSvg) {
         outlineSvg.style.color = outlineColor;
       }
-      const edgePattern = root.dataset.perimeterEdgePattern === 'totem' ? 'totem' : 'scallop';
-      const edges = root.dataset.perimeterEdges === 'top' ? 'top' : 'all';
+      const edgePattern = readDataEnum(root, 'perimeterEdgePattern', ['scallop', 'totem'], 'scallop');
+      const edges = readDataEnum(root, 'perimeterEdges', ['all', 'top'], 'all');
       const animationAdapter = resolvePatternAnimationAdapter(edgePattern);
       const hoverMorphEnabled =
         shape === 'rectangle' &&
-        root.dataset.perimeterHoverMorph === 'true' &&
+        readDataBool(root, 'perimeterHoverMorph', false) &&
         animationAdapter.supportsParamAnimation;
       const animationProgress = hoverMorphEnabled ? clamp01(state.animProgress) : 0;
-      const baseStep = Math.max(1, readNumber(root.dataset.perimeterStep, 40));
+      const baseStep = Math.max(1, readDataNumber(root, 'perimeterStep', 40));
       const available = resolveAvailableSize(root, parent, baseStep);
       const effectiveStep = resolveEffectiveStep(baseStep, available.width, available.height);
-      const minCols = clampInt(readNumber(root.dataset.perimeterMinCols, 12), 1);
-      const minRows = clampInt(readNumber(root.dataset.perimeterMinRows, 8), 1);
-      const minLobes = clampInt(readNumber(root.dataset.perimeterMinLobes, 8), 3);
+      const minCols = clampInt(readDataInt(root, 'perimeterMinCols', 12), 1);
+      const minRows = clampInt(readDataInt(root, 'perimeterMinRows', 8), 1);
+      const minLobes = clampInt(readDataInt(root, 'perimeterMinLobes', 8), 3);
       const baseParams = animationAdapter.resolveBaseParams(root.dataset);
       const hoverParams = hoverMorphEnabled
         ? animationAdapter.resolveHoverParams(baseParams, root.dataset)
@@ -997,7 +1018,7 @@ const resolvedInViewPreset =
       const widthBudget = Math.max(1, Math.floor(available.width));
       const heightBudget = Math.max(1, Math.floor(available.height));
 
-      const fitMode = resolveFitMode(root.dataset.perimeterFit);
+      const fitMode = resolveFitMode(readDataEnum(root, 'perimeterFit', ['contain', 'cover'], 'contain'));
       const floorCols = Math.max(1, Math.floor(widthBudget / effectiveStep));
       const ceilCols = Math.max(1, Math.ceil(widthBudget / effectiveStep));
       const floorRows = Math.max(1, Math.floor(heightBudget / effectiveStep));
@@ -1089,7 +1110,7 @@ const resolvedInViewPreset =
       if (!state || state.rafId !== 0) {
         return;
       }
-      state.rafId = window.requestAnimationFrame(() => {
+      state.rafId = lifecycle.requestAnimationFrame(() => {
         state.rafId = 0;
         update(root);
       });
@@ -1120,8 +1141,8 @@ const resolvedInViewPreset =
       }
 
       const from = clamp01(state.animProgress);
-      const duration = Math.max(0.2, readNumber(root.dataset.perimeterMorphSpringDuration, 1.05));
-      const bounce = clamp01(readNumber(root.dataset.perimeterMorphSpringBounce, 0.24));
+      const duration = Math.max(0.2, readDataNumber(root, 'perimeterMorphSpringDuration', 1.05));
+      const bounce = clamp01(readDataNumber(root, 'perimeterMorphSpringBounce', 0.24));
 
       state.animControl = animate(from, clampedTarget, {
         type: 'spring',
@@ -1177,9 +1198,10 @@ const resolvedInViewPreset =
       const state = runtime.states.get(root);
       if (
         state &&
-        root.dataset.perimeterHoverMorph === 'true' &&
-        root.dataset.perimeterShape === 'rectangle' &&
-        resolvePatternAnimationAdapter(root.dataset.perimeterEdgePattern).supportsParamAnimation
+        readDataBool(root, 'perimeterHoverMorph', false) &&
+        readDataEnum(root, 'perimeterShape', ['rectangle', 'circle'], 'rectangle') === 'rectangle' &&
+        resolvePatternAnimationAdapter(readDataEnum(root, 'perimeterEdgePattern', ['scallop', 'totem'], 'scallop'))
+          .supportsParamAnimation
       ) {
         const activate = () => animateHoverParams(root, 1);
         const deactivate = () => animateHoverParams(root, 0);
@@ -1210,7 +1232,7 @@ const resolvedInViewPreset =
           state.unbindHoverHandlers();
         }
         if (state.rafId !== 0) {
-          window.cancelAnimationFrame(state.rafId);
+          lifecycle.cancelAnimationFrame(state.rafId);
         }
         state.observer.disconnect();
         runtime.states.delete(root);
@@ -1242,24 +1264,31 @@ const resolvedInViewPreset =
       });
     };
 
-    document.addEventListener('astro:page-load', () => {
-      mountNewRoots({ scheduleExisting: false });
-    });
-
-    window.addEventListener('resize', () => {
-      scheduleAll();
-    });
-
-    if (document.fonts?.ready) {
-      document.fonts.ready.then(() => {
-        scheduleAll();
-      });
-    }
-
-    window[runtimeKey] = {
+    const runtimeApi = {
       mountNewRoots,
       scheduleAll,
+      destroy() {
+        for (const root of Array.from(runtime.roots)) {
+          unmount(root);
+        }
+        lifecycle.dispose();
+      },
     };
+
+    lifecycle.addCleanup(
+      onAstroPageLoad(() => {
+        mountNewRoots({ scheduleExisting: false });
+      }),
+    );
+    lifecycle.on(window, 'resize', scheduleAll);
+    lifecycle.onFontsLoadingDone(scheduleAll);
+
+    const installedRuntime = getOrCreateWindowRuntime(runtimeKey, () => runtimeApi);
+    if (installedRuntime !== runtimeApi) {
+      runtimeApi.destroy();
+      installedRuntime?.mountNewRoots?.({ scheduleExisting: false });
+      return;
+    }
 
     mountNewRoots({ scheduleExisting: false });
   })();

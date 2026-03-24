@@ -1,12 +1,24 @@
 <script>
+  import {
+    createLifecycle,
+    getOrCreateWindowRuntime,
+    getRouteFlags,
+    getWindowRuntime,
+    onAstroBeforeSwap,
+    onAstroPageLoad,
+    readDataString,
+  } from '../lib/runtime';
+
   (() => {
     const runtimeKey = '__managedVideoPlaybackRuntime';
-    if (window[runtimeKey]) {
-      window[runtimeKey].mount?.();
-      window[runtimeKey].sync?.();
+    const existingRuntime = getWindowRuntime(runtimeKey);
+    if (existingRuntime) {
+      existingRuntime.mount?.();
+      existingRuntime.sync?.();
       return;
     }
 
+    const lifecycle = createLifecycle();
     const selector = 'video[data-video-playback="inview"]';
     const initAttr = 'data-video-playback-init';
     const mobileDowngradedAttr = 'data-video-mobile-downgraded';
@@ -16,6 +28,8 @@
 
     const hasCurrentFrameData = (video) => video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA;
 
+    const readPlaybackPolicy = (video) => readDataString(video, 'videoPlayback', '');
+
     const markMockupFrameReady = (video) => {
       if (!(video instanceof HTMLVideoElement)) {
         return;
@@ -24,14 +38,14 @@
       if (!(mockup instanceof HTMLElement)) {
         return;
       }
-      if (mockup.dataset.deviceMediaKind !== 'video') {
+      if (readDataString(mockup, 'deviceMediaKind', '') !== 'video') {
         return;
       }
       mockup.setAttribute(frameReadyAttr, 'true');
     };
 
     const shouldDowngradeAlwaysPlaybackForMobileGallery = () => {
-      const isGalleryRoute = document.body?.dataset.routeGallery === 'true';
+      const { isGalleryRoute } = getRouteFlags();
       if (!isGalleryRoute) {
         return false;
       }
@@ -54,9 +68,7 @@
           video.removeEventListener('canplay', state.onCanPlay);
         }
       }
-      if (observer) {
-        observer.unobserve(video);
-      }
+      observer?.unobserve(video);
       managed.delete(video);
       video.removeAttribute(initAttr);
     };
@@ -73,7 +85,7 @@
       galleryVideos.forEach((video) => {
         const isDowngraded = video.getAttribute(mobileDowngradedAttr) === 'true';
         if (forceInViewPolicy) {
-          if (video.dataset.videoPlayback !== 'always') {
+          if (readPlaybackPolicy(video) !== 'always') {
             return;
           }
           video.dataset.videoPlayback = 'inview';
@@ -108,7 +120,7 @@
       if (!(video instanceof HTMLVideoElement)) {
         return;
       }
-      if (video.dataset.videoPlayback !== 'inview') {
+      if (readPlaybackPolicy(video) !== 'inview') {
         return;
       }
       const state = managed.get(video);
@@ -159,29 +171,31 @@
       });
     };
 
-    observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const target = entry.target;
-          if (!(target instanceof HTMLVideoElement)) {
-            return;
-          }
-          const state = managed.get(target);
-          if (!state) {
-            return;
-          }
-          state.inView = entry.isIntersecting && entry.intersectionRatio > 0.15;
-          syncVideoPlayback(target);
-        });
-      },
-      { threshold: [0, 0.15, 0.35] },
+    observer = lifecycle.trackObserver(
+      new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            const target = entry.target;
+            if (!(target instanceof HTMLVideoElement)) {
+              return;
+            }
+            const state = managed.get(target);
+            if (!state) {
+              return;
+            }
+            state.inView = entry.isIntersecting && entry.intersectionRatio > 0.15;
+            syncVideoPlayback(target);
+          });
+        },
+        { threshold: [0, 0.15, 0.35] },
+      ),
     );
 
     const registerVideo = (video) => {
       if (!(video instanceof HTMLVideoElement)) {
         return;
       }
-      if (video.dataset.videoPlayback !== 'inview') {
+      if (readPlaybackPolicy(video) !== 'inview') {
         return;
       }
       if (video.getAttribute(initAttr) === 'true') {
@@ -212,7 +226,7 @@
       }
       video.addEventListener('loadeddata', onFrameDataReady);
       video.addEventListener('canplay', onFrameDataReady);
-      observer.observe(video);
+      observer?.observe(video);
       syncVideoPlayback(video);
     };
 
@@ -225,18 +239,33 @@
       syncAllVideos();
     };
 
-    document.addEventListener('astro:page-load', mount);
-    document.addEventListener('astro:before-swap', pauseAllVideos);
-    document.addEventListener('visibilitychange', syncAllVideos);
-    window.addEventListener('pagehide', pauseAllVideos);
-    window.addEventListener('resize', mount);
+    lifecycle.addCleanup(onAstroPageLoad(mount));
+    lifecycle.addCleanup(onAstroBeforeSwap(() => pauseAllVideos()));
+    lifecycle.on(document, 'visibilitychange', syncAllVideos);
+    lifecycle.on(window, 'pagehide', pauseAllVideos);
+    lifecycle.on(window, 'resize', mount);
 
     const runtime = {
       mount,
       sync: syncAllVideos,
       pauseAll: pauseAllVideos,
+      destroy() {
+        pauseAllVideos();
+        for (const video of Array.from(managed.keys())) {
+          unregisterManagedVideo(video);
+        }
+        lifecycle.dispose();
+      },
     };
-    window[runtimeKey] = runtime;
+
+    const installedRuntime = getOrCreateWindowRuntime(runtimeKey, () => runtime);
+    if (installedRuntime !== runtime) {
+      lifecycle.dispose();
+      installedRuntime?.mount?.();
+      installedRuntime?.sync?.();
+      return;
+    }
+
     mount();
   })();
 </script>

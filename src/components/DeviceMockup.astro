@@ -365,6 +365,16 @@ const styleVars = [
 </style>
 
 <script>
+  import {
+    createLifecycle,
+    createRafScheduler,
+    getOrCreateWindowRuntime,
+    getWindowRuntime,
+    onAstroPageLoad,
+    onDomReady,
+    readDataString,
+  } from '../lib/runtime';
+
   (() => {
     const runtimeKey = '__deviceMockupRevealRuntime';
     const videoPlaybackRuntimeKey = '__managedVideoPlaybackRuntime';
@@ -387,7 +397,7 @@ const styleVars = [
           return mediaSrc;
         }
       }
-      return mockup?.dataset.deviceMediaSrc ?? '';
+      return readDataString(mockup, 'deviceMediaSrc', '');
     };
 
     const resolveVideoPoster = (media, mockup) => {
@@ -397,7 +407,7 @@ const styleVars = [
           return poster;
         }
       }
-      return mockup?.dataset.deviceMediaPoster ?? '';
+      return readDataString(mockup, 'deviceMediaPoster', '');
     };
 
     const buildVideoWarmKey = (mockup, media) => {
@@ -408,8 +418,8 @@ const styleVars = [
       if (src.length === 0) {
         return null;
       }
-      const deviceKind = mockup.dataset.deviceKind ?? 'phone';
-      const size = mockup.dataset.deviceSize ?? 'default';
+      const deviceKind = readDataString(mockup, 'deviceKind', 'phone');
+      const size = readDataString(mockup, 'deviceSize', 'default');
       const poster = resolveVideoPoster(media, mockup);
       return `${deviceKind}|${size}|${src}|${poster}`;
     };
@@ -440,6 +450,16 @@ const styleVars = [
       return typeof key === 'string' && warmedVideoKeys.has(key);
     };
 
+    const deferredManagedPlaybackSync = createRafScheduler(() => {
+      const deferredRuntime = window[videoPlaybackRuntimeKey];
+      if (deferredRuntime && typeof deferredRuntime.mount === 'function') {
+        deferredRuntime.mount();
+        if (typeof deferredRuntime.sync === 'function') {
+          deferredRuntime.sync();
+        }
+      }
+    });
+
     const requestManagedVideoPlaybackSync = () => {
       const runtime = window[videoPlaybackRuntimeKey];
       if (runtime && typeof runtime.mount === 'function') {
@@ -449,23 +469,17 @@ const styleVars = [
         }
         return;
       }
-      window.requestAnimationFrame(() => {
-        const deferredRuntime = window[videoPlaybackRuntimeKey];
-        if (deferredRuntime && typeof deferredRuntime.mount === 'function') {
-          deferredRuntime.mount();
-          if (typeof deferredRuntime.sync === 'function') {
-            deferredRuntime.sync();
-          }
-        }
-      });
+      deferredManagedPlaybackSync.schedule();
     };
 
-    if (window[runtimeKey]) {
+    const existingRuntime = getWindowRuntime(runtimeKey);
+    if (existingRuntime) {
       requestManagedVideoPlaybackSync();
-      window[runtimeKey].mount();
+      existingRuntime.mount();
       return;
     }
 
+    const lifecycle = createLifecycle();
     const mockupSelector = '.device-mockup[data-device-mockup]';
     const initAttr = 'data-device-mockup-ready-init';
     const frameReadyAttr = 'data-video-frame-ready';
@@ -620,10 +634,10 @@ const styleVars = [
         }
       }
 
-      const fallbackTimer = window.setTimeout(() => {
+      const fallbackTimer = lifecycle.setTimeout(() => {
         settle();
       }, fallbackDelayMs);
-      cleanups.push(() => window.clearTimeout(fallbackTimer));
+      cleanups.push(() => lifecycle.clearTimeout(fallbackTimer));
 
       trySettle();
     };
@@ -635,13 +649,24 @@ const styleVars = [
       });
     };
 
-    document.addEventListener('astro:page-load', mount);
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', mount, { once: true });
-    } else {
-      mount();
+    lifecycle.addCleanup(onAstroPageLoad(mount));
+    lifecycle.addCleanup(onDomReady(mount));
+
+    const runtime = {
+      mount,
+      destroy() {
+        deferredManagedPlaybackSync.cancel();
+        lifecycle.dispose();
+      },
+    };
+
+    const installedRuntime = getOrCreateWindowRuntime(runtimeKey, () => runtime);
+    if (installedRuntime !== runtime) {
+      runtime.destroy();
+      installedRuntime?.mount?.();
+      return;
     }
 
-    window[runtimeKey] = { mount };
+    mount();
   })();
 </script>
