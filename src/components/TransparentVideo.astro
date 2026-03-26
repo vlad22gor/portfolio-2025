@@ -55,6 +55,14 @@ const resolvedTabIndex =
     const supportPromiseKey = '__transparentVideoHevcAlphaSupportPromise';
     const runtimeKey = '__transparentVideoRuntime';
     const managedVideoPlaybackRuntimeKey = '__managedVideoPlaybackRuntime';
+    const iOSUserAgentPattern = /(iPad|iPhone|iPod)/i;
+    const isIOSWebKit = (() => {
+      const ua = typeof navigator.userAgent === 'string' ? navigator.userAgent : '';
+      const platform = typeof navigator.platform === 'string' ? navigator.platform : '';
+      const maxTouchPoints = Number.isFinite(navigator.maxTouchPoints) ? navigator.maxTouchPoints : 0;
+      const isIOSDevice = iOSUserAgentPattern.test(ua) || (platform === 'MacIntel' && maxTouchPoints > 1);
+      return isIOSDevice && /AppleWebKit/i.test(ua);
+    })();
 
     const decodeConfigCandidates = [
       'video/quicktime; codecs="hvc1.1.6.L93.B0"',
@@ -101,6 +109,9 @@ const resolvedTabIndex =
       return supportPromise;
     };
 
+    const shouldDeferInviewAutoplay = (video) =>
+      isIOSWebKit && (video.dataset.videoPlayback ?? '') === 'inview';
+
     const applyVideoSource = (video, shouldUseHevc) => {
       if (!(video instanceof HTMLVideoElement)) {
         return;
@@ -118,13 +129,18 @@ const resolvedTabIndex =
       if (video.dataset.transparentVideoActiveSrc !== selectedSrc) {
         video.setAttribute('src', selectedSrc);
         video.dataset.transparentVideoActiveSrc = selectedSrc;
-        video.load();
+        if (shouldDeferInviewAutoplay(video)) {
+          video.preload = 'none';
+          video.setAttribute('preload', 'none');
+        } else {
+          video.load();
+        }
       }
 
       video.dataset.transparentVideoCodec = selectedCodec;
       video.muted = true;
 
-      if (video.autoplay) {
+      if (video.autoplay && !shouldDeferInviewAutoplay(video)) {
         const playPromise = video.play();
         if (playPromise && typeof playPromise.catch === 'function') {
           playPromise.catch(() => {});

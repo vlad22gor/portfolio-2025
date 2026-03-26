@@ -25,6 +25,30 @@ const waitForGalleryCriticalReady = async (
     .toEqual({ count: 3, allReady: true });
 };
 
+const scrollPageToBottom = async (page: import('@playwright/test').Page, settleMs: number = 180) => {
+  await page.evaluate(async ({ settleMs }) => {
+    const maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    if (maxY <= 0) {
+      return;
+    }
+
+    const step = Math.max(220, Math.round(window.innerHeight * 0.85));
+    let currentY = window.scrollY;
+    await new Promise<void>((resolve) => {
+      const tick = () => {
+        currentY = Math.min(maxY, currentY + step);
+        window.scrollTo(0, currentY);
+        if (currentY >= maxY) {
+          window.setTimeout(resolve, settleMs);
+          return;
+        }
+        window.requestAnimationFrame(tick);
+      };
+      tick();
+    });
+  }, { settleMs });
+};
+
 test.describe('Gallery smoke', () => {
   test.use({ viewport: { width: 1440, height: 1100 } });
 
@@ -1225,7 +1249,7 @@ test.describe('Gallery mobile smoke', () => {
       snapshots.push(await routeBudget());
     }
 
-    const gallerySnapshots = snapshots.filter((snapshot) => snapshot.path === '/gallery');
+    const gallerySnapshots = snapshots.filter((snapshot) => snapshot.path.startsWith('/gallery'));
     const homeSnapshots = snapshots.filter((snapshot) => snapshot.path === '/');
 
     expect(gallerySnapshots.length).toBe(10);
@@ -1235,6 +1259,102 @@ test.describe('Gallery mobile smoke', () => {
     expect(homeSnapshots.every((snapshot) => snapshot.homeSliderVideos === 0)).toBe(true);
     expect(gallerySnapshots.every((snapshot) => snapshot.totalVideos <= 10)).toBe(true);
     expect(homeSnapshots.every((snapshot) => snapshot.totalVideos <= 3)).toBe(true);
+  });
+
+  test('webkit mobile deep-scroll soft-nav gallery-home-gallery keeps page stable', async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(browserName !== 'webkit', 'WebKit-only deep-scroll soft-nav scenario');
+    test.setTimeout(360_000);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/gallery/');
+    await waitForGalleryCriticalReady(page);
+
+    const crashEvents: string[] = [];
+    page.on('crash', () => {
+      crashEvents.push('crash');
+    });
+
+    const readRouteState = async () =>
+      page.evaluate(() => {
+        const allVideos = Array.from(document.querySelectorAll('video')).filter(
+          (node): node is HTMLVideoElement => node instanceof HTMLVideoElement,
+        );
+        const isOffscreen = (node: HTMLVideoElement) => {
+          const rect = node.getBoundingClientRect();
+          return (
+            rect.bottom <= 0 || rect.top >= window.innerHeight || rect.right <= 0 || rect.left >= window.innerWidth
+          );
+        };
+        return {
+          path: window.location.pathname,
+          totalVideos: allVideos.length,
+          offscreenPlaying: allVideos.filter((video) => isOffscreen(video) && !video.paused && !video.ended).length,
+          tempShellVideos: document.querySelectorAll('.temporary-adaptive-shell video').length,
+        };
+      });
+
+    const snapshots: Array<{ path: string; totalVideos: number; offscreenPlaying: number; tempShellVideos: number }> = [];
+    const navigateViaHeaderWithFallback = async (
+      navId: 'home' | 'gallery',
+      expectedPath: '/' | '/gallery',
+      fallbackHref: '/' | '/gallery/',
+    ) => {
+      const selector = `.site-desktop-shell a[data-nav-id="${navId}"]`;
+      await page.click(selector);
+      const navigatedViaSoftNav = await page
+        .waitForFunction(
+          (targetPath) => {
+            const path = window.location.pathname;
+            return path === targetPath || path === `${targetPath}/`;
+          },
+          expectedPath,
+          { timeout: 8_000 },
+        )
+        .then(() => true)
+        .catch(() => false);
+
+      if (!navigatedViaSoftNav) {
+        await page.goto(fallbackHref);
+      }
+      await page.waitForTimeout(250);
+    };
+
+    for (let cycle = 0; cycle < 10; cycle += 1) {
+      await scrollPageToBottom(page);
+      snapshots.push(await readRouteState());
+
+      await page.evaluate(() => {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      });
+      await page.waitForTimeout(120);
+      await navigateViaHeaderWithFallback('home', '/', '/');
+      await scrollPageToBottom(page);
+      snapshots.push(await readRouteState());
+
+      await page.evaluate(() => {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      });
+      await page.waitForTimeout(120);
+      await navigateViaHeaderWithFallback('gallery', '/gallery', '/gallery/');
+      await waitForGalleryCriticalReady(page);
+      await scrollPageToBottom(page);
+      snapshots.push(await readRouteState());
+    }
+
+    const gallerySnapshots = snapshots.filter((snapshot) => snapshot.path.startsWith('/gallery'));
+    const homeSnapshots = snapshots.filter((snapshot) => snapshot.path === '/');
+
+    expect(crashEvents).toHaveLength(0);
+    expect(snapshots).toHaveLength(30);
+    expect(gallerySnapshots.length).toBeGreaterThanOrEqual(19);
+    expect(homeSnapshots.length).toBeGreaterThanOrEqual(10);
+    expect(snapshots.every((snapshot) => snapshot.tempShellVideos === 0)).toBe(true);
+    expect(gallerySnapshots.every((snapshot) => snapshot.totalVideos <= 10)).toBe(true);
+    expect(homeSnapshots.every((snapshot) => snapshot.totalVideos <= 3)).toBe(true);
+    expect(snapshots.every((snapshot) => snapshot.offscreenPlaying === 0)).toBe(true);
   });
 
   test('webkit mobile stress route cycle keeps offscreen videos paused and budget bounded', async ({

@@ -1,5 +1,11 @@
 # Logs
 
+- 2026-03-26: Реализован iOS/WebKit hardening для `inview`-видео при deep-scroll + soft-nav (`/gallery <-> /`) с релизом media-ресурсов на swap и новым deep-scroll smoke.
+  Причина: по репорту падения Safari после полного скролла `gallery/home` и повторной навигации требовалось снизить memory pressure decode-буферов без изменения визуального контракта и без новых transcoding-ассетов.
+  Файлы: `src/components/ManagedVideoPlaybackRuntime.astro`, `src/components/TransparentVideo.astro`, `tests/smoke/gallery.spec.ts`, `docs/astro-client-router-stability.md`, `tasks/logs.md`.
+  Что сделано: (1) в `ManagedVideoPlaybackRuntime` добавлен детектор iOS WebKit и memory-safe preload policy для `video[data-video-playback='inview']` (`preload='none'` до фактического warmup); (2) на `astro:before-swap` для iOS WebKit добавлен `pause + release` (`src detach + load()`) с cleanup managed state, для остальных движков сохранён baseline `pause` (включая `pagehide`); (3) при mobile downgrade `always -> inview` явно применяется memory-safe preload, при возврате `inview -> always` восстанавливается исходный preload; (4) в `TransparentVideo` добавлен guard, чтобы на iOS/WebKit не форсировать `load()/play()` для `inview`-видео во время source refresh; (5) в `gallery` smoke добавлен новый WebKit кейс на 10 циклов `gallery(bottom) -> home(bottom) -> gallery(bottom)` с deep-scroll и проверками `crash/budget/offscreenPlaying`.
+  Проверки: (1) `npm run build` — успешно; (2) `npx playwright test tests/smoke/gallery.spec.ts -g "webkit mobile deep-scroll soft-nav gallery-home-gallery keeps page stable" --browser=webkit --workers=1` — успешно (`1/1`); (3) `npm run test:smoke:webkit-mobile` — успешно (`1/1`); (4) `npx playwright test tests/smoke/mobile-home.spec.ts -g "cases more-card transparent loader exposes webm\\+mov and selects supported codec" --browser=webkit --workers=1` — успешно (`1/1`).
+
 - 2026-03-23: Добавлен staged `appear` для mobile `home hero` в порядке `screens -> title -> subtitle -> button` через существующий `InViewMotionRuntime`.
   Причина: по задаче нужно синхронизировать mobile hero с Figma `99:7560` и запускать стандартную in-view анимацию один раз без отдельного runtime.
   Файлы: `src/pages/index.astro`, `src/components/AdaptivePhoneArcSlider.astro`, `tests/smoke/mobile-home.spec.ts`, `tasks/logs.md`.
