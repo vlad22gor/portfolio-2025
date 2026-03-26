@@ -111,6 +111,26 @@ const resolvedTabIndex =
 
     const shouldDeferInviewAutoplay = (video) =>
       isIOSWebKit && (video.dataset.videoPlayback ?? '') === 'inview';
+    const isVideoInViewport = (video) => {
+      if (!(video instanceof HTMLVideoElement)) {
+        return false;
+      }
+      const rect = video.getBoundingClientRect();
+      return rect.bottom > 0 && rect.top < window.innerHeight && rect.right > 0 && rect.left < window.innerWidth;
+    };
+    const resetMockupFrameReady = (video) => {
+      if (!(video instanceof HTMLVideoElement)) {
+        return;
+      }
+      const mockup = video.closest('.device-mockup[data-device-mockup]');
+      if (!(mockup instanceof HTMLElement)) {
+        return;
+      }
+      if ((mockup.dataset.deviceMediaKind ?? '') !== 'video') {
+        return;
+      }
+      mockup.setAttribute('data-video-frame-ready', 'false');
+    };
 
     const applyVideoSource = (video, shouldUseHevc) => {
       if (!(video instanceof HTMLVideoElement)) {
@@ -126,12 +146,35 @@ const resolvedTabIndex =
         return;
       }
 
-      if (video.dataset.transparentVideoActiveSrc !== selectedSrc) {
+      const managedRuntime = window[managedVideoPlaybackRuntimeKey];
+      const shouldDeferAutoplay = shouldDeferInviewAutoplay(video);
+      const isSourceChanged = video.dataset.transparentVideoActiveSrc !== selectedSrc;
+
+      if (isSourceChanged) {
         video.setAttribute('src', selectedSrc);
         video.dataset.transparentVideoActiveSrc = selectedSrc;
-        if (shouldDeferInviewAutoplay(video)) {
+        if (shouldDeferAutoplay) {
           video.preload = 'none';
           video.setAttribute('preload', 'none');
+          resetMockupFrameReady(video);
+          const resetViaRuntime =
+            managedRuntime &&
+            typeof managedRuntime.resetVideo === 'function' &&
+            managedRuntime.resetVideo(video) === true;
+          if (isVideoInViewport(video)) {
+            video.preload = 'auto';
+            video.setAttribute('preload', 'auto');
+            if (!resetViaRuntime) {
+              try {
+                video.load();
+              } catch {
+                // Ignore manual warmup load failures and let runtime retry on next sync.
+              }
+            }
+          }
+          if (managedRuntime && typeof managedRuntime.sync === 'function') {
+            managedRuntime.sync();
+          }
         } else {
           video.load();
         }
@@ -140,7 +183,7 @@ const resolvedTabIndex =
       video.dataset.transparentVideoCodec = selectedCodec;
       video.muted = true;
 
-      if (video.autoplay && !shouldDeferInviewAutoplay(video)) {
+      if (video.autoplay && !shouldDeferAutoplay) {
         const playPromise = video.play();
         if (playPromise && typeof playPromise.catch === 'function') {
           playPromise.catch(() => {});

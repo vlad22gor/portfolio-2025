@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { devices, expect, test } from '@playwright/test';
 import { resolveGalleryMobileExpectations } from './helpers/perimeter-contracts';
 
 const floatingThemeButtonSelector = '.floating-theme-button[data-floating-theme-button]';
@@ -48,6 +48,49 @@ const scrollPageToBottom = async (page: import('@playwright/test').Page, settleM
     });
   }, { settleMs });
 };
+
+const scrollGalleryToTransparentCard = async (page: import('@playwright/test').Page, settleMs: number = 180) => {
+  await page.evaluate(async ({ settleMs }) => {
+    const target = document.querySelector('.gallery-card-illustration--coin-wheel');
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+    const targetTop = Math.max(0, Math.round(target.getBoundingClientRect().top + window.scrollY - 120));
+    window.scrollTo({ top: targetTop, behavior: 'instant' });
+    await new Promise<void>((resolve) => {
+      window.setTimeout(resolve, settleMs);
+    });
+  }, { settleMs });
+};
+
+const readGalleryPlaybackState = async (page: import('@playwright/test').Page) =>
+  page.evaluate(() => {
+    const videos = Array.from(document.querySelectorAll('.gallery-row video')).filter(
+      (node): node is HTMLVideoElement => node instanceof HTMLVideoElement,
+    );
+    const isInView = (video: HTMLVideoElement) => {
+      const rect = video.getBoundingClientRect();
+      return rect.bottom > 0 && rect.top < window.innerHeight && rect.right > 0 && rect.left < window.innerWidth;
+    };
+    const isOffscreen = (video: HTMLVideoElement) => {
+      const rect = video.getBoundingClientRect();
+      return rect.bottom <= 0 || rect.top >= window.innerHeight || rect.right <= 0 || rect.left >= window.innerWidth;
+    };
+
+    const inViewVideos = videos.filter(isInView);
+    const transparentInViewReadyStates = inViewVideos
+      .filter((video) => video.dataset.transparentVideo === 'true')
+      .map((video) => video.readyState);
+
+    return {
+      path: window.location.pathname,
+      totalVideos: videos.length,
+      inViewPlaying: inViewVideos.filter((video) => !video.paused && !video.ended).length,
+      offscreenPlaying: videos.filter((video) => isOffscreen(video) && !video.paused && !video.ended).length,
+      tempShellVideos: document.querySelectorAll('.temporary-adaptive-shell video').length,
+      transparentInViewReadyStates,
+    };
+  });
 
 test.describe('Gallery smoke', () => {
   test.use({ viewport: { width: 1440, height: 1100 } });
@@ -1259,6 +1302,118 @@ test.describe('Gallery mobile smoke', () => {
     expect(homeSnapshots.every((snapshot) => snapshot.homeSliderVideos === 0)).toBe(true);
     expect(gallerySnapshots.every((snapshot) => snapshot.totalVideos <= 10)).toBe(true);
     expect(homeSnapshots.every((snapshot) => snapshot.totalVideos <= 3)).toBe(true);
+  });
+
+  test('webkit mobile stress iOS WebKit mobile reload keeps gallery videos playable', async ({
+    browser,
+    browserName,
+    baseURL,
+  }) => {
+    test.skip(browserName !== 'webkit', 'WebKit-only iOS reload regression guard');
+    test.setTimeout(180_000);
+
+    const context = await browser.newContext({
+      ...devices['iPhone 13'],
+      baseURL: baseURL ?? 'http://127.0.0.1:4173',
+    });
+    const page = await context.newPage();
+
+    const crashEvents: string[] = [];
+    page.on('crash', () => {
+      crashEvents.push('crash');
+    });
+
+    const snapshots: Array<{
+      path: string;
+      totalVideos: number;
+      inViewPlaying: number;
+      offscreenPlaying: number;
+      tempShellVideos: number;
+      transparentInViewReadyStates: number[];
+    }> = [];
+
+    const waitForPlayableInView = async (label: string) => {
+      await expect
+        .poll(
+          async () => {
+            const state = await readGalleryPlaybackState(page);
+            const transparentReady =
+              state.transparentInViewReadyStates.length > 0 &&
+              state.transparentInViewReadyStates.every((readyState) => readyState >= 2);
+            return (
+              state.inViewPlaying > 0 &&
+              state.offscreenPlaying === 0 &&
+              state.tempShellVideos === 0 &&
+              transparentReady
+            );
+          },
+          {
+            timeout: 12_000,
+            message: `${label}: gallery in-view media should stay playable after refresh/navigation`,
+          },
+        )
+        .toBe(true);
+      snapshots.push(await readGalleryPlaybackState(page));
+    };
+
+    const navigateViaHeaderWithFallback = async (
+      navId: 'home' | 'gallery',
+      expectedPath: '/' | '/gallery',
+      fallbackHref: '/' | '/gallery/',
+    ) => {
+      const selector = `.site-desktop-shell a[data-nav-id="${navId}"]`;
+      await page.click(selector);
+      const navigatedViaSoftNav = await page
+        .waitForFunction(
+          (targetPath) => {
+            const path = window.location.pathname;
+            return path === targetPath || path === `${targetPath}/`;
+          },
+          expectedPath,
+          { timeout: 8_000 },
+        )
+        .then(() => true)
+        .catch(() => false);
+
+      if (!navigatedViaSoftNav) {
+        await page.goto(fallbackHref);
+      }
+      await page.waitForTimeout(250);
+    };
+
+    try {
+      await page.goto('/gallery/');
+      await waitForGalleryCriticalReady(page);
+      await scrollGalleryToTransparentCard(page);
+      await waitForPlayableInView('first gallery load');
+
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await waitForGalleryCriticalReady(page);
+      await scrollGalleryToTransparentCard(page);
+      await waitForPlayableInView('gallery reload');
+
+      await navigateViaHeaderWithFallback('home', '/', '/');
+      await navigateViaHeaderWithFallback('gallery', '/gallery', '/gallery/');
+      await waitForGalleryCriticalReady(page);
+      await scrollGalleryToTransparentCard(page);
+      await waitForPlayableInView('gallery re-entry from home');
+
+      expect(crashEvents).toHaveLength(0);
+      expect(snapshots).toHaveLength(3);
+      expect(snapshots.every((snapshot) => snapshot.path === '/gallery' || snapshot.path === '/gallery/')).toBe(true);
+      expect(snapshots.every((snapshot) => snapshot.totalVideos <= 10)).toBe(true);
+      expect(snapshots.every((snapshot) => snapshot.offscreenPlaying === 0)).toBe(true);
+      expect(snapshots.every((snapshot) => snapshot.inViewPlaying > 0)).toBe(true);
+      expect(
+        snapshots.every(
+          (snapshot) =>
+            snapshot.transparentInViewReadyStates.length > 0 &&
+            snapshot.transparentInViewReadyStates.every((readyState) => readyState >= 2),
+        ),
+      ).toBe(true);
+    } finally {
+      await context.close();
+    }
   });
 
   test('webkit mobile deep-scroll soft-nav gallery-home-gallery keeps page stable', async ({

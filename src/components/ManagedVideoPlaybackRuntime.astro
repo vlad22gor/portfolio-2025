@@ -36,6 +36,15 @@
     })();
 
     const hasCurrentFrameData = (video) => video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA;
+    const isElementInViewport = (video) => {
+      if (!(video instanceof HTMLVideoElement)) {
+        return false;
+      }
+      const rect = video.getBoundingClientRect();
+      const visibleHeight = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+      const visibleWidth = Math.min(rect.right, window.innerWidth) - Math.max(rect.left, 0);
+      return visibleHeight > rect.height * 0.15 && visibleWidth > rect.width * 0.15;
+    };
 
     const readPlaybackPolicy = (video) => readDataString(video, 'videoPlayback', '');
 
@@ -217,12 +226,17 @@
         if (!state.warmupRequested) {
           state.warmupRequested = true;
           setVideoPreload(video, 'auto');
-          if (video.networkState === HTMLMediaElement.NETWORK_EMPTY) {
-            try {
-              video.load();
-            } catch {
-              // Ignore media load errors here; playback gate will remain closed.
-            }
+        }
+
+        const shouldForceLoadForWarmup = isIOSWebKit
+          ? video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA &&
+            video.networkState !== HTMLMediaElement.NETWORK_LOADING
+          : video.networkState === HTMLMediaElement.NETWORK_EMPTY;
+        if (shouldForceLoadForWarmup) {
+          try {
+            video.load();
+          } catch {
+            // Ignore media load errors here; playback gate will remain closed.
           }
         }
         return;
@@ -273,15 +287,18 @@
       ),
     );
 
-    const registerVideo = (video) => {
+    const registerVideo = (video, { force = false } = {}) => {
       if (!(video instanceof HTMLVideoElement)) {
         return;
       }
       if (readPlaybackPolicy(video) !== 'inview') {
         return;
       }
-      if (video.getAttribute(initAttr) === 'true') {
+      if (video.getAttribute(initAttr) === 'true' && !force) {
         return;
+      }
+      if (force) {
+        unregisterManagedVideo(video);
       }
       video.setAttribute(initAttr, 'true');
       video.muted = true;
@@ -298,7 +315,7 @@
         syncVideoPlayback(video);
       };
       managed.set(video, {
-        inView: false,
+        inView: isElementInViewport(video),
         hasFrameData: initialHasFrameData,
         warmupRequested: initialHasFrameData || (video.getAttribute('preload') ?? '') === 'auto',
         onLoadedData: onFrameDataReady,
@@ -311,6 +328,21 @@
       video.addEventListener('canplay', onFrameDataReady);
       observer?.observe(video);
       syncVideoPlayback(video);
+    };
+
+    const resetVideo = (video) => {
+      if (!isIOSWebKit) {
+        return false;
+      }
+      if (!(video instanceof HTMLVideoElement)) {
+        return false;
+      }
+      if (readPlaybackPolicy(video) !== 'inview') {
+        return false;
+      }
+      registerVideo(video, { force: true });
+      syncVideoPlayback(video);
+      return true;
     };
 
     const mount = () => {
@@ -341,6 +373,7 @@
       sync: syncAllVideos,
       pauseAll: pauseAllVideos,
       releaseForSwap: releaseManagedVideosForSwap,
+      resetVideo,
       destroy() {
         releaseManagedVideosForSwap();
         lifecycle.dispose();
