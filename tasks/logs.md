@@ -1,5 +1,11 @@
 # Logs
 
+- 2026-03-27: Починен mobile flicker при выходе с `/gallery` (вторая video-card в mock: ранний cover handoff до snapshot).
+  Причина: сброс `data-video-frame-ready` только на `astro:before-swap` происходил слишком поздно для transition snapshot (`gallery-content`), поэтому во время выхода появлялся краткий blank до показа cover.
+  Файлы: `src/components/ManagedVideoPlaybackRuntime.astro`, `tests/smoke/gallery.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) в `ManagedVideoPlaybackRuntime` добавлен ранний хук `astro:before-preparation`; (2) добавлен DOM-guard `revealGalleryMobileVideoCovers()` только для `isGalleryRoute && max-width: 767px`, который проходит по `.gallery-row .device-mockup[data-device-media-kind='video']` и переводит mockup в pending-state (`data-video-frame-ready='false'` + принудительный reveal poster), не завися от `managed` map; (3) текущий `astro:before-swap` cleanup (`pause/release`) сохранён; (4) mobile regression обновлён: проверяется `frame-ready='false'` и на `astro:before-preparation`, и на `astro:before-swap` у второй video-card (`flat-index=1`).
+  Проверки: (1) `npm run build` — успешно; (2) `npm run -s test:smoke -- tests/smoke/gallery.spec.ts -g "390x844 gallery -> home preparation/swap keep cover handoff for second video card|390x844 renders real gallery shell with D-runtime and pair-gap matrix|390x844 keeps offscreen in-view videos paused|mobile home <-> gallery soft-nav keeps bounded video budget for 10 cycles" --workers=1` — успешно (`4/4`); (3) `npm run -s test:smoke -- tests/smoke/gallery.spec.ts -g "webkit mobile stress iOS WebKit mobile reload keeps gallery videos playable|webkit mobile deep-scroll soft-nav gallery-home-gallery keeps page stable|webkit mobile stress route cycle keeps offscreen videos paused and budget bounded" --browser=webkit --workers=1` — успешно (`3/3`).
+
 - 2026-03-26: Стабилизирован mobile tap в `SiteHeader` без изменения визуального контракта `wave-rail` (`120..320ms` сохранён).
   Причина: на реальных mobile-тапах периодически наблюдался сценарий «первая тап-анимация есть, soft-nav не стартует до второго тапа»; требовалась страховка touch-цепочки и контроль silent-drop после `navigate()`.
   Файлы: `src/components/SiteHeader.astro`, `src/styles/components.css`, `tests/smoke/gallery.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.

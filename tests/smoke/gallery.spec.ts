@@ -1231,21 +1231,30 @@ test.describe('Gallery mobile smoke', () => {
     expect(snapshot.afterContent === 'none' || snapshot.afterHeight <= 0.5).toBe(true);
   });
 
-  test('390x844 gallery -> home before-swap keeps mockup cover visible for second video card', async ({ page }) => {
+  test('390x844 gallery -> home preparation/swap keep cover handoff for second video card', async ({ page }) => {
     await page.addInitScript(() => {
-      const frameReadyKey = '__gallery_swap_frame_ready';
+      const frameReadyBeforePreparationKey = '__gallery_before_preparation_frame_ready';
+      const frameReadyBeforeSwapKey = '__gallery_before_swap_frame_ready';
+      const readSecondCardMockupFrameReady = () =>
+        document
+          .querySelector('.gallery-card-container[data-gallery-flat-index="1"] .device-mockup[data-device-mockup]')
+          ?.getAttribute('data-video-frame-ready') ?? 'null';
       const bind = () => {
-        sessionStorage.removeItem(frameReadyKey);
+        sessionStorage.removeItem(frameReadyBeforePreparationKey);
+        sessionStorage.removeItem(frameReadyBeforeSwapKey);
+        document.addEventListener(
+          'astro:before-preparation',
+          () => {
+            queueMicrotask(() => {
+              sessionStorage.setItem(frameReadyBeforePreparationKey, readSecondCardMockupFrameReady());
+            });
+          },
+          { once: true },
+        );
         document.addEventListener(
           'astro:before-swap',
           () => {
-            const mockup = document.querySelector(
-              '.gallery-card-container[data-gallery-flat-index="1"] .device-mockup[data-device-mockup]',
-            );
-            if (!(mockup instanceof HTMLElement)) {
-              return;
-            }
-            sessionStorage.setItem(frameReadyKey, mockup.getAttribute('data-video-frame-ready') ?? 'null');
+            sessionStorage.setItem(frameReadyBeforeSwapKey, readSecondCardMockupFrameReady());
           },
           { once: true },
         );
@@ -1272,9 +1281,11 @@ test.describe('Gallery mobile smoke', () => {
     await page.waitForURL('**/');
 
     const swapSnapshot = await page.evaluate(() => ({
-      frameReady: sessionStorage.getItem('__gallery_swap_frame_ready'),
+      frameReadyBeforePreparation: sessionStorage.getItem('__gallery_before_preparation_frame_ready'),
+      frameReadyBeforeSwap: sessionStorage.getItem('__gallery_before_swap_frame_ready'),
     }));
-    expect(swapSnapshot.frameReady).toBe('false');
+    expect(swapSnapshot.frameReadyBeforePreparation).not.toBeNull();
+    expect(swapSnapshot.frameReadyBeforeSwap).toBe('false');
   });
 
   test('390x844 final cta morph matches home-consistent initial/final title states on gallery', async ({ page }) => {

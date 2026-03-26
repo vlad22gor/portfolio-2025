@@ -20,13 +20,17 @@
 
     const lifecycle = createLifecycle();
     const selector = 'video[data-video-playback="inview"]';
+    const galleryVideoMockupSelector = '.gallery-row .device-mockup[data-device-media-kind="video"]';
     const initAttr = 'data-video-playback-init';
     const mobileDowngradedAttr = 'data-video-mobile-downgraded';
     const frameReadyAttr = 'data-video-frame-ready';
     const iOSUserAgentPattern = /(iPad|iPhone|iPod)/i;
     const originalPreloadFallback = 'metadata';
+    const routePreparationResetDelayMs = 2000;
     const managed = new Map();
     let observer = null;
+    let routePreparing = false;
+    let routePreparationResetTimer = 0;
     const isIOSWebKit = (() => {
       const ua = typeof navigator.userAgent === 'string' ? navigator.userAgent : '';
       const platform = typeof navigator.platform === 'string' ? navigator.platform : '';
@@ -99,6 +103,9 @@
       if (!(video instanceof HTMLVideoElement)) {
         return;
       }
+      if (routePreparing) {
+        return;
+      }
       const mockup = video.closest('.device-mockup[data-device-mockup]');
       if (!(mockup instanceof HTMLElement)) {
         return;
@@ -109,11 +116,7 @@
       mockup.setAttribute(frameReadyAttr, 'true');
     };
 
-    const markMockupFramePending = (video) => {
-      if (!(video instanceof HTMLVideoElement)) {
-        return;
-      }
-      const mockup = video.closest('.device-mockup[data-device-mockup]');
+    const revealMockupPoster = (mockup) => {
       if (!(mockup instanceof HTMLElement)) {
         return;
       }
@@ -126,6 +129,35 @@
         poster.style.transition = 'none';
         poster.style.opacity = '1';
       }
+    };
+
+    const markMockupFramePending = (video) => {
+      if (!(video instanceof HTMLVideoElement)) {
+        return;
+      }
+      const mockup = video.closest('.device-mockup[data-device-mockup]');
+      revealMockupPoster(mockup);
+    };
+
+    const revealGalleryMobileVideoCovers = () => {
+      if (typeof window.matchMedia === 'function' && !window.matchMedia('(max-width: 767px)').matches) {
+        return;
+      }
+      const mockups = Array.from(document.querySelectorAll(galleryVideoMockupSelector));
+      if (mockups.length === 0) {
+        return;
+      }
+      routePreparing = true;
+      if (routePreparationResetTimer !== 0) {
+        lifecycle.clearTimeout(routePreparationResetTimer);
+      }
+      routePreparationResetTimer = lifecycle.setTimeout(() => {
+        routePreparing = false;
+        routePreparationResetTimer = 0;
+      }, routePreparationResetDelayMs);
+      mockups.forEach((mockup) => {
+        revealMockupPoster(mockup);
+      });
     };
 
     const shouldDowngradeAlwaysPlaybackForMobileGallery = () => {
@@ -369,6 +401,11 @@
     };
 
     const mount = () => {
+      routePreparing = false;
+      if (routePreparationResetTimer !== 0) {
+        lifecycle.clearTimeout(routePreparationResetTimer);
+        routePreparationResetTimer = 0;
+      }
       syncMobileGalleryPlaybackPolicy();
       cleanupStaleVideos();
       document.querySelectorAll(selector).forEach((node) => {
@@ -378,6 +415,12 @@
     };
 
     lifecycle.addCleanup(onAstroPageLoad(mount));
+    document.addEventListener('astro:before-preparation', revealGalleryMobileVideoCovers, { capture: true });
+    window.addEventListener('astro:before-preparation', revealGalleryMobileVideoCovers, { capture: true });
+    lifecycle.addCleanup(() => {
+      document.removeEventListener('astro:before-preparation', revealGalleryMobileVideoCovers, { capture: true });
+      window.removeEventListener('astro:before-preparation', revealGalleryMobileVideoCovers, { capture: true });
+    });
     lifecycle.addCleanup(
       onAstroBeforeSwap(() => {
         if (isIOSWebKit) {
@@ -398,6 +441,11 @@
       releaseForSwap: releaseManagedVideosForSwap,
       resetVideo,
       destroy() {
+        if (routePreparationResetTimer !== 0) {
+          lifecycle.clearTimeout(routePreparationResetTimer);
+          routePreparationResetTimer = 0;
+        }
+        routePreparing = false;
         releaseManagedVideosForSwap();
         lifecycle.dispose();
       },
