@@ -119,13 +119,13 @@ flattenedItems.forEach((item, flatIndex) => {
     const desktopMediaQuery = '(min-width: 1360px)';
     const galleryMobileMediaQuery = '(max-width: 767px)';
     const firstTwoRowsPreset = 'gallery-first-two-rows-stagger-v1';
-    const mobileFirstTwoPreset = 'gallery-mobile-first-two-stagger-v1';
+    const mobileAllCardsPreset = 'gallery-mobile-all-cards-stagger-v1';
     const desktopRowStaggerPreset = 'gallery-row-stagger-v1';
     const rootSelector = '.gallery-rows';
     const stagedRowSelector = '.gallery-row';
     const rowStagedItemSelector = '[data-motion-stagger-item]';
     const firstTwoStageSelector = '[data-gallery-first-two-stage-item]';
-    const mobileFirstTwoStageSelector = '[data-gallery-mobile-first-two-stage-item]';
+    const mobileAllCardsStageSelector = '[data-gallery-mobile-stage-item]';
     const cardContainerSelector = '.gallery-card-container';
     const store = window;
     const existingRuntime = store[runtimeKey];
@@ -163,11 +163,12 @@ flattenedItems.forEach((item, flatIndex) => {
       containers.forEach((container) => {
         container.removeAttribute('data-gallery-first-two-stage-item');
         container.removeAttribute('data-gallery-mobile-first-two-stage-item');
+        container.removeAttribute('data-gallery-mobile-stage-item');
         container.removeAttribute('data-motion-stagger-index');
       });
     };
 
-    const resolveIndexedContainers = (containers, maxFlatIndex) =>
+    const resolveIndexedContainers = (containers, maxFlatIndex = Number.POSITIVE_INFINITY) =>
       containers
         .map((container) => {
           const rawIndex = container.dataset.galleryFlatIndex ?? '';
@@ -188,13 +189,13 @@ flattenedItems.forEach((item, flatIndex) => {
       });
     };
 
-    const applyMobileFirstTwoStageMetadata = (root) => {
+    const applyMobileAllCardsStageMetadata = (root) => {
       const containers = resolveCardContainers(root);
       clearCardContainerStageState(containers);
 
-      const firstTwoContainers = resolveIndexedContainers(containers, 1);
-      firstTwoContainers.forEach(({ container, flatIndex }) => {
-        container.setAttribute('data-gallery-mobile-first-two-stage-item', '');
+      const indexedContainers = resolveIndexedContainers(containers);
+      indexedContainers.forEach(({ container, flatIndex }) => {
+        container.setAttribute('data-gallery-mobile-stage-item', '');
         container.setAttribute('data-motion-stagger-index', String(flatIndex));
       });
     };
@@ -202,10 +203,10 @@ flattenedItems.forEach((item, flatIndex) => {
     const clearGalleryStaggerState = (root, rows) => {
       clearInViewState(root);
       const firstTwoStageNodes = Array.from(root.querySelectorAll(firstTwoStageSelector));
-      const mobileFirstTwoStageNodes = Array.from(root.querySelectorAll(mobileFirstTwoStageSelector));
+      const mobileAllCardsStageNodes = Array.from(root.querySelectorAll(mobileAllCardsStageSelector));
       const rowStagedNodes = Array.from(root.querySelectorAll(rowStagedItemSelector));
       clearElementStyles(firstTwoStageNodes);
-      clearElementStyles(mobileFirstTwoStageNodes);
+      clearElementStyles(mobileAllCardsStageNodes);
       clearElementStyles(rowStagedNodes);
 
       const containers = resolveCardContainers(root).filter(
@@ -230,10 +231,10 @@ flattenedItems.forEach((item, flatIndex) => {
       });
     };
 
-    const applyMobileFirstTwoStagger = (rows, root) => {
+    const applyMobileAllCardsStagger = (rows, root) => {
       clearGalleryStaggerState(root, rows);
-      root.setAttribute('data-motion-inview', mobileFirstTwoPreset);
-      applyMobileFirstTwoStageMetadata(root);
+      root.setAttribute('data-motion-inview', mobileAllCardsPreset);
+      applyMobileAllCardsStageMetadata(root);
     };
 
     const syncMode = () => {
@@ -248,7 +249,7 @@ flattenedItems.forEach((item, flatIndex) => {
       if (desktopMedia.matches) {
         applyDesktopRowStagger(rows, root);
       } else if (mobileMedia.matches) {
-        applyMobileFirstTwoStagger(rows, root);
+        applyMobileAllCardsStagger(rows, root);
       } else {
         clearGalleryStaggerState(root, rows);
       }

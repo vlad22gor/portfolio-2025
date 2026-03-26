@@ -178,6 +178,14 @@ export const inViewPresets = {
     transition: baseTransition,
     childDelay: 0.1,
   },
+  'gallery-mobile-all-cards-stagger-v1': {
+    mode: 'stagger-children',
+    childSelector: '[data-gallery-mobile-stage-item]',
+    initialTransform: 'translate3d(0px, 50px, 0px)',
+    finalTransform: 'translate3d(0px, 0px, 0px)',
+    transition: baseTransition,
+    childDelay: 0.1,
+  },
   'process-tickets-row-stagger-v1': {
     mode: 'stagger-children',
     childSelector: '[data-motion-stagger-item]',

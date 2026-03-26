@@ -47,6 +47,18 @@ const agentationEndpoint =
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <script is:inline>
       (() => {
+        const ua = typeof navigator.userAgent === 'string' ? navigator.userAgent : '';
+        const platform = typeof navigator.platform === 'string' ? navigator.platform : '';
+        const maxTouchPoints = Number.isFinite(navigator.maxTouchPoints) ? navigator.maxTouchPoints : 0;
+        const isIOSDevice = /(iPad|iPhone|iPod)/i.test(ua) || (platform === 'MacIntel' && maxTouchPoints > 1);
+        const isWebKit = /AppleWebKit/i.test(ua);
+        const isAltIOSBrowser = /(CriOS|FxiOS|EdgiOS|OPiOS)/i.test(ua);
+        const isIOSSafari = isIOSDevice && isWebKit && !isAltIOSBrowser;
+        document.documentElement.dataset.iosSafari = isIOSSafari ? 'true' : 'false';
+      })();
+    </script>
+    <script is:inline>
+      (() => {
         const themeKey = 'vh-theme';
         const normalizeTheme = (value) => (value === 'dark' ? 'dark' : 'light');
         const resolveTheme = () => {

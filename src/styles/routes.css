@@ -1086,7 +1086,7 @@
 }
 
 @media (max-width: 767px) {
-  body[data-route-gallery='true']::after {
+  html[data-ios-safari='true'] body[data-route-gallery='true']::after {
     content: '';
     position: fixed;
     right: 0;

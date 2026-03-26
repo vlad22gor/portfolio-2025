@@ -1025,8 +1025,8 @@ test.describe('Gallery mobile smoke', () => {
     await expect(page.locator('.site-desktop-shell')).toBeVisible();
     await expect(page.locator('.gallery-row[data-motion-inview]')).toHaveCount(0);
     await expect(page.locator('.gallery-card')).toHaveCount(21);
-    await expect(page.locator('.gallery-rows[data-motion-inview="gallery-mobile-first-two-stagger-v1"]')).toHaveCount(1);
-    await expect(page.locator('.gallery-card-container[data-gallery-mobile-first-two-stage-item]')).toHaveCount(2);
+    await expect(page.locator('.gallery-rows[data-motion-inview="gallery-mobile-all-cards-stagger-v1"]')).toHaveCount(1);
+    await expect(page.locator('.gallery-card-container[data-gallery-mobile-stage-item]')).toHaveCount(21);
 
     await expect
       .poll(
@@ -1148,8 +1148,7 @@ test.describe('Gallery mobile smoke', () => {
         contentViewportWidth: Math.floor(document.documentElement.clientWidth || window.innerWidth),
         firstRowHasMotion: firstRow.hasAttribute('data-motion-inview'),
         rootMotionPreset: document.querySelector('.gallery-rows')?.getAttribute('data-motion-inview') ?? null,
-        firstTwoStageCount: document.querySelectorAll('.gallery-card-container[data-gallery-mobile-first-two-stage-item]')
-          .length,
+        mobileStageCount: document.querySelectorAll('.gallery-card-container[data-gallery-mobile-stage-item]').length,
         pageWidth: Number(document.querySelector('.page-shell--gallery')?.getBoundingClientRect().width.toFixed(2) ?? 0),
         expectedRowsSectionWidthCandidates: [
           Number((Math.max(0, window.innerWidth - 40)).toFixed(2)),
@@ -1168,8 +1167,8 @@ test.describe('Gallery mobile smoke', () => {
     expect(snapshot).not.toBeNull();
     expect(snapshot!.hasHorizontalOverflow).toBe(false);
     expect(snapshot!.firstRowHasMotion).toBe(false);
-    expect(snapshot!.rootMotionPreset).toBe('gallery-mobile-first-two-stagger-v1');
-    expect(snapshot!.firstTwoStageCount).toBe(2);
+    expect(snapshot!.rootMotionPreset).toBe('gallery-mobile-all-cards-stagger-v1');
+    expect(snapshot!.mobileStageCount).toBe(21);
     expect(snapshot!.pageWidth).toBeGreaterThan(0);
     expect(
       snapshot!.expectedRowsSectionWidthCandidates.some((expected) => Math.abs(snapshot!.rowsSectionWidth - expected) <= 1),
@@ -1208,6 +1207,74 @@ test.describe('Gallery mobile smoke', () => {
         return Math.abs(entry.gap - expectedGap) <= 1.1;
       }),
     ).toBe(true);
+  });
+
+  test('390x844 keeps Safari-only safe-area fill disabled in Chromium', async ({ page, browserName }) => {
+    test.skip(browserName !== 'chromium', 'Chrome regression guard');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/gallery');
+
+    const snapshot = await page.evaluate(() => {
+      const after = getComputedStyle(document.body, '::after');
+      const parsePx = (value: string) => {
+        const numeric = Number.parseFloat(value);
+        return Number.isFinite(numeric) ? numeric : 0;
+      };
+      return {
+        iosSafari: document.documentElement.dataset.iosSafari ?? null,
+        afterContent: after.content,
+        afterHeight: parsePx(after.height),
+      };
+    });
+
+    expect(snapshot.iosSafari).toBe('false');
+    expect(snapshot.afterContent === 'none' || snapshot.afterHeight <= 0.5).toBe(true);
+  });
+
+  test('390x844 gallery -> home before-swap keeps mockup cover visible for second video card', async ({ page }) => {
+    await page.addInitScript(() => {
+      const frameReadyKey = '__gallery_swap_frame_ready';
+      const bind = () => {
+        sessionStorage.removeItem(frameReadyKey);
+        document.addEventListener(
+          'astro:before-swap',
+          () => {
+            const mockup = document.querySelector(
+              '.gallery-card-container[data-gallery-flat-index="1"] .device-mockup[data-device-mockup]',
+            );
+            if (!(mockup instanceof HTMLElement)) {
+              return;
+            }
+            sessionStorage.setItem(frameReadyKey, mockup.getAttribute('data-video-frame-ready') ?? 'null');
+          },
+          { once: true },
+        );
+      };
+      bind();
+      document.addEventListener('astro:page-load', bind);
+    });
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/gallery');
+    await waitForGalleryCriticalReady(page);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            document
+              .querySelector('.gallery-card-container[data-gallery-flat-index="1"] .device-mockup[data-device-mockup]')
+              ?.getAttribute('data-video-frame-ready') ?? null,
+        ),
+      )
+      .toBe('true');
+
+    await page.click('.site-desktop-shell a[data-nav-id="home"]');
+    await page.waitForURL('**/');
+
+    const swapSnapshot = await page.evaluate(() => ({
+      frameReady: sessionStorage.getItem('__gallery_swap_frame_ready'),
+    }));
+    expect(swapSnapshot.frameReady).toBe('false');
   });
 
   test('390x844 final cta morph matches home-consistent initial/final title states on gallery', async ({ page }) => {
