@@ -166,6 +166,7 @@ body {
 
 html {
   scrollbar-gutter: stable both-edges;
+  background: var(--page-bg);
 }
 
 @supports not (scrollbar-gutter: stable) {

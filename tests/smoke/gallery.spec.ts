@@ -957,6 +957,67 @@ test.describe('Gallery tablet smoke', () => {
 test.describe('Gallery mobile smoke', () => {
   test('390x844 renders real gallery shell with D-runtime and pair-gap matrix', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
+    await page.addInitScript(() => {
+      const timeline = {
+        card1StartAt: null as number | null,
+        card2StartAt: null as number | null,
+      };
+      (
+        window as Window & {
+          __galleryMobileFirstTwoTimeline?: typeof timeline;
+        }
+      ).__galleryMobileFirstTwoTimeline = timeline;
+
+      const watchStart = (element: HTMLElement, key: 'card1StartAt' | 'card2StartAt') => {
+        const readScheduledStart = () => {
+          const animation = element.getAnimations()[0];
+          if (!animation || typeof animation.startTime !== 'number') {
+            return null;
+          }
+          const delay = Number(animation.effect?.getTiming?.().delay ?? 0);
+          if (!Number.isFinite(delay)) {
+            return null;
+          }
+          return animation.startTime + delay;
+        };
+
+        const tick = () => {
+          if (timeline[key] !== null) {
+            return;
+          }
+          const scheduledStart = readScheduledStart();
+          if (typeof scheduledStart === 'number') {
+            timeline[key] = scheduledStart;
+            return;
+          }
+          window.requestAnimationFrame(tick);
+        };
+        tick();
+
+        const observer = new MutationObserver(() => {
+          if (timeline[key] !== null) {
+            return;
+          }
+          const scheduledStart = readScheduledStart();
+          if (typeof scheduledStart === 'number') {
+            timeline[key] = scheduledStart;
+          }
+        });
+        observer.observe(element, { attributes: true, attributeFilter: ['style'] });
+      };
+
+      const waitForTargets = () => {
+        const card1 = document.querySelector('.gallery-card-container[data-gallery-flat-index="0"]');
+        const card2 = document.querySelector('.gallery-card-container[data-gallery-flat-index="1"]');
+        if (!(card1 instanceof HTMLElement) || !(card2 instanceof HTMLElement)) {
+          window.requestAnimationFrame(waitForTargets);
+          return;
+        }
+        watchStart(card1, 'card1StartAt');
+        watchStart(card2, 'card2StartAt');
+      };
+      waitForTargets();
+    });
     await page.goto('/gallery');
 
     await expect(page.locator('.temporary-adaptive-shell')).toHaveCount(0);
@@ -964,6 +1025,63 @@ test.describe('Gallery mobile smoke', () => {
     await expect(page.locator('.site-desktop-shell')).toBeVisible();
     await expect(page.locator('.gallery-row[data-motion-inview]')).toHaveCount(0);
     await expect(page.locator('.gallery-card')).toHaveCount(21);
+    await expect(page.locator('.gallery-rows[data-motion-inview="gallery-mobile-first-two-stagger-v1"]')).toHaveCount(1);
+    await expect(page.locator('.gallery-card-container[data-gallery-mobile-first-two-stage-item]')).toHaveCount(2);
+
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const primeMockups = Array.from(
+              document.querySelectorAll('.gallery-card-container[data-gallery-mobile-prime="true"] .device-mockup'),
+            );
+            return {
+              primeContainers: document.querySelectorAll('.gallery-card-container[data-gallery-mobile-prime="true"]').length,
+              primeMockups: primeMockups.length,
+              primeReady: primeMockups.filter((node) => node.getAttribute('data-ready') === 'true').length,
+            };
+          }),
+        { timeout: 3_500, message: 'First two mobile gallery cards should be prime-ready' },
+      )
+      .toEqual({ primeContainers: 2, primeMockups: 2, primeReady: 2 });
+
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            const state = (
+              window as Window & {
+                __galleryMobileFirstTwoTimeline?: {
+                  card1StartAt: number | null;
+                  card2StartAt: number | null;
+                };
+              }
+            ).__galleryMobileFirstTwoTimeline;
+            if (!state || state.card1StartAt === null || state.card2StartAt === null) {
+              return null;
+            }
+            return state.card2StartAt - state.card1StartAt;
+          }),
+        { timeout: 8_000, message: 'Mobile first-two stagger should keep card-2 start after card-1 start' },
+      )
+      .not.toBeNull();
+    const mobileFirstTwoDelta = await page.evaluate(() => {
+      const state = (
+        window as Window & {
+          __galleryMobileFirstTwoTimeline?: {
+            card1StartAt: number | null;
+            card2StartAt: number | null;
+          };
+        }
+      ).__galleryMobileFirstTwoTimeline;
+      if (!state || state.card1StartAt === null || state.card2StartAt === null) {
+        return null;
+      }
+      return state.card2StartAt - state.card1StartAt;
+    });
+    expect(mobileFirstTwoDelta).not.toBeNull();
+    expect(mobileFirstTwoDelta!).toBeGreaterThanOrEqual(50);
+    expect(mobileFirstTwoDelta!).toBeLessThanOrEqual(260);
 
     const snapshot = await page.evaluate(() => {
       const rowsSection = document.querySelector('.gallery-rows-section');
@@ -1029,7 +1147,9 @@ test.describe('Gallery mobile smoke', () => {
         viewportWidth: Math.floor(window.innerWidth),
         contentViewportWidth: Math.floor(document.documentElement.clientWidth || window.innerWidth),
         firstRowHasMotion: firstRow.hasAttribute('data-motion-inview'),
-        firstCardOpacity: getComputedStyle(firstCard).opacity,
+        rootMotionPreset: document.querySelector('.gallery-rows')?.getAttribute('data-motion-inview') ?? null,
+        firstTwoStageCount: document.querySelectorAll('.gallery-card-container[data-gallery-mobile-first-two-stage-item]')
+          .length,
         pageWidth: Number(document.querySelector('.page-shell--gallery')?.getBoundingClientRect().width.toFixed(2) ?? 0),
         expectedRowsSectionWidthCandidates: [
           Number((Math.max(0, window.innerWidth - 40)).toFixed(2)),
@@ -1048,7 +1168,8 @@ test.describe('Gallery mobile smoke', () => {
     expect(snapshot).not.toBeNull();
     expect(snapshot!.hasHorizontalOverflow).toBe(false);
     expect(snapshot!.firstRowHasMotion).toBe(false);
-    expect(snapshot!.firstCardOpacity).toBe('1');
+    expect(snapshot!.rootMotionPreset).toBe('gallery-mobile-first-two-stagger-v1');
+    expect(snapshot!.firstTwoStageCount).toBe(2);
     expect(snapshot!.pageWidth).toBeGreaterThan(0);
     expect(
       snapshot!.expectedRowsSectionWidthCandidates.some((expected) => Math.abs(snapshot!.rowsSectionWidth - expected) <= 1),

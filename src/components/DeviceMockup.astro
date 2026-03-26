@@ -45,6 +45,7 @@ interface Props {
   screenPoster?: string;
   priority?: DeviceLoadPriority;
   scale?: number;
+  mobilePrime?: boolean;
   class?: string;
 }
 
@@ -57,6 +58,7 @@ const {
   screenPoster,
   priority = 'lazy',
   scale,
+  mobilePrime = false,
   class: className = '',
 } = Astro.props;
 
@@ -210,6 +212,7 @@ const styleVars = [
   data-device-media-poster={screenPoster ?? ''}
   data-device-size={resolvedSize}
   data-device-screen-calibration={screenCalibrationMarker}
+  data-device-mobile-prime={mobilePrime ? 'true' : undefined}
   data-video-frame-ready={screenKind === 'video' ? 'false' : undefined}
   data-ready="false"
 >
@@ -529,6 +532,8 @@ const styleVars = [
 
       const shell = mockup.querySelector('.device-mockup__shell');
       const media = mockup.querySelector('.device-mockup__media');
+      const videoPoster = mockup.querySelector('.device-mockup__video-poster');
+      const isMobilePrime = mockup.dataset.deviceMobilePrime === 'true';
       let shellReady = !(shell instanceof HTMLImageElement);
       let mediaReady = !media;
       let settled = false;
@@ -581,6 +586,27 @@ const styleVars = [
           });
         }
       } else if (media instanceof HTMLVideoElement) {
+        const hasPrimePoster = videoPoster instanceof HTMLImageElement;
+        let primePosterReady = !hasPrimePoster;
+        if (hasPrimePoster) {
+          primePosterReady = videoPoster.complete && videoPoster.naturalWidth > 0;
+          if (!primePosterReady) {
+            bindOnce(videoPoster, 'load', () => {
+              primePosterReady = true;
+              if (isMobilePrime) {
+                mediaReady = true;
+                trySettle();
+              }
+            });
+            bindOnce(videoPoster, 'error', () => {
+              primePosterReady = true;
+              if (isMobilePrime) {
+                mediaReady = true;
+                trySettle();
+              }
+            });
+          }
+        }
         markVideoFramePending(mockup);
         const frameReadyNow = media.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA;
         if (frameReadyNow) {
@@ -607,9 +633,11 @@ const styleVars = [
           bindOnce(media, 'loadeddata', resolveFirstFrame);
           bindOnce(media, 'canplay', resolveFirstFrame);
         }
+        const canUsePrimePosterReady = isMobilePrime && hasPrimePoster && primePosterReady;
         mediaReady =
           media.readyState >= HTMLMediaElement.HAVE_METADATA ||
-          isVideoWarm(mockup, media);
+          isVideoWarm(mockup, media) ||
+          canUsePrimePosterReady;
         if (media.readyState >= HTMLMediaElement.HAVE_METADATA) {
           markVideoWarm(mockup, media);
         }

@@ -50,6 +50,7 @@ const entryByCardId = new Map<
     mobilePadTop: number;
     mobilePadBottom: number;
     flatIndex: number;
+    isMobilePrime: boolean;
   }
 >();
 
@@ -70,6 +71,7 @@ flattenedItems.forEach((item, flatIndex) => {
     mobilePadTop,
     mobilePadBottom,
     flatIndex,
+    isMobilePrime: flatIndex <= 1,
   });
 });
 
@@ -94,9 +96,15 @@ flattenedItems.forEach((item, flatIndex) => {
               data-gallery-mobile-pad-top={String(mobilePadTop)}
               data-gallery-mobile-pad-bottom={String(mobilePadBottom)}
               data-gallery-flat-index={cardEntry ? String(cardEntry.flatIndex) : undefined}
+              data-gallery-mobile-prime={cardEntry?.isMobilePrime ? 'true' : undefined}
               style={inlineStyle}
             >
-              <GalleryCard item={item} priorityOverride={resolvePriorityForRow(rowIndex, item)} staggerIndex={itemIndex} />
+              <GalleryCard
+                item={item}
+                priorityOverride={resolvePriorityForRow(rowIndex, item)}
+                staggerIndex={itemIndex}
+                mobilePrime={cardEntry?.isMobilePrime === true}
+              />
             </div>
           );
         })}
@@ -109,12 +117,15 @@ flattenedItems.forEach((item, flatIndex) => {
   (() => {
     const runtimeKey = '__galleryDesktopRowStaggerRuntime';
     const desktopMediaQuery = '(min-width: 1360px)';
+    const galleryMobileMediaQuery = '(max-width: 767px)';
     const firstTwoRowsPreset = 'gallery-first-two-rows-stagger-v1';
+    const mobileFirstTwoPreset = 'gallery-mobile-first-two-stagger-v1';
     const desktopRowStaggerPreset = 'gallery-row-stagger-v1';
     const rootSelector = '.gallery-rows';
     const stagedRowSelector = '.gallery-row';
     const rowStagedItemSelector = '[data-motion-stagger-item]';
     const firstTwoStageSelector = '[data-gallery-first-two-stage-item]';
+    const mobileFirstTwoStageSelector = '[data-gallery-mobile-first-two-stage-item]';
     const cardContainerSelector = '.gallery-card-container';
     const store = window;
     const existingRuntime = store[runtimeKey];
@@ -123,7 +134,8 @@ flattenedItems.forEach((item, flatIndex) => {
       return;
     }
 
-    const mediaQuery = window.matchMedia(desktopMediaQuery);
+    const desktopMedia = window.matchMedia(desktopMediaQuery);
+    const mobileMedia = window.matchMedia(galleryMobileMediaQuery);
 
     const clearInViewState = (element) => {
       if (!(element instanceof HTMLElement)) {
@@ -144,61 +156,84 @@ flattenedItems.forEach((item, flatIndex) => {
       });
     };
 
-    const applyFirstTwoRowsStageMetadata = (root) => {
-      const containers = Array.from(root.querySelectorAll(cardContainerSelector)).filter(
-        (node) => node instanceof HTMLElement,
-      );
+    const resolveCardContainers = (root) =>
+      Array.from(root.querySelectorAll(cardContainerSelector)).filter((node) => node instanceof HTMLElement);
+
+    const clearCardContainerStageState = (containers) => {
       containers.forEach((container) => {
         container.removeAttribute('data-gallery-first-two-stage-item');
+        container.removeAttribute('data-gallery-mobile-first-two-stage-item');
         container.removeAttribute('data-motion-stagger-index');
       });
+    };
 
-      const firstTwoContainers = containers
+    const resolveIndexedContainers = (containers, maxFlatIndex) =>
+      containers
         .map((container) => {
           const rawIndex = container.dataset.galleryFlatIndex ?? '';
           const flatIndex = Number.parseInt(rawIndex, 10);
           return { container, flatIndex };
         })
-        .filter(({ flatIndex }) => Number.isFinite(flatIndex) && flatIndex >= 0 && flatIndex <= 7)
+        .filter(({ flatIndex }) => Number.isFinite(flatIndex) && flatIndex >= 0 && flatIndex <= maxFlatIndex)
         .sort((left, right) => left.flatIndex - right.flatIndex);
 
+    const applyFirstTwoRowsStageMetadata = (root) => {
+      const containers = resolveCardContainers(root);
+      clearCardContainerStageState(containers);
+
+      const firstTwoContainers = resolveIndexedContainers(containers, 7);
       firstTwoContainers.forEach(({ container, flatIndex }) => {
         container.setAttribute('data-gallery-first-two-stage-item', '');
         container.setAttribute('data-motion-stagger-index', String(flatIndex));
       });
     };
 
-    const applyDesktopRowStagger = (rows, root) => {
+    const applyMobileFirstTwoStageMetadata = (root) => {
+      const containers = resolveCardContainers(root);
+      clearCardContainerStageState(containers);
+
+      const firstTwoContainers = resolveIndexedContainers(containers, 1);
+      firstTwoContainers.forEach(({ container, flatIndex }) => {
+        container.setAttribute('data-gallery-mobile-first-two-stage-item', '');
+        container.setAttribute('data-motion-stagger-index', String(flatIndex));
+      });
+    };
+
+    const clearGalleryStaggerState = (root, rows) => {
       clearInViewState(root);
+      const firstTwoStageNodes = Array.from(root.querySelectorAll(firstTwoStageSelector));
+      const mobileFirstTwoStageNodes = Array.from(root.querySelectorAll(mobileFirstTwoStageSelector));
+      const rowStagedNodes = Array.from(root.querySelectorAll(rowStagedItemSelector));
+      clearElementStyles(firstTwoStageNodes);
+      clearElementStyles(mobileFirstTwoStageNodes);
+      clearElementStyles(rowStagedNodes);
+
+      const containers = resolveCardContainers(root).filter(
+        (node) => node instanceof HTMLElement,
+      );
+      clearCardContainerStageState(containers);
+
+      rows.forEach((row) => {
+        clearInViewState(row);
+      });
+    };
+
+    const applyDesktopRowStagger = (rows, root) => {
+      clearGalleryStaggerState(root, rows);
       root.setAttribute('data-motion-inview', firstTwoRowsPreset);
       applyFirstTwoRowsStageMetadata(root);
 
       rows.forEach((row, index) => {
-        clearInViewState(row);
         if (index >= 2) {
           row.setAttribute('data-motion-inview', desktopRowStaggerPreset);
         }
       });
     };
 
-    const clearDesktopGalleryStagger = (root, rows) => {
-      clearInViewState(root);
-      const firstTwoStageNodes = Array.from(root.querySelectorAll(firstTwoStageSelector));
-      const rowStagedNodes = Array.from(root.querySelectorAll(rowStagedItemSelector));
-      clearElementStyles(firstTwoStageNodes);
-      clearElementStyles(rowStagedNodes);
-
-      const containers = Array.from(root.querySelectorAll(cardContainerSelector)).filter(
-        (node) => node instanceof HTMLElement,
-      );
-      containers.forEach((container) => {
-        container.removeAttribute('data-gallery-first-two-stage-item');
-        container.removeAttribute('data-motion-stagger-index');
-      });
-
-      rows.forEach((row) => {
-        clearInViewState(row);
-      });
+    const applyMobileFirstTwoStagger = (rows, root) => {
+      clearGalleryStaggerState(root, rows);
+      root.setAttribute('data-motion-inview', mobileFirstTwoPreset);
+      applyMobileFirstTwoStageMetadata(root);
     };
 
     const syncMode = () => {
@@ -210,12 +245,13 @@ flattenedItems.forEach((item, flatIndex) => {
         return;
       }
 
-      if (!mediaQuery.matches) {
-        clearDesktopGalleryStagger(root, rows);
-        return;
+      if (desktopMedia.matches) {
+        applyDesktopRowStagger(rows, root);
+      } else if (mobileMedia.matches) {
+        applyMobileFirstTwoStagger(rows, root);
+      } else {
+        clearGalleryStaggerState(root, rows);
       }
-
-      applyDesktopRowStagger(rows, root);
       const inViewRuntime = window.__inViewAppearRuntime;
       if (inViewRuntime && typeof inViewRuntime.mount === 'function') {
         inViewRuntime.mount();
@@ -236,25 +272,31 @@ flattenedItems.forEach((item, flatIndex) => {
       if (!(root instanceof HTMLElement)) {
         return;
       }
-      clearDesktopGalleryStagger(root, rows);
+      clearGalleryStaggerState(root, rows);
     };
 
-    if (typeof mediaQuery.addEventListener === 'function') {
-      mediaQuery.addEventListener('change', handleMediaChange);
-    } else if (typeof mediaQuery.addListener === 'function') {
-      mediaQuery.addListener(handleMediaChange);
-    }
+    const bindMediaQueryChange = (media, handler) => {
+      if (typeof media.addEventListener === 'function') {
+        media.addEventListener('change', handler);
+        return () => media.removeEventListener('change', handler);
+      }
+      if (typeof media.addListener === 'function') {
+        media.addListener(handler);
+        return () => media.removeListener(handler);
+      }
+      return () => {};
+    };
+
+    const unbindDesktopMedia = bindMediaQueryChange(desktopMedia, handleMediaChange);
+    const unbindMobileMedia = bindMediaQueryChange(mobileMedia, handleMediaChange);
     document.addEventListener('astro:page-load', handlePageLoad);
     window.addEventListener('pagehide', handlePageHide);
 
     const runtime = {
       mount: syncMode,
       destroy() {
-        if (typeof mediaQuery.removeEventListener === 'function') {
-          mediaQuery.removeEventListener('change', handleMediaChange);
-        } else if (typeof mediaQuery.removeListener === 'function') {
-          mediaQuery.removeListener(handleMediaChange);
-        }
+        unbindDesktopMedia();
+        unbindMobileMedia();
         document.removeEventListener('astro:page-load', handlePageLoad);
         window.removeEventListener('pagehide', handlePageHide);
       },

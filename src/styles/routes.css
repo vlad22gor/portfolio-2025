@@ -1086,6 +1086,18 @@
 }
 
 @media (max-width: 767px) {
+  body[data-route-gallery='true']::after {
+    content: '';
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: env(safe-area-inset-bottom, 0px);
+    background: var(--page-bg);
+    pointer-events: none;
+    z-index: 0;
+  }
+
   body[data-route-gallery='true'] .floating-theme-button {
     right: max(20px, calc(env(safe-area-inset-right) + 20px));
     bottom: max(20px, calc(env(safe-area-inset-bottom) + 20px));

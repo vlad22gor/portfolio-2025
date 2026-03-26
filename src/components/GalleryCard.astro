@@ -8,9 +8,10 @@ interface Props {
   item: GalleryRowItem;
   priorityOverride?: GalleryDeviceLoadPriority;
   staggerIndex?: number;
+  mobilePrime?: boolean;
 }
 
-const { item, priorityOverride, staggerIndex = 0 } = Astro.props;
+const { item, priorityOverride, staggerIndex = 0, mobilePrime = false } = Astro.props;
 const isImage = item.type === 'image';
 const isDeviceCard = (candidate: GalleryRowItem): candidate is GalleryPhoneCard | GalleryTabletCard =>
   candidate.type === 'phone' || candidate.type === 'tablet';
@@ -27,6 +28,7 @@ const isCritical = resolvedPriority === 'critical';
   data-gallery-card-type={item.type}
   data-gallery-card-id={item.id}
   data-gallery-card-priority={resolvedPriority}
+  data-gallery-mobile-prime={mobilePrime ? 'true' : undefined}
   data-motion-stagger-item
   data-motion-stagger-index={String(staggerIndex)}
   aria-label={item.alt}
@@ -81,6 +83,7 @@ const isCritical = resolvedPriority === 'critical';
               screenAlt=""
               priority={isCritical ? 'critical' : 'lazy'}
               size="compact"
+              mobilePrime={mobilePrime}
             />
           )
         }
