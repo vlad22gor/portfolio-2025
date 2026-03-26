@@ -124,18 +124,86 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
     const railHoverOffsetExpanded = 5;
     const navigationDelayMinMs = 120;
     const navigationDelayMaxMs = 320;
+    const navigationWatchdogMs = 900;
+    const navigationWatchdogMaxAttempts = 2;
+    const touchClickFallbackWindowMs = 350;
+    const touchFallbackMaxTravelPx = 12;
+    const headerNavDebugQuery = 'debugHeaderNav';
+    const headerNavDebugStorageKey = '__headerNavDebug';
+    const headerNavDebugWindowKey = '__siteHeaderNavDiagnostics';
     const gapControls = new WeakMap();
     const railStates = new WeakMap();
+    const touchFallbackStates = new WeakMap();
     const boundButtons = new WeakSet();
     let resizeRafId = 0;
     let railTrimSyncRafId = 0;
     let pendingNavigation = null;
+    let routeStartSignal = 0;
 
     const normalizePath = (pathname) => {
       if (!pathname || pathname === '/') {
         return '/';
       }
       return pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+    };
+
+    const ensureDebugStore = () => {
+      let store = window[headerNavDebugWindowKey];
+      if (!store || typeof store !== 'object') {
+        store = {
+          enabled: false,
+          counters: {},
+          events: [],
+        };
+        window[headerNavDebugWindowKey] = store;
+      }
+      return store;
+    };
+
+    const isHeaderNavDebugEnabled = () => {
+      if (document.documentElement?.dataset?.debugHeaderNav === 'true') {
+        return true;
+      }
+
+      try {
+        const url = new URL(window.location.href);
+        if (url.searchParams.get(headerNavDebugQuery) === '1') {
+          return true;
+        }
+      } catch {
+        // Ignore URL parsing errors in diagnostics mode resolution.
+      }
+
+      try {
+        return window.localStorage.getItem(headerNavDebugStorageKey) === '1';
+      } catch {
+        return false;
+      }
+    };
+
+    const recordDebugMetric = (metric, payload = {}) => {
+      const store = ensureDebugStore();
+      const enabled = isHeaderNavDebugEnabled();
+      store.enabled = enabled;
+      if (!enabled) {
+        return;
+      }
+
+      store.counters[metric] = (store.counters[metric] ?? 0) + 1;
+      store.events.push({
+        at: Date.now(),
+        path: normalizePath(window.location.pathname),
+        metric,
+        ...payload,
+      });
+      if (store.events.length > 200) {
+        store.events.splice(0, store.events.length - 200);
+      }
+    };
+
+    const markRouteStart = (source) => {
+      routeStartSignal += 1;
+      recordDebugMetric('route-start', { source });
     };
 
     const parseCasePaths = (track) => {
@@ -175,6 +243,17 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
         lifecycle.clearTimeout(pendingNavigation.timeoutId);
       }
       pendingNavigation = null;
+    };
+
+    const clearTouchFallbackState = (button) => {
+      const state = touchFallbackStates.get(button);
+      if (!state) {
+        return;
+      }
+      if (state.timeoutId !== 0) {
+        lifecycle.clearTimeout(state.timeoutId);
+      }
+      touchFallbackStates.delete(button);
     };
 
     const canUseDeferredNavigation = (button, event) => {
@@ -262,10 +341,65 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
       return Math.round(clamp(delay, navigationDelayMinMs, navigationDelayMaxMs));
     };
 
-    const scheduleDeferredNavigation = (button) => {
+    const attemptSoftNavigation = ({
+      href,
+      history,
+      button,
+      attempt,
+      initialPath,
+    }) => {
+      recordDebugMetric('navigate-attempt', {
+        attempt,
+        navId: button.dataset.navId ?? '',
+      });
+      navigate(href, {
+        history,
+        sourceElement: button,
+      });
+
+      const routeSignalAtAttempt = routeStartSignal;
+      lifecycle.setTimeout(() => {
+        const currentPath = normalizePath(window.location.pathname);
+        if (currentPath !== initialPath && routeStartSignal === routeSignalAtAttempt) {
+          markRouteStart('pathname-change');
+        }
+        const routeStarted = routeStartSignal !== routeSignalAtAttempt || currentPath !== initialPath;
+        if (routeStarted) {
+          return;
+        }
+
+        if (attempt >= navigationWatchdogMaxAttempts) {
+          return;
+        }
+
+        if (document.visibilityState === 'hidden') {
+          return;
+        }
+
+        recordDebugMetric('navigate-retry', {
+          attempt: attempt + 1,
+          navId: button.dataset.navId ?? '',
+        });
+        attemptSoftNavigation({
+          href,
+          history,
+          button,
+          attempt: attempt + 1,
+          initialPath,
+        });
+      }, navigationWatchdogMs);
+    };
+
+    const scheduleDeferredNavigation = (button, options = {}) => {
       if (!button?.href) {
         return;
       }
+
+      const { source = 'click' } = options;
+      recordDebugMetric('schedule', {
+        source,
+        navId: button.dataset.navId ?? '',
+      });
 
       cancelPendingNavigation();
 
@@ -305,9 +439,13 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
           return;
         }
 
-        navigate(href, {
+        const initialPath = normalizePath(window.location.pathname);
+        attemptSoftNavigation({
+          href,
           history,
-          sourceElement: button,
+          button,
+          attempt: 1,
+          initialPath,
         });
       };
 
@@ -318,6 +456,30 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
       });
       timeoutId = lifecycle.setTimeout(finalize, delayMs);
       pendingNavigation = { rafId1, rafId2, timeoutId };
+    };
+
+    const scheduleTouchFallbackNavigation = (button) => {
+      if (!button?.href) {
+        return;
+      }
+
+      let targetUrl;
+      try {
+        targetUrl = new URL(button.href, window.location.href);
+      } catch {
+        return;
+      }
+
+      if (targetUrl.origin !== window.location.origin) {
+        return;
+      }
+
+      const targetPath = normalizePath(targetUrl.pathname);
+      if (targetPath === normalizePath(window.location.pathname)) {
+        return;
+      }
+
+      scheduleDeferredNavigation(button, { source: 'touch-fallback' });
     };
 
     const isWaveRailTrack = (track) => track?.dataset.waveVariant === 'wave-rail';
@@ -757,7 +919,54 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
         if (event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
           return;
         }
+
+        recordDebugMetric('tap', {
+          source: 'pointerdown',
+          navId: button.dataset.navId ?? '',
+          pointerType: event.pointerType ?? 'unknown',
+        });
         moveSegmentToButton(button, { optimistic: true, animated: true });
+
+        if (event.pointerType !== 'touch') {
+          clearTouchFallbackState(button);
+          return;
+        }
+
+        clearTouchFallbackState(button);
+        touchFallbackStates.set(button, {
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY,
+          timeoutId: 0,
+        });
+      });
+      button.addEventListener('pointerup', (event) => {
+        const state = touchFallbackStates.get(button);
+        if (!state || state.pointerId !== event.pointerId) {
+          return;
+        }
+
+        const distance = Math.hypot(event.clientX - state.startX, event.clientY - state.startY);
+        if (distance > touchFallbackMaxTravelPx) {
+          clearTouchFallbackState(button);
+          return;
+        }
+
+        state.timeoutId = lifecycle.setTimeout(() => {
+          const latestState = touchFallbackStates.get(button);
+          if (latestState !== state) {
+            return;
+          }
+          clearTouchFallbackState(button);
+          scheduleTouchFallbackNavigation(button);
+        }, touchClickFallbackWindowMs);
+      });
+      button.addEventListener('pointercancel', (event) => {
+        const state = touchFallbackStates.get(button);
+        if (!state || state.pointerId !== event.pointerId) {
+          return;
+        }
+        clearTouchFallbackState(button);
       });
       button.addEventListener('keydown', (event) => {
         if (event.key !== 'Enter' && event.key !== ' ') {
@@ -766,13 +975,19 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
         moveSegmentToButton(button, { optimistic: true, animated: true });
       });
       button.addEventListener('click', (event) => {
+        clearTouchFallbackState(button);
+        recordDebugMetric('click', {
+          navId: button.dataset.navId ?? '',
+          detail: event.detail,
+        });
+
         if (!canUseDeferredNavigation(button, event)) {
           return;
         }
 
         event.preventDefault();
         event.stopPropagation();
-        scheduleDeferredNavigation(button);
+        scheduleDeferredNavigation(button, { source: 'click' });
       });
     };
 
@@ -867,6 +1082,9 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
         sync({ animated: true });
       }),
     );
+    lifecycle.on(document, 'astro:before-preparation', () => {
+      markRouteStart('astro:before-preparation');
+    });
     lifecycle.on(window, 'resize', scheduleResizeSync);
     lifecycle.on(window, 'beforeunload', cancelPendingNavigation);
     lifecycle.on(window, 'pagehide', cancelPendingNavigation);

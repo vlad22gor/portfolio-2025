@@ -1771,6 +1771,94 @@ test.describe('Gallery mobile smoke', () => {
     expect(monitoredSnapshots.every((snapshot) => snapshot.offscreenPlaying === 0)).toBe(true);
   });
 
+  test('webkit mobile header tap navigates on first tap without fallback retries', async ({
+    browser,
+    browserName,
+    baseURL,
+  }) => {
+    test.skip(browserName !== 'webkit', 'WebKit-only mobile tap reliability scenario');
+    test.setTimeout(240_000);
+
+    const cycles = 24;
+    const context = await browser.newContext({
+      ...devices['iPhone 13'],
+      baseURL: baseURL ?? 'http://127.0.0.1:4173',
+    });
+    const page = await context.newPage();
+
+    try {
+      await page.addInitScript(() => {
+        try {
+          window.localStorage.setItem('__headerNavDebug', '1');
+        } catch {
+          // Ignore storage errors in diagnostics setup.
+        }
+      });
+      await page.goto('/gallery');
+      await waitForGalleryCriticalReady(page);
+
+      const waitForPath = async (targetPath: '/' | '/gallery', timeout: number = 4_000) =>
+        page
+          .waitForFunction(
+            (expectedPath) => {
+              const path = window.location.pathname;
+              return path === expectedPath || path === `${expectedPath}/`;
+            },
+            targetPath,
+            { timeout },
+          )
+          .then(() => true)
+          .catch(() => false);
+
+      let firstTapFailures = 0;
+      for (let cycle = 0; cycle < cycles; cycle += 1) {
+        await page.evaluate((index) => {
+          const maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+          if (maxY <= 0) {
+            return;
+          }
+          const ratios = [0, 0.2, 0.45, 0.75, 1];
+          const ratio = ratios[index % ratios.length] ?? 0;
+          window.scrollTo({ top: Math.floor(maxY * ratio), behavior: 'instant' });
+        }, cycle);
+        await page.waitForTimeout(120);
+
+        const toHome = cycle % 2 === 0;
+        const navId = toHome ? 'home' : 'gallery';
+        const expectedPath: '/' | '/gallery' = toHome ? '/' : '/gallery';
+        await page.tap(`.site-desktop-shell a[data-nav-id="${navId}"]`);
+
+        const firstTapNavigated = await waitForPath(expectedPath);
+        if (!firstTapNavigated) {
+          firstTapFailures += 1;
+          break;
+        }
+
+        if (!toHome) {
+          await waitForGalleryCriticalReady(page);
+        }
+      }
+
+      const counters = await page.evaluate(() => {
+        const debug = (window as Window & {
+          __siteHeaderNavDiagnostics?: {
+            counters?: Record<string, number>;
+          };
+        }).__siteHeaderNavDiagnostics;
+        return debug?.counters ?? {};
+      });
+
+      expect(firstTapFailures).toBe(0);
+      expect(counters['navigate-retry'] ?? 0).toBe(0);
+      expect(counters.click ?? 0).toBeGreaterThanOrEqual(cycles);
+      expect(counters.schedule ?? 0).toBeGreaterThanOrEqual(cycles);
+      expect(counters['navigate-attempt'] ?? 0).toBeGreaterThanOrEqual(cycles);
+      expect(counters['route-start'] ?? 0).toBeGreaterThanOrEqual(cycles);
+    } finally {
+      await context.close();
+    }
+  });
+
   test('767 keeps real gallery shell and grid-width contract', async ({ page }) => {
     await page.setViewportSize({ width: 767, height: 1024 });
     await page.goto('/gallery');

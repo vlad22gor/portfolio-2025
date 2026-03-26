@@ -225,6 +225,7 @@
   font-weight: 400;
   font-optical-sizing: none;
   font-variation-settings: "opsz" var(--axis-dm-label-large-opsz), "wght" 400;
+  touch-action: manipulation;
   transition: color 0.2s ease;
 }
 
@@ -261,8 +262,10 @@
   color: var(--color-text-default-highlighted);
 }
 
-.header-button:hover {
-  color: var(--color-text-default-highlighted);
+@media (hover: hover) and (pointer: fine) {
+  .header-button:hover {
+    color: var(--color-text-default-highlighted);
+  }
 }
 
 .header-button-wave-container {
