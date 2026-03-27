@@ -9,6 +9,7 @@ import QuotesSection from '../components/QuotesSection.astro';
 import FinalCtaSection from '../components/FinalCtaSection.astro';
 import Button from '../components/Button.astro';
 import AdaptivePhoneArcSlider from '../components/AdaptivePhoneArcSlider.astro';
+import TransparentVideo from '../components/TransparentVideo.astro';
 
 const isDev = import.meta.env.DEV;
 const coinInlineStyle = [
@@ -62,7 +63,20 @@ const coinInlineStyle = [
         </div>
 
         <div class="home-hero-asset home-hero-asset--cube" aria-hidden="true">
-          <img src="/media/home/cube.webp" alt="" loading="lazy" decoding="async" />
+          <TransparentVideo
+            class="home-hero-cube-video"
+            webmSrc="/media/gallery/illustrations/loader-light.webm"
+            movSrc="/media/gallery/illustrations/loader-light.mov"
+            autoplay={false}
+            muted
+            loop
+            playsinline
+            preload="metadata"
+            poster="/media/home/cube.webp"
+            ariaHidden="true"
+            tabindex="-1"
+            data-video-playback="inview"
+          />
         </div>
 
         <div class="home-hero-asset home-hero-asset--ternimal" aria-hidden="true">

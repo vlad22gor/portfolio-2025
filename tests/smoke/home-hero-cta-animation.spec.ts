@@ -19,6 +19,24 @@ const readHomeHeroCtaState = () => {
 };
 
 test.describe('Home hero CTA animation', () => {
+  test('hero cube uses transparent video contract with webm+mov and poster fallback', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 1100 });
+    await page.goto('/', { waitUntil: 'load' });
+
+    const cubeVideo = page.locator('.home-hero-asset--cube video[data-transparent-video="true"]');
+    await expect(cubeVideo).toHaveCount(1);
+    await expect(cubeVideo).toHaveAttribute(
+      'data-transparent-video-webm',
+      '/media/gallery/illustrations/loader-light.webm',
+    );
+    await expect(cubeVideo).toHaveAttribute(
+      'data-transparent-video-hevc',
+      '/media/gallery/illustrations/loader-light.mov',
+    );
+    await expect(cubeVideo).toHaveAttribute('poster', '/media/home/cube.webp');
+    await expect(cubeVideo).toHaveAttribute('data-video-playback', 'inview');
+  });
+
   test('continues hero stagger when CTA is initially inside viewport', async ({ page }) => {
     await page.addInitScript(() => {
       const runtimeWindow = window as typeof window & {

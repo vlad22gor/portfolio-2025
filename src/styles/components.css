@@ -460,6 +460,7 @@
 }
 
 .home-hero-asset img,
+.home-hero-asset video,
 img.home-hero-asset {
   display: block;
   width: 100%;
