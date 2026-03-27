@@ -1,5 +1,17 @@
 # Logs
 
+- 2026-03-27: Устранён двойной запуск `appear` в `/gallery` (desktop + mobile) из-за повторного rebind на `astro:page-load`.
+  Причина: `GalleryRowsSection` при каждом `syncMode()` выполнял деструктивный reset (`clearGalleryStaggerState`) даже когда `root/mode` не менялись; это сбрасывало `data-motion-inview-animated` в `null` и запускало второй stagger через ~200-400ms после первого старта.
+  Файлы: `src/components/GalleryRowsSection.astro`, `tests/smoke/gallery.spec.ts`, `tasks/logs.md`.
+  Что сделано: (1) runtime `GalleryRowsSection` сделан идемпотентным по `(appliedRoot, appliedMode)`; reset/apply выполняется только при смене режима (`desktop|mobile|neutral`) или смене root-документа; (2) при неизменном режиме на `astro:page-load` состояние `data-motion-inview-bound/animated` и inline-style больше не сбрасывается; (3) на `pagehide` добавлен явный сброс internal-state (`appliedRoot/appliedMode`), чтобы новый заход корректно переинициализировался; (4) в `gallery` smoke добавлены два regression-теста: desktop и `390x844` проверяют отсутствие `true -> null` reset у `.gallery-rows` после первого старта и единственный уникальный `startTime` для карточки `flat-index=0`.
+  Проверки: (1) `PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:4321 npx playwright test tests/smoke/gallery.spec.ts -g "/gallery renders webm cards, desktop row-stagger, and critical priority contract|/gallery desktop does not reset root animated state after first appear start|390x844 gallery does not reset root animated state after first appear start" --workers=1` — успешно (`3/3`); (2) `npm run build` — успешно.
+
+- 2026-03-27: Убран hard-reload flicker для non-home `appear` через pre-paint initial-state до bind `InViewMotionRuntime`.
+  Причина: на `/cases` и `/fora` paint-аудит показывал `first-paint/FCP` в финальном состоянии (`opacity: 1`, `transform: none`), а к `DOMContentLoaded` runtime переводил узлы в initial-state (`opacity: 0`, `translateY`), что давало visible->hidden->appear мерцание.
+  Файлы: `src/styles/components.css`, `tests/smoke/inview-prepaint.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) в `components.css` добавлен общий pre-paint anti-flash слой под `html[data-js='true']` и `prefers-reduced-motion: no-preference` только до bind (`:not([data-motion-inview-bound='true'])`); (2) для element-presets (`appear-v1`, `cases-arrow-left/right-v1`) задан initial `opacity/transform`; (3) для stagger-presets pre-arm перенесён на child selectors (`data-motion-stage-item`, `data-motion-stagger-item`, gallery stage selectors, `data-temp-stage-item`) с корректными offset-контрактами `50px/25px`; (4) добавлены side-aware override для `data-motion-stage-side='left|right'`; (5) добавлен smoke `inview-prepaint` с ранним paint-аудитом `/cases` и `/fora` и проверкой, что анимация доходит до финала без регресса.
+  Проверки: (1) `npx playwright test tests/smoke/inview-prepaint.spec.ts tests/smoke/header-appear.spec.ts --workers=1` — успешно (`3/3`); (2) `npm run build` — успешно.
+
 - 2026-03-27: Починен mobile flicker при выходе с `/gallery` (вторая video-card в mock: ранний cover handoff до snapshot).
   Причина: сброс `data-video-frame-ready` только на `astro:before-swap` происходил слишком поздно для transition snapshot (`gallery-content`), поэтому во время выхода появлялся краткий blank до показа cover.
   Файлы: `src/components/ManagedVideoPlaybackRuntime.astro`, `tests/smoke/gallery.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.

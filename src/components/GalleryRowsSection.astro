@@ -137,6 +137,11 @@ flattenedItems.forEach((item, flatIndex) => {
 
     const desktopMedia = window.matchMedia(desktopMediaQuery);
     const mobileMedia = window.matchMedia(galleryMobileMediaQuery);
+    const modeDesktop = 'desktop';
+    const modeMobile = 'mobile';
+    const modeNeutral = 'neutral';
+    let appliedRoot = null;
+    let appliedMode = null;
 
     const clearInViewState = (element) => {
       if (!(element instanceof HTMLElement)) {
@@ -238,6 +243,16 @@ flattenedItems.forEach((item, flatIndex) => {
       applyMobileAllCardsStageMetadata(root);
     };
 
+    const resolveMode = () => {
+      if (desktopMedia.matches) {
+        return modeDesktop;
+      }
+      if (mobileMedia.matches) {
+        return modeMobile;
+      }
+      return modeNeutral;
+    };
+
     const syncMode = () => {
       const root = document.querySelector(rootSelector);
       const rows = Array.from(document.querySelectorAll(stagedRowSelector)).filter(
@@ -247,12 +262,20 @@ flattenedItems.forEach((item, flatIndex) => {
         return;
       }
 
-      if (desktopMedia.matches) {
-        applyDesktopRowStagger(rows, root);
-      } else if (mobileMedia.matches) {
-        applyMobileAllCardsStagger(rows, root);
-      } else {
-        clearGalleryStaggerState(root, rows);
+      const nextMode = resolveMode();
+      const rootChanged = appliedRoot !== root;
+      const modeChanged = appliedMode !== nextMode;
+
+      if (rootChanged || modeChanged) {
+        if (nextMode === modeDesktop) {
+          applyDesktopRowStagger(rows, root);
+        } else if (nextMode === modeMobile) {
+          applyMobileAllCardsStagger(rows, root);
+        } else {
+          clearGalleryStaggerState(root, rows);
+        }
+        appliedRoot = root;
+        appliedMode = nextMode;
       }
       const inViewRuntime = window.__inViewAppearRuntime;
       if (inViewRuntime && typeof inViewRuntime.mount === 'function') {
@@ -275,6 +298,8 @@ flattenedItems.forEach((item, flatIndex) => {
         return;
       }
       clearGalleryStaggerState(root, rows);
+      appliedRoot = null;
+      appliedMode = null;
     };
 
     const bindMediaQueryChange = (media, handler) => {

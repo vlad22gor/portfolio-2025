@@ -149,6 +149,49 @@
     opacity: 0;
     transform: translate3d(0px, -50px, 0px);
   }
+
+  /* Pre-paint anti-flash for appear presets before InView runtime binds. */
+  html[data-js='true'] [data-motion-inview='appear-v1']:not([data-motion-inview-bound='true']) {
+    opacity: 0;
+    transform: translate3d(0px, 50px, 0px);
+  }
+
+  html[data-js='true'] [data-motion-inview='cases-arrow-left-v1']:not([data-motion-inview-bound='true']) {
+    opacity: 0;
+    transform: translate3d(0px, 25px, 0px) scale(0.5);
+  }
+
+  html[data-js='true'] [data-motion-inview='cases-arrow-right-v1']:not([data-motion-inview-bound='true']) {
+    opacity: 0;
+    transform: translate3d(0px, -25px, 0px) scale(0.5);
+  }
+
+  html[data-js='true'] [data-motion-inview='appear-stagger-v1']:not([data-motion-inview-bound='true']) [data-motion-stage-item],
+  html[data-js='true'] [data-motion-inview='appear-stagger-dynamic-v1']:not([data-motion-inview-bound='true']) [data-motion-stage-item],
+  html[data-js='true'] [data-motion-inview='temporary-adaptive-stagger-v1']:not([data-motion-inview-bound='true']) [data-temp-stage-item],
+  html[data-js='true'] [data-motion-inview='gallery-mobile-first-two-stagger-v1']:not([data-motion-inview-bound='true']) [data-gallery-mobile-first-two-stage-item],
+  html[data-js='true'] [data-motion-inview='gallery-mobile-all-cards-stagger-v1']:not([data-motion-inview-bound='true']) [data-gallery-mobile-stage-item] {
+    opacity: 0;
+    transform: translate3d(0px, 50px, 0px);
+  }
+
+  html[data-js='true'] [data-motion-inview='gallery-first-two-rows-stagger-v1']:not([data-motion-inview-bound='true']) [data-gallery-first-two-stage-item],
+  html[data-js='true'] [data-motion-inview='gallery-row-stagger-v1']:not([data-motion-inview-bound='true']) [data-motion-stagger-item],
+  html[data-js='true'] [data-motion-inview='process-tickets-row-stagger-v1']:not([data-motion-inview-bound='true']) [data-motion-stagger-item],
+  html[data-js='true'] [data-motion-inview='process-tickets-row-stagger-dynamic-v1']:not([data-motion-inview-bound='true']) [data-motion-stagger-item] {
+    opacity: 0;
+    transform: translate3d(0px, 25px, 0px);
+  }
+
+  html[data-js='true'] [data-motion-inview='appear-stagger-v1']:not([data-motion-inview-bound='true']) [data-motion-stage-item][data-motion-stage-side='left'],
+  html[data-js='true'] [data-motion-inview='appear-stagger-dynamic-v1']:not([data-motion-inview-bound='true']) [data-motion-stage-item][data-motion-stage-side='left'] {
+    transform: translate3d(25px, 0px, 0px) scale(0.9);
+  }
+
+  html[data-js='true'] [data-motion-inview='appear-stagger-v1']:not([data-motion-inview-bound='true']) [data-motion-stage-item][data-motion-stage-side='right'],
+  html[data-js='true'] [data-motion-inview='appear-stagger-dynamic-v1']:not([data-motion-inview-bound='true']) [data-motion-stage-item][data-motion-stage-side='right'] {
+    transform: translate3d(-25px, 0px, 0px) scale(0.9);
+  }
 }
 
 .site-nav {

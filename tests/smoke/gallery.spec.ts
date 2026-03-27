@@ -1,4 +1,4 @@
-import { devices, expect, test } from '@playwright/test';
+import { devices, expect, test, type Page } from '@playwright/test';
 import { resolveGalleryMobileExpectations } from './helpers/perimeter-contracts';
 
 const floatingThemeButtonSelector = '.floating-theme-button[data-floating-theme-button]';
@@ -91,6 +91,110 @@ const readGalleryPlaybackState = async (page: import('@playwright/test').Page) =
       transparentInViewReadyStates,
     };
   });
+
+type GalleryAppearRebindEvent = {
+  label: string;
+  t: number;
+  value: string | null;
+};
+
+type GalleryAppearRebindAudit = {
+  rootMotion: string | null;
+  animatedEvents: GalleryAppearRebindEvent[];
+  uniqueStartTimes: number[];
+};
+
+const installGalleryAppearRebindAudit = async (page: Page, storageKey: string) => {
+  await page.addInitScript(
+    ({ key }) => {
+      const store = window as typeof window & Record<string, unknown>;
+      store[key] = {
+        rootMotion: null,
+        animatedEvents: [],
+        uniqueStartTimes: [],
+      };
+
+      const attach = () => {
+        const root = document.querySelector('.gallery-rows');
+        const firstCard = document.querySelector('.gallery-card-container[data-gallery-flat-index="0"]');
+        if (!(root instanceof HTMLElement) || !(firstCard instanceof HTMLElement)) {
+          window.requestAnimationFrame(attach);
+          return;
+        }
+
+        const audit = store[key] as GalleryAppearRebindAudit;
+        const startTimes = new Set<number>();
+        const recordAnimatedEvent = (label: string) => {
+          audit.animatedEvents.push({
+            label,
+            t: performance.now(),
+            value: root.getAttribute('data-motion-inview-animated'),
+          });
+        };
+        const captureAnimationStarts = () => {
+          firstCard.getAnimations().forEach((animation) => {
+            const { startTime } = animation;
+            if (typeof startTime === 'number' && Number.isFinite(startTime)) {
+              startTimes.add(Number(startTime.toFixed(3)));
+            }
+          });
+          audit.uniqueStartTimes = Array.from(startTimes).sort((left, right) => left - right);
+        };
+
+        audit.rootMotion = root.getAttribute('data-motion-inview');
+        recordAnimatedEvent('initial');
+        captureAnimationStarts();
+
+        const observer = new MutationObserver(() => {
+          recordAnimatedEvent('mutation');
+          captureAnimationStarts();
+        });
+        observer.observe(root, {
+          attributes: true,
+          attributeFilter: ['data-motion-inview-animated'],
+        });
+
+        document.addEventListener('astro:page-load', () => {
+          recordAnimatedEvent('astro:page-load');
+          captureAnimationStarts();
+        });
+
+        const startedAt = performance.now();
+        const tick = () => {
+          captureAnimationStarts();
+          if (performance.now() - startedAt <= 1800) {
+            window.requestAnimationFrame(tick);
+          }
+        };
+        tick();
+      };
+
+      document.addEventListener('DOMContentLoaded', attach);
+    },
+    { key: storageKey },
+  );
+};
+
+const readGalleryAppearRebindAudit = async (page: Page, storageKey: string): Promise<GalleryAppearRebindAudit> =>
+  page.evaluate((key) => {
+    const store = window as typeof window & Record<string, unknown>;
+    const audit = store[key];
+    if (!audit || typeof audit !== 'object') {
+      return {
+        rootMotion: null,
+        animatedEvents: [],
+        uniqueStartTimes: [],
+      };
+    }
+    return audit as GalleryAppearRebindAudit;
+  }, storageKey);
+
+const assertNoAnimatedResetAfterStart = (events: GalleryAppearRebindEvent[]) => {
+  const firstTrueIndex = events.findIndex((event) => event.value === 'true');
+  expect(firstTrueIndex).toBeGreaterThanOrEqual(0);
+  const hasNullAfterStart = events.slice(firstTrueIndex + 1).some((event) => event.value === null);
+  expect(hasNullAfterStart).toBe(false);
+};
 
 test.describe('Gallery smoke', () => {
   test.use({ viewport: { width: 1440, height: 1100 } });
@@ -720,6 +824,35 @@ test.describe('Gallery smoke', () => {
     expect(compactApertureAlignment).not.toBeNull();
     expect(compactApertureAlignment!.withinX).toBe(true);
     expect(compactApertureAlignment!.withinY).toBe(true);
+  });
+
+  test('/gallery desktop does not reset root animated state after first appear start', async ({ page }) => {
+    const storageKey = '__galleryAppearRebindDesktopAudit';
+    await installGalleryAppearRebindAudit(page, storageKey);
+
+    await page.goto('/gallery');
+    await waitForGalleryCriticalReady(page);
+    await page.waitForTimeout(1300);
+
+    const audit = await readGalleryAppearRebindAudit(page, storageKey);
+    expect(audit.rootMotion).toBe('gallery-first-two-rows-stagger-v1');
+    assertNoAnimatedResetAfterStart(audit.animatedEvents);
+    expect(audit.uniqueStartTimes.length).toBe(1);
+  });
+
+  test('390x844 gallery does not reset root animated state after first appear start', async ({ page }) => {
+    const storageKey = '__galleryAppearRebindMobileAudit';
+    await installGalleryAppearRebindAudit(page, storageKey);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/gallery');
+    await waitForGalleryCriticalReady(page);
+    await page.waitForTimeout(1300);
+
+    const audit = await readGalleryAppearRebindAudit(page, storageKey);
+    expect(audit.rootMotion).toBe('gallery-mobile-all-cards-stagger-v1');
+    assertNoAnimatedResetAfterStart(audit.animatedEvents);
+    expect(audit.uniqueStartTimes.length).toBe(1);
   });
 
   test('/gallery preloads critical media and keeps critical mockups ready on repeat entry', async ({ page }) => {
