@@ -214,6 +214,7 @@ const styleVars = [
   data-device-screen-calibration={screenCalibrationMarker}
   data-device-mobile-prime={mobilePrime ? 'true' : undefined}
   data-video-frame-ready={screenKind === 'video' ? 'false' : undefined}
+  data-video-visual-state={screenKind === 'video' ? 'cover' : undefined}
   data-ready="false"
 >
   <div class="device-mockup__screen" data-layer="screen">
@@ -323,25 +324,26 @@ const styleVars = [
     width: 100%;
     height: 100%;
     object-fit: cover;
-    z-index: 0;
+    z-index: 1;
     transform: none;
+    opacity: 0;
+    transition: opacity 0.16s ease;
   }
 
   .device-mockup__video-poster {
     position: absolute;
     inset: 0;
-    z-index: 1;
+    z-index: 0;
     display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
     pointer-events: none;
     opacity: 1;
-    transition: opacity 0.16s ease;
   }
 
-  .device-mockup[data-video-frame-ready='true'] .device-mockup__video-poster {
-    opacity: 0;
+  .device-mockup[data-video-visual-state='video'] .device-mockup__media--video {
+    opacity: 1;
   }
 
   .device-mockup__shell {
@@ -362,6 +364,10 @@ const styleVars = [
     }
 
     .device-mockup__video-poster {
+      transition: none;
+    }
+
+    .device-mockup__media--video {
       transition: none;
     }
   }
@@ -486,6 +492,7 @@ const styleVars = [
     const mockupSelector = '.device-mockup[data-device-mockup]';
     const initAttr = 'data-device-mockup-ready-init';
     const frameReadyAttr = 'data-video-frame-ready';
+    const visualStateAttr = 'data-video-visual-state';
     const fallbackDelayMs = 1200;
 
     const markReady = (mockup) => {
@@ -506,6 +513,7 @@ const styleVars = [
         return;
       }
       mockup.setAttribute(frameReadyAttr, 'false');
+      mockup.setAttribute(visualStateAttr, 'cover');
     };
 
     const markVideoFrameReady = (mockup) => {
@@ -516,9 +524,11 @@ const styleVars = [
         return;
       }
       if (mockup.getAttribute(frameReadyAttr) === 'true') {
+        mockup.setAttribute(visualStateAttr, 'video');
         return;
       }
       mockup.setAttribute(frameReadyAttr, 'true');
+      mockup.setAttribute(visualStateAttr, 'video');
     };
 
     const initMockup = (mockup) => {

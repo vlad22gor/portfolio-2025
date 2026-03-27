@@ -1343,19 +1343,37 @@ test.describe('Gallery mobile smoke', () => {
   test('390x844 gallery -> home preparation/swap keep cover handoff for second video card', async ({ page }) => {
     await page.addInitScript(() => {
       const frameReadyBeforePreparationKey = '__gallery_before_preparation_frame_ready';
+      const visualStateBeforePreparationKey = '__gallery_before_preparation_visual_state';
       const frameReadyBeforeSwapKey = '__gallery_before_swap_frame_ready';
-      const readSecondCardMockupFrameReady = () =>
-        document
-          .querySelector('.gallery-card-container[data-gallery-flat-index="1"] .device-mockup[data-device-mockup]')
-          ?.getAttribute('data-video-frame-ready') ?? 'null';
+      const visualStateBeforeSwapKey = '__gallery_before_swap_visual_state';
+      const videoSrcBeforeSwapKey = '__gallery_before_swap_video_src';
+      const videoPausedBeforeSwapKey = '__gallery_before_swap_video_paused';
+      const readSecondCardSnapshot = () => {
+        const mockup = document.querySelector(
+          '.gallery-card-container[data-gallery-flat-index="1"] .device-mockup[data-device-mockup]',
+        );
+        const video = mockup?.querySelector('video.device-mockup__media--video');
+        return {
+          frameReady: mockup?.getAttribute('data-video-frame-ready') ?? 'null',
+          visualState: mockup?.getAttribute('data-video-visual-state') ?? 'null',
+          videoSrc: video instanceof HTMLVideoElement ? video.getAttribute('src') ?? '' : '',
+          videoPaused: video instanceof HTMLVideoElement ? String(video.paused) : 'null',
+        };
+      };
       const bind = () => {
         sessionStorage.removeItem(frameReadyBeforePreparationKey);
+        sessionStorage.removeItem(visualStateBeforePreparationKey);
         sessionStorage.removeItem(frameReadyBeforeSwapKey);
+        sessionStorage.removeItem(visualStateBeforeSwapKey);
+        sessionStorage.removeItem(videoSrcBeforeSwapKey);
+        sessionStorage.removeItem(videoPausedBeforeSwapKey);
         document.addEventListener(
           'astro:before-preparation',
           () => {
             queueMicrotask(() => {
-              sessionStorage.setItem(frameReadyBeforePreparationKey, readSecondCardMockupFrameReady());
+              const snapshot = readSecondCardSnapshot();
+              sessionStorage.setItem(frameReadyBeforePreparationKey, snapshot.frameReady);
+              sessionStorage.setItem(visualStateBeforePreparationKey, snapshot.visualState);
             });
           },
           { once: true },
@@ -1363,7 +1381,11 @@ test.describe('Gallery mobile smoke', () => {
         document.addEventListener(
           'astro:before-swap',
           () => {
-            sessionStorage.setItem(frameReadyBeforeSwapKey, readSecondCardMockupFrameReady());
+            const snapshot = readSecondCardSnapshot();
+            sessionStorage.setItem(frameReadyBeforeSwapKey, snapshot.frameReady);
+            sessionStorage.setItem(visualStateBeforeSwapKey, snapshot.visualState);
+            sessionStorage.setItem(videoSrcBeforeSwapKey, snapshot.videoSrc);
+            sessionStorage.setItem(videoPausedBeforeSwapKey, snapshot.videoPaused);
           },
           { once: true },
         );
@@ -1378,23 +1400,36 @@ test.describe('Gallery mobile smoke', () => {
     await expect
       .poll(() =>
         page.evaluate(
-          () =>
-            document
-              .querySelector('.gallery-card-container[data-gallery-flat-index="1"] .device-mockup[data-device-mockup]')
-              ?.getAttribute('data-video-frame-ready') ?? null,
+          () => {
+            const mockup = document.querySelector(
+              '.gallery-card-container[data-gallery-flat-index="1"] .device-mockup[data-device-mockup]',
+            );
+            return {
+              frameReady: mockup?.getAttribute('data-video-frame-ready') ?? null,
+              visualState: mockup?.getAttribute('data-video-visual-state') ?? null,
+            };
+          },
         ),
       )
-      .toBe('true');
+      .toEqual({ frameReady: 'true', visualState: 'video' });
 
     await page.click('.site-desktop-shell a[data-nav-id="home"]');
     await page.waitForURL('**/');
 
     const swapSnapshot = await page.evaluate(() => ({
       frameReadyBeforePreparation: sessionStorage.getItem('__gallery_before_preparation_frame_ready'),
+      visualStateBeforePreparation: sessionStorage.getItem('__gallery_before_preparation_visual_state'),
       frameReadyBeforeSwap: sessionStorage.getItem('__gallery_before_swap_frame_ready'),
+      visualStateBeforeSwap: sessionStorage.getItem('__gallery_before_swap_visual_state'),
+      videoSrcBeforeSwap: sessionStorage.getItem('__gallery_before_swap_video_src'),
+      videoPausedBeforeSwap: sessionStorage.getItem('__gallery_before_swap_video_paused'),
     }));
-    expect(swapSnapshot.frameReadyBeforePreparation).not.toBeNull();
+    expect(swapSnapshot.frameReadyBeforePreparation).toBe('false');
+    expect(swapSnapshot.visualStateBeforePreparation).toBe('cover');
     expect(swapSnapshot.frameReadyBeforeSwap).toBe('false');
+    expect(swapSnapshot.visualStateBeforeSwap).toBe('cover');
+    expect((swapSnapshot.videoSrcBeforeSwap ?? '').length).toBeGreaterThan(0);
+    expect(swapSnapshot.videoPausedBeforeSwap).toBe('true');
   });
 
   test('390x844 final cta morph matches home-consistent initial/final title states on gallery', async ({ page }) => {
