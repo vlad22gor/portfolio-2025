@@ -629,6 +629,269 @@ test.describe('Case details smoke', () => {
       .toBeNull();
   });
 
+  test('case card click from home and cases uses sequential fade->navigate transition', async ({ page }) => {
+    test.setTimeout(90_000);
+
+    const runCaseCardTransitionScenario = async (fromPath: '/' | '/cases') => {
+      const cardSelector = ".cases-cards-list .case-card[href='/fora']";
+      await page.goto(fromPath);
+      const card = page.locator(cardSelector);
+      await expect(card).toBeVisible();
+
+      const didScrollToCard = await page.evaluate((selector) => {
+        const target = document.querySelector(selector);
+        if (!(target instanceof HTMLElement)) {
+          return false;
+        }
+        const targetTop = Math.max(0, Math.round(target.getBoundingClientRect().top + window.scrollY - 120));
+        window.scrollTo({ top: targetTop, behavior: 'instant' });
+        return true;
+      }, cardSelector);
+      expect(didScrollToCard).toBe(true);
+
+      const scrollBeforeClick = await page.evaluate(() => window.scrollY);
+      expect(scrollBeforeClick).toBeGreaterThan(0);
+
+      await page.evaluate(() => {
+        const runtimeWindow = window as Window & {
+          __caseCardTransitionAudit?: {
+            startedAt: number;
+            sawTransitionWindow: boolean;
+            sawEnteringWindow: boolean;
+            animatedDuringTransition: boolean;
+            mainVisibleDuringEntering: boolean;
+            introAnimatedWhileEntering: boolean;
+            reachedIntroAnimated: boolean;
+            beforeSwapSeen: boolean;
+            beforeSwapRouteCaseDetail: string | null;
+            beforeSwapEnteringFlag: string | null;
+            beforeSwapMarkerRaw: string | null;
+            pageLoadSeen: boolean;
+            pageLoadPath: string | null;
+            pageLoadEnteringFlag: string | null;
+          };
+        };
+
+        runtimeWindow.__caseCardTransitionAudit = {
+          startedAt: performance.now(),
+          sawTransitionWindow: false,
+          sawEnteringWindow: false,
+          animatedDuringTransition: false,
+          mainVisibleDuringEntering: false,
+          introAnimatedWhileEntering: false,
+          reachedIntroAnimated: false,
+          beforeSwapSeen: false,
+          beforeSwapRouteCaseDetail: null,
+          beforeSwapEnteringFlag: null,
+          beforeSwapMarkerRaw: null,
+          pageLoadSeen: false,
+          pageLoadPath: null,
+          pageLoadEnteringFlag: null,
+        };
+        const onBeforeSwap = (event: Event & { newDocument?: Document }) => {
+          const audit = runtimeWindow.__caseCardTransitionAudit;
+          if (!audit) {
+            return;
+          }
+          audit.beforeSwapSeen = true;
+          const nextDocument = event.newDocument;
+          const nextBody = nextDocument?.body;
+          audit.beforeSwapRouteCaseDetail = nextBody?.dataset?.routeCaseDetail ?? null;
+          audit.beforeSwapMarkerRaw = window.sessionStorage.getItem('__case-switcher-intro-sync');
+          const nextMain = nextDocument?.querySelector('main#content.page-shell--case-detail');
+          audit.beforeSwapEnteringFlag = nextMain instanceof HTMLElement ? nextMain.getAttribute('data-case-switcher-entering') : null;
+          document.removeEventListener('astro:before-swap', onBeforeSwap);
+        };
+        const onPageLoad = () => {
+          const audit = runtimeWindow.__caseCardTransitionAudit;
+          if (!audit) {
+            return;
+          }
+          audit.pageLoadSeen = true;
+          audit.pageLoadPath = window.location.pathname;
+          const incomingMain = document.querySelector('main#content.page-shell--case-detail');
+          audit.pageLoadEnteringFlag = incomingMain instanceof HTMLElement
+            ? incomingMain.getAttribute('data-case-switcher-entering')
+            : null;
+          document.removeEventListener('astro:page-load', onPageLoad);
+        };
+        document.addEventListener('astro:before-swap', onBeforeSwap);
+        document.addEventListener('astro:page-load', onPageLoad);
+
+        const maxAuditDurationMs = 2200;
+        const tick = () => {
+          const audit = runtimeWindow.__caseCardTransitionAudit;
+          if (!audit) {
+            return;
+          }
+          const elapsed = performance.now() - audit.startedAt;
+          const transitionActive =
+            document.documentElement.hasAttribute('data-astro-transition') && window.location.pathname === '/fora';
+          const intro = document.querySelector('.fora-intro-section');
+          const introAnimated = intro instanceof HTMLElement && intro.getAttribute('data-motion-inview-animated') === 'true';
+          const main = document.querySelector('main#content');
+          const mainOpacity = main instanceof HTMLElement ? Number.parseFloat(getComputedStyle(main).opacity) : Number.NaN;
+          const enteringActive =
+            window.location.pathname === '/fora' &&
+            main instanceof HTMLElement &&
+            main.getAttribute('data-case-switcher-entering') === 'true';
+          if (transitionActive) {
+            audit.sawTransitionWindow = true;
+            if (introAnimated) {
+              audit.animatedDuringTransition = true;
+            }
+          }
+          if (enteringActive) {
+            audit.sawEnteringWindow = true;
+            if (Number.isFinite(mainOpacity) && mainOpacity >= 0.99) {
+              audit.mainVisibleDuringEntering = true;
+            }
+            if (introAnimated) {
+              audit.introAnimatedWhileEntering = true;
+            }
+          }
+          if (window.location.pathname === '/fora' && introAnimated) {
+            audit.reachedIntroAnimated = true;
+          }
+          if (elapsed < maxAuditDurationMs && !audit.reachedIntroAnimated) {
+            window.requestAnimationFrame(tick);
+          }
+        };
+        window.requestAnimationFrame(tick);
+      });
+
+      await card.click({ noWaitAfter: true });
+
+      await expect
+        .poll(
+          async () =>
+            page.evaluate(() => {
+              const main = document.querySelector('main#content');
+              const footer = document.querySelector('footer.site-footer');
+              const path = window.location.pathname;
+              const scrollY = window.scrollY;
+              if (path === '/fora') {
+                return true;
+              }
+              if (!(main instanceof HTMLElement) || !(footer instanceof HTMLElement)) {
+                return false;
+              }
+              const leavingState = main.getAttribute('data-case-switcher-leaving');
+              const opacity = Number.parseFloat(getComputedStyle(main).opacity);
+              const footerOpacity = Number.parseFloat(getComputedStyle(footer).opacity);
+              return (
+                leavingState === 'true' &&
+                Number.isFinite(opacity) &&
+                opacity < 1 &&
+                Number.isFinite(footerOpacity) &&
+                footerOpacity < 1 &&
+                scrollY > 0
+              );
+            }),
+          {
+            timeout: 2500,
+            message: `Case card click from ${fromPath} should enter transition window or land on /fora`,
+          },
+        )
+        .toBe(true);
+
+      const preNavigationState = await page.evaluate(() => ({
+        path: window.location.pathname,
+        leavingState: document.querySelector('main#content')?.getAttribute('data-case-switcher-leaving') ?? null,
+        mainOpacity: Number.parseFloat(getComputedStyle(document.querySelector('main#content')).opacity),
+        footerOpacity: Number.parseFloat(getComputedStyle(document.querySelector('footer.site-footer')).opacity),
+        scrollY: window.scrollY,
+      }));
+
+      expect([fromPath, '/fora']).toContain(preNavigationState.path);
+      if (preNavigationState.path !== '/fora') {
+        expect(preNavigationState.leavingState).toBe('true');
+        expect(preNavigationState.mainOpacity).toBeLessThan(1);
+        expect(preNavigationState.footerOpacity).toBeLessThan(1);
+        expect(preNavigationState.scrollY).toBeGreaterThan(0);
+      }
+
+      await expect(page).toHaveURL(/\/fora\/?$/);
+      await expect(page.locator('.fora-intro-section')).toBeVisible();
+
+      const transitionWindowCheck = await page.evaluate(() => {
+        const runtimeWindow = window as Window & {
+          __caseCardTransitionAudit?: {
+            startedAt: number;
+            sawTransitionWindow: boolean;
+            sawEnteringWindow: boolean;
+            animatedDuringTransition: boolean;
+            mainVisibleDuringEntering: boolean;
+            introAnimatedWhileEntering: boolean;
+            reachedIntroAnimated: boolean;
+            beforeSwapSeen: boolean;
+            beforeSwapRouteCaseDetail: string | null;
+            beforeSwapEnteringFlag: string | null;
+            beforeSwapMarkerRaw: string | null;
+            pageLoadSeen: boolean;
+            pageLoadPath: string | null;
+            pageLoadEnteringFlag: string | null;
+          };
+        };
+        return runtimeWindow.__caseCardTransitionAudit ?? null;
+      });
+
+      expect(transitionWindowCheck?.beforeSwapSeen).toBe(true);
+      expect(transitionWindowCheck?.beforeSwapRouteCaseDetail).toBe('true');
+      expect(transitionWindowCheck?.beforeSwapMarkerRaw).not.toBeNull();
+      expect(transitionWindowCheck?.pageLoadSeen).toBe(true);
+      expect(transitionWindowCheck?.pageLoadPath).toBe('/fora');
+      expect(transitionWindowCheck?.pageLoadEnteringFlag).toBe('true');
+      if (transitionWindowCheck?.sawTransitionWindow) {
+        expect(transitionWindowCheck.animatedDuringTransition).toBe(false);
+      }
+      if (transitionWindowCheck?.sawEnteringWindow) {
+        expect(transitionWindowCheck.mainVisibleDuringEntering).toBe(false);
+        expect(transitionWindowCheck.introAnimatedWhileEntering).toBe(false);
+      }
+
+      await expect
+        .poll(
+          async () =>
+            page.evaluate(
+              () =>
+                document.querySelector('main#content.page-shell--case-detail')?.getAttribute('data-case-switcher-entering') ??
+                null,
+            ),
+          {
+            timeout: 2500,
+            message: `Entering gate should clear after case-card transition from ${fromPath}`,
+          },
+        )
+        .toBeNull();
+
+      await expect
+        .poll(
+          async () =>
+            page.evaluate(() => document.querySelector('.fora-intro-section')?.getAttribute('data-motion-inview-animated')),
+          {
+            timeout: 2500,
+            message: `Intro stagger should start only after route transition from ${fromPath}`,
+          },
+        )
+        .toBe('true');
+
+      await expect
+        .poll(async () => page.evaluate(() => window.scrollY), {
+          timeout: 2500,
+          message: `After case-card transition from ${fromPath}, scroll should reset to top`,
+        })
+        .toBe(0);
+
+      await expect
+        .poll(async () => page.evaluate(() => window.sessionStorage.getItem('__case-switcher-intro-sync')))
+        .toBeNull();
+    };
+
+    await runCaseCardTransitionScenario('/');
+    await runCaseCardTransitionScenario('/cases');
+  });
+
   test('/fora video mockup covers screen bounds without seams', async ({ page }) => {
     await page.goto('/fora');
 

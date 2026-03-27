@@ -100,12 +100,15 @@ const arrowAssetPath =
 </a>
 
 <script>
+  import { navigate } from 'astro:transitions/client';
   import { animate } from 'motion';
   import { installThemeToggleSoundRuntime, playButtonClickSound } from '../lib/sound/engine';
   import {
+    CASE_SWITCHER_INTRO_SYNC_MARKER_KEY,
     createLifecycle,
     getOrCreateWindowRuntime,
     getWindowRuntime,
+    onAstroBeforeSwap,
     onAstroPageLoad,
     readDataEnum,
     readDataNumber,
@@ -135,6 +138,197 @@ const arrowAssetPath =
     const pressScaleTarget = 0.95;
     const supportsHoverPointer = () => window.matchMedia('(pointer: fine)').matches;
     const scaleControls = new WeakMap();
+    const leavingMainAttribute = 'data-case-switcher-leaving';
+    const introSyncMarkerKey = CASE_SWITCHER_INTRO_SYNC_MARKER_KEY;
+    const preFadeDurationMs = 180;
+    const preFadeFallbackDelayMs = 420;
+    const fallbackCleanupMs = 3000;
+    const introSyncMarkerMaxAgeMs = 5000;
+    let preFadeFallbackTimeoutId = null;
+    let fallbackTimeoutId = null;
+    let navigationLocked = false;
+
+    const clearTimers = () => {
+      if (preFadeFallbackTimeoutId != null) {
+        lifecycle.clearTimeout(preFadeFallbackTimeoutId);
+        preFadeFallbackTimeoutId = null;
+      }
+      if (fallbackTimeoutId != null) {
+        lifecycle.clearTimeout(fallbackTimeoutId);
+        fallbackTimeoutId = null;
+      }
+    };
+
+    const clearLeaveStateFromMain = () => {
+      document.querySelectorAll(`main#content[${leavingMainAttribute}]`).forEach((node) => {
+        if (node instanceof HTMLElement) {
+          node.removeAttribute(leavingMainAttribute);
+        }
+      });
+    };
+
+    const clearLeavingState = () => {
+      clearTimers();
+      navigationLocked = false;
+      clearLeaveStateFromMain();
+    };
+
+    const setIntroSyncMarker = () => {
+      try {
+        window.sessionStorage.setItem(introSyncMarkerKey, String(Date.now()));
+      } catch {
+        // Ignore quota/security errors for private mode.
+      }
+    };
+
+    const hasFreshIntroSyncMarker = () => {
+      try {
+        const raw = window.sessionStorage.getItem(introSyncMarkerKey);
+        if (!raw) {
+          return false;
+        }
+        const parsed = Number.parseInt(raw, 10);
+        if (!Number.isFinite(parsed)) {
+          return false;
+        }
+        return Date.now() - parsed <= introSyncMarkerMaxAgeMs;
+      } catch {
+        return false;
+      }
+    };
+
+    const markIncomingCaseDetailAsEntering = (event) => {
+      const nextDocument = event?.newDocument;
+      if (!nextDocument || typeof nextDocument !== 'object') {
+        return;
+      }
+      const nextBody = nextDocument.body;
+      if (!nextBody || typeof nextBody !== 'object') {
+        return;
+      }
+      if (nextBody.dataset.routeCaseDetail !== 'true') {
+        return;
+      }
+      if (!hasFreshIntroSyncMarker()) {
+        return;
+      }
+      const nextMain = nextDocument.querySelector('main#content.page-shell--case-detail');
+      if (nextMain instanceof HTMLElement) {
+        nextMain.setAttribute('data-case-switcher-entering', 'true');
+      }
+    };
+
+    const canInterceptClick = (card, event) => {
+      if (!card?.href) {
+        return false;
+      }
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
+        return false;
+      }
+      if (card.hasAttribute('download')) {
+        return false;
+      }
+      if (card.target && card.target !== '_self') {
+        return false;
+      }
+
+      let targetUrl;
+      try {
+        targetUrl = new URL(card.href, window.location.href);
+      } catch {
+        return false;
+      }
+
+      if (targetUrl.origin !== window.location.origin) {
+        return false;
+      }
+      if (targetUrl.href === window.location.href) {
+        return false;
+      }
+
+      return true;
+    };
+
+    const navigateToCardTarget = (card) => {
+      if (!card?.href) {
+        return;
+      }
+      const history = readDataEnum(card, 'astroHistory', ['auto', 'replace'], 'auto');
+      navigate(card.href, {
+        history,
+        sourceElement: card,
+      });
+    };
+
+    const startNavigationWithPreFade = (card) => {
+      if (navigationLocked) {
+        return;
+      }
+
+      if (prefersReducedMotion.matches) {
+        setIntroSyncMarker();
+        navigateToCardTarget(card);
+        return;
+      }
+
+      const main = document.querySelector('main#content');
+      if (!(main instanceof HTMLElement)) {
+        setIntroSyncMarker();
+        navigateToCardTarget(card);
+        return;
+      }
+
+      navigationLocked = true;
+      let settled = false;
+
+      const cleanupTransitionListeners = () => {
+        main.removeEventListener('transitionend', onTransitionEnd);
+        main.removeEventListener('transitioncancel', onTransitionCancel);
+      };
+
+      const finalizeNavigation = () => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        clearTimers();
+        cleanupTransitionListeners();
+        setIntroSyncMarker();
+        navigateToCardTarget(card);
+      };
+
+      const onTransitionEnd = (event) => {
+        if (!(event.target instanceof HTMLElement) || event.target !== main) {
+          return;
+        }
+        if (event.propertyName !== 'opacity') {
+          return;
+        }
+        finalizeNavigation();
+      };
+
+      const onTransitionCancel = (event) => {
+        if (!(event.target instanceof HTMLElement) || event.target !== main) {
+          return;
+        }
+        if (event.propertyName !== 'opacity') {
+          return;
+        }
+        finalizeNavigation();
+      };
+
+      main.addEventListener('transitionend', onTransitionEnd);
+      main.addEventListener('transitioncancel', onTransitionCancel);
+      main.setAttribute(leavingMainAttribute, 'true');
+
+      preFadeFallbackTimeoutId = lifecycle.setTimeout(
+        finalizeNavigation,
+        preFadeDurationMs + preFadeFallbackDelayMs,
+      );
+      fallbackTimeoutId = lifecycle.setTimeout(() => {
+        clearLeavingState();
+      }, fallbackCleanupMs);
+    };
 
     const setTransform = (asset, x, y, scale) => {
       asset.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
@@ -352,6 +546,7 @@ const arrowAssetPath =
 
       runtime.cards.add(card);
       runtime.states.set(card, state);
+      card.dataset.astroReload = '';
       setScale(card, 1);
       applyAssetDelays(state.assets);
       applyEffectiveAssetPositions(card, state);
@@ -427,6 +622,11 @@ const arrowAssetPath =
           return;
         }
         void playButtonClickSound();
+        if (!canInterceptClick(card, event)) {
+          return;
+        }
+        event.preventDefault();
+        startNavigationWithPreFade(card);
       };
 
       if (supportsHoverPointer()) {
@@ -436,7 +636,7 @@ const arrowAssetPath =
       card.addEventListener('pointerdown', onPointerDown);
       card.addEventListener('pointerup', onPointerUp);
       card.addEventListener('pointercancel', onPointerCancel);
-      card.addEventListener('click', onClick);
+      card.addEventListener('click', onClick, { capture: true });
       card.addEventListener('focusin', onFocusIn);
       card.addEventListener('focusout', onFocusOut);
       card.addEventListener('keydown', onKeyDown);
@@ -449,7 +649,7 @@ const arrowAssetPath =
         card.removeEventListener('pointerdown', onPointerDown);
         card.removeEventListener('pointerup', onPointerUp);
         card.removeEventListener('pointercancel', onPointerCancel);
-        card.removeEventListener('click', onClick);
+        card.removeEventListener('click', onClick, true);
         card.removeEventListener('focusin', onFocusIn);
         card.removeEventListener('focusout', onFocusOut);
         card.removeEventListener('keydown', onKeyDown);
@@ -481,6 +681,7 @@ const arrowAssetPath =
     };
 
     runtime.mountNewCards = () => {
+      clearLeavingState();
       cleanupDisconnectedCards();
       document.querySelectorAll('[data-case-card]').forEach((card) => {
         mountCard(card);
@@ -500,11 +701,14 @@ const arrowAssetPath =
     };
 
     lifecycle.addCleanup(onAstroPageLoad(runtime.mountNewCards));
+    lifecycle.addCleanup(onAstroBeforeSwap(markIncomingCaseDetailAsEntering));
     lifecycle.on(window, 'pagehide', resetActiveStates);
+    lifecycle.on(window, 'pagehide', clearLeavingState);
 
     const runtimeApi = {
       mountNewCards: runtime.mountNewCards,
       destroy() {
+        clearLeavingState();
         for (const card of Array.from(runtime.cards)) {
           unmountCard(card);
         }
