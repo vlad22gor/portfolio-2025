@@ -18,6 +18,7 @@ interface Props {
   hoverMorph?: boolean;
   hoverMorphPreset?: 'default' | 'strong';
   hoverMorphDesktopOnly?: boolean;
+  hoverMorphFocusMode?: 'pointer-and-focus' | 'pointer-only';
   hoverWaveAmplitudeDelta?: number;
   hoverWaveTensionDelta?: number;
   /** @deprecated kept for backward compatibility; ignored by single-type param animation */
@@ -57,6 +58,7 @@ const {
   hoverMorph = false,
   hoverMorphPreset = 'default',
   hoverMorphDesktopOnly = false,
+  hoverMorphFocusMode = 'pointer-and-focus',
   hoverWaveAmplitudeDelta,
   hoverWaveTensionDelta,
   hoverMorphTo = 'totem',
@@ -81,12 +83,14 @@ const resolvedPattern = edgePattern === 'totem' ? 'totem' : 'scallop';
 const resolvedEdges = edges === 'top' ? 'top' : 'all';
 const resolvedFit = fit === 'cover' ? 'cover' : 'contain';
 const resolvedHoverMorphPreset = hoverMorphPreset === 'strong' ? 'strong' : 'default';
+const resolvedHoverMorphFocusMode = hoverMorphFocusMode === 'pointer-only' ? 'pointer-only' : 'pointer-and-focus';
 const resolvedOutlineMode = outlineMode === 'geometric' ? 'geometric' : 'alpha';
 const resolvedOutlinePlacement = outlinePlacement === 'outside' ? 'outside' : 'center';
 // Deprecated dataset for backward compatibility; runtime ignores target pattern now.
 const resolvedHoverMorphTo = hoverMorphTo === 'scallop' ? 'scallop' : 'totem';
 const resolvedHoverAnimationEnabled =
   hoverMorph && resolvedShape === 'rectangle' && (resolvedPattern === 'totem' || resolvedPattern === 'scallop');
+const shouldEnableHoverFocus = resolvedHoverAnimationEnabled && resolvedHoverMorphFocusMode === 'pointer-and-focus';
 const legacyRectangleEdges = resolvedEdges === 'top' ? 'top' : 'all';
 const styleParts = [`--scallop-line-clamp: ${clampLines};`];
 
@@ -135,6 +139,7 @@ const resolvedInViewPreset =
   data-perimeter-hover-morph={hoverMorph ? 'true' : 'false'}
   data-perimeter-hover-morph-preset={resolvedHoverMorphPreset}
   data-perimeter-hover-desktop-only={hoverMorphDesktopOnly ? 'true' : 'false'}
+  data-perimeter-hover-focus-mode={resolvedHoverMorphFocusMode}
   data-perimeter-hover-wave-amplitude-delta={typeof hoverWaveAmplitudeDelta === 'number' ? String(hoverWaveAmplitudeDelta) : undefined}
   data-perimeter-hover-wave-tension-delta={typeof hoverWaveTensionDelta === 'number' ? String(hoverWaveTensionDelta) : undefined}
   data-perimeter-hover-morph-to={resolvedHoverMorphTo}
@@ -158,7 +163,7 @@ const resolvedInViewPreset =
   data-motion-stage-side={motionStageSide}
   style={rootStyle}
   aria-label={label}
-  tabindex={resolvedHoverAnimationEnabled ? '0' : undefined}
+  tabindex={shouldEnableHoverFocus ? '0' : undefined}
 >
   <svg class="scallop-frame" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true" focusable="false"></svg>
   <svg
@@ -221,6 +226,9 @@ const resolvedInViewPreset =
       }
       return window.matchMedia(`(min-width: ${DESKTOP_MIN_WIDTH}px)`).matches;
     };
+    const isHoverMorphFocusEnabled = (root) =>
+      readDataEnum(root, 'perimeterHoverFocusMode', ['pointer-and-focus', 'pointer-only'], 'pointer-and-focus') ===
+      'pointer-and-focus';
 
     const parseAbsoluteSize = (value) => {
       if (typeof value !== 'string') {
@@ -1231,13 +1239,18 @@ const resolvedInViewPreset =
         const deactivate = () => animateHoverParams(root, 0);
         root.addEventListener('pointerenter', activate);
         root.addEventListener('pointerleave', deactivate);
-        root.addEventListener('focus', activate);
-        root.addEventListener('blur', deactivate);
+        const enableFocusTrigger = isHoverMorphFocusEnabled(root);
+        if (enableFocusTrigger) {
+          root.addEventListener('focus', activate);
+          root.addEventListener('blur', deactivate);
+        }
         state.unbindHoverHandlers = () => {
           root.removeEventListener('pointerenter', activate);
           root.removeEventListener('pointerleave', deactivate);
-          root.removeEventListener('focus', activate);
-          root.removeEventListener('blur', deactivate);
+          if (enableFocusTrigger) {
+            root.removeEventListener('focus', activate);
+            root.removeEventListener('blur', deactivate);
+          }
         };
       }
 

@@ -42,6 +42,10 @@ const arrowAssetPath =
       class="case-card-cover"
       pad="0"
       bg="var(--surface-base)"
+      hoverMorph
+      hoverMorphPreset="strong"
+      hoverMorphDesktopOnly
+      hoverMorphFocusMode="pointer-only"
       clipContentToShape={false}
       exportShapeMask
       outlineEnabled
@@ -331,9 +335,9 @@ const arrowAssetPath =
         return;
       }
 
-      const cover = card.querySelector('[data-case-card-cover]');
+      const cover = card.querySelector('.case-card-cover[data-quantized-perimeter]');
       const assets = Array.from(card.querySelectorAll('[data-case-card-hover-asset]'));
-      if (!cover || assets.length === 0) {
+      if (!(cover instanceof HTMLElement) || assets.length === 0) {
         return;
       }
 

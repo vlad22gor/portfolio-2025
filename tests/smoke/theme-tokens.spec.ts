@@ -1219,7 +1219,12 @@ test.describe('Theme tokens smoke', () => {
     await expect(page.locator('.cases-cards-section')).toBeVisible();
 
     const rightArrowCardSelector = ".cases-cards-list .case-card[href='/fora']";
+    const rightArrowCoverSelector = `${rightArrowCardSelector} .case-card-cover`;
+    const rightArrowCoverPerimeterSelector = `${rightArrowCardSelector} .case-card-cover[data-quantized-perimeter]`;
+    const rightArrowContentSelector = `${rightArrowCardSelector} .case-card-content`;
     const leftArrowCardSelector = ".cases-cards-list .case-card[href='/kissa']";
+    const leftArrowCoverSelector = `${leftArrowCardSelector} .case-card-cover`;
+    const leftArrowCoverPerimeterSelector = `${leftArrowCardSelector} .case-card-cover[data-quantized-perimeter]`;
     const prefersReducedMotion = await page.evaluate(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
     const rightArrowBeforeHover = await page.evaluate(readCaseCardArrowMotionSnapshot, rightArrowCardSelector);
@@ -1237,7 +1242,86 @@ test.describe('Theme tokens smoke', () => {
     expect(rightArrowBeforeHover.matrix?.d ?? Number.NaN).toBeCloseTo(0.9, 2);
     expect(rightArrowBeforeHover.matrix?.ty ?? Number.NaN).toBeCloseTo(12.5, 1);
 
-    await page.hover(rightArrowCardSelector);
+    const rightCoverHoverContract = await page.evaluate((selector) => {
+      const cover = document.querySelector(selector);
+      if (!(cover instanceof HTMLElement)) {
+        return null;
+      }
+      return {
+        hoverMorph: cover.dataset.perimeterHoverMorph ?? null,
+        hoverPreset: cover.dataset.perimeterHoverMorphPreset ?? null,
+        desktopOnly: cover.dataset.perimeterHoverDesktopOnly ?? null,
+        focusMode: cover.dataset.perimeterHoverFocusMode ?? null,
+        tabIndexAttr: cover.getAttribute('tabindex'),
+      };
+    }, rightArrowCoverPerimeterSelector);
+    expect(rightCoverHoverContract).toEqual({
+      hoverMorph: 'true',
+      hoverPreset: 'strong',
+      desktopOnly: 'true',
+      focusMode: 'pointer-only',
+      tabIndexAttr: null,
+    });
+
+    const rightContentHoverPoint = await page.evaluate((selector) => {
+      const content = document.querySelector(selector);
+      if (!(content instanceof HTMLElement)) {
+        return null;
+      }
+      const rect = content.getBoundingClientRect();
+      return {
+        y: rect.top + rect.height / 2,
+        fromX: rect.right + 24,
+      };
+    }, rightArrowContentSelector);
+    expect(rightContentHoverPoint).not.toBeNull();
+    await page.mouse.move(rightContentHoverPoint!.fromX, rightContentHoverPoint!.y);
+    await page.hover(rightArrowContentSelector);
+
+    await expect
+      .poll(
+        () =>
+          page.evaluate((selector) => {
+            const card = document.querySelector(selector);
+            if (!(card instanceof HTMLElement)) {
+              return false;
+            }
+            const arrow = card.querySelector('.case-card-arrow');
+            if (!(arrow instanceof HTMLElement)) {
+              return false;
+            }
+            const styles = getComputedStyle(arrow);
+            const matrix = styles.transform === 'none' ? null : new DOMMatrixReadOnly(styles.transform);
+            if (!matrix) {
+              return false;
+            }
+            return (
+              card.getAttribute('data-hover-active') === 'true' &&
+              Number.parseFloat(styles.opacity) >= 0.99 &&
+              Math.abs(matrix.a - 1) < 0.02 &&
+              Math.abs(matrix.d - 1) < 0.02 &&
+              Math.abs(matrix.m42) < 0.5
+            );
+          }, rightArrowCardSelector),
+        { timeout: 3000 },
+      )
+      .toBe(true);
+
+    await expect
+      .poll(
+        () =>
+          page.evaluate((selector) => {
+            const cover = document.querySelector(selector);
+            if (!(cover instanceof HTMLElement)) {
+              return -1;
+            }
+            return Number.parseFloat(cover.dataset.perimeterMorphProgress ?? '0');
+          }, rightArrowCoverPerimeterSelector),
+        { timeout: 4000 },
+      )
+      .toBeLessThan(0.01);
+
+    await page.hover(rightArrowCoverSelector);
     await expect
       .poll(
         () =>
@@ -1270,7 +1354,21 @@ test.describe('Theme tokens smoke', () => {
       )
       .toBe(true);
 
-    await page.hover(leftArrowCardSelector);
+    await expect
+      .poll(
+        () =>
+          page.evaluate((selector) => {
+            const cover = document.querySelector(selector);
+            if (!(cover instanceof HTMLElement)) {
+              return -1;
+            }
+            return Number.parseFloat(cover.dataset.perimeterMorphProgress ?? '0');
+          }, rightArrowCoverPerimeterSelector),
+        { timeout: 4000 },
+      )
+      .toBeGreaterThan(0.05);
+
+    await page.hover(leftArrowCoverSelector);
     await expect
       .poll(
         () =>
@@ -1302,6 +1400,86 @@ test.describe('Theme tokens smoke', () => {
         { timeout: 4000 },
       )
       .toBe(true);
+
+    await expect
+      .poll(
+        () =>
+          page.evaluate((selector) => {
+            const cover = document.querySelector(selector);
+            if (!(cover instanceof HTMLElement)) {
+              return -1;
+            }
+            return Number.parseFloat(cover.dataset.perimeterMorphProgress ?? '0');
+          }, leftArrowCoverPerimeterSelector),
+        { timeout: 4000 },
+      )
+      .toBeGreaterThan(0.05);
+
+    await page.mouse.move(1, 1);
+    await expect
+      .poll(
+        () =>
+          page.evaluate((selector) => {
+            const cover = document.querySelector(selector);
+            if (!(cover instanceof HTMLElement)) {
+              return -1;
+            }
+            return Number.parseFloat(cover.dataset.perimeterMorphProgress ?? '0');
+          }, rightArrowCoverPerimeterSelector),
+        { timeout: 4000 },
+      )
+      .toBeLessThan(0.01);
+    await expect
+      .poll(
+        () =>
+          page.evaluate((selector) => {
+            const cover = document.querySelector(selector);
+            if (!(cover instanceof HTMLElement)) {
+              return -1;
+            }
+            return Number.parseFloat(cover.dataset.perimeterMorphProgress ?? '0');
+          }, leftArrowCoverPerimeterSelector),
+        { timeout: 4000 },
+      )
+      .toBeLessThan(0.01);
+
+    await page.setViewportSize({ width: 1024, height: 1100 });
+    await page.goto('/');
+    await expect(page.locator('.cases-cards-section')).toBeVisible();
+
+    const tabletCoverHoverContract = await page.evaluate((selector) => {
+      const cover = document.querySelector(selector);
+      if (!(cover instanceof HTMLElement)) {
+        return null;
+      }
+      return {
+        hoverMorph: cover.dataset.perimeterHoverMorph ?? null,
+        hoverPreset: cover.dataset.perimeterHoverMorphPreset ?? null,
+        desktopOnly: cover.dataset.perimeterHoverDesktopOnly ?? null,
+        focusMode: cover.dataset.perimeterHoverFocusMode ?? null,
+      };
+    }, rightArrowCoverPerimeterSelector);
+    expect(tabletCoverHoverContract).toEqual({
+      hoverMorph: 'true',
+      hoverPreset: 'strong',
+      desktopOnly: 'true',
+      focusMode: 'pointer-only',
+    });
+
+    await page.hover(rightArrowCoverSelector);
+    await expect
+      .poll(
+        () =>
+          page.evaluate((selector) => {
+            const cover = document.querySelector(selector);
+            if (!(cover instanceof HTMLElement)) {
+              return -1;
+            }
+            return Number.parseFloat(cover.dataset.perimeterMorphProgress ?? '0');
+          }, rightArrowCoverPerimeterSelector),
+        { timeout: 4000 },
+      )
+      .toBe(0);
   });
 
   test('button and divider tokens are applied to variants and waves', async ({ page }) => {

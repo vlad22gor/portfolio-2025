@@ -14,6 +14,10 @@ interface Props {
   label?: string;
   bg?: string;
   pad?: string;
+  hoverMorph?: boolean;
+  hoverMorphPreset?: 'default' | 'strong';
+  hoverMorphDesktopOnly?: boolean;
+  hoverMorphFocusMode?: 'pointer-and-focus' | 'pointer-only';
   clipContentToShape?: boolean;
   exportShapeMask?: boolean;
   outlineEnabled?: boolean;
@@ -37,6 +41,10 @@ const {
   label = 'Quantized scallop surface',
   bg,
   pad,
+  hoverMorph = false,
+  hoverMorphPreset = 'default',
+  hoverMorphDesktopOnly = false,
+  hoverMorphFocusMode = 'pointer-and-focus',
   clipContentToShape = false,
   exportShapeMask = false,
   outlineEnabled = false,
@@ -64,6 +72,10 @@ const resolvedEdges = rectangleEdges === 'top' ? 'top' : 'all';
   label={label}
   bg={bg}
   pad={pad}
+  hoverMorph={hoverMorph}
+  hoverMorphPreset={hoverMorphPreset}
+  hoverMorphDesktopOnly={hoverMorphDesktopOnly}
+  hoverMorphFocusMode={hoverMorphFocusMode}
   clipContentToShape={clipContentToShape}
   exportShapeMask={exportShapeMask}
   outlineEnabled={outlineEnabled}
