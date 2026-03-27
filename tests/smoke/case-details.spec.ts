@@ -398,16 +398,24 @@ test.describe('Case details smoke', () => {
         __introTransitionAudit?: {
           startedAt: number;
           sawTransitionWindow: boolean;
+          sawEnteringWindow: boolean;
           animatedDuringTransition: boolean;
           screensAnimatedDuringTransition: boolean;
+          mainVisibleDuringEntering: boolean;
+          introAnimatedWhileEntering: boolean;
+          reachedIntroAnimated: boolean;
         };
       };
 
       runtimeWindow.__introTransitionAudit = {
         startedAt: performance.now(),
         sawTransitionWindow: false,
+        sawEnteringWindow: false,
         animatedDuringTransition: false,
         screensAnimatedDuringTransition: false,
+        mainVisibleDuringEntering: false,
+        introAnimatedWhileEntering: false,
+        reachedIntroAnimated: false,
       };
       const maxAuditDurationMs = 2200;
       const tick = () => {
@@ -423,6 +431,12 @@ test.describe('Case details smoke', () => {
         const introScreens = document.querySelector('.kissa-intro-screens');
         const screensAnimated =
           introScreens instanceof HTMLElement && introScreens.getAttribute('data-motion-inview-animated') === 'true';
+        const main = document.querySelector('main#content');
+        const mainOpacity = main instanceof HTMLElement ? Number.parseFloat(getComputedStyle(main).opacity) : Number.NaN;
+        const enteringActive =
+          window.location.pathname === '/kissa' &&
+          main instanceof HTMLElement &&
+          main.getAttribute('data-case-switcher-entering') === 'true';
         if (transitionActive) {
           audit.sawTransitionWindow = true;
           if (introAnimated) {
@@ -432,7 +446,19 @@ test.describe('Case details smoke', () => {
             audit.screensAnimatedDuringTransition = true;
           }
         }
-        if (elapsed < maxAuditDurationMs) {
+        if (enteringActive) {
+          audit.sawEnteringWindow = true;
+          if (Number.isFinite(mainOpacity) && mainOpacity >= 0.99) {
+            audit.mainVisibleDuringEntering = true;
+          }
+          if (introAnimated || screensAnimated) {
+            audit.introAnimatedWhileEntering = true;
+          }
+        }
+        if (window.location.pathname === '/kissa' && introAnimated) {
+          audit.reachedIntroAnimated = true;
+        }
+        if (elapsed < maxAuditDurationMs && !audit.reachedIntroAnimated) {
           window.requestAnimationFrame(tick);
         }
       };
@@ -445,21 +471,25 @@ test.describe('Case details smoke', () => {
         async () =>
           page.evaluate(() => {
             const main = document.querySelector('main#content');
+            const footer = document.querySelector('footer.site-footer');
             const path = window.location.pathname;
             const scrollY = window.scrollY;
             if (path === '/kissa') {
               return true;
             }
-            if (!(main instanceof HTMLElement)) {
+            if (!(main instanceof HTMLElement) || !(footer instanceof HTMLElement)) {
               return false;
             }
             const leavingState = main.getAttribute('data-case-switcher-leaving');
             const opacity = Number.parseFloat(getComputedStyle(main).opacity);
+            const footerOpacity = Number.parseFloat(getComputedStyle(footer).opacity);
             return (
               path === '/fora' &&
               leavingState === 'true' &&
               Number.isFinite(opacity) &&
               opacity < 1 &&
+              Number.isFinite(footerOpacity) &&
+              footerOpacity < 1 &&
               scrollY > 0
             );
           }),
@@ -474,6 +504,7 @@ test.describe('Case details smoke', () => {
       path: window.location.pathname,
       leavingState: document.querySelector('main#content')?.getAttribute('data-case-switcher-leaving') ?? null,
       mainOpacity: Number.parseFloat(getComputedStyle(document.querySelector('main#content')).opacity),
+      footerOpacity: Number.parseFloat(getComputedStyle(document.querySelector('footer.site-footer')).opacity),
       scrollY: window.scrollY,
     }));
 
@@ -481,6 +512,7 @@ test.describe('Case details smoke', () => {
     if (preNavigationState.path === '/fora') {
       expect(preNavigationState.leavingState).toBe('true');
       expect(preNavigationState.mainOpacity).toBeLessThan(1);
+      expect(preNavigationState.footerOpacity).toBeLessThan(1);
       expect(preNavigationState.scrollY).toBeGreaterThan(0);
     }
 
@@ -492,8 +524,12 @@ test.describe('Case details smoke', () => {
         __introTransitionAudit?: {
           startedAt: number;
           sawTransitionWindow: boolean;
+          sawEnteringWindow: boolean;
           animatedDuringTransition: boolean;
           screensAnimatedDuringTransition: boolean;
+          mainVisibleDuringEntering: boolean;
+          introAnimatedWhileEntering: boolean;
+          reachedIntroAnimated: boolean;
         };
       };
       return runtimeWindow.__introTransitionAudit ?? null;
@@ -502,6 +538,26 @@ test.describe('Case details smoke', () => {
       expect(transitionWindowCheck.animatedDuringTransition).toBe(false);
       expect(transitionWindowCheck.screensAnimatedDuringTransition).toBe(false);
     }
+    expect(transitionWindowCheck?.sawEnteringWindow).toBe(true);
+    if (transitionWindowCheck?.sawEnteringWindow) {
+      expect(transitionWindowCheck.mainVisibleDuringEntering).toBe(false);
+      expect(transitionWindowCheck.introAnimatedWhileEntering).toBe(false);
+    }
+
+    await expect
+      .poll(
+        async () =>
+          page.evaluate(
+            () =>
+              document.querySelector('main#content.page-shell--case-detail')?.getAttribute('data-case-switcher-entering') ??
+              null,
+          ),
+        {
+          timeout: 2500,
+          message: 'Case switcher entering flag should clear before steady state',
+        },
+      )
+      .toBeNull();
 
     await expect
       .poll(

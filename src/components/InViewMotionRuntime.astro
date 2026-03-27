@@ -1,5 +1,7 @@
 <script>
   import {
+    CASE_SWITCHER_INTRO_SYNC_MARKER_KEY,
+    CASE_SWITCHER_INTRO_SYNC_MARKER_MAX_AGE_MS,
     createInViewMotionEngine,
     createLifecycle,
     createObserverRegistry,
@@ -7,6 +9,7 @@
     getOrCreateWindowRuntime,
     getWindowRuntime,
     inViewPresets,
+    onAstroBeforeSwap,
     onAstroPageLoad,
   } from '../lib/runtime';
 
@@ -21,6 +24,13 @@
     const lifecycle = createLifecycle();
     const observerRegistry = createObserverRegistry();
     const routeGate = createRouteTransitionGate();
+    const enteringMainAttribute = 'data-case-switcher-entering';
+    const enteringRevealDelayMs = 80;
+    const enteringRevealFallbackMs = 420;
+    let enteringRevealRafId = 0;
+    let enteringRevealRafId2 = 0;
+    let enteringRevealDelayTimeoutId: ReturnType<typeof window.setTimeout> | null = null;
+    let enteringRevealFallbackTimeoutId: ReturnType<typeof window.setTimeout> | null = null;
     const engine = createInViewMotionEngine({
       lifecycle,
       presets: inViewPresets,
@@ -28,14 +38,117 @@
       routeGate,
     });
 
+    const clearEnteringRevealTimers = () => {
+      if (enteringRevealRafId !== 0) {
+        lifecycle.cancelAnimationFrame(enteringRevealRafId);
+        enteringRevealRafId = 0;
+      }
+      if (enteringRevealRafId2 !== 0) {
+        lifecycle.cancelAnimationFrame(enteringRevealRafId2);
+        enteringRevealRafId2 = 0;
+      }
+      if (enteringRevealDelayTimeoutId !== null) {
+        lifecycle.clearTimeout(enteringRevealDelayTimeoutId);
+        enteringRevealDelayTimeoutId = null;
+      }
+      if (enteringRevealFallbackTimeoutId !== null) {
+        lifecycle.clearTimeout(enteringRevealFallbackTimeoutId);
+        enteringRevealFallbackTimeoutId = null;
+      }
+    };
+
+    const getCaseDetailMain = (root: ParentNode = document) =>
+      root.querySelector('main#content.page-shell--case-detail');
+
+    const clearCaseSwitcherEnteringFlag = () => {
+      clearEnteringRevealTimers();
+      const main = getCaseDetailMain();
+      if (main instanceof HTMLElement) {
+        main.removeAttribute(enteringMainAttribute);
+      }
+    };
+
+    const hasFreshCaseSwitcherIntroMarker = () => {
+      try {
+        const raw = window.sessionStorage.getItem(CASE_SWITCHER_INTRO_SYNC_MARKER_KEY);
+        if (!raw) {
+          return false;
+        }
+        const parsed = Number.parseInt(raw, 10);
+        if (!Number.isFinite(parsed)) {
+          return false;
+        }
+        return Date.now() - parsed <= CASE_SWITCHER_INTRO_SYNC_MARKER_MAX_AGE_MS;
+      } catch {
+        return false;
+      }
+    };
+
+    const markIncomingCaseDetailAsEntering = (event: Event & { newDocument?: Document }) => {
+      const nextDocument = event?.newDocument;
+      if (!nextDocument || typeof nextDocument !== 'object') {
+        return;
+      }
+      const nextBody = nextDocument.body;
+      if (!nextBody || typeof nextBody !== 'object') {
+        return;
+      }
+      if (nextBody.dataset.routeCaseDetail !== 'true') {
+        return;
+      }
+      if (!hasFreshCaseSwitcherIntroMarker()) {
+        return;
+      }
+      const nextMain = getCaseDetailMain(nextDocument);
+      if (nextMain && typeof nextMain.setAttribute === 'function') {
+        nextMain.setAttribute(enteringMainAttribute, 'true');
+      }
+    };
+
+    const scheduleCaseDetailEnteringReveal = () => {
+      const main = getCaseDetailMain();
+      if (!(main instanceof HTMLElement) || main.getAttribute(enteringMainAttribute) !== 'true') {
+        return;
+      }
+
+      clearEnteringRevealTimers();
+      let revealed = false;
+      const reveal = () => {
+        if (revealed) {
+          return;
+        }
+        revealed = true;
+        clearCaseSwitcherEnteringFlag();
+      };
+
+      enteringRevealRafId = lifecycle.requestAnimationFrame(() => {
+        enteringRevealRafId = 0;
+        enteringRevealRafId2 = lifecycle.requestAnimationFrame(() => {
+          enteringRevealRafId2 = 0;
+          enteringRevealDelayTimeoutId = lifecycle.setTimeout(reveal, enteringRevealDelayMs);
+        });
+      });
+      enteringRevealFallbackTimeoutId = lifecycle.setTimeout(reveal, enteringRevealFallbackMs);
+    };
+
+    const isCurrentCaseDetailRoute = () => document.body?.dataset?.routeCaseDetail === 'true';
+
     const mount = () => {
+      if (isCurrentCaseDetailRoute() && hasFreshCaseSwitcherIntroMarker()) {
+        const main = getCaseDetailMain();
+        if (main instanceof HTMLElement) {
+          main.setAttribute(enteringMainAttribute, 'true');
+        }
+      }
       engine.mount();
+      scheduleCaseDetailEnteringReveal();
     };
 
     const stopAll = () => {
       engine.stopAll();
     };
 
+    lifecycle.addCleanup(onAstroBeforeSwap(markIncomingCaseDetailAsEntering));
     lifecycle.addCleanup(onAstroPageLoad(mount));
     lifecycle.on(window, 'pagehide', stopAll);
 

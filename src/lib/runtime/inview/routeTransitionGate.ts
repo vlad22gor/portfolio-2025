@@ -1,4 +1,5 @@
 export const CASE_SWITCHER_INTRO_SYNC_MARKER_KEY = '__case-switcher-intro-sync';
+export const CASE_SWITCHER_INTRO_SYNC_MARKER_MAX_AGE_MS = 5000;
 export const ROUTE_TRANSITION_ATTRIBUTE = 'data-astro-transition';
 
 export interface RouteTransitionGate {
@@ -18,7 +19,7 @@ export interface CreateRouteTransitionGateOptions {
 export const createRouteTransitionGate = (
   options: CreateRouteTransitionGateOptions = {},
 ): RouteTransitionGate => {
-  const markerMaxAgeMs = options.markerMaxAgeMs ?? 5000;
+  const markerMaxAgeMs = options.markerMaxAgeMs ?? CASE_SWITCHER_INTRO_SYNC_MARKER_MAX_AGE_MS;
   const transitionWaitMaxMs = options.transitionWaitMaxMs ?? 1500;
   const transitionStartWaitMaxMs = options.transitionStartWaitMaxMs ?? 250;
   const transitionInactiveStableMs = options.transitionInactiveStableMs ?? 80;
