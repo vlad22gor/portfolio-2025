@@ -238,6 +238,68 @@ test.describe('Gallery smoke', () => {
     await expect(cards).toHaveCount(21);
     await expect(page.locator('.gallery-card[data-motion-stagger-item]')).toHaveCount(21);
 
+    const firstMockSurfaceSelector =
+      '.gallery-card[data-gallery-card-type="phone"] .gallery-card__surface--mock[data-quantized-perimeter]';
+    const firstImageSurfaceSelector =
+      '.gallery-card[data-gallery-card-type="image"] .gallery-card__surface--image[data-quantized-perimeter]';
+
+    const hoverPresetContract = await page.evaluate(({ mockSelector, imageSelector }) => {
+      const readContract = (node: Element | null) => {
+        if (!(node instanceof HTMLElement)) {
+          return null;
+        }
+        return {
+          hoverMorph: node.dataset.perimeterHoverMorph ?? null,
+          hoverPreset: node.dataset.perimeterHoverMorphPreset ?? null,
+          desktopOnly: node.dataset.perimeterHoverDesktopOnly ?? null,
+        };
+      };
+
+      return {
+        mock: readContract(document.querySelector(mockSelector)),
+        image: readContract(document.querySelector(imageSelector)),
+      };
+    }, { mockSelector: firstMockSurfaceSelector, imageSelector: firstImageSurfaceSelector });
+    expect(hoverPresetContract.mock).toEqual({
+      hoverMorph: 'true',
+      hoverPreset: 'strong',
+      desktopOnly: 'true',
+    });
+    expect(hoverPresetContract.image).toEqual({
+      hoverMorph: 'true',
+      hoverPreset: 'strong',
+      desktopOnly: 'true',
+    });
+
+    await page.hover(firstMockSurfaceSelector);
+    await expect
+      .poll(
+        () =>
+          page.evaluate((selector) => {
+            const node = document.querySelector(selector);
+            if (!(node instanceof HTMLElement)) {
+              return -1;
+            }
+            return Number.parseFloat(node.dataset.perimeterMorphProgress ?? '0');
+          }, firstMockSurfaceSelector),
+        { timeout: 3_000, message: 'Desktop hover should enable strong perimeter morph progress' },
+      )
+      .toBeGreaterThan(0.05);
+    await page.mouse.move(1, 1);
+    await expect
+      .poll(
+        () =>
+          page.evaluate((selector) => {
+            const node = document.querySelector(selector);
+            if (!(node instanceof HTMLElement)) {
+              return -1;
+            }
+            return Number.parseFloat(node.dataset.perimeterMorphProgress ?? '0');
+          }, firstMockSurfaceSelector),
+        { timeout: 3_000, message: 'Perimeter morph progress should return to zero after hover-out' },
+      )
+      .toBeLessThan(0.01);
+
     const webmVideos = page.locator('.gallery-card .device-mockup video.device-mockup__media');
     await expect(webmVideos).toHaveCount(7);
 
@@ -807,6 +869,53 @@ test.describe('Gallery tablet smoke', () => {
     expect(tabletVisibilitySnapshot).not.toBeNull();
     expect(tabletVisibilitySnapshot!.firstRowHasMotion).toBe(false);
     expect(tabletVisibilitySnapshot!.firstCardOpacity).toBe('1');
+
+    const firstMockSurfaceSelector =
+      '.gallery-card[data-gallery-card-type="phone"] .gallery-card__surface--mock[data-quantized-perimeter]';
+    const firstImageSurfaceSelector =
+      '.gallery-card[data-gallery-card-type="image"] .gallery-card__surface--image[data-quantized-perimeter]';
+    const tabletHoverPresetContract = await page.evaluate(({ mockSelector, imageSelector }) => {
+      const readContract = (node: Element | null) => {
+        if (!(node instanceof HTMLElement)) {
+          return null;
+        }
+        return {
+          hoverMorph: node.dataset.perimeterHoverMorph ?? null,
+          hoverPreset: node.dataset.perimeterHoverMorphPreset ?? null,
+          desktopOnly: node.dataset.perimeterHoverDesktopOnly ?? null,
+        };
+      };
+
+      return {
+        mock: readContract(document.querySelector(mockSelector)),
+        image: readContract(document.querySelector(imageSelector)),
+      };
+    }, { mockSelector: firstMockSurfaceSelector, imageSelector: firstImageSurfaceSelector });
+    expect(tabletHoverPresetContract.mock).toEqual({
+      hoverMorph: 'true',
+      hoverPreset: 'strong',
+      desktopOnly: 'true',
+    });
+    expect(tabletHoverPresetContract.image).toEqual({
+      hoverMorph: 'true',
+      hoverPreset: 'strong',
+      desktopOnly: 'true',
+    });
+
+    await page.hover(firstMockSurfaceSelector);
+    await expect
+      .poll(
+        () =>
+          page.evaluate((selector) => {
+            const node = document.querySelector(selector);
+            if (!(node instanceof HTMLElement)) {
+              return -1;
+            }
+            return Number.parseFloat(node.dataset.perimeterMorphProgress ?? '0');
+          }, firstMockSurfaceSelector),
+        { timeout: 3_000, message: 'Tablet hover should keep perimeter morph progress gated at zero' },
+      )
+      .toBe(0);
   });
 
   test('gallery header and page-shell top stay compact through 847 and switch at 848', async ({ page }) => {

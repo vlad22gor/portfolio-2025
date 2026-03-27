@@ -17,6 +17,7 @@ interface Props {
   waveTension?: number;
   hoverMorph?: boolean;
   hoverMorphPreset?: 'default' | 'strong';
+  hoverMorphDesktopOnly?: boolean;
   hoverWaveAmplitudeDelta?: number;
   hoverWaveTensionDelta?: number;
   /** @deprecated kept for backward compatibility; ignored by single-type param animation */
@@ -55,6 +56,7 @@ const {
   waveTension = 0.5,
   hoverMorph = false,
   hoverMorphPreset = 'default',
+  hoverMorphDesktopOnly = false,
   hoverWaveAmplitudeDelta,
   hoverWaveTensionDelta,
   hoverMorphTo = 'totem',
@@ -132,6 +134,7 @@ const resolvedInViewPreset =
   data-perimeter-wave-tension={String(waveTension)}
   data-perimeter-hover-morph={hoverMorph ? 'true' : 'false'}
   data-perimeter-hover-morph-preset={resolvedHoverMorphPreset}
+  data-perimeter-hover-desktop-only={hoverMorphDesktopOnly ? 'true' : 'false'}
   data-perimeter-hover-wave-amplitude-delta={typeof hoverWaveAmplitudeDelta === 'number' ? String(hoverWaveAmplitudeDelta) : undefined}
   data-perimeter-hover-wave-tension-delta={typeof hoverWaveTensionDelta === 'number' ? String(hoverWaveTensionDelta) : undefined}
   data-perimeter-hover-morph-to={resolvedHoverMorphTo}
@@ -209,6 +212,15 @@ const resolvedInViewPreset =
     const clamp01 = (value) => Math.max(0, Math.min(1, value));
     const round3 = (value) => Math.round(value * 1000) / 1000;
     const lerp = (from, to, progress) => from + (to - from) * progress;
+    const DESKTOP_MIN_WIDTH = 1360;
+
+    const isHoverMorphEnabledForViewport = (root) => {
+      const desktopOnly = readDataBool(root, 'perimeterHoverDesktopOnly', false);
+      if (!desktopOnly) {
+        return true;
+      }
+      return window.matchMedia(`(min-width: ${DESKTOP_MIN_WIDTH}px)`).matches;
+    };
 
     const parseAbsoluteSize = (value) => {
       if (typeof value !== 'string') {
@@ -951,10 +963,20 @@ const resolvedInViewPreset =
       const edgePattern = readDataEnum(root, 'perimeterEdgePattern', ['scallop', 'totem'], 'scallop');
       const edges = readDataEnum(root, 'perimeterEdges', ['all', 'top'], 'all');
       const animationAdapter = resolvePatternAnimationAdapter(edgePattern);
+      const hoverMorphAllowedByViewport = isHoverMorphEnabledForViewport(root);
+      if (!hoverMorphAllowedByViewport && (state.animProgress !== 0 || state.animTarget !== 0)) {
+        if (state.animControl) {
+          state.animControl.stop();
+          state.animControl = null;
+        }
+        state.animProgress = 0;
+        state.animTarget = 0;
+      }
       const hoverMorphEnabled =
         shape === 'rectangle' &&
         readDataBool(root, 'perimeterHoverMorph', false) &&
-        animationAdapter.supportsParamAnimation;
+        animationAdapter.supportsParamAnimation &&
+        hoverMorphAllowedByViewport;
       const animationProgress = hoverMorphEnabled ? clamp01(state.animProgress) : 0;
       const baseStep = Math.max(1, readDataNumber(root, 'perimeterStep', 40));
       const available = resolveAvailableSize(root, parent, baseStep);
@@ -1203,7 +1225,9 @@ const resolvedInViewPreset =
         resolvePatternAnimationAdapter(readDataEnum(root, 'perimeterEdgePattern', ['scallop', 'totem'], 'scallop'))
           .supportsParamAnimation
       ) {
-        const activate = () => animateHoverParams(root, 1);
+        const activate = () => {
+          animateHoverParams(root, isHoverMorphEnabledForViewport(root) ? 1 : 0);
+        };
         const deactivate = () => animateHoverParams(root, 0);
         root.addEventListener('pointerenter', activate);
         root.addEventListener('pointerleave', deactivate);

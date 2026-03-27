@@ -9,9 +9,16 @@ interface Props {
   priorityOverride?: GalleryDeviceLoadPriority;
   staggerIndex?: number;
   mobilePrime?: boolean;
+  enableStrongDesktopHover?: boolean;
 }
 
-const { item, priorityOverride, staggerIndex = 0, mobilePrime = false } = Astro.props;
+const {
+  item,
+  priorityOverride,
+  staggerIndex = 0,
+  mobilePrime = false,
+  enableStrongDesktopHover = false,
+} = Astro.props;
 const isImage = item.type === 'image';
 const isDeviceCard = (candidate: GalleryRowItem): candidate is GalleryPhoneCard | GalleryTabletCard =>
   candidate.type === 'phone' || candidate.type === 'tablet';
@@ -45,6 +52,9 @@ const isCritical = resolvedPriority === 'critical';
         pad="0"
         exportShapeMask
         label={item.alt}
+        hoverMorph={enableStrongDesktopHover}
+        hoverMorphPreset="strong"
+        hoverMorphDesktopOnly={enableStrongDesktopHover}
       >
         <div class="gallery-card__image-stack" aria-hidden="true">
           <div class="gallery-card__image-bg"></div>
@@ -69,6 +79,9 @@ const isCritical = resolvedPriority === 'critical';
         bg="var(--color-bg-darkened)"
         pad="0"
         label={item.alt}
+        hoverMorph={enableStrongDesktopHover}
+        hoverMorphPreset="strong"
+        hoverMorphDesktopOnly={enableStrongDesktopHover}
       >
         {
           item.type === 'illustration' ? (
