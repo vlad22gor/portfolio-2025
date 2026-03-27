@@ -142,6 +142,65 @@ const readButtonTokenSnapshot = (input: string | [string, string, string?]) => {
   };
 };
 
+const readCaseCardArrowMotionSnapshot = (cardSelector: string) => {
+  const card = document.querySelector(cardSelector);
+  if (!(card instanceof HTMLElement)) {
+    return {
+      selector: cardSelector,
+      present: false,
+      hoverActive: null,
+      opacity: null,
+      transform: null,
+      transitionDuration: null,
+      transitionTimingFunction: null,
+      matrix: null,
+    };
+  }
+
+  const arrow = card.querySelector('.case-card-arrow');
+  if (!(arrow instanceof HTMLElement)) {
+    return {
+      selector: cardSelector,
+      present: false,
+      hoverActive: card.getAttribute('data-hover-active'),
+      opacity: null,
+      transform: null,
+      transitionDuration: null,
+      transitionTimingFunction: null,
+      matrix: null,
+    };
+  }
+
+  const styles = getComputedStyle(arrow);
+  const transform = styles.transform;
+  let matrix: { a: number; d: number; tx: number; ty: number } | null = null;
+
+  if (transform && transform !== 'none') {
+    try {
+      const domMatrix = new DOMMatrixReadOnly(transform);
+      matrix = {
+        a: domMatrix.a,
+        d: domMatrix.d,
+        tx: domMatrix.m41,
+        ty: domMatrix.m42,
+      };
+    } catch {
+      matrix = null;
+    }
+  }
+
+  return {
+    selector: cardSelector,
+    present: true,
+    hoverActive: card.getAttribute('data-hover-active'),
+    opacity: Number.parseFloat(styles.opacity),
+    transform,
+    transitionDuration: styles.transitionDuration,
+    transitionTimingFunction: styles.transitionTimingFunction,
+    matrix,
+  };
+};
+
 const readFooterBackgrounds = () => {
   const footer = document.querySelector('.site-footer');
   const scallopFrame = document.querySelector('.site-footer .quantized-scallop .scallop-frame');
@@ -1151,6 +1210,98 @@ test.describe('Theme tokens smoke', () => {
     expect(samples.some((sample) => sample.path === '/gallery')).toBe(true);
     expect(samples.filter((sample) => sample.htmlTheme !== 'dark')).toEqual([]);
     expect(samples.filter((sample) => sample.floatingState !== 'dark')).toEqual([]);
+  });
+
+  test('case card arrows animate on hover with the cases description motion profile', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 1200 });
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.goto('/');
+    await expect(page.locator('.cases-cards-section')).toBeVisible();
+
+    const rightArrowCardSelector = ".cases-cards-list .case-card[href='/fora']";
+    const leftArrowCardSelector = ".cases-cards-list .case-card[href='/kissa']";
+    const prefersReducedMotion = await page.evaluate(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+    const rightArrowBeforeHover = await page.evaluate(readCaseCardArrowMotionSnapshot, rightArrowCardSelector);
+    expect(rightArrowBeforeHover.present).toBe(true);
+    expect(rightArrowBeforeHover.hoverActive).toBe('false');
+    expect(rightArrowBeforeHover.opacity).toBeCloseTo(0, 2);
+    if (prefersReducedMotion) {
+      expect(rightArrowBeforeHover.transitionDuration).toContain('0s');
+    } else {
+      expect(rightArrowBeforeHover.transitionDuration).toContain('0.2s');
+      expect(rightArrowBeforeHover.transitionTimingFunction).toContain('cubic-bezier(0.34, 1.2, 0.64, 1)');
+    }
+    expect(rightArrowBeforeHover.matrix).not.toBeNull();
+    expect(rightArrowBeforeHover.matrix?.a ?? Number.NaN).toBeCloseTo(0.9, 2);
+    expect(rightArrowBeforeHover.matrix?.d ?? Number.NaN).toBeCloseTo(0.9, 2);
+    expect(rightArrowBeforeHover.matrix?.ty ?? Number.NaN).toBeCloseTo(12.5, 1);
+
+    await page.hover(rightArrowCardSelector);
+    await expect
+      .poll(
+        () =>
+          page.evaluate((selector) => {
+            const card = document.querySelector(selector);
+            if (!(card instanceof HTMLElement)) {
+              return false;
+            }
+
+            const arrow = card.querySelector('.case-card-arrow');
+            if (!(arrow instanceof HTMLElement)) {
+              return false;
+            }
+
+            const styles = getComputedStyle(arrow);
+            const matrix = styles.transform === 'none' ? null : new DOMMatrixReadOnly(styles.transform);
+            if (!matrix) {
+              return false;
+            }
+
+            return (
+              card.getAttribute('data-hover-active') === 'true' &&
+              Number.parseFloat(styles.opacity) >= 0.99 &&
+              Math.abs(matrix.a - 1) < 0.02 &&
+              Math.abs(matrix.d - 1) < 0.02 &&
+              Math.abs(matrix.m42) < 0.5
+            );
+          }, rightArrowCardSelector),
+        { timeout: 4000 },
+      )
+      .toBe(true);
+
+    await page.hover(leftArrowCardSelector);
+    await expect
+      .poll(
+        () =>
+          page.evaluate((selector) => {
+            const card = document.querySelector(selector);
+            if (!(card instanceof HTMLElement)) {
+              return false;
+            }
+
+            const arrow = card.querySelector('.case-card-arrow');
+            if (!(arrow instanceof HTMLElement)) {
+              return false;
+            }
+
+            const styles = getComputedStyle(arrow);
+            const matrix = styles.transform === 'none' ? null : new DOMMatrixReadOnly(styles.transform);
+            if (!matrix) {
+              return false;
+            }
+
+            return (
+              card.getAttribute('data-hover-active') === 'true' &&
+              Number.parseFloat(styles.opacity) >= 0.99 &&
+              Math.abs(matrix.a - 1) < 0.02 &&
+              Math.abs(matrix.d - 1) < 0.02 &&
+              Math.abs(matrix.m42) < 0.5
+            );
+          }, leftArrowCardSelector),
+        { timeout: 4000 },
+      )
+      .toBe(true);
   });
 
   test('button and divider tokens are applied to variants and waves', async ({ page }) => {

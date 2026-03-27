@@ -1657,12 +1657,25 @@ html[data-theme='dark'] .case-badge[data-badge-type='default'] {
   width: 78px;
   height: 44px;
   opacity: 0;
+  transform: translate3d(0px, 12.5px, 0px) scale(0.9);
+  transform-origin: center center;
+  transition:
+    opacity 0.2s ease-out,
+    transform 0.2s cubic-bezier(0.34, 1.2, 0.64, 1);
   pointer-events: none;
   z-index: 2;
+  will-change: opacity, transform;
 }
 
 .case-card[data-hover-active="true"] .case-card-arrow {
   opacity: 1;
+  transform: translate3d(0px, 0px, 0px) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .case-card-arrow {
+    transition: none;
+  }
 }
 
 .case-card-hover-asset {

@@ -2339,3 +2339,28 @@
   Файлы: `src/components/SiteHeader.astro`, `src/styles/components.css`, `tests/smoke/header-appear.spec.ts`, `tasks/lessons.md`, `tasks/logs.md`.
   Что сделано: (1) на `.site-header-inner` добавлен явный state-контракт `data-header-appear='pending|running|done'`, убрана зависимость от `data-motion-inview` для хедера; (2) в runtime `SiteHeader` добавлен one-shot `playHeaderAppear()` с параметрами стандартного `appear` (`duration 0.4`, `ease [0.44,0,0.56,1]`, `translateY -50 -> 0`), c no-op на soft-nav через persist и immediate-final для `prefers-reduced-motion`; (3) CSS pre-paint anti-flash селектор переведён на `html[data-js='true'] .site-header-inner[data-header-appear='pending']`; (4) `header-appear` smoke обновлён: ранний аудит (`DOMContentLoaded/raf-1/raf-2`) для initial-state + проверка отсутствия replay на soft-nav `/ -> /gallery -> /`.
   Проверки: (1) `npm run build` — успешно; (2) `PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:4321 npx playwright test tests/smoke/header-appear.spec.ts --workers=1` — успешно (`1 passed`); (3) `PLAYWRIGHT_SKIP_WEBSERVER=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:4321 npx playwright test tests/smoke/gallery.spec.ts -g "gallery header and page-shell top stay compact through 847 and switch at 848|route transition to home keeps fade only in page-content and removes plus-lighter artifacts" --workers=1` — первый прогон: `1 passed`, `1 failed` (flake/артефакты Playwright в `test-results`); (4) изолированный ретрай проблемного кейса `route transition to home keeps fade only in page-content and removes plus-lighter artifacts` — успешно (`1 passed`).
+- 2026-03-27: Добавлена hover-анимация стрелок `CaseCard` (left/right) по профилю `cases-arrow-left-v1` и покрыта smoke-тестом.
+  Причина: требовалось синхронизировать поведение `case-card` стрелок с референсом из `cases cards description` в hover-состоянии карточки.
+  Файлы: `src/styles/components.css`, `tests/smoke/theme-tokens.spec.ts`, `tasks/logs.md`.
+  Что сделано: (1) для `.case-card-arrow` добавлены начальный `transform: translate3d(0, 25px, 0) scale(0.5)` и transition-профиль `0.4s cubic-bezier(0.44, 0, 0.56, 1)` по `opacity/transform`; (2) в hover/focus state (`.case-card[data-hover-active='true'] .case-card-arrow`) добавлен финальный `transform: translate3d(0, 0, 0) scale(1)`; (3) добавлен `prefers-reduced-motion` fallback (`transition: none`); (4) в `theme-tokens` добавлен smoke-кейс, который проверяет pre-hover и post-hover геометрию/opacity стрелок для обеих карточек (`/fora` и `/kissa`).
+  Проверки: (1) `npm run build` — успешно; (2) `npm run test:smoke -- tests/smoke/theme-tokens.spec.ts` — успешно (`10 passed`).
+- 2026-03-27: Ускорена hover-анимация стрелок `CaseCard` в 2 раза и выделен отдельный string-literal тип направления стрелки.
+  Причина: пользователь запросил увеличить скорость анимации `case-card-arrow` x2 и явно добавить string-тип для направления, если он не выделен отдельно.
+  Файлы: `src/styles/components.css`, `tests/smoke/theme-tokens.spec.ts`, `src/data/cases.ts`, `tasks/logs.md`.
+  Что сделано: (1) в `.case-card-arrow` сокращена длительность transition с `0.4s` до `0.2s` для `opacity` и `transform`; (2) в smoke-тесте обновлено ожидание длительности (`0.2s`) для ветки без reduced-motion; (3) в `cases.ts` добавлен alias `CaseCardArrowDirection = 'left' | 'right'` и подключён в `CaseCardHover.arrowDirection`.
+  Проверки: (1) `npm run build` — успешно; (2) `npm run test:smoke -- tests/smoke/theme-tokens.spec.ts` — успешно (`10 passed`).
+- 2026-03-27: Точечно усилен эффект hover-стрелки `CaseCard`: скорость `0.12s` и более выраженный bounce по transform.
+  Причина: пользователь запросил дополнительно ускорить анимацию до `0.12` и увеличить визуальный bounce, т.к. текущий эффект был слишком слабым.
+  Файлы: `src/styles/components.css`, `tests/smoke/theme-tokens.spec.ts`, `tasks/logs.md`.
+  Что сделано: (1) в `.case-card-arrow` длительность transition для `opacity/transform` снижена до `0.12s`; (2) для transform установлен более агрессивный overshoot-bezier `cubic-bezier(0.18, 1.65, 0.32, 1)`; (3) в smoke-тесте обновлены ожидания по длительности и timing function для ветки без reduced-motion.
+  Проверки: (1) `npm run build` — успешно; (2) `npm run test:smoke -- tests/smoke/theme-tokens.spec.ts` — успешно (`10 passed`).
+- 2026-03-27: Скорректирован контракт hover-стрелки `CaseCard` по уточнению: `0.2s`, меньший bounce, `scale 0.9 -> 1`.
+  Причина: пользователь попросил откатить скорость к `0.2`, уменьшить bounce и явно зафиксировать стартовый scale `0.9`.
+  Файлы: `src/styles/components.css`, `tests/smoke/theme-tokens.spec.ts`, `tasks/logs.md`.
+  Что сделано: (1) в `.case-card-arrow` установлены `transition` `0.2s`; (2) bounce смягчён до `transform ... cubic-bezier(0.34, 1.2, 0.64, 1)`; (3) стартовый transform переведён на `scale(0.9)` при сохранении финального `scale(1)`; (4) smoke-ожидания синхронизированы (`duration=0.2s`, новый bezier, pre-hover scale `0.9`).
+  Проверки: (1) `npm run build` — успешно; (2) `npm run test:smoke -- tests/smoke/theme-tokens.spec.ts` — успешно (`10 passed`).
+- 2026-03-27: Уменьшена амплитуда пути hover-стрелки `CaseCard` в 2 раза (`translateY 25px -> 12.5px`).
+  Причина: пользователь запросил сократить путь анимации (меньший translate при том же scale-контракте `0.9 -> 1`).
+  Файлы: `src/styles/components.css`, `tests/smoke/theme-tokens.spec.ts`, `tasks/logs.md`.
+  Что сделано: (1) стартовый transform для `.case-card-arrow` изменён на `translate3d(0px, 12.5px, 0px) scale(0.9)`; (2) smoke-ожидание pre-hover `matrix.ty` синхронизировано на `12.5`.
+  Проверки: (1) `npm run build` — успешно; (2) `npm run test:smoke -- tests/smoke/theme-tokens.spec.ts` — успешно (`10 passed`).

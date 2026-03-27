@@ -25,10 +25,12 @@ export type CaseCardHoverAsset = {
   zIndex: number;
 };
 
+export type CaseCardArrowDirection = 'left' | 'right';
+
 export type CaseCardHover = {
   designWidth?: number;
   borderColor: string;
-  arrowDirection: 'left' | 'right';
+  arrowDirection: CaseCardArrowDirection;
   assets: CaseCardHoverAsset[];
 };
 
