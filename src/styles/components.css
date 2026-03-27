@@ -452,6 +452,13 @@
   transform: translate3d(0px, 25px, 0px) scale(0.5) rotate(0deg);
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  html[data-js='true'] .home-hero[data-home-hero-appear='pending'] [data-home-hero-cta-stage] {
+    opacity: 0;
+    transform: translate3d(0px, 25px, 0px);
+  }
+}
+
 .home-hero-asset img,
 img.home-hero-asset {
   display: block;

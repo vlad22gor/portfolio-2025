@@ -20,9 +20,106 @@ const readHomeHeroCtaState = () => {
 
 test.describe('Home hero CTA animation', () => {
   test('continues hero stagger when CTA is initially inside viewport', async ({ page }) => {
+    await page.addInitScript(() => {
+      const runtimeWindow = window as typeof window & {
+        __homeHeroCtaEarlySamples?: Array<{
+          label: string;
+          exists: boolean;
+          heroAppearState: string | null;
+          computedOpacity: number | null;
+          computedTransform: string | null;
+          translateY: number | null;
+        }>;
+      };
+
+      const resolveTranslateY = (transform: string) => {
+        if (!transform || transform === 'none') {
+          return 0;
+        }
+        if (transform.startsWith('matrix3d(') && transform.endsWith(')')) {
+          const values = transform
+            .slice('matrix3d('.length, -1)
+            .split(',')
+            .map((value) => Number.parseFloat(value.trim()));
+          return Number.isFinite(values[13]) ? values[13] : null;
+        }
+        if (transform.startsWith('matrix(') && transform.endsWith(')')) {
+          const values = transform
+            .slice('matrix('.length, -1)
+            .split(',')
+            .map((value) => Number.parseFloat(value.trim()));
+          return Number.isFinite(values[5]) ? values[5] : null;
+        }
+        return null;
+      };
+
+      runtimeWindow.__homeHeroCtaEarlySamples = [];
+      const sample = (label: string) => {
+        const node = document.querySelector('.home-hero-cta [data-home-hero-cta-stage="text"]');
+        const hero = document.querySelector('.home-hero');
+        if (!(node instanceof HTMLElement)) {
+          runtimeWindow.__homeHeroCtaEarlySamples?.push({
+            label,
+            exists: false,
+            heroAppearState: hero instanceof HTMLElement ? hero.getAttribute('data-home-hero-appear') : null,
+            computedOpacity: null,
+            computedTransform: null,
+            translateY: null,
+          });
+          return;
+        }
+
+        const computedStyle = window.getComputedStyle(node);
+        const opacity = Number.parseFloat(computedStyle.opacity);
+        const transform = computedStyle.transform || 'none';
+        runtimeWindow.__homeHeroCtaEarlySamples?.push({
+          label,
+          exists: true,
+          heroAppearState: hero instanceof HTMLElement ? hero.getAttribute('data-home-hero-appear') : null,
+          computedOpacity: Number.isFinite(opacity) ? opacity : null,
+          computedTransform: transform,
+          translateY: resolveTranslateY(transform),
+        });
+      };
+
+      document.addEventListener('DOMContentLoaded', () => {
+        sample('domcontentloaded');
+        requestAnimationFrame(() => {
+          sample('raf-1');
+          requestAnimationFrame(() => {
+            sample('raf-2');
+          });
+        });
+      });
+    });
+
     await page.setViewportSize({ width: 1440, height: 1100 });
     await page.goto('/', { waitUntil: 'load' });
     await expect(page).toHaveTitle(/Vlad Horovyy – Product Designer/i);
+
+    const earlySamples = await page.evaluate(() => {
+      const runtimeWindow = window as typeof window & {
+        __homeHeroCtaEarlySamples?: Array<{
+          label: string;
+          exists: boolean;
+          heroAppearState: string | null;
+          computedOpacity: number | null;
+          computedTransform: string | null;
+          translateY: number | null;
+        }>;
+      };
+      return runtimeWindow.__homeHeroCtaEarlySamples ?? [];
+    });
+    const earlyFlashGuard = earlySamples.some((sample) => {
+      if (!sample.exists || sample.computedOpacity === null || sample.translateY === null) {
+        return false;
+      }
+      const hasHeroPrepaintState = sample.heroAppearState === 'pending' || sample.heroAppearState === 'running';
+      const opacityInitial = sample.computedOpacity <= 0.01;
+      const transformInitial = Math.abs(sample.translateY - 25) <= 1;
+      return hasHeroPrepaintState && opacityInitial && transformInitial;
+    });
+    expect(earlyFlashGuard).toBe(true);
 
     await expect(page.locator('.home-hero-cta')).toBeVisible();
     await expect

@@ -2364,3 +2364,8 @@
   Файлы: `src/styles/components.css`, `tests/smoke/theme-tokens.spec.ts`, `tasks/logs.md`.
   Что сделано: (1) стартовый transform для `.case-card-arrow` изменён на `translate3d(0px, 12.5px, 0px) scale(0.9)`; (2) smoke-ожидание pre-hover `matrix.ty` синхронизировано на `12.5`.
   Проверки: (1) `npm run build` — успешно; (2) `npm run test:smoke -- tests/smoke/theme-tokens.spec.ts` — успешно (`10 passed`).
+- 2026-03-27: Устранён hard-reload anti-flash для `home-hero` CTA (`text + button`) с pre-paint initial-state и smoke-guard ранних кадров.
+  Причина: на перезагрузке CTA кратко рендерился в финальном состоянии, затем скрывался runtime и повторно появлялся по stagger (визуальный «прыжок»).
+  Файлы: `src/styles/components.css`, `src/layouts/BaseLayout.astro`, `tests/smoke/home-hero-cta-animation.spec.ts`, `tasks/logs.md`.
+  Что сделано: (1) добавлен pre-paint CSS для `[data-home-hero-cta-stage]` под `.home-hero[data-home-hero-appear='pending']` в режиме `html[data-js='true']` + `prefers-reduced-motion: no-preference` (`opacity:0`, `translateY:25px`); (2) расширен `noscript` fallback, чтобы CTA не оставался скрытым без JS; (3) расширен smoke `home-hero-cta-animation`: добавлены ранние сэмплы (`DOMContentLoaded`, `raf-1`, `raf-2`) и assert prepaint-state (`opacity≈0`, `translateY≈25`) при `hero` в `pending|running`; (4) runtime-тайминги hero CTA не менялись.
+  Проверки: (1) `npx playwright test tests/smoke/home-hero-cta-animation.spec.ts` — успешно (`2 passed`); (2) `npm run build` — успешно; (3) hard reload под throttling (`latency 180ms`, `cellular3g`) через Playwright CDP: ранние сэмплы CTA зафиксированы как `opacity=0`, `translateY=25`, `hasVisibleSnap=false`.
