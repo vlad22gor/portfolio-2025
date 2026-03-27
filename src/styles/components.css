@@ -143,6 +143,14 @@
   padding-top: var(--site-header-top-padding);
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  /* Pre-paint anti-flash: keep header in initial frame until runtime switches pending -> running. */
+  html[data-js='true'] .site-header-inner[data-header-appear='pending'] {
+    opacity: 0;
+    transform: translate3d(0px, -50px, 0px);
+  }
+}
+
 .site-nav {
   display: flex;
   justify-content: center;

@@ -78,6 +78,12 @@ export const inViewPresets = {
     finalTransform: 'translate3d(0px, 0px, 0px)',
     transition: baseTransition,
   },
+  'appear-top-v1': {
+    mode: 'element',
+    initialTransform: 'translate3d(0px, -50px, 0px)',
+    finalTransform: 'translate3d(0px, 0px, 0px)',
+    transition: baseTransition,
+  },
   'appear-stagger-v1': {
     mode: 'stagger-children',
     childSelector: '[data-motion-stage-item]',

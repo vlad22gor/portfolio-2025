@@ -28,7 +28,7 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
 ---
 
 <header class="site-header" transition:name="site-header" transition:animate="none" transition:persist>
-  <div class="site-header-inner">
+  <div class="site-header-inner" data-header-appear="pending">
     <nav class="site-nav" aria-label="Main navigation">
       <div
         class="site-nav-track"
@@ -115,6 +115,10 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
 
     const lifecycle = createLifecycle();
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const headerAppearPending = 'pending';
+    const headerAppearRunning = 'running';
+    const headerAppearDone = 'done';
+    const headerAppearTransition = { duration: 0.4, ease: [0.44, 0, 0.56, 1] };
     const waveDiameter = 8;
     const waveMinCircles = 1;
     const railSpringDuration = 1.05;
@@ -139,12 +143,75 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
     let railTrimSyncRafId = 0;
     let pendingNavigation = null;
     let routeStartSignal = 0;
+    let headerAppearControl = null;
 
     const normalizePath = (pathname) => {
       if (!pathname || pathname === '/') {
         return '/';
       }
       return pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+    };
+
+    const resolveHeaderRoot = () => document.querySelector('.site-header-inner');
+
+    const setHeaderAppearState = (header, state) => {
+      header.dataset.headerAppear = state;
+    };
+
+    const setHeaderInitial = (header) => {
+      header.style.opacity = '0';
+      header.style.transform = 'translate3d(0px, -50px, 0px)';
+    };
+
+    const setHeaderFinal = (header) => {
+      header.style.opacity = '1';
+      header.style.transform = 'translate3d(0px, 0px, 0px)';
+    };
+
+    const stopHeaderAppear = () => {
+      if (!headerAppearControl) {
+        return;
+      }
+      headerAppearControl.stop?.();
+      headerAppearControl = null;
+    };
+
+    const playHeaderAppear = () => {
+      const header = resolveHeaderRoot();
+      if (!(header instanceof HTMLElement)) {
+        return;
+      }
+
+      const currentState = header.dataset.headerAppear ?? headerAppearPending;
+      if (currentState === headerAppearDone || currentState === headerAppearRunning) {
+        return;
+      }
+
+      if (prefersReducedMotion.matches) {
+        stopHeaderAppear();
+        setHeaderFinal(header);
+        setHeaderAppearState(header, headerAppearDone);
+        return;
+      }
+
+      stopHeaderAppear();
+      setHeaderInitial(header);
+      setHeaderAppearState(header, headerAppearRunning);
+      headerAppearControl = animate(
+        header,
+        {
+          opacity: [0, 1],
+          transform: ['translate3d(0px, -50px, 0px)', 'translate3d(0px, 0px, 0px)'],
+        },
+        {
+          ...headerAppearTransition,
+          onComplete: () => {
+            setHeaderFinal(header);
+            setHeaderAppearState(header, headerAppearDone);
+            headerAppearControl = null;
+          },
+        },
+      );
     };
 
     const ensureDebugStore = () => {
@@ -1079,6 +1146,7 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
 
     lifecycle.addCleanup(
       onAstroPageLoad(() => {
+        playHeaderAppear();
         sync({ animated: true });
       }),
     );
@@ -1103,6 +1171,7 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
     const runtime = {
       sync,
       destroy() {
+        stopHeaderAppear();
         cancelPendingNavigation();
         resetAllRailHoverOffsets();
         lifecycle.dispose();
@@ -1116,6 +1185,7 @@ const navPrefetchStrategy = import.meta.env.DEV ? 'false' : 'viewport';
       return;
     }
 
+    playHeaderAppear();
     sync({ animated: false });
   })();
 </script>
