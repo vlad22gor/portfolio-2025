@@ -1,0 +1,11 @@
+---
+import AgentationToolbar from './AgentationToolbar';
+
+interface Props {
+  endpoint: string;
+}
+
+const { endpoint } = Astro.props;
+---
+
+<AgentationToolbar client:only="react" endpoint={endpoint} />

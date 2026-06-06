@@ -7,6 +7,8 @@ import CaseDetailSections from '../components/case-details/CaseDetailSections.as
 import { CASES, getCaseBySlug } from '../data/cases';
 import { getCaseDetailConfig } from '../data/case-details';
 import { getCriticalMediaForRoute } from '../data/critical-media';
+import { PAGE_METADATA } from '../data/agent-profile';
+import { caseCreativeWorkStructuredData } from '../data/structured-data';
 
 export function getStaticPaths() {
   return CASES.map((item) => ({ params: { slug: item.slug } }));
@@ -24,9 +26,24 @@ const prev = CASES[(index - 1 + CASES.length) % CASES.length];
 const next = CASES[(index + 1) % CASES.length];
 const detailConfig = getCaseDetailConfig(current.slug);
 const criticalMediaPreloads = getCriticalMediaForRoute(current.slug);
+const pageMetadata = current.slug === 'fora' ? PAGE_METADATA.fora : PAGE_METADATA.kissa;
+const caseKeywords =
+  current.slug === 'fora'
+    ? ['mobile B2C app', 'mobile product redesign', 'grocery app', 'design system', 'craft-heavy product polish']
+    : ['0-to-1 product design', 'AI-enabled self-service', 'self-checkout terminal', 'complex product flow'];
 ---
 
-<BaseLayout canonicalPath={`/${current.slug}`}>
+<BaseLayout
+  canonicalPath={`/${current.slug}`}
+  title={pageMetadata.title}
+  description={pageMetadata.description}
+  structuredData={caseCreativeWorkStructuredData({
+    slug: current.slug,
+    title: pageMetadata.title,
+    description: pageMetadata.description,
+    keywords: caseKeywords,
+  })}
+>
   {
     criticalMediaPreloads.length > 0 && (
       <Fragment slot="head">

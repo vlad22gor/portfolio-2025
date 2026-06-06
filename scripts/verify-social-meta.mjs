@@ -6,6 +6,10 @@ const source = await readFile(
   'utf8',
 );
 const expectedCoverUrl = 'https://vladhorovyy.com/media/site/site-cover.png?v=2026-06-06';
+const expectedTitle = 'Vladyslav Horovyy - Product Designer';
+const expectedDescription =
+  'Product designer from Kyiv crafting standout mobile apps with product thinking, visual craft, 3D, motion, and AI-assisted workflows.';
+const expectedCoverAlt = 'Vladyslav Horovyy portfolio cover';
 
 const metaContent = (attribute, value) => {
   const pattern = new RegExp(
@@ -31,10 +35,14 @@ if (shouldReadSource) {
     "const socialCoverVersion = '2026-06-06';",
     'const socialCoverUrl = new URL(`${socialCoverPath}?v=${socialCoverVersion}`, siteBaseUrl).toString();',
     '<meta property="og:image" content={socialCoverUrl} />',
+    '<title>{siteTitle}</title>',
+    '<meta name="description" content={siteDescription} />',
     '<meta name="twitter:title" content={siteTitle} />',
     '<meta name="twitter:description" content={siteDescription} />',
     '<meta name="twitter:image" content={socialCoverUrl} />',
     '<meta name="twitter:image:alt" content={socialCoverAlt} />',
+    'structuredData?: unknown | unknown[];',
+    '{serializedStructuredData.map((item) => <script type="application/ld+json" set:html={item} />)}',
   ];
 
   const missing = sourceExpectations.filter((expected) => !source.includes(expected));
@@ -44,13 +52,9 @@ if (shouldReadSource) {
 } else {
   assertMeta('og:image', metaContent('property', 'og:image'), expectedCoverUrl);
   assertMeta('twitter:image', metaContent('name', 'twitter:image'), expectedCoverUrl);
-  assertMeta('twitter:title', metaContent('name', 'twitter:title'), 'Vlad Horovyy – Product Designer');
-  assertMeta(
-    'twitter:description',
-    metaContent('name', 'twitter:description'),
-    'Product designer from Kyiv crafting standout mobile apps',
-  );
-  assertMeta('twitter:image:alt', metaContent('name', 'twitter:image:alt'), 'Vlad Horovyy portfolio cover');
+  assertMeta('twitter:title', metaContent('name', 'twitter:title'), expectedTitle);
+  assertMeta('twitter:description', metaContent('name', 'twitter:description'), expectedDescription);
+  assertMeta('twitter:image:alt', metaContent('name', 'twitter:image:alt'), expectedCoverAlt);
 }
 
 console.log('Social metadata looks good.');

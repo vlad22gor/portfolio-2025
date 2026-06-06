@@ -262,7 +262,7 @@ test.describe('Gallery smoke', () => {
 
     await page.goto('/gallery');
 
-    await expect(page).toHaveTitle(/Vlad Horovyy – Product Designer/i);
+    await expect(page).toHaveTitle(/Gallery - Vladyslav Horovyy/i);
     await waitForGalleryCriticalReady(page);
 
     const desktopDiagnostics = await page.evaluate(() => ({

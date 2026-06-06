@@ -6,6 +6,7 @@ import GalleryRowsSection from '../components/GalleryRowsSection.astro';
 import GalleryToBeMoreSection from '../components/GalleryToBeMoreSection.astro';
 import FinalCtaSection from '../components/FinalCtaSection.astro';
 import { getCriticalMediaForRoute } from '../data/critical-media';
+import { PAGE_METADATA } from '../data/agent-profile';
 
 const criticalMediaPreloads = getCriticalMediaForRoute('gallery');
 const videoPreloadMediaQuery = '(min-width: 768px)';
@@ -13,6 +14,8 @@ const videoPreloadMediaQuery = '(min-width: 768px)';
 
 <BaseLayout
   canonicalPath="/gallery"
+  title={PAGE_METADATA.gallery.title}
+  description={PAGE_METADATA.gallery.description}
 >
   <Fragment slot="head">
     {criticalMediaPreloads.map((asset) => (

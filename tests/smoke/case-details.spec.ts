@@ -271,7 +271,7 @@ test.describe('Case details smoke', () => {
     test.setTimeout(60_000);
     await page.goto('/fora');
 
-    await expect(page).toHaveTitle(/Vlad Horovyy – Product Designer/i);
+    await expect(page).toHaveTitle(/Fora app redesign - Vladyslav Horovyy/i);
     await expect(page.locator('a[data-nav-id="cases"][aria-current="page"]')).toBeVisible();
 
     await expect(page.locator('.fora-intro-section')).toBeVisible();
@@ -339,7 +339,7 @@ test.describe('Case details smoke', () => {
   test('/kissa renders detail config with artifact photos section and no fallback blocks', async ({ page }) => {
     await page.goto('/kissa');
 
-    await expect(page).toHaveTitle(/Vlad Horovyy – Product Designer/i);
+    await expect(page).toHaveTitle(/Kissa\.AI self-checkout terminal redesign - Vladyslav Horovyy/i);
     await expect(page.locator('a[data-nav-id="cases"][aria-current="page"]')).toBeVisible();
 
     await expect(page.locator('.kissa-intro-section')).toBeVisible();
