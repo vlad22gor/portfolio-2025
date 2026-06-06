@@ -21,7 +21,8 @@ const siteBaseUrl = Astro.site ?? 'https://vladhorovyy.com';
 const canonical = new URL(canonicalPath, siteBaseUrl).toString();
 const criticalRouteId = resolveCriticalRouteIdFromPath(canonicalPath);
 const socialCoverPath = '/media/site/site-cover.png';
-const socialCoverUrl = new URL(socialCoverPath, siteBaseUrl).toString();
+const socialCoverVersion = '2026-06-06';
+const socialCoverUrl = new URL(`${socialCoverPath}?v=${socialCoverVersion}`, siteBaseUrl).toString();
 const socialCoverWidth = 2400;
 const socialCoverHeight = 1260;
 const socialCoverAlt = 'Vlad Horovyy portfolio cover';
@@ -262,7 +263,10 @@ const agentationEndpoint =
     <meta property="og:image:height" content={String(socialCoverHeight)} />
     <meta property="og:image:alt" content={socialCoverAlt} />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={siteTitle} />
+    <meta name="twitter:description" content={siteDescription} />
     <meta name="twitter:image" content={socialCoverUrl} />
+    <meta name="twitter:image:alt" content={socialCoverAlt} />
   </head>
   <body
     data-route-home={isHomeRoute ? 'true' : 'false'}
