@@ -1,22 +1,30 @@
 ---
 import '../styles/global.css';
 import { ClientRouter } from 'astro:transitions';
-import AgentationToolbar from '../components/dev/AgentationToolbar';
 import InViewMotionRuntime from '../components/InViewMotionRuntime.astro';
 import TemporaryAdaptiveNotice from '../components/TemporaryAdaptiveNotice.astro';
 import CriticalMediaWarmupRuntime from '../components/CriticalMediaWarmupRuntime.astro';
 import FloatingThemeButton from '../components/FloatingThemeButton.astro';
 import MobilePerimeterRuntime from '../components/MobilePerimeterRuntime.astro';
 import ManagedVideoPlaybackRuntime from '../components/ManagedVideoPlaybackRuntime.astro';
+import { PAGE_METADATA } from '../data/agent-profile';
 import { resolveCriticalRouteIdFromPath } from '../data/critical-media';
 
 export interface Props {
   canonicalPath?: string;
+  title?: string;
+  description?: string;
+  structuredData?: unknown | unknown[];
 }
 
-const { canonicalPath = '/' } = Astro.props;
-const siteTitle = 'Vlad Horovyy – Product Designer';
-const siteDescription = 'Product designer from Kyiv crafting standout mobile apps';
+const {
+  canonicalPath = '/',
+  title = PAGE_METADATA.home.title,
+  description = PAGE_METADATA.home.description,
+  structuredData,
+} = Astro.props;
+const siteTitle = title;
+const siteDescription = description;
 const siteBaseUrl = Astro.site ?? 'https://vladhorovyy.com';
 const canonical = new URL(canonicalPath, siteBaseUrl).toString();
 const criticalRouteId = resolveCriticalRouteIdFromPath(canonicalPath);
@@ -25,7 +33,9 @@ const socialCoverVersion = '2026-06-06';
 const socialCoverUrl = new URL(`${socialCoverPath}?v=${socialCoverVersion}`, siteBaseUrl).toString();
 const socialCoverWidth = 2400;
 const socialCoverHeight = 1260;
-const socialCoverAlt = 'Vlad Horovyy portfolio cover';
+const socialCoverAlt = 'Vladyslav Horovyy portfolio cover';
+const structuredDataItems = Array.isArray(structuredData) ? structuredData : structuredData ? [structuredData] : [];
+const serializedStructuredData = structuredDataItems.map((item) => JSON.stringify(item));
 const normalizedCanonicalPath =
   canonicalPath.length > 1 && canonicalPath.endsWith('/') ? canonicalPath.slice(0, -1) : canonicalPath;
 const isHomeRoute = normalizedCanonicalPath === '/';
@@ -39,6 +49,11 @@ const agentationEndpoint =
   import.meta.env.PUBLIC_AGENTATION_ENDPOINT.trim().length > 0
     ? import.meta.env.PUBLIC_AGENTATION_ENDPOINT
     : 'http://localhost:4747');
+let AgentationMount: (typeof import('../components/dev/AgentationMount.astro'))['default'] | undefined;
+if (isAgentationEnabled) {
+  const agentationMountPath = '../components/dev/AgentationMount.astro';
+  AgentationMount = (await import(/* @vite-ignore */ agentationMountPath)).default;
+}
 ---
 
 <!doctype html>
@@ -267,6 +282,7 @@ const agentationEndpoint =
     <meta name="twitter:description" content={siteDescription} />
     <meta name="twitter:image" content={socialCoverUrl} />
     <meta name="twitter:image:alt" content={socialCoverAlt} />
+    {serializedStructuredData.map((item) => <script type="application/ld+json" set:html={item} />)}
   </head>
   <body
     data-route-home={isHomeRoute ? 'true' : 'false'}
@@ -290,9 +306,9 @@ const agentationEndpoint =
       <MobilePerimeterRuntime />
       <CriticalMediaWarmupRuntime routeId={criticalRouteId} />
       {
-        isAgentationEnabled && (
+        AgentationMount && (
           <div id="agentation-dev-root" transition:persist>
-            <AgentationToolbar client:only="react" endpoint={agentationEndpoint} />
+            <AgentationMount endpoint={agentationEndpoint} />
           </div>
         )
       }

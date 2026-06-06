@@ -10,6 +10,8 @@ import FinalCtaSection from '../components/FinalCtaSection.astro';
 import Button from '../components/Button.astro';
 import AdaptivePhoneArcSlider from '../components/AdaptivePhoneArcSlider.astro';
 import TransparentVideo from '../components/TransparentVideo.astro';
+import { PAGE_METADATA } from '../data/agent-profile';
+import { personStructuredData, profilePageStructuredData } from '../data/structured-data';
 
 const isDev = import.meta.env.DEV;
 const coinInlineStyle = [
@@ -22,6 +24,9 @@ const coinInlineStyle = [
 
 <BaseLayout
   canonicalPath="/"
+  title={PAGE_METADATA.home.title}
+  description={PAGE_METADATA.home.description}
+  structuredData={[personStructuredData(), profilePageStructuredData()]}
 >
   <SiteHeader />
   <main id="content" class="page-shell page-shell--home" transition:name="page-content">

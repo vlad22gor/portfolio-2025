@@ -113,7 +113,7 @@ test.describe('Home hero CTA animation', () => {
 
     await page.setViewportSize({ width: 1440, height: 1100 });
     await page.goto('/', { waitUntil: 'load' });
-    await expect(page).toHaveTitle(/Vlad Horovyy – Product Designer/i);
+    await expect(page).toHaveTitle(/Vladyslav Horovyy - Product Designer/i);
 
     const earlySamples = await page.evaluate(() => {
       const runtimeWindow = window as typeof window & {
@@ -261,7 +261,7 @@ test.describe('Home hero CTA animation', () => {
   test('falls back to inView when CTA is initially outside viewport', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 760 });
     await page.goto('/', { waitUntil: 'load' });
-    await expect(page).toHaveTitle(/Vlad Horovyy – Product Designer/i);
+    await expect(page).toHaveTitle(/Vladyslav Horovyy - Product Designer/i);
 
     await expect
       .poll(() => page.evaluate(readHomeHeroCtaState), {

@@ -77,7 +77,7 @@ export const FORA_PROCESS_SECTION: CaseProcessSectionData = {
       },
     },
     {
-      text: 'I also led design reviews that cut bugs in prod by 80%, ensuring a polished look',
+      text: 'I also led design reviews that reduced UI bugs by 40%, helping preserve a polished look',
       iconSrc: FORA_MOTIF_HOURGLASS,
       iconColorToken: '--color-accent-orange',
       offsetX: 168,

@@ -152,7 +152,7 @@ export const GALLERY_ROWS: GalleryRow[] = [
       phone(
         '53:5328',
         screenImage('/media/gallery/screens/r3-c3-phone.webp'),
-        'Gallery phone card: portfolio finance tracker',
+        'Gallery phone card: portfolio finance dashboard',
       ),
       phone(
         '53:5329',

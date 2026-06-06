@@ -1,5 +1,7 @@
 # Lessons
 
+- Для agent-readable слоя портфолио использовать canonical name `Vladyslav Horovyy` (`Vlad Horovyy` только casual alias), one-line summary держать без `Senior`, публичными proof facts считать `5+ years`, `700K MAU`, Fozzy Group internal platform и MVP; startup CEO/founder учитывать как отдельную аудиторию с primary-сценариями `mobile B2C app`, `0-to-1 product design`, `craft-heavy product polish` (не `founder-style`).
+- Agent-readable public output генерировать только из whitelisted public data (`src/data/agent-*`, кейсы, approved proof facts), не из raw `Vacancies`; privacy-gate должен проверять `public` и `dist` на job-search/internal markers.
 - Для маршрутов, где `TemporaryAdaptiveNotice` по контракту всегда скрыт (`/`, `/cases`, `/gallery`, `/fora`, `/kissa`), не монтировать `temporary-adaptive-shell` в DOM: скрытый CSS-блок с видео/slider runtime даёт лишний decode/RAF и ухудшает mobile-навигацию.
 - Для mobile WebKit держать декоративные `TransparentVideo` (включая `cases more-card`) на `data-video-playback='inview'` и без принудительного `playAll/autoplay`; управление `inview`-playback должно жить в одном глобальном runtime, смонтированном в `BaseLayout`.
 - Для mobile-стабильности: `home`-версия `AdaptivePhoneArcSlider` должна работать в `mediaMode='poster-only'`; lazy-видео (`device mockups` и gallery-illustrations) переводить на `data-video-playback='inview'` с `pause` вне viewport и на `astro:before-swap`.

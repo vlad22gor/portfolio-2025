@@ -661,7 +661,7 @@ test.describe('Theme tokens smoke', () => {
     await page.emulateMedia({ colorScheme: 'dark' });
 
     await page.goto('/');
-    await expect(page).toHaveTitle(/Vlad Horovyy – Product Designer/i);
+    await expect(page).toHaveTitle(/Vladyslav Horovyy - Product Designer/i);
 
     const darkBySystem = await page.evaluate(readThemeTokens);
     expect(darkBySystem).toEqual({
@@ -779,7 +779,7 @@ test.describe('Theme tokens smoke', () => {
   test('badge uses outlined in dark for default type and restores tone in light', async ({ page }) => {
     await page.emulateMedia({ colorScheme: 'light' });
     await page.goto('/');
-    await expect(page).toHaveTitle(/Vlad Horovyy – Product Designer/i);
+    await expect(page).toHaveTitle(/Vladyslav Horovyy - Product Designer/i);
 
     await page.evaluate(() => {
       document.documentElement.dataset.theme = 'light';
@@ -908,7 +908,7 @@ test.describe('Theme tokens smoke', () => {
     await page.emulateMedia({ colorScheme: 'light' });
 
     await page.goto('/');
-    await expect(page).toHaveTitle(/Vlad Horovyy – Product Designer/i);
+    await expect(page).toHaveTitle(/Vladyslav Horovyy - Product Designer/i);
     await expect(page.locator(floatingThemeButtonSelector)).toBeVisible();
     await page.evaluate((storageKey) => {
       document.documentElement.dataset.theme = 'light';
@@ -1485,7 +1485,7 @@ test.describe('Theme tokens smoke', () => {
   test('button and divider tokens are applied to variants and waves', async ({ page }) => {
     await page.emulateMedia({ colorScheme: 'light' });
     await page.goto('/');
-    await expect(page).toHaveTitle(/Vlad Horovyy – Product Designer/i);
+    await expect(page).toHaveTitle(/Vladyslav Horovyy - Product Designer/i);
 
     await page.evaluate((storageKey) => {
       document.documentElement.dataset.theme = 'light';

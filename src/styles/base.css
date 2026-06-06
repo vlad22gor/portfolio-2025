@@ -190,11 +190,6 @@ html {
   top: 1rem;
 }
 
-#agentation-dev-root {
-  position: relative;
-  z-index: 1100;
-}
-
 h1 {
   margin: 0;
   font-family: var(--type-t2-family);

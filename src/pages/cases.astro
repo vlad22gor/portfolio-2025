@@ -4,10 +4,13 @@ import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import CasesCardsSection from '../components/CasesCardsSection.astro';
 import FinalCtaSection from '../components/FinalCtaSection.astro';
+import { PAGE_METADATA } from '../data/agent-profile';
 ---
 
 <BaseLayout
   canonicalPath="/cases"
+  title={PAGE_METADATA.cases.title}
+  description={PAGE_METADATA.cases.description}
 >
   <SiteHeader />
   <main id="content" class="page-shell page-shell--cases" transition:name="page-content">
