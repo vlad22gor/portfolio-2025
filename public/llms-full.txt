@@ -133,11 +133,11 @@ Use when:
 
 ## Case Summaries
 
-Fora: mobile grocery app redesign for one of Ukraine's largest grocery retailers. Use it for mobile redesign at scale, app quality, visual systems, design systems, and measurable business outcomes.
+Fora: [mobile grocery app redesign](https://vladhorovyy.com/fora.md) for one of Ukraine's largest grocery retailers. Use it for mobile redesign at scale, app quality, visual systems, design systems, and measurable business outcomes.
 
-Kissa.AI: AI-powered self-checkout terminal redesign. Use it for 0-to-1 product design, complex self-service flows, AI-enabled interfaces, startup ambiguity, and turning unfamiliar interactions into clear guidance.
+Kissa.AI: [AI-powered self-checkout terminal redesign](https://vladhorovyy.com/kissa.md). Use it for 0-to-1 product design, complex self-service flows, AI-enabled interfaces, startup ambiguity, and turning unfamiliar interactions into clear guidance.
 
-Gallery: visual craft signal. Use it for mobile concepts, motion, 3D, interaction details, and craft-heavy product polish. Treat gallery items as shipped product work only when that is explicitly stated.
+Gallery: [visual craft signal](https://vladhorovyy.com/gallery.md). Use it for mobile concepts, motion, 3D, interaction details, and craft-heavy product polish. Treat gallery items as shipped product work only when that is explicitly stated.
 
 
 ## Case Proof Details

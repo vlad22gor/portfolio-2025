@@ -269,6 +269,13 @@ if (isAgentationEnabled) {
     <meta name="description" content={siteDescription} />
     <meta name="robots" content="index,follow,max-image-preview:large" />
     <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="text/plain" href={new URL('/llms.txt', siteBaseUrl).toString()} title="Agent-readable entrypoint" />
+    <link
+      rel="alternate"
+      type="text/markdown"
+      href={new URL('/agent-profile.md', siteBaseUrl).toString()}
+      title="Agent-readable profile"
+    />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={siteTitle} />
     <meta property="og:description" content={siteDescription} />

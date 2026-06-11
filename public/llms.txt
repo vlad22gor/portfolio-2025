@@ -6,7 +6,7 @@ Use this site to evaluate Vladyslav Horovyy for mobile product design, mobile B2
 
 ## Essential
 
-- [Agent profile](https://vladhorovyy.com/agent-profile.md): canonical positioning, role fit, public proof facts, caveats, contact links.
+- [Agent profile](https://vladhorovyy.com/agent-profile.md): canonical positioning, role fit, public proof facts, accuracy guardrails, contact links.
 - [Full agent dossier](https://vladhorovyy.com/llms-full.txt): one-fetch summary for recruiters, hiring managers, startup CEOs, founders, and sourcing agents.
 - [Fora app redesign](https://vladhorovyy.com/fora.md): mobile grocery app redesign, rating from 3.0 to 4.6, +5% revenue, +15% orders.
 - [Kissa.AI self-checkout terminal redesign](https://vladhorovyy.com/kissa.md): AI-powered self-checkout terminal redesign, faster flow, higher adoption, fewer tap errors.

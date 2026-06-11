@@ -170,7 +170,7 @@ export const GALLERY_ROWS: GalleryRow[] = [
         'Gallery phone card: dark finance tasks',
       ),
       image('57:5418', '/media/gallery/images/r4-c2-image.webp', 'Gallery image card: Nova Poshta 3D composition'),
-      phone('57:5420', screenImage('/media/gallery/screens/r4-c3-phone.webp'), 'Gallery phone card: socioligy concept'),
+      phone('57:5420', screenImage('/media/gallery/screens/r4-c3-phone.webp'), 'Gallery phone card: sociology concept'),
     ],
   },
   {

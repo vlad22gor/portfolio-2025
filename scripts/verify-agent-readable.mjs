@@ -52,6 +52,8 @@ const forbiddenPublicFragments = [
   'pay preferences',
   'active opportunities',
   'outreach strategy',
+  'speeded up flow times',
+  'socioligy',
 ];
 
 const forbiddenDistFragments = [
@@ -147,6 +149,8 @@ for (const file of requiredFiles) {
 }
 
 const files = Object.fromEntries(await Promise.all(requiredFiles.map(async (file) => [file, await readText(file)])));
+const robotsTxt = await readText('robots.txt');
+const sitemapXml = await readText('sitemap.xml');
 
 if (!shouldReadSource) {
   for (const file of requiredFiles) {
@@ -183,6 +187,10 @@ assertIncludes('llms.txt', files['llms.txt'], 'https://vladhorovyy.com/llms-full
 assertIncludes('llms.txt', files['llms.txt'], 'https://vladhorovyy.com/fora.md');
 assertIncludes('llms.txt', files['llms.txt'], 'https://vladhorovyy.com/kissa.md');
 assertIncludes('llms.txt', files['llms.txt'], 'https://vladhorovyy.com/gallery.md');
+assertIncludes('robots.txt', robotsTxt, 'https://vladhorovyy.com/llms.txt');
+for (const file of requiredFiles) {
+  assertIncludes('sitemap.xml', sitemapXml, `https://vladhorovyy.com/${file}`);
+}
 assertIncludes('llms-full.txt', files['llms-full.txt'], 'Founder/CEO-Ready Summary');
 const llmsFullWordCount = wordCount(files['llms-full.txt']);
 if (llmsFullWordCount < 1500 || llmsFullWordCount > 3000) {
@@ -191,7 +199,8 @@ if (llmsFullWordCount < 1500 || llmsFullWordCount > 3000) {
 assertIncludes('agent-profile.md', files['agent-profile.md'], 'Vlad Horovyy');
 assertIncludes('agent-profile.md', files['agent-profile.md'], 'Do not position Vladyslav as a frontend engineer');
 assertIncludes('fora.md', files['fora.md'], 'rating from 3.0 to 4.6');
-assertIncludes('kissa.md', files['kissa.md'], 'tap error rate by 80%');
+assertIncludes('kissa.md', files['kissa.md'], 'reduced flow time by 50%');
+assertIncludes('kissa.md', files['kissa.md'], 'reduced tap error rate by 80%');
 assertIncludes('gallery.md', files['gallery.md'], 'only when that is explicitly stated');
 
 if (!shouldReadSource) {
@@ -245,6 +254,12 @@ if (!shouldReadSource) {
     assertEqual(`${route} og:description`, metaContent(page, 'property', 'og:description'), expected.description);
     assertEqual(`${route} twitter:title`, metaContent(page, 'name', 'twitter:title'), expected.title);
     assertEqual(`${route} twitter:description`, metaContent(page, 'name', 'twitter:description'), expected.description);
+    assertIncludes(`${route} head llms alternate`, page, 'rel="alternate" type="text/plain" href="https://vladhorovyy.com/llms.txt"');
+    assertIncludes(
+      `${route} head agent-profile alternate`,
+      page,
+      'rel="alternate" type="text/markdown" href="https://vladhorovyy.com/agent-profile.md"',
+    );
 
     if (expected.jsonLdType) {
       const jsonLd = jsonLdItems(page);

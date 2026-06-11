@@ -195,7 +195,7 @@ export const CASE_AGENT_DETAILS = {
       },
     ],
     outcomes: [
-      'speeded up flow times by 50%',
+      'reduced flow time by 50%',
       'increased the channel shift rate from staffed checkout to self-checkout terminal by 20%',
       'reduced tap error rate by 80%',
     ],
