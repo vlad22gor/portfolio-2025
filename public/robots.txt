@@ -1,3 +1,6 @@
 User-agent: *
 Allow: /
 Sitemap: https://vladhorovyy.com/sitemap.xml
+
+# Agent-readable entrypoint:
+# https://vladhorovyy.com/llms.txt

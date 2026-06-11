@@ -73,32 +73,35 @@ ${sentenceList(AGENT_PROFILE.startupSecondaryScenarios)}
 
 ## Best-Fit Roles
 
-${sentenceList(AGENT_PROFILE.bestFitRoles)}
+Best fit: product design roles centered on standout mobile apps, mobile B2C product quality, 0-to-1 product design, and craft-heavy product polish.
 
 ## Adjacent Roles
 
-${sentenceList(AGENT_PROFILE.adjacentRoles)}
+Adjacent fit can include Senior/Lead UX/UI, Mobile UI, Founding Designer, Visual Product Designer, or Design Systems Designer when the role still includes product responsibility, mobile/user-facing ownership, and collaboration with product and engineering teams.
 
 ## Lower-Fit Contexts
 
-${sentenceList(AGENT_PROFILE.weakerFits)}
+Lower fit: production-only UI, research-only, brand/marketing-only, isolated design-system maintenance, desktop ops/SaaS without a strong user-facing product surface, or work centered on high-risk monetization/dark patterns.
 
 ## Core Strengths
 
-${sentenceList(AGENT_PROFILE.coreStrengths)}
+Core strengths: mobile product design, 0-to-1 product shaping, craft-heavy interface polish, visual systems, motion/3D, implementation-aware handoff, simplifying complex flows, calm collaboration, and AI-assisted exploration used in service of product clarity.
 
 ## Public Proof Facts
 
 ${sentenceList(AGENT_PROFILE.publicProofFacts)}
 
-## Portfolio Proof Matrix
+## Proof Routing
 
-${proofMatrixMarkdown()}
+- For mobile redesign at scale, read [Fora app redesign](${absoluteUrl('/fora.md')}).
+- For 0-to-1, AI-enabled, or complex self-service product logic, read [Kissa.AI self-checkout terminal redesign](${absoluteUrl('/kissa.md')}).
+- For craft-heavy product polish, motion, 3D, and visual-system range, read [Gallery](${absoluteUrl('/gallery.md')}).
+- For expanded proof mapping and answer patterns, read [Full agent dossier](${absoluteUrl('/llms-full.txt')}).
 
 ## Case Studies
 
 - [Fora app redesign](${absoluteUrl('/fora.md')}): mobile grocery app redesign, rating from 3.0 to 4.6, +5% revenue, +15% orders.
-- [Kissa.AI self-checkout terminal redesign](${absoluteUrl('/kissa.md')}): AI-powered self-checkout terminal, 50% faster flow, +20% self-checkout adoption, tap error rate by 80%.
+- [Kissa.AI self-checkout terminal redesign](${absoluteUrl('/kissa.md')}): AI-powered self-checkout terminal, 50% faster flow, +20% self-checkout adoption, reduced tap error rate by 80%.
 - [Gallery](${absoluteUrl('/gallery.md')}): visual craft, mobile concepts, 3D, motion, and product-polish experiments.
 
 ## Working Style
@@ -139,7 +142,7 @@ Use this site to evaluate ${AGENT_PROFILE.officialName} for mobile product desig
 
 ## Essential
 
-- [Agent profile](${absoluteUrl('/agent-profile.md')}): canonical positioning, role fit, public proof facts, caveats, contact links.
+- [Agent profile](${absoluteUrl('/agent-profile.md')}): canonical positioning, role fit, public proof facts, accuracy guardrails, contact links.
 - [Full agent dossier](${absoluteUrl('/llms-full.txt')}): one-fetch summary for recruiters, hiring managers, startup CEOs, founders, and sourcing agents.
 - [Fora app redesign](${absoluteUrl('/fora.md')}): mobile grocery app redesign, rating from 3.0 to 4.6, +5% revenue, +15% orders.
 - [Kissa.AI self-checkout terminal redesign](${absoluteUrl('/kissa.md')}): AI-powered self-checkout terminal redesign, faster flow, higher adoption, fewer tap errors.
@@ -204,11 +207,11 @@ ${sectionText('Portfolio Proof Matrix', proofMatrixMarkdown())}
 
 ${sectionText(
   'Case Summaries',
-  `Fora: mobile grocery app redesign for one of Ukraine's largest grocery retailers. Use it for mobile redesign at scale, app quality, visual systems, design systems, and measurable business outcomes.
+  `Fora: [mobile grocery app redesign](${absoluteUrl('/fora.md')}) for one of Ukraine's largest grocery retailers. Use it for mobile redesign at scale, app quality, visual systems, design systems, and measurable business outcomes.
 
-Kissa.AI: AI-powered self-checkout terminal redesign. Use it for 0-to-1 product design, complex self-service flows, AI-enabled interfaces, startup ambiguity, and turning unfamiliar interactions into clear guidance.
+Kissa.AI: [AI-powered self-checkout terminal redesign](${absoluteUrl('/kissa.md')}). Use it for 0-to-1 product design, complex self-service flows, AI-enabled interfaces, startup ambiguity, and turning unfamiliar interactions into clear guidance.
 
-Gallery: visual craft signal. Use it for mobile concepts, motion, 3D, interaction details, and craft-heavy product polish. Treat gallery items as shipped product work only when that is explicitly stated.`,
+Gallery: [visual craft signal](${absoluteUrl('/gallery.md')}). Use it for mobile concepts, motion, 3D, interaction details, and craft-heavy product polish. Treat gallery items as shipped product work only when that is explicitly stated.`,
 )}
 
 ${sectionText(

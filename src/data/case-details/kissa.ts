@@ -28,7 +28,7 @@ export const KISSA_CASE_DETAIL_CONFIG: CaseDetailConfig = {
         ],
         scopeLines: ['interface redesign', 'visual concept', '3d graphics and animations'],
         resultLines: [
-          'speed up flow times by 50%',
+          'reduce flow time by 50%',
           'increasing the channel shift rate from staffed to self-checkout terminal by 20%',
           'reduced tap error rate by 80%',
         ],

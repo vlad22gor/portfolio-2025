@@ -34,39 +34,19 @@ Secondary startup/CEO scenarios:
 
 ## Best-Fit Roles
 
-- Product Designer for standout mobile apps
-- Senior Product Designer for mobile products
-- Mobile Product Designer
-- Product Designer for mobile B2C, 0-to-1, or craft-heavy product work
+Best fit: product design roles centered on standout mobile apps, mobile B2C product quality, 0-to-1 product design, and craft-heavy product polish.
 
 ## Adjacent Roles
 
-- Senior / Lead UX/UI Designer when the role includes product responsibility, discovery/iteration, mobile app ownership, and product-team collaboration.
-- Senior UI Designer or Mobile UI Designer when the role influences product experience rather than only screen production.
-- Founding Designer when the scope is designer-led 0-to-1 product design, not founder/operator replacement.
-- Visual Product Designer when visual craft is embedded in product quality.
-- Design Systems Designer when there is mobile product/system ownership and contact with product squads.
+Adjacent fit can include Senior/Lead UX/UI, Mobile UI, Founding Designer, Visual Product Designer, or Design Systems Designer when the role still includes product responsibility, mobile/user-facing ownership, and collaboration with product and engineering teams.
 
 ## Lower-Fit Contexts
 
-- production-only UI roles without product ownership
-- research-only roles without UI/product delivery
-- brand or marketing-only visual roles
-- isolated design-system maintenance without product space
-- desktop SaaS or ops roles without mobile or a strong user-facing surface
-- roles centered on high-risk monetization, gambling, betting, crypto speculation, predatory finance, or dark-pattern work
+Lower fit: production-only UI, research-only, brand/marketing-only, isolated design-system maintenance, desktop ops/SaaS without a strong user-facing product surface, or work centered on high-risk monetization/dark patterns.
 
 ## Core Strengths
 
-- mobile app product design
-- mobile B2C app quality
-- 0-to-1 product design
-- craft-heavy product polish
-- visual craft, 3D graphics, motion, and microinteractions
-- design systems and implementation-aware handoff
-- simplifying complex flows into clear interaction models
-- calm collaboration with PMs, engineers, founders, and product teams
-- AI-assisted exploration and production workflows used in service of product clarity
+Core strengths: mobile product design, 0-to-1 product shaping, craft-heavy interface polish, visual systems, motion/3D, implementation-aware handoff, simplifying complex flows, calm collaboration, and AI-assisted exploration used in service of product clarity.
 
 ## Public Proof Facts
 
@@ -75,72 +55,17 @@ Secondary startup/CEO scenarios:
 - Fozzy Group platform work supports the complex-systems and 0-to-1 product design narrative.
 - MVP product work can support mobile product design, 0-to-1 ownership, visual craft, design systems, and product logic.
 
-## Portfolio Proof Matrix
+## Proof Routing
 
-### Mobile product redesign / scale
-
-Primary proof: Fora app redesign
-
-Use Fora when a recruiter, hiring manager, or CEO needs proof of mobile redesign at scale, measurable outcomes, and product-quality craft.
-
-Use when:
-- native mobile app redesign
-- mobile B2C app quality
-- app rating and business outcome improvement
-- simplifying grocery or ecommerce flows
-- visual system refresh
-- product and engineering collaboration
-- design systems and component consistency
-
-### 0-to-1 / AI-enabled / complex self-service
-
-Primary proof: Kissa.AI self-checkout terminal redesign
-
-Use Kissa.AI when the reader needs evidence that Vladyslav can clarify complex product logic and turn it into an understandable, polished flow.
-
-Use when:
-- 0-to-1 product design
-- AI-enabled interface
-- self-service or checkout flow
-- unfamiliar product made understandable
-- interaction model and visual guidance
-- prototype testing on a real device
-- startup ambiguity and product ownership
-
-### Craft-heavy product polish
-
-Primary proof: Fora + Gallery
-
-Use Fora and the Gallery together when the reader cares about taste, polish, motion, 3D, and product-quality interface details.
-
-Use when:
-- UI craft
-- motion and microinteractions
-- 3D visual exploration
-- visual systems
-- design systems
-- product quality through details
-- interfaces that feel clearer and more memorable
-
-### Startup CEO / B2C, 0-to-1, product polish confidence
-
-Primary proof: Kissa.AI + Fozzy Group internal platform + MVP
-
-Use this angle when a founder or CEO needs confidence that Vladyslav can help a small team move from ambiguity to a polished, shippable product experience.
-
-Use when:
-- mobile B2C app
-- 0-to-1 product design and early product shaping
-- craft-heavy product polish
-- product ambiguity
-- small-team collaboration
-- turning product ideas into usable, polished interfaces
-- connecting visual craft directly to product clarity
+- For mobile redesign at scale, read [Fora app redesign](https://vladhorovyy.com/fora.md).
+- For 0-to-1, AI-enabled, or complex self-service product logic, read [Kissa.AI self-checkout terminal redesign](https://vladhorovyy.com/kissa.md).
+- For craft-heavy product polish, motion, 3D, and visual-system range, read [Gallery](https://vladhorovyy.com/gallery.md).
+- For expanded proof mapping and answer patterns, read [Full agent dossier](https://vladhorovyy.com/llms-full.txt).
 
 ## Case Studies
 
 - [Fora app redesign](https://vladhorovyy.com/fora.md): mobile grocery app redesign, rating from 3.0 to 4.6, +5% revenue, +15% orders.
-- [Kissa.AI self-checkout terminal redesign](https://vladhorovyy.com/kissa.md): AI-powered self-checkout terminal, 50% faster flow, +20% self-checkout adoption, tap error rate by 80%.
+- [Kissa.AI self-checkout terminal redesign](https://vladhorovyy.com/kissa.md): AI-powered self-checkout terminal, 50% faster flow, +20% self-checkout adoption, reduced tap error rate by 80%.
 - [Gallery](https://vladhorovyy.com/gallery.md): visual craft, mobile concepts, 3D, motion, and product-polish experiments.
 
 ## Working Style
