@@ -170,8 +170,9 @@ export default function GoomYOnboardingMotion({
     },
   );
 
-  // TODO(production): replace DialKit sampling with the final Motion timeline
-  // after the authoring values have been approved and copied.
+  // TODO(production): DialKit's clip.current values are the scrubbable authoring preview.
+  // Replace them with equivalent real Motion animations using the tuned timeline
+  // timings and transitions, then remove useDialTimeline and <DialTimeline />.
   const timeline = useDialTimeline(
     'GoomY onboarding loop',
     TIMELINE_CONFIG,

@@ -205,7 +205,7 @@ const TIMELINE_CONFIG = {
       },
       {
         duration: 1.1,
-        to: { offset: PAYWALL_MAX_SCROLL },
+        to: { offset: 2120 },
         transition: {
           type: 'easing',
           duration: 1.1,
@@ -266,9 +266,9 @@ const TIMELINE_CONFIG = {
         },
       },
       {
-        duration: 2.92,
+        duration: 2.2,
         to: { phase: 3 },
-        transition: { type: 'easing', duration: 2.92, ease: [0, 0, 1, 1] },
+        transition: { type: 'easing', duration: 2.2, ease: [0, 0, 1, 1] },
       },
     ],
   },
@@ -378,11 +378,11 @@ const TIMELINE_CONFIG = {
     },
     steps: [
       {
-        duration: CONFETTI_FADE_IN_DURATION,
+        duration: 1.42,
         to: { progress: 0, opacity: 1 },
         transition: {
           type: 'easing',
-          duration: CONFETTI_FADE_IN_DURATION,
+          duration: 1.42,
           ease: [0, 0, 1, 1],
         },
       },
@@ -470,9 +470,9 @@ const TIMELINE_CONFIG = {
     },
     steps: [
       {
-        duration: 0.01,
+        duration: 0.05,
         to: { value: 1 },
-        transition: { type: 'easing', duration: 0.01, ease: [0, 0, 1, 1] },
+        transition: { type: 'easing', duration: 0.05, ease: [0, 0, 1, 1] },
       },
     ],
   },
@@ -613,25 +613,25 @@ export default function GoomYPaywallActivationFlow({
         headerFadeThreshold: [44, 8, 120, 1],
       },
       carousel: {
-        drumSideOffset: [316, 240, 390, 1],
-        drumArcDepth: [80, -120, 180, 1],
-        drumSlotAngle: [45, 20, 70, 0.5],
-        drumTilt: [12, 0, 30, 0.5],
+        drumSideOffset: [332, 240, 390, 1],
+        drumArcDepth: [15, -120, 180, 1],
+        drumSlotAngle: [20, 20, 70, 0.5],
+        drumTilt: [5, 0, 30, 0.5],
         pressScale: [0.95, 0.9, 1, 0.005],
       },
       celebration: {
         confettiTravel: [1.5, 0.65, 1.5, 0.01],
         emitterOffset: [36, 20, 64, 1],
         returnDepth: [1, 0.6, 1.6, 0.01],
-        particleCount: [120, 44, 120, 1],
-        emissionSpread: [0.68, 0.18, 0.72, 0.01],
-        paperWidth: [7, 3, 12, 0.1],
-        paperAspect: [1.7, 0.7, 3, 0.05],
-        paperFlutter: [1, 0.4, 1.6, 0.01],
-        paperSpin: [1, 0.5, 1.4, 0.01],
-        riseSpeed: [1, 0.45, 2.2, 0.05],
-        turnaroundSlowdown: [0.35, 0, 1, 0.01],
-        fallSpeed: [1, 0.45, 2.2, 0.05],
+        particleCount: [90, 44, 120, 1],
+        emissionSpread: [0.29, 0.18, 0.72, 0.01],
+        paperWidth: [4.5, 3, 12, 0.1],
+        paperAspect: [2.55, 0.7, 3, 0.05],
+        paperFlutter: [0.4, 0.4, 1.6, 0.01],
+        paperSpin: [0.97, 0.5, 1.4, 0.01],
+        riseSpeed: [0.45, 0.45, 2.2, 0.05],
+        turnaroundSlowdown: [0.19, 0, 1, 0.01],
+        fallSpeed: [0.45, 0.45, 2.2, 0.05],
       },
     },
     {
@@ -640,6 +640,9 @@ export default function GoomYPaywallActivationFlow({
     },
   );
 
+  // TODO(production): DialKit's clip.current values are the scrubbable authoring preview.
+  // Replace them with equivalent real Motion animations using the tuned timeline
+  // timings and transitions, then remove useDialTimeline and <DialTimeline />.
   const timeline = useDialTimeline(
     'GoomY paywall → activation',
     TIMELINE_CONFIG,
