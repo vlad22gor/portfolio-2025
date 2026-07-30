@@ -90,6 +90,7 @@ const arrowAssetPath =
     <span
       class="case-card-hover-asset"
       data-case-card-hover-asset
+      data-case-card-hover-asset-id={asset.tuningId}
       data-target-x={String(asset.targetX)}
       data-target-y={String(asset.targetY)}
       data-target-width={String(asset.width)}
@@ -561,7 +562,10 @@ const arrowAssetPath =
 
       const syncInteractionState = (immediate = false) => {
         applyEffectiveAssetPositions(card, state);
-        const shouldBeActive = state.pointerInside || state.focusInside;
+        const shouldBeActive =
+          state.pointerInside ||
+          state.focusInside ||
+          card.dataset.caseCardHoverPinned === 'true';
         if (shouldBeActive) {
           activate(card, state, immediate);
         } else {
@@ -609,6 +613,10 @@ const arrowAssetPath =
           syncInteractionState(true);
         }
       };
+      const onTuningUpdate = () => {
+        applyAssetDelays(state.assets);
+        syncInteractionState(true);
+      };
       const onKeyDown = (event) => {
         if (event.repeat) {
           return;
@@ -649,6 +657,7 @@ const arrowAssetPath =
         card.addEventListener('keyup', onKeyUp);
       }
       window.addEventListener('resize', onResize);
+      card.addEventListener('case-card:tuning-update', onTuningUpdate);
 
       state.unbind = () => {
         card.removeEventListener('pointerenter', onPointerEnter);
@@ -664,6 +673,7 @@ const arrowAssetPath =
           card.removeEventListener('keyup', onKeyUp);
         }
         window.removeEventListener('resize', onResize);
+        card.removeEventListener('case-card:tuning-update', onTuningUpdate);
       };
     };
 

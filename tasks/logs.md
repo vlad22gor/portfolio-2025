@@ -2546,6 +2546,13 @@
 - Обновлены data contract, `CaseCard`, `CasesCardsSection`, component CSS, smoke-контракт и generated `public/fora.md`; runtime-ассеты добавлены в `public/media/cases/goomy/card/`.
 - Проверки: `npm run build` — успешно (`6` routes, motion isolation и `15` poster pairs прошли); targeted Playwright smoke — `6 passed`; desktop hover всех трёх карточек и mobile-композиция проверены визуально; `git diff --check` — без замечаний.
 
+## 2026-07-30 — GoomY upright mockups: lifestyle и recipe
+
+- Сгенерированы две цельные фотореалистичные сцены встроенным ImageGen: iPhone 17 Pro на оливково-терракотовой мягкой мебели и минимальный кухонный вариант с керамической миской, льном и несколькими ингредиентами.
+- В обоих вариантах экран оставлен нейтрально-серым `#808080`; добавлены естественные отражения стекла, краевые блики, контактные и падающие тени.
+- Финалы сохранены в `assets/images/goomy/mockups/imagegen-2/upright-settings-v4/` вместе с raw-версиями и приведены к референсному формату `1200×1495`.
+- Проверки: обе сцены визуально проверены на целостность перспективы `screen/bezel/frame`, отсутствие UI и сильного wide-angle искажения; ImageMagick подтвердил RGB PNG и размер финалов `1200×1495`.
+
 ## 2026-07-30 — 3× GoomY hover, стрелка и обновлённая Fora
 
 - Низкоразрешённые GoomY hover-ассеты заменены пользовательскими прозрачными PNG: `add-recipe-sheet.png` (`1177×1184`) и `recipe-choice-card.png` (`1119×1412`); оба проходят минимальный порог `3×` относительно desktop render-size.
@@ -2553,3 +2560,13 @@
 - Позиции Fora обновлены по изменённому Figma hover-варианту `20:1411`: `delivery-time x=796.53`, `summary x=952.99`; общая right-side runtime-нормализация сохранена.
 - Smoke-контракт расширен автоматической проверкой `naturalWidth/naturalHeight >= 3× render-size` для всех hover-растров.
 - Проверки: исходные PNG подтверждены как прозрачные RGBA; targeted Playwright — `2 passed`; GoomY/Fora hover проверены визуально в localhost; `npm run build` — успешно (`6` routes, agent-readable/SVG/motion gates прошли).
+
+## 2026-07-30 — Корректировка подхода к Fora hover tuning
+
+- Пользователь подтвердил, что GoomY корректна, но Fora после прямого переноса обновлённых Figma bounds всё ещё визуально неточна.
+- Уточнено правило: координаты правых overflow-ассетов Fora должны финализироваться на реальной runtime-карточке через dev-only controls, а не считаться approved только по Figma instance bounds.
+- Подключён DialKit `1.4.3` как `devDependency`; команда `npm run dev:fora-dials` включает отдельную панель только при `DEV + PUBLIC_FORA_HOVER_DIALS=true`.
+- Добавлены persistent-контролы Fora `delivery-time` и `summary`: `x/y/rotation/width/height`, `Freeze Hover`, `Debug Bounds` и встроенный `Copy parameters`. Значения применяются к фактической runtime-карточке с сохранением общей right-side `effectiveX`-нормализации.
+- `CaseCard` получил dev-событие для live-пересчёта и режим pinned hover; production-поведение не меняется без tuning mount.
+- Isolation guard разрешает DialKit только в allowlisted dev-компоненте и после production build сканирует `dist` на DialKit/panel/env markers.
+- Проверки: source isolation guard — PASS; production build — PASS (`6` routes); dist isolation guard — PASS, DialKit в production bundle отсутствует; targeted production Playwright — `2 passed`; dev browser QA подтвердил live-применение, pinned hover и localStorage persistence.

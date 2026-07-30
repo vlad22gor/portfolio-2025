@@ -6,11 +6,16 @@ import path from 'node:path';
 
 const root = process.cwd();
 const sourceRoot = path.join(root, 'src');
+const distRoot = path.join(root, 'dist');
 const caseMediaRoot = path.join(root, 'public', 'media', 'cases');
 const verifiedMotionRoots = [
   path.join(caseMediaRoot, 'goomy', 'flows'),
 ];
 const packagePath = path.join(root, 'package.json');
+const verifyDist = process.argv.includes('--dist');
+const allowedDialKitSourcePaths = new Set([
+  'src/components/dev/ForaHoverDialKit.tsx',
+]);
 const forbiddenAuthoringPaths = [
   'src/pages/goomy-onboarding-motion.astro',
   'src/pages/goomy-paywall-activation-flow.astro',
@@ -24,6 +29,11 @@ const forbiddenSourcePatterns = [
   { label: 'authoring production flag', pattern: /\bproductionEnabled\b/ },
   { label: 'DialKit authoring timeline', pattern: /\buseDialTimeline\b/ },
   { label: 'Motion Lab source import', pattern: /(?:from\s+['"][^'"]*motion-lab|Documents\/Design\/motion-lab)/ },
+];
+const forbiddenDistPatterns = [
+  { label: 'DialKit bundle marker', pattern: /dialkit/i },
+  { label: 'Fora hover tuning panel id', pattern: /fora-hover-assets-v1/i },
+  { label: 'Fora hover dev env marker', pattern: /PUBLIC_FORA_HOVER_DIALS/i },
 ];
 
 async function exists(filePath) {
@@ -55,8 +65,8 @@ async function sha256(filePath) {
 
 const issues = [];
 const packageJson = JSON.parse(await readFile(packagePath, 'utf8'));
-if (packageJson.dependencies?.dialkit || packageJson.devDependencies?.dialkit) {
-  issues.push('package.json still contains the authoring-only dialkit dependency.');
+if (packageJson.dependencies?.dialkit) {
+  issues.push('package.json contains dialkit as a production dependency.');
 }
 
 for (const relativePath of forbiddenAuthoringPaths) {
@@ -68,11 +78,30 @@ for (const relativePath of forbiddenAuthoringPaths) {
 for (const sourcePath of await walk(sourceRoot)) {
   if (!/\.(?:astro|css|js|jsx|mjs|ts|tsx)$/.test(sourcePath)) continue;
   const source = await readFile(sourcePath, 'utf8');
+  const relativeSourcePath = path.relative(root, sourcePath);
   for (const forbidden of forbiddenSourcePatterns) {
+    if (
+      forbidden.label === 'DialKit import' &&
+      allowedDialKitSourcePaths.has(relativeSourcePath)
+    ) {
+      continue;
+    }
     if (forbidden.pattern.test(source)) {
       issues.push(
-        `${forbidden.label} in ${path.relative(root, sourcePath)}`,
+        `${forbidden.label} in ${relativeSourcePath}`,
       );
+    }
+  }
+}
+
+if (verifyDist) {
+  for (const distPath of await walk(distRoot)) {
+    if (!/\.(?:css|html|js|json|map|mjs|txt)$/.test(distPath)) continue;
+    const source = await readFile(distPath, 'utf8');
+    for (const forbidden of forbiddenDistPatterns) {
+      if (forbidden.pattern.test(source)) {
+        issues.push(`${forbidden.label} in ${path.relative(root, distPath)}`);
+      }
     }
   }
 }
@@ -143,5 +172,5 @@ if (issues.length > 0) {
 }
 
 console.log(
-  `[verify:motion-isolation] OK: no authoring source; ${videos.length} verified video set(s).`,
+  `[verify:motion-isolation] OK: no production authoring source${verifyDist ? ' or DialKit bundle' : ''}; ${videos.length} verified video set(s).`,
 );

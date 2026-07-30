@@ -1329,6 +1329,28 @@ test.describe('Theme tokens smoke', () => {
         expect(asset.naturalHeight).toBeGreaterThanOrEqual(asset.height * 3);
       });
     });
+
+    const pinnedHover = await page.evaluate(() => {
+      const card = document.querySelector<HTMLElement>(
+        '[data-case-card][data-case-slug="fora"]',
+      );
+      if (!card) {
+        return null;
+      }
+      card.dataset.caseCardHoverPinned = 'true';
+      card.dispatchEvent(new CustomEvent('case-card:tuning-update'));
+      const activeWhenPinned = card.dataset.hoverActive ?? null;
+      card.dataset.caseCardHoverPinned = 'false';
+      card.dispatchEvent(new CustomEvent('case-card:tuning-update'));
+      return {
+        activeWhenPinned,
+        activeWhenReleased: card.dataset.hoverActive ?? null,
+      };
+    });
+    expect(pinnedHover).toEqual({
+      activeWhenPinned: 'true',
+      activeWhenReleased: 'false',
+    });
   });
 
   test('case card arrows animate on hover with the cases description motion profile', async ({ page }) => {

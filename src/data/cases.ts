@@ -15,6 +15,7 @@ export type CaseCardCover = {
 };
 
 export type CaseCardHoverAsset = {
+  tuningId?: string;
   src: string;
   alt: string;
   targetX: number;
@@ -78,6 +79,7 @@ export const CASES: Case[] = [
       arrowDirection: 'left',
       assets: [
         {
+          tuningId: 'delivery-time',
           src: '/media/cases/fora/card/delivery-time.png',
           alt: 'Fora delivery time preview',
           targetX: 796.53,
@@ -88,6 +90,7 @@ export const CASES: Case[] = [
           zIndex: 3,
         },
         {
+          tuningId: 'summary',
           src: '/media/cases/fora/card/summary.webp',
           alt: 'Fora summary preview',
           targetX: 952.99,

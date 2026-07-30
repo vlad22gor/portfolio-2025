@@ -18,14 +18,16 @@
     "verify:social-meta": "node scripts/verify-social-meta.mjs",
     "verify:social-meta:source": "node scripts/verify-social-meta.mjs --source",
     "verify:motion-isolation": "node scripts/verify-motion-isolation.mjs",
+    "verify:motion-isolation:dist": "node scripts/verify-motion-isolation.mjs --dist",
     "generate:posters": "node scripts/generate-video-posters.mjs",
     "generate:transparent-mov": "node scripts/generate-transparent-mov-variants.mjs",
     "verify:posters": "node scripts/verify-video-posters.mjs",
     "predev": "npm run generate:posters",
     "dev": "astro dev",
+    "dev:fora-dials": "PUBLIC_FORA_HOVER_DIALS=true astro dev",
     "dev:annotate": "PUBLIC_AGENTATION_ENABLED=true PUBLIC_AGENTATION_ENDPOINT=http://localhost:4747 astro dev",
     "prebuild": "npm run generate:posters && npm run generate:agent-readable && npm run verify:agent-readable:source && npm run verify:svg-icons && npm run verify:motion-isolation",
-    "build": "astro build",
+    "build": "astro build && npm run verify:motion-isolation:dist",
     "preview": "astro preview",
     "test:smoke": "playwright test",
     "test:smoke:webkit-mobile": "playwright test tests/smoke/gallery.spec.ts -g \"webkit mobile stress\" --browser=webkit --workers=1",
@@ -43,6 +45,7 @@
     "web-haptics": "^0.0.6"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.2"
+    "@playwright/test": "^1.58.2",
+    "dialkit": "^1.4.3"
   }
 }

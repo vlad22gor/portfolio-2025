@@ -44,6 +44,8 @@ const isGalleryRoute = normalizedCanonicalPath === '/gallery';
 const isCaseDetailRoute = criticalRouteId === 'fora' || criticalRouteId === 'kissa';
 const shouldRenderTemporaryAdaptiveShell = !(isHomeRoute || isCasesRoute || isGalleryRoute || isCaseDetailRoute);
 const isAgentationEnabled = import.meta.env.DEV && import.meta.env.PUBLIC_AGENTATION_ENABLED === 'true';
+const isForaHoverDialKitEnabled =
+  import.meta.env.DEV && import.meta.env.PUBLIC_FORA_HOVER_DIALS === 'true';
 const agentationEndpoint =
   (typeof import.meta.env.PUBLIC_AGENTATION_ENDPOINT === 'string' &&
   import.meta.env.PUBLIC_AGENTATION_ENDPOINT.trim().length > 0
@@ -53,6 +55,13 @@ let AgentationMount: (typeof import('../components/dev/AgentationMount.astro'))[
 if (isAgentationEnabled) {
   const agentationMountPath = '../components/dev/AgentationMount.astro';
   AgentationMount = (await import(/* @vite-ignore */ agentationMountPath)).default;
+}
+let ForaHoverDialKitMount:
+  | (typeof import('../components/dev/ForaHoverDialKitMount.astro'))['default']
+  | undefined;
+if (isForaHoverDialKitEnabled) {
+  const foraHoverDialKitMountPath = '../components/dev/ForaHoverDialKitMount.astro';
+  ForaHoverDialKitMount = (await import(/* @vite-ignore */ foraHoverDialKitMountPath)).default;
 }
 ---
 
@@ -316,6 +325,13 @@ if (isAgentationEnabled) {
         AgentationMount && (
           <div id="agentation-dev-root" transition:persist>
             <AgentationMount endpoint={agentationEndpoint} />
+          </div>
+        )
+      }
+      {
+        ForaHoverDialKitMount && (
+          <div id="fora-hover-dialkit-dev-root" transition:persist>
+            <ForaHoverDialKitMount />
           </div>
         )
       }
