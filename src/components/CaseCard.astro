@@ -83,7 +83,7 @@ const arrowAssetPath =
     <h3 class="case-card-title">{item.title}</h3>
     <p class="case-card-subtitle">{item.subtitle}</p>
 
-    {isInteractive && <ThemedSvgIcon class="case-card-arrow" src={arrowAssetPath} aria-hidden="true" />}
+    <ThemedSvgIcon class="case-card-arrow" src={arrowAssetPath} aria-hidden="true" />
   </div>
 
   {item.cardHover.assets.map((asset, index) => (

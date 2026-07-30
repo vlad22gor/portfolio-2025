@@ -1239,12 +1239,17 @@ test.describe('Theme tokens smoke', () => {
           const contentRect = content.getBoundingClientRect();
           const assets = Array.from(card.querySelectorAll('[data-case-card-hover-asset]'))
             .filter((asset): asset is HTMLElement => asset instanceof HTMLElement)
-            .map((asset) => ({
-              x: Number.parseFloat(asset.dataset.targetX ?? ''),
-              y: Number.parseFloat(asset.dataset.targetY ?? ''),
-              width: Number.parseFloat(asset.dataset.targetWidth ?? ''),
-              height: Number.parseFloat(asset.dataset.targetHeight ?? ''),
-            }));
+            .map((asset) => {
+              const image = asset.querySelector('img');
+              return {
+                x: Number.parseFloat(asset.dataset.targetX ?? ''),
+                y: Number.parseFloat(asset.dataset.targetY ?? ''),
+                width: Number.parseFloat(asset.dataset.targetWidth ?? ''),
+                height: Number.parseFloat(asset.dataset.targetHeight ?? ''),
+                naturalWidth: image instanceof HTMLImageElement ? image.naturalWidth : 0,
+                naturalHeight: image instanceof HTMLImageElement ? image.naturalHeight : 0,
+              };
+            });
 
           return {
             slug: card.dataset.caseSlug ?? null,
@@ -1285,12 +1290,12 @@ test.describe('Theme tokens smoke', () => {
       interactive: 'false',
       coverSide: 'left',
       coverBeforeContent: true,
-      arrowStyle: null,
       assets: [
         { x: -179.14, y: -122, width: 370, height: 383 },
         { x: -189.01, y: 52, width: 373, height: 463 },
       ],
     });
+    expect(goomy?.arrowStyle).toContain('case-card-arrow-right.svg');
     expect(fora).toMatchObject({
       slug: 'fora',
       tagName: 'A',
@@ -1299,8 +1304,8 @@ test.describe('Theme tokens smoke', () => {
       coverSide: 'right',
       coverBeforeContent: false,
       assets: [
-        { x: 383.79, y: -74.9, width: 288, height: 257 },
-        { x: 328.04, y: 135.3, width: 252, height: 340 },
+        { x: 796.53, y: -74.9, width: 288, height: 257 },
+        { x: 952.99, y: 135.3, width: 252, height: 340 },
       ],
     });
     expect(fora?.arrowStyle).toContain('case-card-arrow-left.svg');
@@ -1317,6 +1322,13 @@ test.describe('Theme tokens smoke', () => {
       ],
     });
     expect(kissa?.arrowStyle).toContain('case-card-arrow-right.svg');
+
+    snapshot!.cards.forEach((card) => {
+      card?.assets.forEach((asset) => {
+        expect(asset.naturalWidth).toBeGreaterThanOrEqual(asset.width * 3);
+        expect(asset.naturalHeight).toBeGreaterThanOrEqual(asset.height * 3);
+      });
+    });
   });
 
   test('case card arrows animate on hover with the cases description motion profile', async ({ page }) => {

@@ -2545,3 +2545,11 @@
 - Карточка GoomY оставлена черновой и некликабельной без стрелки, пока отсутствует production route `/goomy`; опубликованные Fora/Kissa остаются ссылками со всеми press/focus/click-переходами.
 - Обновлены data contract, `CaseCard`, `CasesCardsSection`, component CSS, smoke-контракт и generated `public/fora.md`; runtime-ассеты добавлены в `public/media/cases/goomy/card/`.
 - Проверки: `npm run build` — успешно (`6` routes, motion isolation и `15` poster pairs прошли); targeted Playwright smoke — `6 passed`; desktop hover всех трёх карточек и mobile-композиция проверены визуально; `git diff --check` — без замечаний.
+
+## 2026-07-30 — 3× GoomY hover, стрелка и обновлённая Fora
+
+- Низкоразрешённые GoomY hover-ассеты заменены пользовательскими прозрачными PNG: `add-recipe-sheet.png` (`1177×1184`) и `recipe-choice-card.png` (`1119×1412`); оба проходят минимальный порог `3×` относительно desktop render-size.
+- Стрелка `CaseCard` теперь рендерится независимо от наличия `href`, поэтому черновая GoomY получила правую стрелку как Kissa, оставаясь некликабельным `article`.
+- Позиции Fora обновлены по изменённому Figma hover-варианту `20:1411`: `delivery-time x=796.53`, `summary x=952.99`; общая right-side runtime-нормализация сохранена.
+- Smoke-контракт расширен автоматической проверкой `naturalWidth/naturalHeight >= 3× render-size` для всех hover-растров.
+- Проверки: исходные PNG подтверждены как прозрачные RGBA; targeted Playwright — `2 passed`; GoomY/Fora hover проверены визуально в localhost; `npm run build` — успешно (`6` routes, agent-readable/SVG/motion gates прошли).

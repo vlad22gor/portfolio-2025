@@ -80,7 +80,7 @@ export const CASES: Case[] = [
         {
           src: '/media/cases/fora/card/delivery-time.png',
           alt: 'Fora delivery time preview',
-          targetX: 383.79,
+          targetX: 796.53,
           targetY: -74.9,
           rotationDeg: 13.8,
           width: 288,
@@ -90,7 +90,7 @@ export const CASES: Case[] = [
         {
           src: '/media/cases/fora/card/summary.webp',
           alt: 'Fora summary preview',
-          targetX: 328.04,
+          targetX: 952.99,
           targetY: 135.3,
           rotationDeg: 31.46,
           width: 252,
@@ -233,7 +233,7 @@ export const GOOMY_CASE_CARD: CaseCardData = {
     arrowDirection: 'right',
     assets: [
       {
-        src: '/media/cases/goomy/card/add-recipe.png',
+        src: '/media/cases/goomy/card/add-recipe-sheet.png',
         alt: 'GoomY add recipe sheet preview',
         targetX: -179.14,
         targetY: -122,
@@ -243,8 +243,8 @@ export const GOOMY_CASE_CARD: CaseCardData = {
         zIndex: 3,
       },
       {
-        src: '/media/cases/goomy/card/recipe-card.png',
-        alt: 'GoomY recipe card preview',
+        src: '/media/cases/goomy/card/recipe-choice-card.png',
+        alt: 'GoomY recipe choice card preview',
         targetX: -189.01,
         targetY: 52,
         rotationDeg: 0,
