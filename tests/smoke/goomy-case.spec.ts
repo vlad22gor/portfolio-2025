@@ -109,6 +109,16 @@ test.describe('GoomY case', () => {
     expect(layout!.rightArrow.y - layout!.section.y).toBeCloseTo(55, 1);
     expect(layout!.leftArrow.width).toBeCloseTo(94, 1);
     expect(layout!.leftArrow.height).toBeCloseTo(102, 1);
+    await expect(
+      page.locator(
+        '.case-screens-loop-section__arrow--left .case-screens-loop-section__arrow-art',
+      ),
+    ).toHaveAttribute('src', '/media/cases/goomy/screens-loop/arrow-left.svg');
+    await expect(
+      page.locator(
+        '.case-screens-loop-section__arrow--right .case-screens-loop-section__arrow-art',
+      ),
+    ).toHaveAttribute('src', '/media/cases/goomy/screens-loop/arrow-right.svg');
     expect(layout!.items[0].x).toBeCloseTo(232, 1);
     layout!.items.forEach((item, index) => {
       expect(item.x).toBeCloseTo(232 + index * 268, 1);

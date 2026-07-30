@@ -36,18 +36,30 @@ const titleId = 'case-screens-loop-title';
     <p class="type-body case-screens-loop-section__body">{data.body}</p>
   </div>
 
-  <img
+  <span
     class="case-screens-loop-section__arrow case-screens-loop-section__arrow--left"
-    src="/media/cases/goomy/challenge/arrow-top-left.svg"
-    alt=""
     aria-hidden="true"
-  />
-  <img
+  >
+    <img
+      class="case-screens-loop-section__arrow-art"
+      src="/media/cases/goomy/screens-loop/arrow-left.svg"
+      alt=""
+      width="98.6965"
+      height="101.415"
+    />
+  </span>
+  <span
     class="case-screens-loop-section__arrow case-screens-loop-section__arrow--right"
-    src="/media/cases/goomy/challenge/arrow-top-left.svg"
-    alt=""
     aria-hidden="true"
-  />
+  >
+    <img
+      class="case-screens-loop-section__arrow-art"
+      src="/media/cases/goomy/screens-loop/arrow-right.svg"
+      alt=""
+      width="98.6965"
+      height="101.415"
+    />
+  </span>
 
   {
     screens.length > 1 && (
@@ -132,8 +144,8 @@ const titleId = 'case-screens-loop-title';
     top: 55px;
     width: 94px;
     height: 102px;
-    object-fit: fill;
     pointer-events: none;
+    overflow: visible;
   }
 
   .case-screens-loop-section__arrow--left {
@@ -143,6 +155,17 @@ const titleId = 'case-screens-loop-title';
   .case-screens-loop-section__arrow--right {
     left: 584px;
     transform: scaleX(-1);
+    transform-origin: center;
+  }
+
+  .case-screens-loop-section__arrow-art {
+    position: absolute;
+    left: 2.88px;
+    top: -0.42px;
+    display: block;
+    width: 98.6965px;
+    height: 101.415px;
+    max-width: none;
   }
 
   .case-screens-loop-section__rail {

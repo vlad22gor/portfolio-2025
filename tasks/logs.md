@@ -2600,3 +2600,10 @@
 - Header screen-loop секции перестроен 1:1 по Figma `193:15242`: центрированный stack, label `10/14`, title `32/35`, body `312×72`, две стрелки и вертикальная геометрия `153 + 48 + 501 = 702px`.
 - Добавлен smoke-контракт для `2048px`: document без horizontal overflow, intro/section/grid по `816px`, full-bleed viewport `x=0`, экраны `244×501` с шагом `268px`; существующие loop/hover/drag, `3×` raster и mobile проверки сохранены.
 - Проверки: production build — PASS; `tests/smoke/goomy-case.spec.ts --workers=1` — `3 passed`; browser QA на `1360px` и `2048px` подтвердил Figma-композицию и отсутствие layout drift.
+
+## 2026-07-30 — Актуальные стрелки GoomY
+
+- Сверены Figma-узлы screen gallery `193:15242`, design system `193:15317` и challenge `193:15214` по screenshot, geometry и SHA-256 экспортированных SVG.
+- Устаревшее переиспользование challenge-стрелки в screen gallery заменено отдельными `screens-loop/arrow-left.svg` и `arrow-right.svg`; сохранены distinct фигмовские контуры, bounds `94×102` и отдельное отражение правого wrapper.
+- Design system и challenge, включая нижнюю правую стрелку, уже побайтово совпадали с актуальной Figma и поэтому оставлены без бессмысленной перезаписи.
+- Проверки: browser QA трёх секций — PASS; production build — PASS (`7` routes и isolation guards); `tests/smoke/goomy-case.spec.ts --workers=1` — `3 passed`; первый параллельный запуск ожидаемо пересёкся с перестройкой `dist`, последовательный повтор прошёл полностью.
