@@ -2570,3 +2570,9 @@
 - `CaseCard` получил dev-событие для live-пересчёта и режим pinned hover; production-поведение не меняется без tuning mount.
 - Isolation guard разрешает DialKit только в allowlisted dev-компоненте и после production build сканирует `dist` на DialKit/panel/env markers.
 - Проверки: source isolation guard — PASS; production build — PASS (`6` routes); dist isolation guard — PASS, DialKit в production bundle отсутствует; targeted production Playwright — `2 passed`; dev browser QA подтвердил live-применение, pinned hover и localStorage persistence.
+
+## 2026-07-30 — Approved Fora hover coordinates
+
+- Перенесены подтверждённые из DialKit raw X-координаты: `delivery-time = 739.12`, `summary = 777.54`; остальные `y/rotation/width/height` оставлены без изменений.
+- Значения синхронизированы между dev defaults в `ForaHoverDialKit.tsx` и production data в `src/data/cases.ts`, чтобы выключение tuning-панели не меняло композицию.
+- Проверки: fresh browser context получил новые DialKit defaults и pinned hover; production build и dist isolation guard — PASS; targeted Playwright layout contract — `1 passed`.

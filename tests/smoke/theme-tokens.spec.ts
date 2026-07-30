@@ -1304,8 +1304,8 @@ test.describe('Theme tokens smoke', () => {
       coverSide: 'right',
       coverBeforeContent: false,
       assets: [
-        { x: 796.53, y: -74.9, width: 288, height: 257 },
-        { x: 952.99, y: 135.3, width: 252, height: 340 },
+        { x: 739.12, y: -74.9, width: 288, height: 257 },
+        { x: 777.54, y: 135.3, width: 252, height: 340 },
       ],
     });
     expect(fora?.arrowStyle).toContain('case-card-arrow-left.svg');
