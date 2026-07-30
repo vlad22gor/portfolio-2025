@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "verification": {
+    "status": "verified",
+    "checkedAt": "2026-07-30T13:32:24.792Z"
+  },
+  "scene": {
+    "id": "goomy/onboarding",
+    "title": "GoomY onboarding",
+    "sceneVersion": 1,
+    "settingsSchemaVersion": 1,
+    "width": 1206,
+    "height": 2622,
+    "displayWidth": 402,
+    "displayHeight": 874,
+    "scale": 3,
+    "fps": 60,
+    "durationInFrames": 490,
+    "durationSeconds": 8.166666666666666,
+    "posterFrame": 0,
+    "loopMode": "hard-cut",
+    "background": "#fde2cf"
+  },
+  "profile": {
+    "id": "portfolio",
+    "scale": 3,
+    "inputColorSpace": "sRGB",
+    "webm": {
+      "codec": "vp9",
+      "pixelFormat": "yuv420p",
+      "colorPrimaries": "bt709",
+      "colorTransfer": "bt709",
+      "colorSpace": "bt709"
+    },
+    "mp4": false
+  },
+  "source": {
+    "commit": "9adcf862e927cfd6274f824bab9cc2bd8388cd12",
+    "branch": "codex/motion-lab-mvp",
+    "dirty": false,
+    "dirtyPaths": []
+  },
+  "toolchain": {
+    "node": "v25.6.0",
+    "playwright": "1.62.0",
+    "browser": "151.0.7922.34",
+    "ffmpeg": "ffmpeg version 8.1.1 Copyright (c) 2000-2026 the FFmpeg developers",
+    "ffprobe": "ffprobe version 8.1.1 Copyright (c) 2007-2026 the FFmpeg developers",
+    "packageLockSha256": "a4c829d60aabff45da09d92809625f68069d1dba99a93344abe497be90fa929d"
+  },
+  "render": {
+    "createdAt": "2026-07-30T13:29:31.958Z",
+    "elapsedSeconds": 172.834,
+    "frameSequence": {
+      "count": 490,
+      "firstSha256": "5391f846a5900c484677beef9d3500336695cc5840933ca4bbb383012b54a7ca",
+      "lastSha256": "86828a41be962ead66896abb0086d92cdb8a9b67a89a2db2c6dde5d6937871ab",
+      "posterSha256": "5391f846a5900c484677beef9d3500336695cc5840933ca4bbb383012b54a7ca"
+    },
+    "diskEstimateBytes": 2479111488,
+    "suppressedNetworkRequests": [
+      "https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&display=swap"
+    ]
+  },
+  "artifacts": [
+    {
+      "role": "video-primary",
+      "format": "webm",
+      "verification": {
+        "codec": "vp9",
+        "pixelFormat": "yuv420p",
+        "width": 1206,
+        "height": 2622,
+        "fps": 60,
+        "frameCount": 490,
+        "durationSeconds": 8.167,
+        "audioStreams": 0,
+        "colorPrimaries": null,
+        "colorTransfer": null,
+        "colorSpace": "bt709",
+        "decodedFirstSha256": "503b383e65aaca376ee5e6ac19f367bb322ec5a5c728782b79737cf5137efe09",
+        "decodedLastSha256": "febaa91f145f76a576faf84a433d5554fb2cde45f00fd50c8dcdbae8cb7b2a3e",
+        "firstFrameSsim": 0.987294,
+        "lastFrameSsim": 0.98288
+      },
+      "path": "goomy-onboarding-v1.webm",
+      "sha256": "e027e8d62fa2f9e728dadafff377cda712e740cde7119cfc067007de93173e29",
+      "bytes": 4053961
+    },
+    {
+      "role": "poster",
+      "format": "png",
+      "verification": {
+        "width": 1206,
+        "height": 2622
+      },
+      "path": "goomy-onboarding-v1-poster.png",
+      "sha256": "5391f846a5900c484677beef9d3500336695cc5840933ca4bbb383012b54a7ca",
+      "bytes": 1684847
+    }
+  ]
+}

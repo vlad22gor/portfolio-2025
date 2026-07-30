@@ -26,7 +26,7 @@ const walk = async (dirPath) => {
 
 const relativeFromRoot = (filePath) => path.relative(ROOT, filePath);
 
-const resolvePosterPath = (videoPath) => {
+const resolveLegacyPosterPath = (videoPath) => {
   const relToMedia = path.relative(MEDIA_ROOT, videoPath);
   const flowSegment = `${path.sep}flows${path.sep}`;
 
@@ -37,6 +37,19 @@ const resolvePosterPath = (videoPath) => {
   const withPosterDir = relToMedia.replace(flowSegment, `${path.sep}posters${path.sep}`);
   const posterRel = withPosterDir.replace(/\.webm$/i, '.png');
   return path.join(MEDIA_ROOT, posterRel);
+};
+
+const resolvePosterPath = async (videoPath) => {
+  const adjacentVersionedPoster = videoPath.replace(/\.webm$/i, '-poster.png');
+  try {
+    const adjacentStats = await stat(adjacentVersionedPoster);
+    if (adjacentStats.isFile()) {
+      return adjacentVersionedPoster;
+    }
+  } catch {
+    // Legacy project videos keep their posters in the sibling /posters/ directory.
+  }
+  return resolveLegacyPosterPath(videoPath);
 };
 
 const readPngMetadata = async (posterPath) => {
@@ -89,7 +102,7 @@ const main = async () => {
   const checked = [];
 
   for (const videoPath of flowVideos) {
-    const posterPath = resolvePosterPath(videoPath);
+    const posterPath = await resolvePosterPath(videoPath);
     if (!posterPath) {
       issues.push(`Невозможно вычислить poster-путь для: ${relativeFromRoot(videoPath)}`);
       continue;

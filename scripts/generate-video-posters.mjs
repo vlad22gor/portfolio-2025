@@ -89,13 +89,26 @@ const walk = async (dirPath) => {
   return files;
 };
 
-const resolvePosterPath = (videoPath) => {
+const resolveLegacyPosterPath = (videoPath) => {
   const relToMedia = path.relative(MEDIA_ROOT, videoPath);
   const withPosterDir = relToMedia.includes(`${path.sep}flows${path.sep}`)
     ? relToMedia.replace(`${path.sep}flows${path.sep}`, `${path.sep}posters${path.sep}`)
     : relToMedia;
   const posterRel = withPosterDir.replace(/\.webm$/i, ".png");
   return path.join(MEDIA_ROOT, posterRel);
+};
+
+const resolvePosterPath = async (videoPath) => {
+  const adjacentVersionedPoster = videoPath.replace(/\.webm$/i, "-poster.png");
+  try {
+    const adjacentStats = await stat(adjacentVersionedPoster);
+    if (adjacentStats.isFile()) {
+      return adjacentVersionedPoster;
+    }
+  } catch {
+    // Legacy project videos keep their posters in the sibling /posters/ directory.
+  }
+  return resolveLegacyPosterPath(videoPath);
 };
 
 const shouldRegeneratePoster = async (videoPath, posterPath) => {
@@ -160,7 +173,7 @@ const main = async () => {
   let skippedCount = 0;
 
   for (const videoPath of videos) {
-    const posterPath = resolvePosterPath(videoPath);
+    const posterPath = await resolvePosterPath(videoPath);
     const needsRegenerate = await shouldRegeneratePoster(videoPath, posterPath);
     if (!needsRegenerate) {
       skippedCount += 1;
