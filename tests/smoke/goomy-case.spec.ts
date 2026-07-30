@@ -7,6 +7,116 @@ const readTrackX = async (page: import('@playwright/test').Page) =>
   });
 
 test.describe('GoomY case', () => {
+  test('keeps the 816px case grid and matches the Figma screen-loop geometry', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 2048, height: 1200 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/goomy');
+
+    const layout = await page.evaluate(() => {
+      const main = document.querySelector<HTMLElement>('main.page-shell--goomy');
+      const intro = document.querySelector<HTMLElement>('.goomy-intro-section');
+      const section = document.querySelector<HTMLElement>('.case-screens-loop-section');
+      const header = document.querySelector<HTMLElement>('.case-screens-loop-section__header');
+      const badge = document.querySelector<HTMLElement>('.case-screens-loop-section__badge');
+      const title = document.querySelector<HTMLElement>('.case-screens-loop-section__title');
+      const body = document.querySelector<HTMLElement>('.case-screens-loop-section__body');
+      const leftArrow = document.querySelector<HTMLElement>(
+        '.case-screens-loop-section__arrow--left',
+      );
+      const rightArrow = document.querySelector<HTMLElement>(
+        '.case-screens-loop-section__arrow--right',
+      );
+      const rail = document.querySelector<HTMLElement>('.case-screens-loop-section__rail');
+      const viewport = document.querySelector<HTMLElement>('[data-case-screens-loop]');
+      const items = Array.from(
+        document.querySelectorAll<HTMLElement>('[data-case-screens-loop-item]'),
+      ).slice(0, 6);
+
+      if (
+        !main ||
+        !intro ||
+        !section ||
+        !header ||
+        !badge ||
+        !title ||
+        !body ||
+        !leftArrow ||
+        !rightArrow ||
+        !rail ||
+        !viewport ||
+        items.length !== 6
+      ) {
+        return null;
+      }
+
+      const rect = (element: HTMLElement) => {
+        const bounds = element.getBoundingClientRect();
+        return {
+          x: bounds.x,
+          y: bounds.y,
+          width: bounds.width,
+          height: bounds.height,
+        };
+      };
+
+      return {
+        innerWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+        gridTemplateColumns: getComputedStyle(main).gridTemplateColumns,
+        main: rect(main),
+        intro: rect(intro),
+        section: rect(section),
+        header: rect(header),
+        badge: rect(badge),
+        title: {
+          ...rect(title),
+          fontSize: getComputedStyle(title).fontSize,
+          lineHeight: getComputedStyle(title).lineHeight,
+        },
+        body: rect(body),
+        leftArrow: rect(leftArrow),
+        rightArrow: rect(rightArrow),
+        rail: rect(rail),
+        viewport: rect(viewport),
+        items: items.map(rect),
+      };
+    });
+
+    expect(layout).not.toBeNull();
+    expect(layout!.scrollWidth).toBe(layout!.innerWidth);
+    expect(layout!.gridTemplateColumns).toBe('816px');
+    expect(layout!.main.width).toBeCloseTo(816, 1);
+    expect(layout!.intro.width).toBeCloseTo(816, 1);
+    expect(layout!.section.width).toBeCloseTo(816, 1);
+    expect(layout!.section.height).toBeCloseTo(702, 1);
+    expect(layout!.header.width).toBeCloseTo(816, 1);
+    expect(layout!.header.height).toBeCloseTo(153, 1);
+    expect(layout!.badge.height).toBeCloseTo(22, 1);
+    expect(layout!.title.fontSize).toBe('32px');
+    expect(layout!.title.lineHeight).toBe('35px');
+    expect(layout!.body.width).toBeCloseTo(312, 1);
+    expect(layout!.body.height).toBeCloseTo(72, 1);
+    expect(layout!.rail.y - layout!.section.y).toBeCloseTo(201, 1);
+    expect(layout!.rail.height).toBeCloseTo(501, 1);
+    expect(layout!.viewport.x).toBeCloseTo(0, 1);
+    expect(layout!.viewport.width).toBeCloseTo(2048, 1);
+    expect(layout!.viewport.height).toBeCloseTo(501, 1);
+    expect(layout!.leftArrow.x - layout!.section.x).toBeCloseTo(138, 1);
+    expect(layout!.rightArrow.x - layout!.section.x).toBeCloseTo(584, 1);
+    expect(layout!.leftArrow.y - layout!.section.y).toBeCloseTo(55, 1);
+    expect(layout!.rightArrow.y - layout!.section.y).toBeCloseTo(55, 1);
+    expect(layout!.leftArrow.width).toBeCloseTo(94, 1);
+    expect(layout!.leftArrow.height).toBeCloseTo(102, 1);
+    expect(layout!.items[0].x).toBeCloseTo(232, 1);
+    layout!.items.forEach((item, index) => {
+      expect(item.x).toBeCloseTo(232 + index * 268, 1);
+      expect(item.width).toBeCloseTo(244, 1);
+      expect(item.height).toBeCloseTo(501, 1);
+    });
+  });
+
   test('renders the finished sections and a draggable, hover-slowed screen loop', async ({ page }) => {
     test.setTimeout(60_000);
     await page.setViewportSize({ width: 1440, height: 1100 });

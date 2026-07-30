@@ -31,37 +31,52 @@ const titleId = 'case-screens-loop-title';
   data-case-screens-loop-root
 >
   <div class="case-screens-loop-section__header">
-    <p class="type-description-medium case-screens-loop-section__badge">{data.badge}</p>
+    <p class="type-label-small case-screens-loop-section__badge">{data.badge}</p>
     <h2 id={titleId} class="type-t3 case-screens-loop-section__title">{data.title}</h2>
     <p class="type-body case-screens-loop-section__body">{data.body}</p>
   </div>
 
+  <img
+    class="case-screens-loop-section__arrow case-screens-loop-section__arrow--left"
+    src="/media/cases/goomy/challenge/arrow-top-left.svg"
+    alt=""
+    aria-hidden="true"
+  />
+  <img
+    class="case-screens-loop-section__arrow case-screens-loop-section__arrow--right"
+    src="/media/cases/goomy/challenge/arrow-top-left.svg"
+    alt=""
+    aria-hidden="true"
+  />
+
   {
     screens.length > 1 && (
-      <div
-        class="case-screens-loop-section__viewport"
-        data-case-screens-loop
-        data-case-screens-loop-count={screens.length}
-        data-dragging="false"
-        aria-label="GoomY product screens"
-      >
-        <div class="case-screens-loop-section__track" data-case-screens-loop-track>
-          {loopScreens.map((screen, index) => (
-            <div
-              class="case-screens-loop-section__item"
-              data-case-screens-loop-item
-              aria-hidden={index >= screens.length ? 'true' : undefined}
-            >
-              <DeviceMockup
-                class="case-screens-loop-section__device"
-                device="phone"
-                screenKind="image"
-                screenSrc={screen.src}
-                screenAlt={screen.alt}
-                priority={index < 2 ? 'critical' : 'lazy'}
-              />
-            </div>
-          ))}
+      <div class="case-screens-loop-section__rail">
+        <div
+          class="case-screens-loop-section__viewport"
+          data-case-screens-loop
+          data-case-screens-loop-count={screens.length}
+          data-dragging="false"
+          aria-label="GoomY product screens"
+        >
+          <div class="case-screens-loop-section__track" data-case-screens-loop-track>
+            {loopScreens.map((screen, index) => (
+              <div
+                class="case-screens-loop-section__item"
+                data-case-screens-loop-item
+                aria-hidden={index >= screens.length ? 'true' : undefined}
+              >
+                <DeviceMockup
+                  class="case-screens-loop-section__device"
+                  device="phone"
+                  screenKind="image"
+                  screenSrc={screen.src}
+                  screenAlt={screen.alt}
+                  priority={index < 2 ? 'critical' : 'lazy'}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     )
@@ -70,50 +85,80 @@ const titleId = 'case-screens-loop-title';
 
 <style>
   .case-screens-loop-section {
+    position: relative;
     width: 100%;
+    min-width: 0;
     margin-top: 268px;
     overflow: visible;
   }
 
   .case-screens-loop-section__header {
     width: 100%;
-    min-height: 153px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto 1fr;
-    column-gap: 24px;
-    align-items: start;
+    height: 153px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
   }
 
   .case-screens-loop-section__badge {
-    width: fit-content;
-    margin: 0 0 12px;
-    padding: 8px 12px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 1px 8px 0;
+    box-sizing: border-box;
     border-radius: 999px;
     color: var(--color-text-default);
-    background: var(--color-accent-blue);
+    background: var(--color-accent-green);
+    white-space: nowrap;
   }
 
   .case-screens-loop-section__title {
-    grid-column: 1;
     margin: 0;
     color: var(--color-text-default);
   }
 
   .case-screens-loop-section__body {
-    grid-column: 2;
-    grid-row: 1 / span 2;
     width: 312px;
     margin: 0;
-    color: var(--color-text-secondary);
+    color: var(--color-text-default);
+    text-align: center;
+  }
+
+  .case-screens-loop-section__arrow {
+    position: absolute;
+    top: 55px;
+    width: 94px;
+    height: 102px;
+    object-fit: fill;
+    pointer-events: none;
+  }
+
+  .case-screens-loop-section__arrow--left {
+    left: 138px;
+  }
+
+  .case-screens-loop-section__arrow--right {
+    left: 584px;
+    transform: scaleX(-1);
+  }
+
+  .case-screens-loop-section__rail {
+    position: relative;
+    width: 100%;
+    height: 501px;
+    margin-top: 48px;
   }
 
   .case-screens-loop-section__viewport {
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 50%;
     width: 100vw;
     height: 501px;
-    margin-top: 48px;
-    margin-left: calc(50% - 50vw);
+    transform: translateX(-50%);
     overflow: hidden;
     touch-action: pan-y;
     cursor: grab;
@@ -153,11 +198,11 @@ const titleId = 'case-screens-loop-title';
 
     .case-screens-loop-section__header {
       min-height: 0;
-      display: flex;
-      flex-direction: column;
+      height: auto;
       gap: 12px;
       padding-inline: 10px;
       box-sizing: border-box;
+      align-items: flex-start;
     }
 
     .case-screens-loop-section__badge {
@@ -166,11 +211,20 @@ const titleId = 'case-screens-loop-title';
 
     .case-screens-loop-section__body {
       width: min(312px, 100%);
+      text-align: left;
+    }
+
+    .case-screens-loop-section__arrow {
+      display: none;
+    }
+
+    .case-screens-loop-section__rail {
+      height: 361px;
+      margin-top: 48px;
     }
 
     .case-screens-loop-section__viewport {
       height: 361px;
-      margin-top: 48px;
     }
 
     .case-screens-loop-section__track {

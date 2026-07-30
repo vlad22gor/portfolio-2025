@@ -2593,3 +2593,10 @@
 - Design-system композиция получила отдельный GoomY variant с Figma-позициями и адаптивным mobile scale; mobile QA подтвердил `scrollWidth=innerWidth` на `390px`.
 - Обновлены generic mobile route contracts и smoke-тесты; добавлен отдельный GoomY smoke для структуры страницы, отсутствия unfinished feature cards, `3×` растр-контракта, loop/hover/drag и mobile layout.
 - Проверки: production build — PASS (`7` routes; agent-readable, themed SVG, motion isolation и dist DialKit isolation — PASS); GoomY smoke — `2 passed`; generic mobile case-detail — `3 passed`; temporary adaptive — `1 passed`; three-card home contract — `1 passed`; `git diff --check` — PASS. Дополнительный browser QA проверил desktop/mobile screenshots, normal delta `34.36px/700ms`, hover delta `11.67px/700ms`, drag и inertia.
+
+## 2026-07-30 — GoomY screen loop: восстановление layout и Figma fidelity
+
+- Исправлена причина wide-desktop поломки: `100vw` viewport галереи вынесен из intrinsic grid sizing в absolutely positioned viewport внутри rail, поэтому GoomY снова сохраняет общую case-колонку `816px` как Fora.
+- Header screen-loop секции перестроен 1:1 по Figma `193:15242`: центрированный stack, label `10/14`, title `32/35`, body `312×72`, две стрелки и вертикальная геометрия `153 + 48 + 501 = 702px`.
+- Добавлен smoke-контракт для `2048px`: document без horizontal overflow, intro/section/grid по `816px`, full-bleed viewport `x=0`, экраны `244×501` с шагом `268px`; существующие loop/hover/drag, `3×` raster и mobile проверки сохранены.
+- Проверки: production build — PASS; `tests/smoke/goomy-case.spec.ts --workers=1` — `3 passed`; browser QA на `1360px` и `2048px` подтвердил Figma-композицию и отсутствие layout drift.
