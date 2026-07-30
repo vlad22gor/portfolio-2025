@@ -2481,3 +2481,52 @@
   Файлы: `src/data/case-details/kissa.ts`, `tasks/logs.md`.
   Что сделано: строка результата Kissa выровнена с публичными agent-readable формулировками: `reduced flow time by 50%`.
   Проверки: (1) `npm run generate:agent-readable && npm run verify:agent-readable:source` — успешно; (2) `npm run build && npm run verify:agent-readable && npm run verify:social-meta` — успешно; (3) `npm run test:smoke -- tests/smoke/case-details.spec.ts` — успешно (`23 passed`).
+
+## 2026-07-30 — GoomY cover v3: блики и тени
+
+- Создана недеструктивная генеративная версия `/Users/vladyslavhorovyy/Desktop/goomy case/cover/v3/cover-glass-highlights.png`; исходный `cover.png` не перезаписан.
+- Добавлены сдержанное отражение мягкого верхнего света на стекле, краевые блики рамки и уточнённая контактная тень под iPhone.
+- Причина: уменьшить ощущение плоского вставленного экрана и естественнее связать устройство с освещением сцены.
+- Проверки: итог визуально проверен; интерфейс остаётся читаемым; RGB PNG и исходный размер 1323×1189 подтверждены; хеш отличается от исходника.
+
+## 2026-07-30 — GoomY cover: фотореалистичное стекло iPhone
+
+- Создана недеструктивная версия `cover-glass-highlights.png` рядом с исходным `cover.png`.
+- Добавлены деликатные отражения и краевые блики на стекле, уточнена мягкая контактная тень; композиция и читаемость UI сохранены.
+- Итоговый PNG нормализован до исходного размера 1323×1189.
+- Проверки: визуальная проверка пройдена; формат RGB PNG и размеры подтверждены; исходник не перезаписан.
+
+- 2026-07-30: Зафиксированы approved DialKit Copy для двух GoomY-анимаций.
+  Причина: browser-persisted значения должны стать воспроизводимыми source defaults до передачи Motion Lab MVP второму агенту.
+  Файлы: `src/components/goomy/GoomYOnboardingMotion.tsx`, `src/components/goomy/GoomYPaywallActivationFlow.tsx`, `tasks/motion-lab-implementation-handoff.md`, `tasks/logs.md`.
+  Что сделано: применены четыре набора настроек (`2 animations × visual/timeline store`), сохранены DialKit authoring bindings, добавлены production handoff TODO; runtime confetti visibility-fix не возвращён к stale `confetti.current`.
+  Проверки: automated source-to-Copy audit подтвердил `4 + 20 + 20 + 136` paths без расхождений; `npm run build` успешно собрал `8` страниц; `git diff --check` прошёл; runtime confetti на `20.21s` остаётся на canonical progress `0.73` и не читает stale `timeline.confetti.current`.
+- 2026-07-30: Скорректирована методика оценки пропорций GoomY iPhone-мокапов.
+  Причина: пользователь верно указал, что предыдущий корпус визуально уже был слишком узким; apparent ratio серой active-screen области был ошибочно интерпретирован как точность внешнего корпуса.
+  Файлы: `tasks/lessons.md`, `tasks/logs.md`.
+  Что уточнено: official active-display ratio `2.174:1` нельзя напрямую использовать для вывода о body silhouette `2.088:1`; PCA-измерение без полной perspective rectification отражает также camera tilt. По outer silhouette первая версия уже слегка узкая, а следующая стала ещё уже.
+  Проверки: обе приложенные cover-версии повторно сопоставлены визуально; прежняя оценка «ошибка уменьшилась на 88%» отозвана как некорректная для внешнего корпуса.
+- 2026-07-30: Сгенерированы две GoomY cover-версии с раздельными projection и framing references.
+  Причина: требовались реалистичные пропорции iPhone 17 Pro и естественная проекция без сильного искажения при сохранении landscape-композиции пользователя.
+  Файлы: `assets/images/goomy/mockups/imagegen-2/projection-balanced-v3/{goomy-cover-projection-balanced-01-raw.png,goomy-cover-projection-balanced-01-1493x1343.png,goomy-cover-projection-balanced-02-raw.png,goomy-cover-projection-balanced-02-1493x1343.png}`, `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: (1) portrait original использован как reference перспективы, масштаба корпуса, света и теней; landscape image — только как framing/aspect reference; (2) whole-scene генерация получила wider/chunkier Pro body, камеру `68–78°` и lens contract `55–85 mm`; (3) экран оставлен нейтральным `#808080`, сохранены broad glass highlight, specular frame и contact/cast shadows; (4) обе версии приведены к точному cover-размеру `1493×1343`.
+  Проверки: обе версии визуально проверены на согласованность screen/bezel/frame/shadow perspective и отсутствие UI; apparent screen ratio составил около `1.995` у `v3-01` и `2.062` у `v3-02`. Для заявленной высоты камеры `v3-01` признан более естественным по foreshortening; оба raw/final PNG валидны в ImageMagick, `git diff --check` прошёл.
+
+- 2026-07-30: Восстановлена накопленная история `tasks/lessons.md` и `tasks/logs.md` после случайной перезаписи кратким GoomY-контекстом.
+  Причина: рабочие файлы сократились с `168/2483` строк до `5/31`, что удаляло большую часть проектных правил и журнала.
+  Файлы: `tasks/lessons.md`, `tasks/logs.md`.
+  Что сделано: полные версии из текущего `HEAD` объединены с новыми GoomY-записями; добавлено правило безопасного восстановления без потери свежего хвоста.
+  Проверки: первые `168` строк lessons и `2483` строки logs сопоставлены с `HEAD`; `git diff --check` пройден.
+
+## 2026-07-30 — Motion Lab v1 delivery и production isolation
+
+- Опубликованы два verified GoomY artifact set в `public/media/cases/goomy/flows/`: onboarding (`1206×2622`, `490` frames) и paywall → activation (`1206×2622`, `1704` frames), каждый как versioned WebM, PNG poster и provenance manifest.
+- Удалены production authoring routes, React components, CSS, raw GoomY authoring assets и DialKit dependency; исходники сохранены в отдельном Motion Lab Git repository.
+- Добавлен `verify-motion-isolation.mjs` и prebuild gate: запрещены authoring imports/routes/raw frames, а опубликованные media проверяются по explicit allowlist, clean verified manifest, size и SHA-256.
+- Poster scripts научены распознавать adjacent immutable `<stem>-poster.png`, сохранив legacy `/flows/ -> /posters/` fallback.
+- PRD синхронизирован с фактическим v1: native DialKit-only Studio UI, canonical CLI/schema, выполненные acceptance criteria и deferred GoomY case-page playback.
+- Global skill `react-motion-authoring` прошёл `quick_validate.py` и fresh-agent forward-test: clean clone, one-command scene registration, checks, build, `180/180` preview render и independent verify.
+- Проверки portfolio: isolation guard PASS; `15` video/poster пар PASS; production build PASS; повтор четырёх flaky Chrome specs в один worker — `49 passed / 4 skipped`; WebKit mobile — `2 passed`; Chromium/WebKit decode, intrinsic `1206×2622` и hard-cut loop обоих GoomY WebM — PASS.
+- Не выполнено намеренно: подключение через production playback component и layout QA — GoomY case page в текущем portfolio отсутствует.
+- Затронуты: `package*.json`, poster/isolation scripts, GoomY authoring source/assets (удаление), `public/media/cases/goomy/flows/*`, PRD и task journals.
+- Коммиты: Motion Lab `9adcf86` + `89cd339`; portfolio delivery/isolation `a37edfa`.
