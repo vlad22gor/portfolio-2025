@@ -2576,3 +2576,10 @@
 - Перенесены подтверждённые из DialKit raw X-координаты: `delivery-time = 739.12`, `summary = 777.54`; остальные `y/rotation/width/height` оставлены без изменений.
 - Значения синхронизированы между dev defaults в `ForaHoverDialKit.tsx` и production data в `src/data/cases.ts`, чтобы выключение tuning-панели не меняло композицию.
 - Проверки: fresh browser context получил новые DialKit defaults и pinned hover; production build и dist isolation guard — PASS; targeted Playwright layout contract — `1 passed`.
+
+## 2026-07-30 — Fora tuning завершён
+
+- DialKit-панель переведена в post-approval режим: стартует свёрнутой, `Freeze Hover=false`, поэтому ассеты Fora снова скрыты в покое и появляются по штатному hover/focus.
+- Store ids повышены до `fora-hover-assets-v2` / `fora-hover-dialkit-open-v2`, чтобы сохранённые настройки первой tuning-сессии не оставляли карточку закреплённой.
+- Dev browser QA: до hover `active=false`, `opacity=0`; через `500ms` hover `active=true`, `opacity=1`; после pointer leave и `700ms` `active=false`, `opacity=0`; controls скрыты при старте.
+- Проверки: production build и dist isolation guard — PASS; targeted layout/hover Playwright — `2 passed`; `git diff --check` — PASS.

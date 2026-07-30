@@ -2,11 +2,12 @@ import { useEffect } from 'react';
 import { DialRoot, useDialKit, type DialConfig } from 'dialkit';
 import 'dialkit/styles.css';
 
-const panelId = 'fora-hover-assets-v1';
+const panelId = 'fora-hover-assets-v2';
+const panelOpenStorageKey = 'fora-hover-dialkit-open-v2';
 const tuningEventName = 'case-card:tuning-update';
 
 const foraHoverDialConfig = {
-  freezeHover: true,
+  freezeHover: false,
   debugBounds: false,
   deliveryTime: {
     x: [739.12, -400, 1400, 0.01],
@@ -34,15 +35,15 @@ type AssetValues = {
 
 function readPanelOpenPreference() {
   try {
-    return window.localStorage.getItem('fora-hover-dialkit-open') !== '0';
+    return window.localStorage.getItem(panelOpenStorageKey) === '1';
   } catch {
-    return true;
+    return false;
   }
 }
 
 function storePanelOpenPreference(open: boolean) {
   try {
-    window.localStorage.setItem('fora-hover-dialkit-open', open ? '1' : '0');
+    window.localStorage.setItem(panelOpenStorageKey, open ? '1' : '0');
   } catch {
     // Dial controls remain usable when storage is unavailable.
   }
