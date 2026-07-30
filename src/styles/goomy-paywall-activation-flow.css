@@ -1,0 +1,590 @@
+:root {
+  color-scheme: dark;
+}
+
+@font-face {
+  font-family: 'GoomY Asap';
+  src: url('/media/goomy/paywall-activation-flow/fonts/asap-variable.ttf')
+    format('truetype');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GoomY Kalam';
+  src: url('/media/goomy/paywall-activation-flow/fonts/kalam-bold.ttf')
+    format('truetype');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GoomY Poppins';
+  src: url('/media/goomy/paywall-activation-flow/fonts/poppins-regular.ttf')
+    format('truetype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GoomY Brodies';
+  src: url('/media/goomy/paywall-activation-flow/fonts/brodies-twisted-regular.otf')
+    format('opentype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 50% 38%, rgb(45 45 45 / 80%), transparent 42%),
+    #171717;
+}
+
+.goomy-flow-authoring {
+  box-sizing: border-box;
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  padding: 72px 32px 180px;
+  overflow: hidden;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.goomy-flow-meta {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  z-index: 20;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  color: rgb(255 255 255 / 92%);
+  pointer-events: none;
+}
+
+.goomy-flow-meta p,
+.goomy-flow-meta span {
+  margin: 0;
+}
+
+.goomy-flow-meta p {
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.goomy-flow-meta span {
+  color: rgb(255 255 255 / 48%);
+  font-size: 12px;
+}
+
+.goomy-flow-phone {
+  position: relative;
+  width: 402px;
+  height: 874px;
+  overflow: hidden;
+  border-radius: 60px;
+  background: #fde2cf;
+  box-shadow: none;
+  isolation: isolate;
+  transform-origin: center;
+}
+
+.goomy-flow-screen {
+  position: absolute;
+  inset: 0;
+  width: 402px;
+  height: 874px;
+  overflow: hidden;
+  background: #fce2cf;
+  transform-origin: center;
+  will-change: opacity, transform;
+  pointer-events: none;
+}
+
+.goomy-flow-screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background: #000;
+  opacity: var(--goomy-push-dim-opacity, 0);
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.goomy-flow-success {
+  background: #fcebe0;
+}
+
+.goomy-flow-full-screen-image,
+.goomy-paywall-long-image {
+  display: block;
+  width: 402px;
+  max-width: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+.goomy-flow-full-screen-image {
+  height: 874px;
+  clip-path: inset(62px 0 0 round 0 0 60px 60px);
+}
+
+.goomy-hold-content-image {
+  clip-path: inset(62px 0 168px);
+}
+
+.goomy-paywall-scroll-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 402px;
+  height: 2993px;
+  will-change: transform;
+}
+
+.goomy-paywall-long-image {
+  height: 2993px;
+  clip-path: inset(128px 0 168px 0);
+}
+
+.goomy-paywall-hero-window {
+  position: absolute;
+  top: 128px;
+  left: 0;
+  width: 402px;
+  height: 420px;
+  overflow: hidden;
+  background: #fde2cf;
+}
+
+.goomy-paywall-hero-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  height: 396px;
+  will-change: transform;
+}
+
+.goomy-paywall-hero-slide {
+  flex: 0 0 402px;
+  width: 402px;
+  height: 396px;
+  overflow: hidden;
+}
+
+.goomy-paywall-hero-slide img {
+  display: block;
+  width: 402px;
+  height: 874px;
+  margin-top: -128px;
+  max-width: none;
+  user-select: none;
+}
+
+.goomy-paywall-page-indicator {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 24px;
+  background: #fde2cf;
+}
+
+.goomy-paywall-page-indicator span {
+  display: block;
+  height: 6px;
+  border-radius: 999px;
+  will-change: width, background-color;
+}
+
+.goomy-paywall-fixed-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 7;
+  width: 402px;
+  height: 136px;
+  overflow: visible;
+  background: transparent;
+  pointer-events: none;
+}
+
+.goomy-paywall-header-underlap {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    #fde2cf 0%,
+    #fde2cf 80%,
+    rgb(253 226 207 / 0%) 100%
+  );
+  will-change: opacity;
+}
+
+.goomy-flow-static-status-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  width: 402px;
+  height: 62px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.goomy-flow-static-status-bar img {
+  display: block;
+  width: 402px;
+  height: 62px;
+  max-width: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+.goomy-paywall-header-row {
+  position: absolute;
+  top: 62px;
+  right: 24px;
+  left: 24px;
+  display: flex;
+  align-items: center;
+  height: 50px;
+}
+
+.goomy-paywall-header-slot {
+  display: flex;
+  flex: 0 0 81px;
+  align-items: center;
+  height: 50px;
+}
+
+.goomy-paywall-header-slot.is-leading {
+  justify-content: flex-start;
+}
+
+.goomy-paywall-header-slot.is-trailing {
+  justify-content: flex-end;
+}
+
+.goomy-paywall-back-control {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 12px;
+  background: rgb(81 8 0 / 5%);
+}
+
+.goomy-paywall-back-control img {
+  display: block;
+  width: 18.499px;
+  height: 13.64px;
+  max-width: none;
+  user-select: none;
+}
+
+.goomy-paywall-brand-slot {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  height: 50px;
+  overflow: visible;
+}
+
+.goomy-paywall-brand-slot img {
+  display: block;
+  width: 154.795px;
+  height: 63.451px;
+  max-width: none;
+  transform: rotate(-2.66deg);
+  user-select: none;
+}
+
+.goomy-paywall-restore-control {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 81px;
+  height: 36px;
+  border-radius: 12px;
+  background: rgb(81 8 0 / 9%);
+  color: rgb(0 0 0 / 80%);
+  font: 500 15px/22px 'GoomY Poppins', ui-sans-serif, system-ui, sans-serif;
+}
+
+.goomy-paywall-fixed-footer {
+  box-sizing: border-box;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+  width: 402px;
+  height: 168px;
+  padding: 32px;
+  overflow: visible;
+  background: linear-gradient(
+    to bottom,
+    rgb(253 226 207 / 0%) 0%,
+    #fde2cf 20%,
+    #fde2cf 100%
+  );
+  pointer-events: none;
+}
+
+.goomy-paywall-fixed-footer p {
+  height: 22px;
+  margin: 0;
+  color: rgb(0 0 0 / 60%);
+  font: 400 15px/22px 'GoomY Poppins', ui-sans-serif, system-ui, sans-serif;
+  text-align: center;
+}
+
+.goomy-paywall-primary-action {
+  display: flex;
+  flex: 0 0 72px;
+  align-items: center;
+  justify-content: center;
+  width: 338px;
+  height: 72px;
+  border-radius: 28px;
+  background: rgb(0 0 0 / 90%);
+  color: #fde2cf;
+  font: 400 24px/28px 'GoomY Brodies', 'GoomY Poppins', sans-serif;
+  white-space: nowrap;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.goomy-hold-fixed-footer {
+  box-sizing: border-box;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+  width: 402px;
+  height: 168px;
+  padding: 32px;
+  overflow: visible;
+  background: linear-gradient(
+    to bottom,
+    rgb(252 226 207 / 0%) 0%,
+    #fce2cf 20%,
+    #fce2cf 100%
+  );
+  pointer-events: none;
+}
+
+.goomy-hold-fixed-footer p {
+  height: 22px;
+  margin: 0;
+  color: rgb(0 0 0 / 60%);
+  font: 400 15px/22px 'GoomY Poppins', ui-sans-serif, system-ui, sans-serif;
+  text-align: center;
+}
+
+.goomy-hold-button-live {
+  position: relative;
+  flex: 0 0 72px;
+  width: 338px;
+  height: 72px;
+  border-radius: 28px;
+  background: #655a53;
+  overflow: hidden;
+  transform-origin: center;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.goomy-hold-button-progress {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: block;
+  width: 0;
+  border-radius: 28px;
+  background: #0a0908;
+  will-change: width;
+}
+
+.goomy-hold-button-label {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fde2cf;
+  font: 400 24px/28px 'GoomY Brodies', 'GoomY Poppins', sans-serif;
+  white-space: nowrap;
+  user-select: none;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+.goomy-confetti-emitter {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 45;
+  width: 402px;
+  height: 290px;
+  overflow: visible;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.goomy-confetti-emitter span {
+  position: absolute;
+  bottom: 0;
+  display: block;
+  border-radius: 0.5px;
+  transform-origin: center;
+  transform-style: preserve-3d;
+  backface-visibility: visible;
+  will-change: transform;
+}
+
+.goomy-recipe-carousel-window {
+  position: absolute;
+  top: 259px;
+  left: 0;
+  z-index: 2;
+  width: 402px;
+  height: 479px;
+  overflow: visible;
+  background: #fde2cf;
+}
+
+.goomy-recipe-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 296px;
+  height: 441px;
+  overflow: hidden;
+  border-radius: 41px;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.goomy-recipe-card > img {
+  display: block;
+  width: 296px;
+  height: 441px;
+  max-width: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+.goomy-recipe-card-content-fix {
+  box-sizing: border-box;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 145px;
+  padding: 16px 24px 24px;
+  border-radius: 0 0 41px 41px;
+  background: var(--goomy-recipe-card-surface);
+  color: var(--goomy-recipe-card-title);
+}
+
+.goomy-recipe-card-content-fix strong,
+.goomy-recipe-card-content-fix em,
+.goomy-recipe-card-content-fix p {
+  display: block;
+  margin: 0;
+}
+
+.goomy-recipe-card-content-fix strong {
+  font: 900 24px/27.6px 'GoomY Asap', ui-sans-serif, system-ui, sans-serif;
+}
+
+.goomy-recipe-card-content-fix em {
+  font: 700 24px/28px 'GoomY Kalam', cursive;
+}
+
+.goomy-recipe-card-content-fix p {
+  margin-top: 4px;
+  color: rgb(0 0 0 / 80%);
+  font: 400 15px/21px 'GoomY Poppins', ui-sans-serif, system-ui, sans-serif;
+}
+
+.goomy-recipe-carousel-window > p {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 30;
+  margin: 0;
+  color: rgb(0 0 0 / 36%);
+  font: 400 15px/22px 'GoomY Poppins', ui-sans-serif, system-ui, sans-serif;
+  text-align: center;
+}
+
+.goomy-flow-authoring.is-capture {
+  min-height: 874px;
+  padding: 0;
+  background: transparent;
+}
+
+@media (max-height: 1080px), (max-width: 560px) {
+  .goomy-flow-phone {
+    transform: scale(
+      min(
+        calc((100vw - 40px) / 402),
+        calc((100dvh - 140px) / 874),
+        1
+      )
+    );
+  }
+
+  .goomy-flow-authoring {
+    padding: 70px 20px 150px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .goomy-flow-screen,
+  .goomy-paywall-scroll-canvas,
+  .goomy-paywall-hero-track,
+  .goomy-paywall-page-indicator span,
+  .goomy-paywall-header-underlap,
+  .goomy-paywall-primary-action,
+  .goomy-hold-fixed-footer,
+  .goomy-hold-button-live,
+  .goomy-hold-button-progress,
+  .goomy-confetti-emitter,
+  .goomy-confetti-emitter span,
+  .goomy-recipe-card {
+    will-change: auto;
+  }
+}
