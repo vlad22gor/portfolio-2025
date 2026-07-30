@@ -141,6 +141,79 @@ test.describe('GoomY case', () => {
     await expect(page.locator('.goomy-case-switcher')).toBeVisible();
     await expect(page.locator('.fora-feature-cards-section')).toHaveCount(0);
 
+    const updatedFigmaGeometry = await page.evaluate(() => {
+      const relativeRect = (
+        element: Element | null,
+        parent: Element | null,
+      ): { x: number; y: number; width: number; height: number } | null => {
+        if (!(element instanceof HTMLElement) || !(parent instanceof HTMLElement)) {
+          return null;
+        }
+        const elementRect = element.getBoundingClientRect();
+        const parentRect = parent.getBoundingClientRect();
+        return {
+          x: elementRect.x - parentRect.x,
+          y: elementRect.y - parentRect.y,
+          width: elementRect.width,
+          height: elementRect.height,
+        };
+      };
+
+      const challengeScene = document.querySelector(
+        '.goomy-case-challenge .case-challenge-scene-wrap--desktop .case-challenge-scene',
+      );
+      const challengeArrows = document.querySelectorAll(
+        '.goomy-case-challenge .case-challenge-scene-wrap--desktop .case-challenge-arrow',
+      );
+      const designScene = document.querySelector(
+        '.goomy-design-system-section .fora-design-system-scene',
+      );
+      const handoffBody = document.querySelector<HTMLElement>(
+        '.goomy-design-system-section .fora-design-system-copy--styles .fora-design-system-copy-body',
+      );
+
+      return {
+        challengeBottomRight: relativeRect(challengeArrows[3] ?? null, challengeScene),
+        designTop: relativeRect(
+          document.querySelector(
+            '.goomy-design-system-section .fora-design-system-arrow--top',
+          ),
+          designScene,
+        ),
+        designBottomLeft: relativeRect(
+          document.querySelector(
+            '.goomy-design-system-section .fora-design-system-arrow--bottom-left',
+          ),
+          designScene,
+        ),
+        handoffText: handoffBody?.innerText ?? '',
+        handoffWhiteSpace: handoffBody ? getComputedStyle(handoffBody).whiteSpace : '',
+      };
+    });
+
+    expect(updatedFigmaGeometry.challengeBottomRight).toEqual({
+      x: 540,
+      y: 366,
+      width: 67,
+      height: 40,
+    });
+    expect(updatedFigmaGeometry.designTop).toEqual({
+      x: 237,
+      y: 132,
+      width: 166,
+      height: 59,
+    });
+    expect(updatedFigmaGeometry.designBottomLeft).toEqual({
+      x: 254,
+      y: 645,
+      width: 109,
+      height: 90,
+    });
+    expect(updatedFigmaGeometry.handoffWhiteSpace).toBe('pre-line');
+    expect(updatedFigmaGeometry.handoffText).toContain(
+      'Specs, DESIGN.md and\ntokens enabled accurate React Native implementation',
+    );
+
     const viewport = page.locator('[data-case-screens-loop]');
     const track = page.locator('[data-case-screens-loop-track]');
     await viewport.scrollIntoViewIfNeeded();

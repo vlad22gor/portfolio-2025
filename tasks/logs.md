@@ -2607,3 +2607,10 @@
 - Устаревшее переиспользование challenge-стрелки в screen gallery заменено отдельными `screens-loop/arrow-left.svg` и `arrow-right.svg`; сохранены distinct фигмовские контуры, bounds `94×102` и отдельное отражение правого wrapper.
 - Design system и challenge, включая нижнюю правую стрелку, уже побайтово совпадали с актуальной Figma и поэтому оставлены без бессмысленной перезаписи.
 - Проверки: browser QA трёх секций — PASS; production build — PASS (`7` routes и isolation guards); `tests/smoke/goomy-case.spec.ts --workers=1` — `3 passed`; первый параллельный запуск ожидаемо пересёкся с перестройкой `dist`, последовательный повтор прошёл полностью.
+
+## 2026-07-30 — Геометрия стрелок и handoff-copy GoomY
+
+- Exact Figma nodes `193:15230`, `193:15408`, `193:15412` сопоставлены по structured context, screenshot, parent metadata, SHA-256 и browser bounds; сами runtime SVG уже совпадали с Figma.
+- Challenge bottom-right перенесена на `x=540, y=366, 67×40`; design-system top — на `x=237, y=132, 166×59`; design-system bottom-left — на `x=254, y=645, 109×90`.
+- В handoff-copy добавлен жёсткий перенос перед `tokens` через `\n + white-space: pre-line`, scoped только на GoomY variant.
+- Добавлен browser smoke-контракт на три геометрии и перенос. Visual QA — PASS; production build — PASS (`7` routes и isolation guards); `tests/smoke/goomy-case.spec.ts --workers=1` — `3 passed`.

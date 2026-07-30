@@ -116,7 +116,7 @@ export const GOOMY_CASE_DETAIL_CONFIG: CaseDetailConfig = {
             width: 184,
             arrowSrc: '/media/cases/goomy/challenge/arrow-bottom-right.svg',
             arrowLeft: 540,
-            arrowTop: 326,
+            arrowTop: 366,
             arrowWidth: 67,
             arrowHeight: 40,
           },
@@ -243,7 +243,7 @@ export const GOOMY_CASE_DETAIL_CONFIG: CaseDetailConfig = {
           '450+ tokens connected Primitive, Semantic and Component level',
         copyStylesTitle: 'handoff',
         copyStylesBody:
-          'Specs, DESIGN.md and tokens enabled accurate React Native implementation',
+          'Specs, DESIGN.md and\ntokens enabled accurate React Native implementation',
         copyLibraryTitle: 'component library',
         copyLibraryBody:
           '72 component families covered core patterns, states and recipe-specific UI',
