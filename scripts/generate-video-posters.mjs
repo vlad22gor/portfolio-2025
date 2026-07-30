@@ -98,8 +98,24 @@ const resolveLegacyPosterPath = (videoPath) => {
   return path.join(MEDIA_ROOT, posterRel);
 };
 
+const resolveArtifactManifestPath = (videoPath) =>
+  videoPath.replace(/\.webm$/i, ".manifest.json");
+
+const hasArtifactManifest = async (videoPath) => {
+  try {
+    const manifestStats = await stat(resolveArtifactManifestPath(videoPath));
+    return manifestStats.isFile();
+  } catch {
+    return false;
+  }
+};
+
 const resolvePosterPath = async (videoPath) => {
   const adjacentVersionedPoster = videoPath.replace(/\.webm$/i, "-poster.png");
+  if (await hasArtifactManifest(videoPath)) {
+    return adjacentVersionedPoster;
+  }
+
   try {
     const adjacentStats = await stat(adjacentVersionedPoster);
     if (adjacentStats.isFile()) {
@@ -112,6 +128,12 @@ const resolvePosterPath = async (videoPath) => {
 };
 
 const shouldRegeneratePoster = async (videoPath, posterPath) => {
+  if (await hasArtifactManifest(videoPath)) {
+    // A delivered artifact set is immutable. Its manifest/hash verifier must
+    // fail on a missing or changed poster instead of prebuild rewriting it.
+    return false;
+  }
+
   const videoStats = await stat(videoPath);
 
   try {

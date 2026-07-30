@@ -2530,3 +2530,10 @@
 - Не выполнено намеренно: подключение через production playback component и layout QA — GoomY case page в текущем portfolio отсутствует.
 - Затронуты: `package*.json`, poster/isolation scripts, GoomY authoring source/assets (удаление), `public/media/cases/goomy/flows/*`, PRD и task journals.
 - Коммиты: Motion Lab `9adcf86` + `89cd339`; portfolio delivery/isolation `a37edfa`.
+
+## 2026-07-30 — Immutable motion posters после merge
+
+- Исправлен post-merge дефект: `generate:posters` считал checkout timestamp WebM новее poster и пересоздавал два verified GoomY poster, нарушая hashes manifest.
+- Для video с adjacent artifact manifest generator теперь всегда выбирает adjacent versioned poster и не изменяет delivery set; отсутствие или mismatch обрабатывает `verify:motion-isolation`.
+- Оба poster восстановлены byte-for-byte из merge commit: SHA-256 снова совпадают с manifests.
+- Проверки: искусственно обновлён `mtime` обоих WebM; generator сообщил `0 generated / 15 skipped`; poster hashes не изменились; isolation guard, `15` poster pairs и полный production build на `6` routes прошли.

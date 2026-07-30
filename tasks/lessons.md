@@ -174,3 +174,4 @@
 - Для exported motion flows держать React/DialKit authoring в отдельном Motion Lab, а в production разрешать только explicit allowlisted versioned `WebM + poster + verified manifest`; отсутствие будущей case page не компенсировать выдуманным playback route.
 - Для versioned motion artifact poster может лежать рядом с видео как `<stem>-poster.png`; poster generation/verification должны сначала учитывать этот immutable naming, затем legacy `/flows/ -> /posters/`.
 - Если полный Playwright suite падает только под параллельной нагрузкой, сначала повторить конкретные specs с `--workers=1`; не менять production-layout по неподтверждённому flaky результату.
+- Poster generator не должен перезаписывать versioned delivery artifact рядом с manifest по сравнению `mtime`: такой набор immutable, а missing/hash mismatch обязан останавливать build через verifier.
