@@ -26,11 +26,35 @@ const prev = CASES[(index - 1 + CASES.length) % CASES.length];
 const next = CASES[(index + 1) % CASES.length];
 const detailConfig = getCaseDetailConfig(current.slug);
 const criticalMediaPreloads = getCriticalMediaForRoute(current.slug);
-const pageMetadata = current.slug === 'fora' ? PAGE_METADATA.fora : PAGE_METADATA.kissa;
-const caseKeywords =
-  current.slug === 'fora'
-    ? ['mobile B2C app', 'mobile product redesign', 'grocery app', 'design system', 'craft-heavy product polish']
-    : ['0-to-1 product design', 'AI-enabled self-service', 'self-checkout terminal', 'complex product flow'];
+const caseMetadataBySlug = {
+  fora: PAGE_METADATA.fora,
+  kissa: PAGE_METADATA.kissa,
+  goomy: PAGE_METADATA.goomy,
+} as const;
+const caseKeywordsBySlug = {
+  fora: [
+    'mobile B2C app',
+    'mobile product redesign',
+    'grocery app',
+    'design system',
+    'craft-heavy product polish',
+  ],
+  kissa: [
+    '0-to-1 product design',
+    'AI-enabled self-service',
+    'self-checkout terminal',
+    'complex product flow',
+  ],
+  goomy: [
+    'mobile recipe app',
+    'mobile product redesign',
+    'onboarding design',
+    'React Native design system',
+    'product design',
+  ],
+} as const;
+const pageMetadata = caseMetadataBySlug[current.slug];
+const caseKeywords = [...caseKeywordsBySlug[current.slug]];
 ---
 
 <BaseLayout

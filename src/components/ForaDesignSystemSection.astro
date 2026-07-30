@@ -27,12 +27,32 @@ const defaultData: CaseDetailDesignSystemData = {
 
 const { data = defaultData, inViewPreset = 'appear-v1', class: className = '' } = Astro.props as Props;
 const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefined;
-const rootClassName = ['fora-design-system-section', className].filter(Boolean).join(' ');
+const variant = data.variant === 'goomy' ? 'goomy' : 'fora';
+const rootClassName = [
+  'fora-design-system-section',
+  `fora-design-system-section--${variant}`,
+  className,
+].filter(Boolean).join(' ');
+const titleId = `${variant}-design-system-title`;
+const imageDimensions =
+  variant === 'goomy'
+    ? {
+        summary: { width: 247, height: 287 },
+        horizontal: { width: 390, height: 292 },
+        vertical: { width: 356, height: 283 },
+        sheet: { width: 264, height: 293 },
+      }
+    : {
+        summary: { width: 227, height: 287 },
+        horizontal: { width: 390, height: 258 },
+        vertical: { width: 310, height: 283 },
+        sheet: { width: 264, height: 293 },
+      };
 ---
 
-<section class={rootClassName} aria-labelledby="fora-design-system-title" data-motion-inview={resolvedInViewPreset}>
+<section class={rootClassName} aria-labelledby={titleId} data-motion-inview={resolvedInViewPreset}>
   <div class="fora-design-system-scene">
-    <h2 id="fora-design-system-title" class="type-t1-tight fora-design-system-heading">{data.heading}</h2>
+    <h2 id={titleId} class="type-t1-tight fora-design-system-heading">{data.heading}</h2>
 
     <article class="fora-design-system-copy fora-design-system-copy--palette">
       <p class="fora-design-system-copy-title">{data.copyPaletteTitle}</p>
@@ -56,8 +76,8 @@ const rootClassName = ['fora-design-system-section', className].filter(Boolean).
       aria-hidden="true"
       loading="lazy"
       decoding="async"
-      width="227"
-      height="287"
+      width={imageDimensions.summary.width}
+      height={imageDimensions.summary.height}
     />
 
     <img
@@ -67,8 +87,8 @@ const rootClassName = ['fora-design-system-section', className].filter(Boolean).
       aria-hidden="true"
       loading="lazy"
       decoding="async"
-      width="390"
-      height="258"
+      width={imageDimensions.horizontal.width}
+      height={imageDimensions.horizontal.height}
     />
 
     <img
@@ -78,8 +98,8 @@ const rootClassName = ['fora-design-system-section', className].filter(Boolean).
       aria-hidden="true"
       loading="lazy"
       decoding="async"
-      width="310"
-      height="283"
+      width={imageDimensions.vertical.width}
+      height={imageDimensions.vertical.height}
     />
 
     <img
@@ -89,8 +109,8 @@ const rootClassName = ['fora-design-system-section', className].filter(Boolean).
       aria-hidden="true"
       loading="lazy"
       decoding="async"
-      width="264"
-      height="293"
+      width={imageDimensions.sheet.width}
+      height={imageDimensions.sheet.height}
     />
 
     <ThemedSvgIcon
@@ -246,5 +266,74 @@ const rootClassName = ['fora-design-system-section', className].filter(Boolean).
     top: 471px;
     width: 100px;
     height: 101px;
+  }
+
+  .fora-design-system-section--goomy .fora-design-system-image--summary {
+    left: -10px;
+    width: 247px;
+  }
+
+  .fora-design-system-section--goomy .fora-design-system-image--horizontal {
+    top: -11px;
+    width: 390px;
+    height: 292px;
+  }
+
+  .fora-design-system-section--goomy .fora-design-system-image--vertical {
+    left: 70px;
+    width: 356px;
+  }
+
+  .fora-design-system-section--goomy .fora-design-system-arrow--bottom-left {
+    top: 645px;
+  }
+
+  @media (max-width: 847px) {
+    .fora-design-system-section--goomy {
+      --goomy-design-system-scale: 0.343;
+      height: calc(800px * var(--goomy-design-system-scale));
+      margin-top: 144px;
+    }
+
+    .fora-design-system-section--goomy .fora-design-system-scene {
+      transform: scale(var(--goomy-design-system-scale));
+      transform-origin: top left;
+    }
+  }
+
+  @media (min-width: 360px) and (max-width: 389px) {
+    .fora-design-system-section--goomy {
+      --goomy-design-system-scale: 0.392;
+    }
+  }
+
+  @media (min-width: 390px) and (max-width: 413px) {
+    .fora-design-system-section--goomy {
+      --goomy-design-system-scale: 0.429;
+    }
+  }
+
+  @media (min-width: 414px) and (max-width: 479px) {
+    .fora-design-system-section--goomy {
+      --goomy-design-system-scale: 0.458;
+    }
+  }
+
+  @media (min-width: 480px) and (max-width: 599px) {
+    .fora-design-system-section--goomy {
+      --goomy-design-system-scale: 0.539;
+    }
+  }
+
+  @media (min-width: 600px) and (max-width: 719px) {
+    .fora-design-system-section--goomy {
+      --goomy-design-system-scale: 0.686;
+    }
+  }
+
+  @media (min-width: 720px) and (max-width: 847px) {
+    .fora-design-system-section--goomy {
+      --goomy-design-system-scale: 0.833;
+    }
   }
 </style>

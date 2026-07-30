@@ -102,6 +102,7 @@ export interface CaseFeatureCardItem {
 }
 
 export interface CaseDetailDesignSystemData {
+  variant?: 'fora' | 'goomy';
   heading: string;
   copyPaletteTitle: string;
   copyPaletteBody: string;
@@ -116,6 +117,13 @@ export interface CaseDetailDesignSystemData {
   arrowTopSrc: string;
   arrowBottomLeftSrc: string;
   arrowBottomRightSrc: string;
+}
+
+export interface CaseDetailScreensLoopData {
+  badge: string;
+  title: string;
+  body: string;
+  screens: CaseDetailImage[];
 }
 
 export interface CaseDetailTeamPhotoData {
@@ -166,6 +174,12 @@ export type CaseDetailSection =
       type: 'featureCards';
       cards: CaseFeatureCardItem[];
       className?: string;
+    }
+  | {
+      type: 'screensLoop';
+      data: CaseDetailScreensLoopData;
+      className?: string;
+      inViewPreset?: InViewPreset;
     }
   | {
       type: 'designSystem';

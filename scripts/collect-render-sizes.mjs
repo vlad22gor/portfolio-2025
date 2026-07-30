@@ -3,7 +3,7 @@ import path from 'node:path';
 import { chromium } from '@playwright/test';
 
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:4173';
-const ROUTES = ['/', '/cases', '/gallery', '/fora', '/kissa'];
+const ROUTES = ['/', '/cases', '/gallery', '/fora', '/kissa', '/goomy'];
 const VIEWPORT = { width: 1360, height: 2200 };
 const OUTPUT_PATH = path.resolve('tasks/manifests/render-size-manifest-desktop.json');
 

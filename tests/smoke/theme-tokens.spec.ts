@@ -1285,9 +1285,9 @@ test.describe('Theme tokens smoke', () => {
     const [goomy, fora, kissa] = snapshot!.cards;
     expect(goomy).toMatchObject({
       slug: 'goomy',
-      tagName: 'ARTICLE',
-      href: null,
-      interactive: 'false',
+      tagName: 'A',
+      href: '/goomy',
+      interactive: 'true',
       coverSide: 'left',
       coverBeforeContent: true,
       assets: [

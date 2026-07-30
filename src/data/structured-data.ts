@@ -46,7 +46,7 @@ export const caseCreativeWorkStructuredData = ({
   description,
   keywords,
 }: {
-  slug: 'fora' | 'kissa';
+  slug: 'fora' | 'kissa' | 'goomy';
   title: string;
   description: string;
   keywords: string[];

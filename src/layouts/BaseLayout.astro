@@ -41,7 +41,8 @@ const normalizedCanonicalPath =
 const isHomeRoute = normalizedCanonicalPath === '/';
 const isCasesRoute = normalizedCanonicalPath === '/cases';
 const isGalleryRoute = normalizedCanonicalPath === '/gallery';
-const isCaseDetailRoute = criticalRouteId === 'fora' || criticalRouteId === 'kissa';
+const isCaseDetailRoute =
+  criticalRouteId === 'fora' || criticalRouteId === 'kissa' || criticalRouteId === 'goomy';
 const shouldRenderTemporaryAdaptiveShell = !(isHomeRoute || isCasesRoute || isGalleryRoute || isCaseDetailRoute);
 const isAgentationEnabled = import.meta.env.DEV && import.meta.env.PUBLIC_AGENTATION_ENABLED === 'true';
 const isForaHoverDialKitEnabled =

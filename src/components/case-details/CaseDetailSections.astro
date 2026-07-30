@@ -8,6 +8,7 @@ import TeamPhotoQuantizedPerimeterSection from '../TeamPhotoQuantizedPerimeterSe
 import KissaArtifactPhotosSection from '../KissaArtifactPhotosSection.astro';
 import CaseSwitcherSection from '../CaseSwitcherSection.astro';
 import CaseDetailIntroSection from './CaseDetailIntroSection.astro';
+import CaseScreensLoopSection from './CaseScreensLoopSection.astro';
 
 import type { Case } from '../../data/cases';
 import type { CaseDetailConfig } from '../../data/case-details';
@@ -68,6 +69,14 @@ const { config, currentCase, prevCase, nextCase } = Astro.props as Props;
 
       {section.type === 'featureCards' && (
         <ForaFeatureCardsSection cards={section.cards} class={section.className} />
+      )}
+
+      {section.type === 'screensLoop' && (
+        <CaseScreensLoopSection
+          data={section.data}
+          class={section.className}
+          inViewPreset={section.inViewPreset}
+        />
       )}
 
       {section.type === 'designSystem' && (

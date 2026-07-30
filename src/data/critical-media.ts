@@ -1,5 +1,6 @@
 import type { CaseDetailSection } from './case-details';
 import { getCaseDetailConfig } from './case-details';
+import type { Case } from './cases';
 import { GALLERY_ROWS, type GalleryRowItem } from './gallery';
 
 export type CriticalMediaKind = 'image' | 'video' | 'poster' | 'shell';
@@ -9,7 +10,7 @@ export interface CriticalMediaAsset {
   kind: CriticalMediaKind;
 }
 
-export type CriticalRouteId = 'home' | 'cases' | 'gallery' | 'fora' | 'kissa';
+export type CriticalRouteId = 'home' | 'cases' | 'gallery' | 'fora' | 'kissa' | 'goomy';
 
 type GalleryDeviceCard = Extract<GalleryRowItem, { type: 'phone' | 'tablet' }>;
 
@@ -90,7 +91,7 @@ const collectCaseSectionCriticalAssets = (section: CaseDetailSection): CriticalM
   return [];
 };
 
-const buildCaseDetailCriticalAssets = (slug: 'fora' | 'kissa'): CriticalMediaAsset[] => {
+const buildCaseDetailCriticalAssets = (slug: Case['slug']): CriticalMediaAsset[] => {
   const config = getCaseDetailConfig(slug);
   if (!config) {
     return [];
@@ -105,9 +106,17 @@ const CRITICAL_MEDIA_BY_ROUTE: Record<CriticalRouteId, CriticalMediaAsset[]> = {
   gallery: buildGalleryCriticalAssets(),
   fora: buildCaseDetailCriticalAssets('fora'),
   kissa: buildCaseDetailCriticalAssets('kissa'),
+  goomy: buildCaseDetailCriticalAssets('goomy'),
 };
 
-export const CRITICAL_ROUTE_IDS: CriticalRouteId[] = ['home', 'cases', 'gallery', 'fora', 'kissa'];
+export const CRITICAL_ROUTE_IDS: CriticalRouteId[] = [
+  'home',
+  'cases',
+  'gallery',
+  'fora',
+  'kissa',
+  'goomy',
+];
 
 export function getCriticalMediaForRoute(routeId: CriticalRouteId): CriticalMediaAsset[] {
   return [...CRITICAL_MEDIA_BY_ROUTE[routeId]];
@@ -144,6 +153,9 @@ export function resolveCriticalRouteIdFromPath(pathname: string): CriticalRouteI
   }
   if (normalized === '/kissa') {
     return 'kissa';
+  }
+  if (normalized === '/goomy') {
+    return 'goomy';
   }
   return 'home';
 }

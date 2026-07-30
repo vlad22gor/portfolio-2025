@@ -2070,6 +2070,10 @@ html[data-theme='dark'] .case-badge[data-badge-type='default'] {
   margin-top: 216px;
 }
 
+.goomy-case-challenge {
+  margin-top: 216px;
+}
+
 .fora-case-switcher {
   margin-top: 220px;
   margin-bottom: 216px;
@@ -2231,8 +2235,24 @@ html[data-theme='dark'] .case-badge[data-badge-type='default'] {
   margin-top: 144px;
 }
 
+.goomy-intro-section {
+  min-height: 586px;
+}
+
+.goomy-intro-section .fora-intro-top {
+  min-height: 330px;
+}
+
+.goomy-intro-screens {
+  margin-top: 144px;
+}
+
 .case-process-section--kissa {
   min-height: 967px;
+}
+
+.case-process-section--goomy {
+  min-height: 1135px;
 }
 
 .case-process-section--kissa .case-process-section__steps {
@@ -2451,6 +2471,11 @@ html[data-theme='dark'] .case-badge[data-badge-type='default'] {
 
 .kissa-case-switcher {
   margin-top: 244px;
+  margin-bottom: 216px;
+}
+
+.goomy-case-switcher {
+  margin-top: 186px;
   margin-bottom: 216px;
 }
 

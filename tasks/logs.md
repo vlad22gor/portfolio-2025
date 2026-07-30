@@ -2583,3 +2583,13 @@
 - Store ids повышены до `fora-hover-assets-v2` / `fora-hover-dialkit-open-v2`, чтобы сохранённые настройки первой tuning-сессии не оставляли карточку закреплённой.
 - Dev browser QA: до hover `active=false`, `opacity=0`; через `500ms` hover `active=true`, `opacity=1`; после pointer leave и `700ms` `active=false`, `opacity=0`; controls скрыты при старте.
 - Проверки: production build и dist isolation guard — PASS; targeted layout/hover Playwright — `2 passed`; `git diff --check` — PASS.
+
+## 2026-07-30 — Production-страница кейса GoomY
+
+- Добавлен production route `/goomy` и GoomY переведён из некликабельной карточки в полноценный третий кейс с metadata, JSON-LD, critical-media contract, sitemap и циклическим case switcher.
+- Страница собрана по Figma `193:15153`: intro, intro screens, challenge, process, новая галерея экранов, обновлённый app design system и case switcher. Незавершённая feature/video-секция намеренно не рендерится.
+- Добавлена data-driven галерея из шести временных экранов: бесшовный double-track loop, autoplay `48px/s`, плавное замедление до `16px/s` на hover, pointer drag, inertia, пауза вне viewport/при hidden document и reduced-motion policy.
+- Оригинальные Figma-экраны заменили прозрачные placeholder-файлы: intro/challenge/gallery используют `1206×2622`; четыре пользовательских design-system PNG переименованы в `action-sheet`, `source-metric-cards`, `saved-recipe-cards`, `explore-featured-card`, затем runtime-копии lossless-конвертированы в WebP с сохранением минимум `3×`.
+- Design-system композиция получила отдельный GoomY variant с Figma-позициями и адаптивным mobile scale; mobile QA подтвердил `scrollWidth=innerWidth` на `390px`.
+- Обновлены generic mobile route contracts и smoke-тесты; добавлен отдельный GoomY smoke для структуры страницы, отсутствия unfinished feature cards, `3×` растр-контракта, loop/hover/drag и mobile layout.
+- Проверки: production build — PASS (`7` routes; agent-readable, themed SVG, motion isolation и dist DialKit isolation — PASS); GoomY smoke — `2 passed`; generic mobile case-detail — `3 passed`; temporary adaptive — `1 passed`; three-card home contract — `1 passed`; `git diff --check` — PASS. Дополнительный browser QA проверил desktop/mobile screenshots, normal delta `34.36px/700ms`, hover delta `11.67px/700ms`, drag и inertia.

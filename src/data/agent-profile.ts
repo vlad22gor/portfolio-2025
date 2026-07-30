@@ -105,4 +105,9 @@ export const PAGE_METADATA = {
     description:
       'Kissa.AI self-checkout terminal redesign case study: faster flow, higher self-checkout adoption, and fewer tap errors.',
   },
+  goomy: {
+    title: 'GoomY recipe app redesign - Vladyslav Horovyy',
+    description:
+      'GoomY recipe app redesign case study: 86 screens and states, 70+ components, and a production-ready React Native design system delivered in four weeks.',
+  },
 } as const;

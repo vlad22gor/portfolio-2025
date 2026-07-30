@@ -52,7 +52,7 @@ export type CaseSection = {
 };
 
 export type Case = CaseCardData & {
-  slug: 'fora' | 'kissa';
+  slug: CaseCardData['slug'];
   href: string;
   metrics: CaseMetric[];
   summary: string;
@@ -60,7 +60,86 @@ export type Case = CaseCardData & {
   media: CaseMedia[];
 };
 
+export const GOOMY_CASE: Case = {
+  slug: 'goomy',
+  href: '/goomy',
+  title: 'GoomY recipe app redesign',
+  subtitle:
+    'Simplifying core recipe flows and building a distinctive, production-ready experience in four weeks',
+  tags: ['Redesign', 'Onboarding'],
+  coverSide: 'left',
+  cardCover: {
+    src: '/media/cases/goomy/card/cover.webp',
+    alt: 'GoomY recipe app case card cover',
+  },
+  cardHover: {
+    designWidth: 874,
+    borderColor: '#E38F75',
+    arrowDirection: 'right',
+    assets: [
+      {
+        src: '/media/cases/goomy/card/add-recipe-sheet.png',
+        alt: 'GoomY add recipe sheet preview',
+        targetX: -179.14,
+        targetY: -122,
+        rotationDeg: 0,
+        width: 370,
+        height: 383,
+        zIndex: 3,
+      },
+      {
+        src: '/media/cases/goomy/card/recipe-choice-card.png',
+        alt: 'GoomY recipe choice card preview',
+        targetX: -189.01,
+        targetY: 52,
+        rotationDeg: 0,
+        width: 373,
+        height: 463,
+        zIndex: 2,
+      },
+    ],
+  },
+  metrics: [
+    { label: 'Scope', value: '86 screens and states' },
+    { label: 'Design system', value: '70+ components' },
+    { label: 'Timeline', value: '4 weeks' },
+  ],
+  summary:
+    'Simplified the core recipe flows and built a distinctive visual system ready for React Native implementation.',
+  sections: [
+    {
+      title: 'Challenge',
+      body: [
+        'The working app lacked a consistent visual language and did not express its playful, food-focused brand.',
+        'The redesign had to simplify core flows without rebuilding the product logic.',
+      ],
+    },
+    {
+      title: 'Process',
+      body: [
+        'Audited the existing product, aligned priorities, and validated a bold food-first visual direction.',
+        'Extended the approved direction across onboarding and the core product flows.',
+      ],
+    },
+    {
+      title: 'Result',
+      body: [
+        'Delivered 86 production-ready screens and states in four weeks.',
+        'Built a reusable system of 70+ components and 450+ design tokens and styles.',
+      ],
+    },
+  ],
+  media: [
+    {
+      kind: 'image',
+      src: '/media/cases/goomy/card/cover.webp',
+      alt: 'GoomY recipe app case cover',
+    },
+  ],
+};
+
 export const CASES: Case[] = [
+  GOOMY_CASE,
   {
     slug: 'fora',
     href: '/fora',
@@ -219,47 +298,9 @@ export const CASES: Case[] = [
   },
 ];
 
-export const GOOMY_CASE_CARD: CaseCardData = {
-  slug: 'goomy',
-  title: 'GoomY recipe app redesign',
-  subtitle:
-    'Simplifying core recipe flows and building a distinctive, production-ready experience in four weeks',
-  tags: ['Redesign', 'Onboarding'],
-  coverSide: 'left',
-  cardCover: {
-    src: '/media/cases/goomy/card/cover.webp',
-    alt: 'GoomY recipe app case card cover',
-  },
-  cardHover: {
-    designWidth: 874,
-    borderColor: '#E38F75',
-    arrowDirection: 'right',
-    assets: [
-      {
-        src: '/media/cases/goomy/card/add-recipe-sheet.png',
-        alt: 'GoomY add recipe sheet preview',
-        targetX: -179.14,
-        targetY: -122,
-        rotationDeg: 0,
-        width: 370,
-        height: 383,
-        zIndex: 3,
-      },
-      {
-        src: '/media/cases/goomy/card/recipe-choice-card.png',
-        alt: 'GoomY recipe choice card preview',
-        targetX: -189.01,
-        targetY: 52,
-        rotationDeg: 0,
-        width: 373,
-        height: 463,
-        zIndex: 2,
-      },
-    ],
-  },
-};
+export const GOOMY_CASE_CARD: CaseCardData = GOOMY_CASE;
 
-export const CASE_CARDS: CaseCardData[] = [GOOMY_CASE_CARD, ...CASES];
+export const CASE_CARDS: CaseCardData[] = CASES;
 
 export function getCaseBySlug(slug: string): Case | undefined {
   return CASES.find((item) => item.slug === slug);

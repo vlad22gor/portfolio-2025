@@ -1142,7 +1142,7 @@ test.describe('Case details mobile intro smoke', () => {
       { width: 1359, expectMobileProfile: false },
       { width: 1360, expectMobileProfile: false },
     ] as const;
-    const routes = ['/fora', '/kissa'] as const;
+    const routes = ['/fora', '/kissa', '/goomy'] as const;
 
     for (const viewport of cases) {
       await page.setViewportSize({ width: viewport.width, height: 900 });
@@ -1883,8 +1883,8 @@ test.describe('Case details mobile intro smoke', () => {
     }
   });
 
-  test('mobile challenge notes keep fixed 184px width on /fora and /kissa', async ({ page }) => {
-    const cases = ['/fora', '/kissa'] as const;
+  test('mobile challenge notes keep fixed 184px width on published cases', async ({ page }) => {
+    const cases = ['/fora', '/kissa', '/goomy'] as const;
     const viewports = [
       { width: 390, height: 844 },
       { width: 767, height: 900 },
@@ -1910,11 +1910,11 @@ test.describe('Case details mobile intro smoke', () => {
     }
   });
 
-  test('mobile root sections keep grid width contract at 767px and 847px for /fora and /kissa', async ({ page }) => {
+  test('mobile root sections keep grid width contract at 767px and 847px for published cases', async ({ page }) => {
     for (const viewportWidth of [767, 847] as const) {
       await page.setViewportSize({ width: viewportWidth, height: 900 });
 
-      for (const pathname of ['/fora', '/kissa'] as const) {
+      for (const pathname of ['/fora', '/kissa', '/goomy'] as const) {
         await page.goto(pathname);
 
         const snapshot = await page.evaluate(() => {

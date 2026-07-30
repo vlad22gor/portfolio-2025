@@ -53,10 +53,10 @@ test.describe('Temporary adaptive notice', () => {
     expect(Math.abs((secondX ?? 0) - (firstX ?? 0))).toBeGreaterThan(0.5);
   });
 
-  test('390x855 shows case detail intro and hides temporary screen for /fora and /kissa', async ({ page }) => {
+  test('390x855 shows case detail intro and hides temporary screen for published cases', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 855 });
 
-    for (const pathname of ['/fora', '/kissa']) {
+    for (const pathname of ['/fora', '/kissa', '/goomy']) {
       await page.goto(pathname);
       await expect(page.locator('.temporary-adaptive-shell')).toBeHidden();
       await expect(page.locator('.site-desktop-shell')).toBeVisible();

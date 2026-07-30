@@ -46,7 +46,8 @@ const resolvedInViewPreset =
   inViewPreset === 'appear-stagger-dynamic-v1'
     ? inViewPreset
     : undefined;
-const hasProcessTicketsRowStagger = safeVariant === 'fora' || safeVariant === 'kissa';
+const hasProcessTicketsRowStagger =
+  safeVariant === 'fora' || safeVariant === 'kissa' || safeVariant === 'goomy';
 const ticketsRowInViewPreset = hasProcessTicketsRowStagger ? 'process-tickets-row-stagger-dynamic-v1' : undefined;
 const ticketShape = resolvedTicketVariant === 'circle-24' ? 'circle' : 'rectangle';
 const ticketStep = resolvedTicketVariant === 'circle-24' ? 24 : 36;
@@ -102,7 +103,10 @@ const resolveTicketsRowSequenceAfter = (rowIndex: number) =>
       }
     </div>
 
-    <div class="case-process-section__tickets" aria-label="Prioritised CJM tickets">
+    <div
+      class="case-process-section__tickets"
+      aria-label={safeVariant === 'goomy' ? 'Prioritised audit tickets' : 'Prioritised CJM tickets'}
+    >
       <div class="case-process-section__tickets-rows">
         {
           ticketsRows.map((row, rowIndex) => (

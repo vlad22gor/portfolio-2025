@@ -33,7 +33,10 @@ export const getRouteFlags = (): RouteFlags => {
   const isCasesRoute = readRouteDatasetFlag('routeCases') || pathname === '/cases';
   const isGalleryRoute = readRouteDatasetFlag('routeGallery') || pathname === '/gallery';
   const isCaseDetailRoute =
-    readRouteDatasetFlag('routeCaseDetail') || pathname === '/fora' || pathname === '/kissa';
+    readRouteDatasetFlag('routeCaseDetail') ||
+    pathname === '/fora' ||
+    pathname === '/kissa' ||
+    pathname === '/goomy';
 
   return {
     pathname,
