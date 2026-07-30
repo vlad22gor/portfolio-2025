@@ -1,6 +1,6 @@
 # Fora app redesign
 
-Driving 5% revenue increase and boosting app ratings from 3.0 to 4.6 over nine months.
+Driving 5% revenue increase and boosting app ratings 3.0 → 4.6 over nine months with a fresh redesign and improved usability
 
 Use this case for mobile product redesign, mobile B2C app quality, visual-system refresh, design systems, and measurable outcomes.
 

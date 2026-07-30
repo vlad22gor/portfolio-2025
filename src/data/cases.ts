@@ -34,19 +34,25 @@ export type CaseCardHover = {
   assets: CaseCardHoverAsset[];
 };
 
-export type CaseSection = {
-  title: string;
-  body: string[];
-};
-
-export type Case = {
-  slug: 'fora' | 'kissa';
+export type CaseCardData = {
+  slug: 'fora' | 'kissa' | 'goomy';
+  href?: string;
   title: string;
   subtitle: string;
   tags: string[];
   coverSide: 'left' | 'right';
   cardCover: CaseCardCover;
   cardHover: CaseCardHover;
+};
+
+export type CaseSection = {
+  title: string;
+  body: string[];
+};
+
+export type Case = CaseCardData & {
+  slug: 'fora' | 'kissa';
+  href: string;
   metrics: CaseMetric[];
   summary: string;
   sections: CaseSection[];
@@ -56,11 +62,12 @@ export type Case = {
 export const CASES: Case[] = [
   {
     slug: 'fora',
+    href: '/fora',
     title: 'Fora supermarket app redesign',
     subtitle:
-      'Driving 5% revenue increase and boosting app ratings from 3.0 to 4.6 over nine months.',
-    tags: ['Redesign', 'Mobile App', 'Product Design'],
-    coverSide: 'left',
+      'Driving 5% revenue increase and boosting app ratings 3.0 → 4.6 over nine months with a fresh redesign and improved usability',
+    tags: ['Redesign', 'Growth', 'Mobile App', 'Product Design'],
+    coverSide: 'right',
     cardCover: {
       src: '/media/cases/fora/card/cover.webp',
       alt: 'Fora case card cover',
@@ -68,14 +75,14 @@ export const CASES: Case[] = [
     cardHover: {
       designWidth: 874,
       borderColor: '#7AAA5C',
-      arrowDirection: 'right',
+      arrowDirection: 'left',
       assets: [
         {
           src: '/media/cases/fora/card/delivery-time.png',
           alt: 'Fora delivery time preview',
-          targetX: -149,
-          targetY: -75,
-          rotationDeg: -13,
+          targetX: 383.79,
+          targetY: -74.9,
+          rotationDeg: 13.8,
           width: 288,
           height: 257,
           zIndex: 3,
@@ -83,9 +90,9 @@ export const CASES: Case[] = [
         {
           src: '/media/cases/fora/card/summary.webp',
           alt: 'Fora summary preview',
-          targetX: -148,
-          targetY: 143,
-          rotationDeg: 10,
+          targetX: 328.04,
+          targetY: 135.3,
+          rotationDeg: 31.46,
           width: 252,
           height: 340,
           zIndex: 2,
@@ -132,11 +139,12 @@ export const CASES: Case[] = [
   },
   {
     slug: 'kissa',
+    href: '/kissa',
     title: 'Kissa.AI self-checkout terminal redesign',
     subtitle:
       'Making complex self-checkout technology easy and engaging for everyday users.',
     tags: ['Redesign', 'Startup', 'AI'],
-    coverSide: 'right',
+    coverSide: 'left',
     cardCover: {
       src: '/media/cases/kissa/card/cover.webp',
       alt: 'Kissa case card cover',
@@ -144,13 +152,13 @@ export const CASES: Case[] = [
     cardHover: {
       designWidth: 874,
       borderColor: '#8D88B5',
-      arrowDirection: 'left',
+      arrowDirection: 'right',
       assets: [
         {
           src: '/media/cases/kissa/card/terminal.webp',
           alt: 'Kissa terminal detail',
-          targetX: 704.1,
-          targetY: -110,
+          targetX: -163,
+          targetY: -98,
           rotationDeg: 0,
           width: 348,
           height: 348,
@@ -159,7 +167,7 @@ export const CASES: Case[] = [
         {
           src: '/media/cases/kissa/card/coin-wheel.webp',
           alt: 'Kissa coin wheel detail',
-          targetX: 666,
+          targetX: -150,
           targetY: 139.14,
           rotationDeg: 0,
           width: 359,
@@ -207,6 +215,48 @@ export const CASES: Case[] = [
     ],
   },
 ];
+
+export const GOOMY_CASE_CARD: CaseCardData = {
+  slug: 'goomy',
+  title: 'GoomY recipe app redesign',
+  subtitle:
+    'Simplifying core recipe flows and building a distinctive, production-ready experience in four weeks',
+  tags: ['Redesign', 'Onboarding'],
+  coverSide: 'left',
+  cardCover: {
+    src: '/media/cases/goomy/card/cover.webp',
+    alt: 'GoomY recipe app case card cover',
+  },
+  cardHover: {
+    designWidth: 874,
+    borderColor: '#E38F75',
+    arrowDirection: 'right',
+    assets: [
+      {
+        src: '/media/cases/goomy/card/add-recipe.png',
+        alt: 'GoomY add recipe sheet preview',
+        targetX: -179.14,
+        targetY: -122,
+        rotationDeg: 0,
+        width: 370,
+        height: 383,
+        zIndex: 3,
+      },
+      {
+        src: '/media/cases/goomy/card/recipe-card.png',
+        alt: 'GoomY recipe card preview',
+        targetX: -189.01,
+        targetY: 52,
+        rotationDeg: 0,
+        width: 373,
+        height: 463,
+        zIndex: 2,
+      },
+    ],
+  },
+};
+
+export const CASE_CARDS: CaseCardData[] = [GOOMY_CASE_CARD, ...CASES];
 
 export function getCaseBySlug(slug: string): Case | undefined {
   return CASES.find((item) => item.slug === slug);

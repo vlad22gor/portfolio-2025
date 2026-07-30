@@ -1212,6 +1212,113 @@ test.describe('Theme tokens smoke', () => {
     expect(samples.filter((sample) => sample.floatingState !== 'dark')).toEqual([]);
   });
 
+  test('case cards follow the three-card Figma layout and orientation contract', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 1200 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/');
+    await expect(page.locator('.cases-cards-section')).toBeVisible();
+
+    const snapshot = await page.evaluate(() => {
+      const section = document.querySelector('.cases-cards-section');
+      const list = document.querySelector('.cases-cards-list');
+      const bottom = document.querySelector('.cases-cards-bottom');
+      if (!(section instanceof HTMLElement) || !(list instanceof HTMLElement) || !(bottom instanceof HTMLElement)) {
+        return null;
+      }
+
+      const cards = Array.from(list.querySelectorAll('.case-card'))
+        .filter((card): card is HTMLElement => card instanceof HTMLElement)
+        .map((card) => {
+          const cover = card.querySelector('.case-card-cover-shell');
+          const content = card.querySelector('.case-card-content');
+          const arrow = card.querySelector('.case-card-arrow');
+          if (!(cover instanceof HTMLElement) || !(content instanceof HTMLElement)) {
+            return null;
+          }
+          const coverRect = cover.getBoundingClientRect();
+          const contentRect = content.getBoundingClientRect();
+          const assets = Array.from(card.querySelectorAll('[data-case-card-hover-asset]'))
+            .filter((asset): asset is HTMLElement => asset instanceof HTMLElement)
+            .map((asset) => ({
+              x: Number.parseFloat(asset.dataset.targetX ?? ''),
+              y: Number.parseFloat(asset.dataset.targetY ?? ''),
+              width: Number.parseFloat(asset.dataset.targetWidth ?? ''),
+              height: Number.parseFloat(asset.dataset.targetHeight ?? ''),
+            }));
+
+          return {
+            slug: card.dataset.caseSlug ?? null,
+            tagName: card.tagName,
+            href: card.getAttribute('href'),
+            interactive: card.dataset.caseCardInteractive ?? null,
+            coverSide: card.dataset.coverSide ?? null,
+            coverBeforeContent: coverRect.left < contentRect.left,
+            arrowStyle: arrow instanceof HTMLElement ? arrow.getAttribute('style') : null,
+            assets,
+          };
+        });
+
+      return {
+        sectionWidth: section.getBoundingClientRect().width,
+        sectionHeight: section.getBoundingClientRect().height,
+        listHeight: list.getBoundingClientRect().height,
+        bottomHeight: bottom.getBoundingClientRect().height,
+        bottomGap: Number.parseFloat(getComputedStyle(bottom).rowGap),
+        cards,
+      };
+    });
+
+    expect(snapshot).not.toBeNull();
+    expect(snapshot!.sectionWidth).toBeCloseTo(816, 1);
+    expect(snapshot!.sectionHeight).toBeCloseTo(1968, 1);
+    expect(snapshot!.listHeight).toBeCloseTo(1464, 1);
+    expect(snapshot!.bottomHeight).toBeCloseTo(912, 1);
+    expect(snapshot!.bottomGap).toBeCloseTo(48, 1);
+    expect(snapshot!.cards).toHaveLength(3);
+    expect(snapshot!.cards.every(Boolean)).toBe(true);
+
+    const [goomy, fora, kissa] = snapshot!.cards;
+    expect(goomy).toMatchObject({
+      slug: 'goomy',
+      tagName: 'ARTICLE',
+      href: null,
+      interactive: 'false',
+      coverSide: 'left',
+      coverBeforeContent: true,
+      arrowStyle: null,
+      assets: [
+        { x: -179.14, y: -122, width: 370, height: 383 },
+        { x: -189.01, y: 52, width: 373, height: 463 },
+      ],
+    });
+    expect(fora).toMatchObject({
+      slug: 'fora',
+      tagName: 'A',
+      href: '/fora',
+      interactive: 'true',
+      coverSide: 'right',
+      coverBeforeContent: false,
+      assets: [
+        { x: 383.79, y: -74.9, width: 288, height: 257 },
+        { x: 328.04, y: 135.3, width: 252, height: 340 },
+      ],
+    });
+    expect(fora?.arrowStyle).toContain('case-card-arrow-left.svg');
+    expect(kissa).toMatchObject({
+      slug: 'kissa',
+      tagName: 'A',
+      href: '/kissa',
+      interactive: 'true',
+      coverSide: 'left',
+      coverBeforeContent: true,
+      assets: [
+        { x: -163, y: -98, width: 348, height: 348 },
+        { x: -150, y: 139.14, width: 359, height: 359 },
+      ],
+    });
+    expect(kissa?.arrowStyle).toContain('case-card-arrow-right.svg');
+  });
+
   test('case card arrows animate on hover with the cases description motion profile', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 1200 });
     await page.emulateMedia({ reducedMotion: 'no-preference' });

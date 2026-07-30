@@ -616,13 +616,29 @@ img.home-hero-asset {
   width: min(100%, 816px);
   justify-self: center;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 72px;
 }
 
 .cases-cards-list {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 24px;
   width: 100%;
+  min-width: 0;
+}
+
+.cases-cards-bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 48px;
+  width: 100%;
+  min-width: 0;
+}
+
+.cases-cards-list > *,
+.cases-cards-bottom > * {
+  min-width: 0;
 }
 
 .cases-cards-description {
@@ -1483,6 +1499,7 @@ img.home-hero-asset {
   align-items: center;
   gap: 24px;
   width: 100%;
+  min-width: 0;
   height: 432px;
   min-height: 432px;
   max-height: 432px;
@@ -1490,9 +1507,13 @@ img.home-hero-asset {
   isolation: isolate;
   color: inherit;
   text-decoration: none;
-  cursor: pointer;
+  cursor: default;
   transform: scale(var(--case-card-scale));
   transform-origin: center;
+}
+
+.case-card[data-case-card-interactive='true'] {
+  cursor: pointer;
 }
 
 .case-card--cover-right {

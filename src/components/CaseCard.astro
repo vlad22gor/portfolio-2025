@@ -1,11 +1,11 @@
 ---
-import type { Case } from '../data/cases';
+import type { CaseCardData } from '../data/cases';
 import Badge from './Badge.astro';
 import QuantizedScallop from './QuantizedScallop.astro';
 import ThemedSvgIcon from './ThemedSvgIcon.astro';
 
 interface Props {
-  item: Case;
+  item: CaseCardData;
   inViewPreset?: 'appear-v1';
 }
 
@@ -13,6 +13,8 @@ const { item, inViewPreset } = Astro.props;
 const resolvedInViewPreset = inViewPreset === 'appear-v1' ? 'appear-v1' : undefined;
 const visibleTags = item.tags.slice(0, 2);
 const isCoverRight = item.coverSide === 'right';
+const isInteractive = typeof item.href === 'string' && item.href.length > 0;
+const RootElement = isInteractive ? 'a' : 'article';
 const assetStackOrder = new Map<number, number>();
 item.cardHover.assets
   .map((asset, index) => ({ index, targetY: asset.targetY }))
@@ -26,11 +28,13 @@ const arrowAssetPath =
     : '/media/icons/cases/case-card-arrow-right.svg';
 ---
 
-<a
+<RootElement
   class={`case-card${isCoverRight ? ' case-card--cover-right' : ''}`}
-  href={`/${item.slug}`}
+  href={item.href}
   data-astro-prefetch="false"
   data-case-card
+  data-case-slug={item.slug}
+  data-case-card-interactive={isInteractive ? 'true' : 'false'}
   data-hover-active="false"
   data-cover-side={item.coverSide}
   data-case-card-design-width={String(item.cardHover.designWidth ?? 874)}
@@ -79,7 +83,7 @@ const arrowAssetPath =
     <h3 class="case-card-title">{item.title}</h3>
     <p class="case-card-subtitle">{item.subtitle}</p>
 
-    <ThemedSvgIcon class="case-card-arrow" src={arrowAssetPath} aria-hidden="true" />
+    {isInteractive && <ThemedSvgIcon class="case-card-arrow" src={arrowAssetPath} aria-hidden="true" />}
   </div>
 
   {item.cardHover.assets.map((asset, index) => (
@@ -97,7 +101,7 @@ const arrowAssetPath =
       </span>
     </span>
   ))}
-</a>
+</RootElement>
 
 <script>
   import { navigate } from 'astro:transitions/client';
@@ -543,6 +547,7 @@ const arrowAssetPath =
         pointerInside: false,
         focusInside: false,
       };
+      const isInteractive = card.dataset.caseCardInteractive === 'true';
 
       runtime.cards.add(card);
       runtime.states.set(card, state);
@@ -633,27 +638,31 @@ const arrowAssetPath =
         card.addEventListener('pointerenter', onPointerEnter);
         card.addEventListener('pointerleave', onPointerLeave);
       }
-      card.addEventListener('pointerdown', onPointerDown);
-      card.addEventListener('pointerup', onPointerUp);
-      card.addEventListener('pointercancel', onPointerCancel);
-      card.addEventListener('click', onClick, { capture: true });
-      card.addEventListener('focusin', onFocusIn);
-      card.addEventListener('focusout', onFocusOut);
-      card.addEventListener('keydown', onKeyDown);
-      card.addEventListener('keyup', onKeyUp);
+      if (isInteractive) {
+        card.addEventListener('pointerdown', onPointerDown);
+        card.addEventListener('pointerup', onPointerUp);
+        card.addEventListener('pointercancel', onPointerCancel);
+        card.addEventListener('click', onClick, { capture: true });
+        card.addEventListener('focusin', onFocusIn);
+        card.addEventListener('focusout', onFocusOut);
+        card.addEventListener('keydown', onKeyDown);
+        card.addEventListener('keyup', onKeyUp);
+      }
       window.addEventListener('resize', onResize);
 
       state.unbind = () => {
         card.removeEventListener('pointerenter', onPointerEnter);
         card.removeEventListener('pointerleave', onPointerLeave);
-        card.removeEventListener('pointerdown', onPointerDown);
-        card.removeEventListener('pointerup', onPointerUp);
-        card.removeEventListener('pointercancel', onPointerCancel);
-        card.removeEventListener('click', onClick, true);
-        card.removeEventListener('focusin', onFocusIn);
-        card.removeEventListener('focusout', onFocusOut);
-        card.removeEventListener('keydown', onKeyDown);
-        card.removeEventListener('keyup', onKeyUp);
+        if (isInteractive) {
+          card.removeEventListener('pointerdown', onPointerDown);
+          card.removeEventListener('pointerup', onPointerUp);
+          card.removeEventListener('pointercancel', onPointerCancel);
+          card.removeEventListener('click', onClick, true);
+          card.removeEventListener('focusin', onFocusIn);
+          card.removeEventListener('focusout', onFocusOut);
+          card.removeEventListener('keydown', onKeyDown);
+          card.removeEventListener('keyup', onKeyUp);
+        }
         window.removeEventListener('resize', onResize);
       };
     };

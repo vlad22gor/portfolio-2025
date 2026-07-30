@@ -2537,3 +2537,11 @@
 - Для video с adjacent artifact manifest generator теперь всегда выбирает adjacent versioned poster и не изменяет delivery set; отсутствие или mismatch обрабатывает `verify:motion-isolation`.
 - Оба poster восстановлены byte-for-byte из merge commit: SHA-256 снова совпадают с manifests.
 - Проверки: искусственно обновлён `mtime` обоих WebM; generator сообщил `0 generated / 15 skipped`; poster hashes не изменились; isolation guard, `15` poster pairs и полный production build на `6` routes прошли.
+
+## 2026-07-30 — GoomY cover и новая композиция карточек на главной
+
+- Главная синхронизирована с Figma `214:16769`: добавлена первая карточка GoomY, а Fora и Kissa собраны в отдельный нижний контейнер с интервалом `48px`; секция сохраняет desktop-геометрию `816×1968`.
+- Для GoomY подключены cover и два hover-ассета; ориентации обновлены на `GoomY/Kissa — cover слева`, `Fora — cover справа`, а координаты, порядок слоёв и направления стрелок перенесены из hover-вариантов Figma.
+- Карточка GoomY оставлена черновой и некликабельной без стрелки, пока отсутствует production route `/goomy`; опубликованные Fora/Kissa остаются ссылками со всеми press/focus/click-переходами.
+- Обновлены data contract, `CaseCard`, `CasesCardsSection`, component CSS, smoke-контракт и generated `public/fora.md`; runtime-ассеты добавлены в `public/media/cases/goomy/card/`.
+- Проверки: `npm run build` — успешно (`6` routes, motion isolation и `15` poster pairs прошли); targeted Playwright smoke — `6 passed`; desktop hover всех трёх карточек и mobile-композиция проверены визуально; `git diff --check` — без замечаний.

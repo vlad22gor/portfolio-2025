@@ -4,17 +4,18 @@ import Badge from './Badge.astro';
 import QuantizedPerimeter from './QuantizedPerimeter.astro';
 import ThemedSvgIcon from './ThemedSvgIcon.astro';
 import TransparentVideo from './TransparentVideo.astro';
-import { CASES } from '../data/cases';
+import { CASE_CARDS } from '../data/cases';
 
-const foraCase = CASES.find((item) => item.slug === 'fora');
-const kissaCase = CASES.find((item) => item.slug === 'kissa');
+const goomyCase = CASE_CARDS.find((item) => item.slug === 'goomy');
+const foraCase = CASE_CARDS.find((item) => item.slug === 'fora');
+const kissaCase = CASE_CARDS.find((item) => item.slug === 'kissa');
 ---
 
 <section class="cases-cards-section" aria-label="Cases cards section">
   <div class="cases-cards-list" data-motion-inview="appear-stagger-v1">
-    {foraCase && (
+    {goomyCase && (
       <div data-motion-stage-item data-motion-stagger-index="0">
-        <CaseCard item={foraCase} />
+        <CaseCard item={goomyCase} />
       </div>
     )}
 
@@ -34,11 +35,19 @@ const kissaCase = CASES.find((item) => item.slug === 'kissa');
       />
     </div>
 
-    {kissaCase && (
-      <div data-motion-stage-item data-motion-stagger-index="2">
-        <CaseCard item={kissaCase} />
-      </div>
-    )}
+    <div class="cases-cards-bottom">
+      {foraCase && (
+        <div data-motion-stage-item data-motion-stagger-index="2">
+          <CaseCard item={foraCase} />
+        </div>
+      )}
+
+      {kissaCase && (
+        <div data-motion-stage-item data-motion-stagger-index="3">
+          <CaseCard item={kissaCase} />
+        </div>
+      )}
+    </div>
   </div>
 
   <QuantizedPerimeter
