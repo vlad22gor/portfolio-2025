@@ -135,6 +135,8 @@ const main = async () => {
       const ffmpegArgs = ['-i', inputPath];
       if (scaleFilter) ffmpegArgs.push('-vf', scaleFilter);
       ffmpegArgs.push(
+        '-pix_fmt',
+        'bgra',
         '-c:v',
         'libwebp',
         '-lossless',
@@ -143,8 +145,6 @@ const main = async () => {
         '6',
         '-q:v',
         '100',
-        '-preset',
-        'picture',
         tempPath,
       );
       runFfmpeg(ffmpegArgs);

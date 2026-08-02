@@ -123,7 +123,11 @@ export interface CaseDetailScreensLoopData {
   badge: string;
   title: string;
   body: string;
-  screens: CaseDetailImage[];
+  screens: CaseDetailScreensLoopScreen[];
+}
+
+export interface CaseDetailScreensLoopScreen extends CaseDetailImage {
+  group: 'onboarding' | 'core';
 }
 
 export interface CaseDetailTeamPhotoData {

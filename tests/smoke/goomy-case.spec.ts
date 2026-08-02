@@ -217,8 +217,49 @@ test.describe('GoomY case', () => {
     const viewport = page.locator('[data-case-screens-loop]');
     const track = page.locator('[data-case-screens-loop-track]');
     await viewport.scrollIntoViewIfNeeded();
-    await expect(viewport).toHaveAttribute('data-case-screens-loop-count', '6');
-    await expect(track.locator('[data-case-screens-loop-item]')).toHaveCount(12);
+    await expect(viewport).toHaveAttribute('data-case-screens-loop-count', '31');
+    await expect(track.locator('[data-case-screens-loop-item]')).toHaveCount(62);
+
+    const screenSequence = await track
+      .locator('[data-case-screens-loop-item]')
+      .evaluateAll((items) =>
+        items.slice(0, 31).map((item) => ({
+          group: item.getAttribute('data-case-screens-loop-group'),
+          src: item.querySelector('img')?.getAttribute('src') ?? '',
+        })),
+      );
+    expect(screenSequence.map((screen) => screen.group)).toEqual([
+      ...Array(15).fill('onboarding'),
+      ...Array(16).fill('core'),
+    ]);
+    expect(
+      screenSequence
+        .map((screen, index) => (screen.src.includes('/recipe-') ? index : -1))
+        .filter((index) => index >= 0),
+    ).toEqual([16, 19, 22, 25, 28]);
+
+    const screenAssetDimensions = await page.evaluate(
+      async (sources) => {
+        const dimensions = [];
+        for (const source of sources) {
+          const response = await fetch(source);
+          if (!response.ok) throw new Error(`Failed to load ${source}: ${response.status}`);
+          const bitmap = await createImageBitmap(await response.blob());
+          dimensions.push({ width: bitmap.width, height: bitmap.height });
+          bitmap.close();
+        }
+        return dimensions;
+      },
+      screenSequence.map((screen) => screen.src),
+    );
+    expect(screenAssetDimensions).toHaveLength(31);
+    screenAssetDimensions.forEach((image) => {
+      expect(image.width).toBe(1206);
+      expect(image.height).toBe(2622);
+      expect(image.width).toBeGreaterThanOrEqual(244 * 3);
+      expect(image.height).toBeGreaterThanOrEqual(501 * 3);
+    });
+
     await page.locator('.goomy-design-system-section').scrollIntoViewIfNeeded();
     await expect
       .poll(

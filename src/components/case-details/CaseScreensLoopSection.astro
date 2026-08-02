@@ -76,6 +76,7 @@ const titleId = 'case-screens-loop-title';
               <div
                 class="case-screens-loop-section__item"
                 data-case-screens-loop-item
+                data-case-screens-loop-group={screen.group}
                 aria-hidden={index >= screens.length ? 'true' : undefined}
               >
                 <DeviceMockup
@@ -84,7 +85,7 @@ const titleId = 'case-screens-loop-title';
                   screenKind="image"
                   screenSrc={screen.src}
                   screenAlt={screen.alt}
-                  priority={index < 2 ? 'critical' : 'lazy'}
+                  priority={index < 8 ? 'critical' : 'lazy'}
                 />
               </div>
             ))}

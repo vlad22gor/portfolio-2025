@@ -2614,3 +2614,11 @@
 - Challenge bottom-right перенесена на `x=540, y=366, 67×40`; design-system top — на `x=237, y=132, 166×59`; design-system bottom-left — на `x=254, y=645, 109×90`.
 - В handoff-copy добавлен жёсткий перенос перед `tokens` через `\n + white-space: pre-line`, scoped только на GoomY variant.
 - Добавлен browser smoke-контракт на три геометрии и перенос. Visual QA — PASS; production build — PASS (`7` routes и isolation guards); `tests/smoke/goomy-case.spec.ts --workers=1` — `3 passed`.
+
+## 2026-08-02 — Полный набор экранов GoomY carousel
+
+- Из Figma `236:22829` экспортирован 31 экран в честном `3×` (`1206×2622`): 15 onboarding и 16 core. Старые 6 временных экранов заменены; 5 recipe-вариантов детерминированно распределены по core-последовательности.
+- Ассеты названы семантически, разложены по `screens-loop/onboarding` и `screens-loop/core`, перекодированы из исходных PNG в настоящий lossless WebP (`VP8L`) без изменения размеров.
+- В carousel-разметку добавлен group-контракт; стартовое eager-окно расширено до 8 экранов, остальные остаются lazy. Это устранило пустые mockup в движущемся viewport без одновременного decode всех 31 изображений.
+- Исправлен общий raster optimizer: для `libwebp` добавлен `bgra`, удалён lossy-reset через `preset`; до фикса `webpinfo` показывал `Lossy/VP8`, после — `Lossless/VP8L`.
+- Проверки: visual browser QA — все видимые карточки заполнены; `npm run build` — PASS; `tests/smoke/goomy-case.spec.ts --workers=1` — `3 passed`, включая порядок групп, recipe-позиции, последовательный decode всех 31 файлов, точный размер и минимум `3×`.

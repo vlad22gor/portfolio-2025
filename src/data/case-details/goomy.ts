@@ -1,5 +1,166 @@
 import { GOOMY_PROCESS_SECTION } from '../case-process/goomy';
-import type { CaseDetailConfig } from './types';
+import type { CaseDetailConfig, CaseDetailScreensLoopScreen } from './types';
+
+const GOOMY_ONBOARDING_SCREENS: CaseDetailScreensLoopScreen[] = [
+  {
+    src: '/media/cases/goomy/screens-loop/onboarding/onboarding-intro-welcome.webp',
+    alt: 'GoomY welcome screen',
+    group: 'onboarding',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/onboarding/onboarding-intro-meal-planning.webp',
+    alt: 'GoomY meal planning introduction screen',
+    group: 'onboarding',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/onboarding/onboarding-intro-recipe-collections.webp',
+    alt: 'GoomY recipe collections introduction screen',
+    group: 'onboarding',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/onboarding/onboarding-personalization-recipes-per-day.webp',
+    alt: 'GoomY recipes per day personalization screen',
+    group: 'onboarding',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/onboarding/onboarding-insight-recipe-saving-volume.webp',
+    alt: 'GoomY recipe saving insight screen',
+    group: 'onboarding',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/onboarding/onboarding-insight-community-imports.webp',
+    alt: 'GoomY community imports insight screen',
+    group: 'onboarding',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/onboarding/onboarding-personalization-recipe-sources.webp',
+    alt: 'GoomY recipe source personalization screen',
+    group: 'onboarding',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/onboarding/onboarding-social-proof-results.webp',
+    alt: 'GoomY social proof results screen',
+    group: 'onboarding',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/onboarding/onboarding-education-how-it-works.webp',
+    alt: 'GoomY onboarding how it works screen',
+    group: 'onboarding',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/onboarding/onboarding-education-import-demo.webp',
+    alt: 'GoomY recipe import demonstration screen',
+    group: 'onboarding',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/onboarding/onboarding-processing-building-plan.webp',
+    alt: 'GoomY building your plan screen',
+    group: 'onboarding',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/onboarding/onboarding-plan-personalized-results.webp',
+    alt: 'GoomY personalized plan results screen',
+    group: 'onboarding',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/onboarding/onboarding-trial-introduction.webp',
+    alt: 'GoomY free trial introduction screen',
+    group: 'onboarding',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/onboarding/onboarding-paywall-import-recipes.webp',
+    alt: 'GoomY recipe import subscription screen',
+    group: 'onboarding',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/onboarding/onboarding-commitment-holding.webp',
+    alt: 'GoomY onboarding commitment screen',
+    group: 'onboarding',
+  },
+];
+
+const GOOMY_CORE_SCREENS: CaseDetailScreensLoopScreen[] = [
+  {
+    src: '/media/cases/goomy/screens-loop/core/core-activation-choose-recipe.webp',
+    alt: 'GoomY choose a recipe activation screen',
+    group: 'core',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/core/recipe-flourless-vegan-chocolate-cake.webp',
+    alt: 'GoomY flourless vegan chocolate cake recipe screen',
+    group: 'core',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/core/core-saved-default.webp',
+    alt: 'GoomY saved recipes screen',
+    group: 'core',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/core/core-folder-favourites.webp',
+    alt: 'GoomY favourites folder screen',
+    group: 'core',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/core/recipe-sesame-salmon-rice-bowl.webp',
+    alt: 'GoomY sesame salmon rice bowl recipe screen',
+    group: 'core',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/core/core-saved-empty-state.webp',
+    alt: 'GoomY saved recipes empty state screen',
+    group: 'core',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/core/core-add-recipe-methods.webp',
+    alt: 'GoomY add a recipe methods screen',
+    group: 'core',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/core/recipe-easy-chocolate-croissants.webp',
+    alt: 'GoomY easy chocolate croissants recipe screen',
+    group: 'core',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/core/core-settings-default.webp',
+    alt: 'GoomY settings screen',
+    group: 'core',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/core/core-explore-default.webp',
+    alt: 'GoomY recipe discovery screen',
+    group: 'core',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/core/recipe-creamy-cod-spinach.webp',
+    alt: 'GoomY creamy cod and spinach recipe screen',
+    group: 'core',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/core/core-cooking-middle-step.webp',
+    alt: 'GoomY guided cooking screen',
+    group: 'core',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/core/core-shopping-list-single-recipe.webp',
+    alt: 'GoomY shopping list screen',
+    group: 'core',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/core/recipe-creamy-spicy-chicken-pasta.webp',
+    alt: 'GoomY creamy spicy chicken pasta recipe screen',
+    group: 'core',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/core/core-meal-plan-default.webp',
+    alt: 'GoomY meal plan screen',
+    group: 'core',
+  },
+  {
+    src: '/media/cases/goomy/screens-loop/core/core-meal-plan-add-meal-recipe.webp',
+    alt: 'GoomY add a recipe to meal plan screen',
+    group: 'core',
+  },
+];
 
 export const GOOMY_CASE_DETAIL_CONFIG: CaseDetailConfig = {
   slug: 'goomy',
@@ -203,32 +364,7 @@ export const GOOMY_CASE_DETAIL_CONFIG: CaseDetailConfig = {
         title: '86 screens',
         body:
           'I extended the visual direction across onboarding and core screens covering the flows and states for production',
-        screens: [
-          {
-            src: '/media/cases/goomy/screens-loop/commitment.webp',
-            alt: 'GoomY onboarding commitment screen',
-          },
-          {
-            src: '/media/cases/goomy/screens-loop/welcome.webp',
-            alt: 'GoomY welcome screen',
-          },
-          {
-            src: '/media/cases/goomy/screens-loop/paywall.webp',
-            alt: 'GoomY subscription screen',
-          },
-          {
-            src: '/media/cases/goomy/screens-loop/recipe-share.webp',
-            alt: 'GoomY recipe sharing screen',
-          },
-          {
-            src: '/media/cases/goomy/screens-loop/explore.webp',
-            alt: 'GoomY explore screen',
-          },
-          {
-            src: '/media/cases/goomy/screens-loop/recipe-detail.webp',
-            alt: 'GoomY redesigned recipe details screen',
-          },
-        ],
+        screens: [...GOOMY_ONBOARDING_SCREENS, ...GOOMY_CORE_SCREENS],
       },
     },
     {
