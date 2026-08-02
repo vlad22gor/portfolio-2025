@@ -2847,3 +2847,4 @@
 
 - Первый deploy run `30757535170` дошёл до smoke, но два GoomY geometry-теста стабильно сравнили Linux layout viewport с `window.innerWidth`: runner зарезервировал scrollbar gutter (`2048→2033`, `390→360`), хотя section geometry и отсутствие реального horizontal overflow оставались корректными.
 - Оба assertions переведены на `document.documentElement.clientWidth`, как в соседнем cross-platform smoke-контракте; production layout/CSS не менялись.
+- Повторный Linux run `30757854126` показал дополнительную особенность `scrollbar-gutter: stable both-edges`: `scrollWidth` корректно оказался меньше `clientWidth`. Финальный no-overflow assertion использует не равенство, а `scrollWidth <= clientWidth + 1px`.

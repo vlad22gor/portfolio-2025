@@ -123,7 +123,7 @@ test.describe('GoomY case', () => {
     });
 
     expect(layout).not.toBeNull();
-    expect(layout!.scrollWidth).toBe(layout!.clientWidth);
+    expect(layout!.scrollWidth).toBeLessThanOrEqual(layout!.clientWidth + 1);
     expect(layout!.gridTemplateColumns).toBe('816px');
     expect(layout!.main.width).toBeCloseTo(816, 1);
     expect(layout!.intro.width).toBeCloseTo(816, 1);
@@ -547,7 +547,7 @@ test.describe('GoomY case', () => {
       };
     });
 
-    expect(layout.scrollWidth).toBe(layout.clientWidth);
+    expect(layout.scrollWidth).toBeLessThanOrEqual(layout.clientWidth + 1);
     layout.sectionWidths.forEach((width) => {
       expect(width).toBeCloseTo(350, 0);
     });
