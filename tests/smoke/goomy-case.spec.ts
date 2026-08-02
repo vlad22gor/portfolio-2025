@@ -100,6 +100,7 @@ test.describe('GoomY case', () => {
 
       return {
         innerWidth,
+        clientWidth: document.documentElement.clientWidth,
         scrollWidth: document.documentElement.scrollWidth,
         gridTemplateColumns: getComputedStyle(main).gridTemplateColumns,
         main: rect(main),
@@ -122,7 +123,7 @@ test.describe('GoomY case', () => {
     });
 
     expect(layout).not.toBeNull();
-    expect(layout!.scrollWidth).toBe(layout!.innerWidth);
+    expect(layout!.scrollWidth).toBe(layout!.clientWidth);
     expect(layout!.gridTemplateColumns).toBe('816px');
     expect(layout!.main.width).toBeCloseTo(816, 1);
     expect(layout!.intro.width).toBeCloseTo(816, 1);
@@ -536,6 +537,7 @@ test.describe('GoomY case', () => {
       ).filter((section) => getComputedStyle(section).display !== 'none');
       return {
         innerWidth,
+        clientWidth: document.documentElement.clientWidth,
         scrollWidth: document.documentElement.scrollWidth,
         sectionWidths: visibleSections.map((section) => section.getBoundingClientRect().width),
         designTransform:
@@ -545,7 +547,7 @@ test.describe('GoomY case', () => {
       };
     });
 
-    expect(layout.scrollWidth).toBe(layout.innerWidth);
+    expect(layout.scrollWidth).toBe(layout.clientWidth);
     layout.sectionWidths.forEach((width) => {
       expect(width).toBeCloseTo(350, 0);
     });

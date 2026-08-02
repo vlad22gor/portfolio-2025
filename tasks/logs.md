@@ -2842,3 +2842,8 @@
 - Scope релиза проверен перед staging: все tracked-изменения относятся к GoomY case/cover/screens loop, shared runtime, theme/media guards, smoke-контрактам и журналам; локальные `.playwright-cli/`, `output/` и `scripts/verify-motion-isolation 2.mjs` исключены.
 - Устаревший mobile smoke ожидал `7` root-секций для всех кейсов; после появления GoomY feature cards контракт уточнён до `GoomY=8`, `Fora/Kissa=7`. Production layout не менялся.
 - Проверки: `verify:posters` — `16` пар; production build — PASS (`7` routes, DialKit отсутствует в dist); CI-mode smoke — `92 passed, 4 skipped`; WebKit mobile stress — `2 passed`; `git diff --check` — PASS.
+
+## 2026-08-02 — GitHub Pages CI: scrollbar-aware GoomY smoke
+
+- Первый deploy run `30757535170` дошёл до smoke, но два GoomY geometry-теста стабильно сравнили Linux layout viewport с `window.innerWidth`: runner зарезервировал scrollbar gutter (`2048→2033`, `390→360`), хотя section geometry и отсутствие реального horizontal overflow оставались корректными.
+- Оба assertions переведены на `document.documentElement.clientWidth`, как в соседнем cross-platform smoke-контракте; production layout/CSS не менялись.
