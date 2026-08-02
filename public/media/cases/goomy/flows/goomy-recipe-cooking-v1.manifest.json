@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "verification": {
+    "status": "verified",
+    "checkedAt": "2026-08-02T14:09:38.820Z"
+  },
+  "scene": {
+    "id": "goomy/recipe-cooking",
+    "title": "GoomY recipe → cooking",
+    "sceneVersion": 1,
+    "settingsSchemaVersion": 6,
+    "width": 1206,
+    "height": 2622,
+    "displayWidth": 402,
+    "displayHeight": 874,
+    "scale": 3,
+    "fps": 60,
+    "durationInFrames": 1363,
+    "durationSeconds": 22.716666666666665,
+    "posterFrame": 0,
+    "loopMode": "hard-cut",
+    "background": "#fdebe0"
+  },
+  "profile": {
+    "id": "portfolio",
+    "scale": 3,
+    "inputColorSpace": "sRGB",
+    "webm": {
+      "codec": "vp9",
+      "pixelFormat": "yuv420p",
+      "colorPrimaries": "bt709",
+      "colorTransfer": "bt709",
+      "colorSpace": "bt709"
+    },
+    "mp4": false
+  },
+  "source": {
+    "commit": "96f7f7fe98a6d248b00749deb55e82041d6c9d50",
+    "branch": null,
+    "dirty": false,
+    "dirtyPaths": []
+  },
+  "toolchain": {
+    "node": "v25.6.0",
+    "playwright": "1.62.0",
+    "browser": "151.0.7922.34",
+    "ffmpeg": "ffmpeg version 8.1.1 Copyright (c) 2000-2026 the FFmpeg developers",
+    "ffprobe": "ffprobe version 8.1.1 Copyright (c) 2007-2026 the FFmpeg developers",
+    "packageLockSha256": "a4c829d60aabff45da09d92809625f68069d1dba99a93344abe497be90fa929d"
+  },
+  "render": {
+    "createdAt": "2026-08-02T14:02:08.801Z",
+    "elapsedSeconds": 450.019,
+    "frameSequence": {
+      "count": 1363,
+      "firstSha256": "7801ed9a50307a943c2bd405c22d5efd120022f42d2fbfedd56f82264690fa06",
+      "lastSha256": "7143dc943a8ecdb85eaf12b248728d22b1a778830d367047e9a630a4550330e8",
+      "posterSha256": "7801ed9a50307a943c2bd405c22d5efd120022f42d2fbfedd56f82264690fa06"
+    },
+    "diskEstimateBytes": 6895977466,
+    "suppressedNetworkRequests": [
+      "https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&display=swap"
+    ]
+  },
+  "artifacts": [
+    {
+      "role": "video-primary",
+      "format": "webm",
+      "verification": {
+        "codec": "vp9",
+        "pixelFormat": "yuv420p",
+        "width": 1206,
+        "height": 2622,
+        "fps": 60,
+        "frameCount": 1363,
+        "durationSeconds": 22.717,
+        "audioStreams": 0,
+        "colorPrimaries": null,
+        "colorTransfer": null,
+        "colorSpace": "bt709",
+        "decodedFirstSha256": "143ce41b8bab79a13f5be2f7d7dd57cf550d1c912832c577f85bd74776f771e4",
+        "decodedLastSha256": "d6583e2b76b6fd8e6b9ae1155c479e825d312d3d54b38fe2cd109f4bba914caa",
+        "firstFrameSsim": 0.988512,
+        "lastFrameSsim": 0.997173
+      },
+      "path": "goomy-recipe-cooking-v1.webm",
+      "sha256": "e039993502f1f67940014510647bfd9f6fa2271120b3bb238638ef8b991a3fd6",
+      "bytes": 8299722
+    },
+    {
+      "role": "poster",
+      "format": "png",
+      "verification": {
+        "width": 1206,
+        "height": 2622
+      },
+      "path": "goomy-recipe-cooking-v1-poster.png",
+      "sha256": "7801ed9a50307a943c2bd405c22d5efd120022f42d2fbfedd56f82264690fa06",
+      "bytes": 1909192
+    }
+  ]
+}

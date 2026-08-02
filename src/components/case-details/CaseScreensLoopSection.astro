@@ -1,5 +1,7 @@
 ---
 import DeviceMockup from '../DeviceMockup.astro';
+import Badge from '../Badge.astro';
+import ThemedSvgIcon from '../ThemedSvgIcon.astro';
 import type {
   CaseDetailScreensLoopData,
   InViewPreset,
@@ -13,7 +15,9 @@ interface Props {
 
 const { data, inViewPreset, class: className = '' } = Astro.props as Props;
 const screens = data.screens.filter((screen) => screen.src.trim().length > 0);
-const loopScreens = [...screens, ...screens];
+const virtualPoolSize = Math.min(14, screens.length);
+const virtualPoolScreens = screens.slice(0, virtualPoolSize);
+const screensManifest = JSON.stringify(screens).replace(/</g, '\\u003c');
 const resolvedInViewPreset =
   inViewPreset === 'appear-v1' ||
   inViewPreset === 'appear-stagger-v1' ||
@@ -31,7 +35,12 @@ const titleId = 'case-screens-loop-title';
   data-case-screens-loop-root
 >
   <div class="case-screens-loop-section__header">
-    <p class="type-label-small case-screens-loop-section__badge">{data.badge}</p>
+    <Badge
+      class="case-screens-loop-section__badge"
+      label={data.badge}
+      tone="green"
+      type="default"
+    />
     <h2 id={titleId} class="type-t3 case-screens-loop-section__title">{data.title}</h2>
     <p class="type-body case-screens-loop-section__body">{data.body}</p>
   </div>
@@ -40,24 +49,22 @@ const titleId = 'case-screens-loop-title';
     class="case-screens-loop-section__arrow case-screens-loop-section__arrow--left"
     aria-hidden="true"
   >
-    <img
+    <ThemedSvgIcon
       class="case-screens-loop-section__arrow-art"
       src="/media/cases/goomy/screens-loop/arrow-left.svg"
-      alt=""
-      width="98.6965"
-      height="101.415"
+      color="var(--color-accent-green)"
+      aria-hidden="true"
     />
   </span>
   <span
     class="case-screens-loop-section__arrow case-screens-loop-section__arrow--right"
     aria-hidden="true"
   >
-    <img
+    <ThemedSvgIcon
       class="case-screens-loop-section__arrow-art"
       src="/media/cases/goomy/screens-loop/arrow-right.svg"
-      alt=""
-      width="98.6965"
-      height="101.415"
+      color="var(--color-accent-green)"
+      aria-hidden="true"
     />
   </span>
 
@@ -68,16 +75,33 @@ const titleId = 'case-screens-loop-title';
           class="case-screens-loop-section__viewport"
           data-case-screens-loop
           data-case-screens-loop-count={screens.length}
+          data-case-screens-loop-initial-slots="3"
+          data-case-screens-loop-visual-buffer-slots="2"
+          data-case-screens-loop-decode-buffer-slots="4"
+          data-case-screens-loop-decode-ready="false"
+          data-case-screens-loop-prepared-count="0"
+          data-case-screens-loop-virtual-ready="false"
+          data-case-screens-loop-pool-size={virtualPoolSize}
+          data-case-screens-loop-recycle-count="0"
+          data-case-screens-loop-recycle-miss-count="0"
           data-dragging="false"
           aria-label="GoomY product screens"
         >
+          <script
+            is:inline
+            type="application/json"
+            data-case-screens-loop-manifest
+            set:html={screensManifest}
+          />
           <div class="case-screens-loop-section__track" data-case-screens-loop-track>
-            {loopScreens.map((screen, index) => (
+            {virtualPoolScreens.map((screen, index) => (
               <div
                 class="case-screens-loop-section__item"
                 data-case-screens-loop-item
                 data-case-screens-loop-group={screen.group}
-                aria-hidden={index >= screens.length ? 'true' : undefined}
+                data-case-screens-loop-index={index}
+                data-case-screens-loop-sequence={index}
+                data-case-screens-loop-cell={index}
               >
                 <DeviceMockup
                   class="case-screens-loop-section__device"
@@ -115,17 +139,7 @@ const titleId = 'case-screens-loop-title';
   }
 
   .case-screens-loop-section__badge {
-    height: 22px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     margin: 0;
-    padding: 1px 8px 0;
-    box-sizing: border-box;
-    border-radius: 999px;
-    color: var(--color-text-default);
-    background: var(--color-accent-green);
-    white-space: nowrap;
   }
 
   .case-screens-loop-section__title {
@@ -193,22 +207,29 @@ const titleId = 'case-screens-loop-title';
     cursor: grabbing;
   }
 
+  .case-screens-loop-section__viewport[data-case-screens-loop-virtual-ready='false']
+    .case-screens-loop-section__track {
+    visibility: hidden;
+  }
+
   .case-screens-loop-section__track {
+    --case-screens-loop-gap: 24px;
     position: absolute;
     top: 0;
     left: calc(50% - 792px);
-    display: flex;
-    align-items: flex-start;
-    gap: 24px;
-    width: max-content;
-    transform: translate3d(0, 0, 0);
+    width: 1px;
+    height: 100%;
+    transform: translate3d(-804px, 0, 0);
     will-change: transform;
   }
 
   .case-screens-loop-section__item {
-    flex: 0 0 244px;
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 244px;
     height: 501px;
+    contain: layout paint style;
   }
 
   .case-screens-loop-section__device {
@@ -252,12 +273,12 @@ const titleId = 'case-screens-loop-title';
     }
 
     .case-screens-loop-section__track {
+      --case-screens-loop-gap: 18px;
       left: -72px;
-      gap: 18px;
+      transform: translate3d(-582px, 0, 0);
     }
 
     .case-screens-loop-section__item {
-      flex-basis: 176px;
       width: 176px;
       height: 361px;
     }
@@ -291,6 +312,14 @@ const titleId = 'case-screens-loop-title';
     const states = new Map();
     const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     const lifecycle = createLifecycle();
+    const decodeConcurrency = 2;
+    const decodeTimeoutMs = 6000;
+    const maintenanceIntervalMs = 400;
+    const autoplaySpeed = 48;
+    const hoverSpeed = 16;
+    const motionDistanceSlots = 1024;
+    const inertiaDurationMs = 900;
+    const inertiaDecay = 8;
 
     const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
     const wrap = (value, size) => {
@@ -300,65 +329,603 @@ const titleId = 'case-screens-loop-title';
       return ((value % size) + size) % size;
     };
 
-    const readMetrics = (state) => {
-      const first = state.items[0];
-      const second = state.items[1];
-      if (!(first instanceof HTMLElement)) {
-        return;
+    const setDatasetValue = (element, key, value) => {
+      const nextValue = String(value);
+      if (element.dataset[key] !== nextValue) {
+        element.dataset[key] = nextValue;
       }
-
-      const firstRect = first.getBoundingClientRect();
-      const secondRect = second instanceof HTMLElement ? second.getBoundingClientRect() : null;
-      const trackStyle = getComputedStyle(state.track);
-      const parsedGap = Number.parseFloat(trackStyle.columnGap || trackStyle.gap || '0');
-      const gap = Number.isFinite(parsedGap) ? parsedGap : 24;
-      state.slot = secondRect ? secondRect.left - firstRect.left : firstRect.width + gap;
-      state.loopWidth = state.slot * state.baseCount;
-      state.offset = wrap(state.offset, state.loopWidth);
     };
 
-    const render = (state) => {
-      state.track.style.transform = `translate3d(${-state.offset.toFixed(3)}px, 0, 0)`;
+    const isAnimation = (value) =>
+      typeof window.Animation === 'function' && value instanceof window.Animation;
+
+    const positionItem = (state, item, sequence) => {
+      item.style.transform = `translate3d(${(sequence * state.slot).toFixed(3)}px, 0, 0)`;
     };
 
-    const loop = createRafLoop((deltaMs) => {
-      if (states.size === 0) {
+    const applyPreparedImageToItem = (state, item, logicalIndex) => {
+      if (!(item instanceof HTMLElement) || !state.prepared.has(logicalIndex)) {
+        return false;
+      }
+      const image = state.preloadImages[logicalIndex];
+      const screen = state.manifest[logicalIndex];
+      const screenLayer = item.querySelector('.device-mockup__screen');
+      if (
+        !(image instanceof HTMLImageElement) ||
+        !(screenLayer instanceof HTMLElement) ||
+        !screen
+      ) {
         return false;
       }
 
-      const dt = clamp(deltaMs / 1000, 0, 0.05);
-      for (const [root, state] of states) {
-        if (!(root instanceof HTMLElement) || !root.isConnected) {
-          state.cleanups.forEach((cleanup) => cleanup());
-          states.delete(root);
-          continue;
+      const current = screenLayer.querySelector('.device-mockup__media');
+      image.className =
+        current instanceof HTMLImageElement && current.className
+          ? current.className
+          : 'device-mockup__media';
+      image.alt = screen.alt;
+      image.loading = 'eager';
+      image.decoding = 'async';
+      image.fetchPriority = 'auto';
+      if (current !== image) {
+        if (current instanceof HTMLImageElement) {
+          current.replaceWith(image);
+        } else {
+          screenLayer.append(image);
         }
+      }
+      return true;
+    };
 
-        if (state.loopWidth <= 0) {
-          readMetrics(state);
-        }
+    const assignItem = (state, item, sequence) => {
+      if (!(item instanceof HTMLElement)) return false;
+      const logicalIndex = wrap(sequence, state.baseCount);
+      const screen = state.manifest[logicalIndex];
+      if (!screen) return false;
+      const sourcePrepared = state.prepared.has(logicalIndex);
 
-        const targetSpeed = state.hovered ? 16 : 48;
-        state.speed += (targetSpeed - state.speed) * (1 - Math.exp(-dt * 8));
+      item.dataset.caseScreensLoopSequence = String(sequence);
+      item.dataset.caseScreensLoopIndex = String(logicalIndex);
+      item.dataset.caseScreensLoopGroup = screen.group;
+      positionItem(state, item, sequence);
+      applyPreparedImageToItem(state, item, logicalIndex);
+      return sourcePrepared;
+    };
 
-        if (
-          !reducedMotionQuery.matches &&
-          state.inViewport &&
-          !document.hidden &&
-          !state.dragging
-        ) {
-          state.offset = wrap(state.offset + state.speed * dt, state.loopWidth);
-        }
+    const readDesiredPoolStart = (state) =>
+      Math.floor(
+        (state.offset -
+          state.trackBaseLeft -
+          state.visualBufferSlots * state.slot) /
+          state.slot,
+      );
 
-        if (!state.dragging && Math.abs(state.inertia) > 0.1) {
-          state.offset = wrap(state.offset + state.inertia * dt, state.loopWidth);
-          state.inertia *= Math.exp(-dt * 8);
-        }
-
-        render(state);
+    const syncVirtualPool = (state) => {
+      if (state.slot <= 0 || state.itemWidth <= 0) return;
+      const desiredStart = readDesiredPoolStart(state);
+      if (state.poolStartSequence === desiredStart) {
+        state.items.forEach((item) => {
+          const sequence = readDataInt(item, 'caseScreensLoopSequence', Number.NaN);
+          if (Number.isFinite(sequence)) positionItem(state, item, sequence);
+        });
+        return;
       }
 
-      return states.size > 0;
+      const initializing = !Number.isFinite(state.poolStartSequence);
+      const bySequence = new Map();
+      state.items.forEach((item) => {
+        const sequence = readDataInt(item, 'caseScreensLoopSequence', Number.NaN);
+        if (Number.isFinite(sequence)) bySequence.set(sequence, item);
+      });
+      const retained = new Set();
+      for (let sequence = desiredStart; sequence < desiredStart + state.items.length; sequence += 1) {
+        const item = bySequence.get(sequence);
+        if (item instanceof HTMLElement) {
+          retained.add(item);
+          positionItem(state, item, sequence);
+        }
+      }
+      const freeItems = state.items.filter((item) => !retained.has(item));
+      let freeIndex = 0;
+      for (let sequence = desiredStart; sequence < desiredStart + state.items.length; sequence += 1) {
+        if (bySequence.has(sequence)) continue;
+        const item = freeItems[freeIndex];
+        freeIndex += 1;
+        if (!(item instanceof HTMLElement)) break;
+        const sourcePrepared = assignItem(state, item, sequence);
+        if (!initializing) {
+          if (!sourcePrepared && state.decodeReady) state.recycleMissCount += 1;
+          state.recycleCount += 1;
+        }
+      }
+      state.poolStartSequence = desiredStart;
+
+      setDatasetValue(state.viewport, 'caseScreensLoopPoolStart', state.poolStartSequence);
+      setDatasetValue(state.viewport, 'caseScreensLoopPoolSize', state.items.length);
+      setDatasetValue(state.viewport, 'caseScreensLoopRecycleCount', state.recycleCount);
+      setDatasetValue(
+        state.viewport,
+        'caseScreensLoopRecycleMissCount',
+        state.recycleMissCount,
+      );
+    };
+
+    const readMetrics = (state) => {
+      const first = state.items[0];
+      if (!(first instanceof HTMLElement)) return;
+
+      stopMotion(state, true);
+      const previousSlot = state.slot;
+      const positionInSlots = previousSlot > 0 ? state.offset / previousSlot : state.initialSlots;
+      const firstRect = first.getBoundingClientRect();
+      const trackStyle = getComputedStyle(state.track);
+      const parsedGap = Number.parseFloat(
+        trackStyle.getPropertyValue('--case-screens-loop-gap') || '0',
+      );
+      const gap = Number.isFinite(parsedGap) ? parsedGap : 24;
+      state.slot = firstRect.width + gap;
+      state.itemWidth = firstRect.width;
+      state.trackBaseLeft = state.track.offsetLeft;
+      state.viewportWidth = state.viewport.clientWidth;
+      state.loopWidth = state.slot * state.baseCount;
+      state.offset = positionInSlots * state.slot;
+      syncVirtualPool(state);
+      applyStaticTransform(state);
+      state.viewport.dataset.caseScreensLoopVirtualReady = 'true';
+      updatePlaybackState(state);
+    };
+
+    const waitForImageDecode = (image) =>
+      new Promise((resolve) => {
+        if (!(image instanceof HTMLImageElement)) {
+          resolve();
+          return;
+        }
+
+        let settled = false;
+        const finish = () => {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(timeoutId);
+          image.removeEventListener('load', onLoad);
+          image.removeEventListener('error', finish);
+          resolve();
+        };
+        const decodeLoadedImage = () => {
+          if (typeof image.decode !== 'function') {
+            finish();
+            return;
+          }
+          image.decode().then(finish).catch(finish);
+        };
+        const onLoad = () => {
+          decodeLoadedImage();
+        };
+        const timeoutId = window.setTimeout(finish, decodeTimeoutMs);
+
+        image.loading = 'eager';
+        image.addEventListener('load', onLoad, { once: true });
+        image.addEventListener('error', finish, { once: true });
+
+        if (image.complete) {
+          if (image.naturalWidth > 0) {
+            decodeLoadedImage();
+          } else {
+            finish();
+          }
+          return;
+        }
+
+        if (typeof image.decode === 'function') {
+          image.decode().then(finish).catch(() => {
+            if (image.complete) finish();
+          });
+        }
+      });
+
+    const maybeMarkDecodeReady = (state) => {
+      if (state.decodeReady || !(state.initialRequired instanceof Set)) {
+        return;
+      }
+      const isReady = [...state.initialRequired].every((index) => state.prepared.has(index));
+      if (!isReady) return;
+      state.decodeReady = true;
+      state.viewport.dataset.caseScreensLoopDecodeReady = 'true';
+      updatePlaybackState(state);
+    };
+
+    const decodeScreen = async (state, index, priority) => {
+      const screen = state.manifest[index];
+      if (!screen) return;
+      let preloadImage = state.preloadImages[index];
+      if (!(preloadImage instanceof HTMLImageElement)) {
+        const assignedItem = state.items.find(
+          (item) =>
+            item instanceof HTMLElement &&
+            readDataInt(item, 'caseScreensLoopIndex', -1) === index,
+        );
+        const assignedImage =
+          assignedItem instanceof HTMLElement
+            ? assignedItem.querySelector('.device-mockup__media')
+            : null;
+        if (
+          assignedImage instanceof HTMLImageElement &&
+          assignedImage.getAttribute('src') === screen.src
+        ) {
+          preloadImage = assignedImage;
+        } else {
+          preloadImage = new Image();
+          preloadImage.className = 'device-mockup__media';
+          preloadImage.alt = screen.alt;
+          preloadImage.loading = 'eager';
+          preloadImage.decoding = 'async';
+          preloadImage.src = screen.src;
+        }
+        state.preloadImages[index] = preloadImage;
+      }
+      preloadImage.fetchPriority = priority <= 0 ? 'high' : 'auto';
+      await waitForImageDecode(preloadImage);
+      if (state.destroyed) return;
+      state.prepared.add(index);
+      state.items
+        .filter(
+          (item) =>
+            item instanceof HTMLElement &&
+            readDataInt(item, 'caseScreensLoopIndex', -1) === index,
+        )
+        .forEach((item) => applyPreparedImageToItem(state, item, index));
+      state.viewport.dataset.caseScreensLoopPreparedCount = String(state.prepared.size);
+      maybeMarkDecodeReady(state);
+    };
+
+    const drainDecodeQueue = (state) => {
+      if (state.destroyed) return;
+      state.decodeQueue.sort((left, right) => left.priority - right.priority);
+      while (state.activeDecodes < decodeConcurrency && state.decodeQueue.length > 0) {
+        const job = state.decodeQueue.shift();
+        if (!job) break;
+        state.queued.delete(job.index);
+        if (state.prepared.has(job.index) || state.pending.has(job.index)) {
+          continue;
+        }
+        state.pending.add(job.index);
+        state.activeDecodes += 1;
+        decodeScreen(state, job.index, job.priority).finally(() => {
+          state.pending.delete(job.index);
+          state.activeDecodes -= 1;
+          drainDecodeQueue(state);
+        });
+      }
+    };
+
+    const enqueueDecode = (state, index, priority) => {
+      if (
+        state.prepared.has(index) ||
+        state.pending.has(index) ||
+        state.queued.has(index)
+      ) {
+        return;
+      }
+      state.queued.add(index);
+      state.decodeQueue.push({ index, priority });
+    };
+
+    const collectDecodeWindow = (state) => {
+      if (state.slot <= 0 || state.itemWidth <= 0) return [];
+      const viewportWidth = state.viewport.clientWidth;
+      const viewportCenter = viewportWidth / 2;
+      const buffer = state.slot * state.decodeBufferSlots;
+      const jobs = new Map();
+      const firstSequence = Math.ceil(
+        (state.offset - state.trackBaseLeft - buffer - state.itemWidth) / state.slot,
+      );
+      const lastSequence = Math.floor(
+        (state.offset - state.trackBaseLeft + viewportWidth + buffer) / state.slot,
+      );
+
+      const addJob = (sequence, priority, required) => {
+        const logicalIndex = wrap(sequence, state.baseCount);
+        const current = jobs.get(logicalIndex);
+        if (!current || priority < current.priority) {
+          jobs.set(logicalIndex, { index: logicalIndex, priority, required });
+        } else if (required && !current.required) {
+          current.required = true;
+        }
+      };
+
+      for (let sequence = firstSequence; sequence <= lastSequence; sequence += 1) {
+        const itemLeft = state.trackBaseLeft + sequence * state.slot - state.offset;
+        const itemRight = itemLeft + state.itemWidth;
+        const isVisible = itemRight > 0 && itemLeft < viewportWidth;
+        const distance = Math.abs(itemLeft + state.itemWidth / 2 - viewportCenter);
+        const priority = isVisible ? 0 : 1 + distance / Math.max(1, state.slot);
+        addJob(sequence, priority, true);
+      }
+
+      for (let distance = 1; distance <= state.decodeBufferSlots; distance += 1) {
+        addJob(
+          state.poolStartSequence - distance,
+          10 + distance,
+          distance === 1,
+        );
+        addJob(
+          state.poolStartSequence + state.items.length - 1 + distance,
+          10 + distance,
+          distance === 1,
+        );
+      }
+
+      return [...jobs.values()].sort((left, right) => left.priority - right.priority);
+    };
+
+    const scheduleDecodeWindow = (state, captureInitial = false) => {
+      if (!state.preloadActive || state.destroyed) return;
+      const jobs = collectDecodeWindow(state);
+      if (jobs.length === 0) return;
+
+      if (captureInitial && !state.decodeReady) {
+        if (!(state.initialRequired instanceof Set)) {
+          state.initialRequired = new Set();
+        }
+        jobs
+          .filter((job) => job.required)
+          .forEach((job) => state.initialRequired.add(job.index));
+        state.viewport.dataset.caseScreensLoopInitialRequiredCount = String(
+          state.initialRequired.size,
+        );
+      }
+
+      jobs.forEach((job) => enqueueDecode(state, job.index, job.priority));
+      drainDecodeQueue(state);
+      maybeMarkDecodeReady(state);
+    };
+
+    const scheduleDecodeWindowIfNeeded = (state, force = false) => {
+      if (!state.preloadActive || state.slot <= 0) return;
+      const slotIndex = Math.floor(state.offset / state.slot);
+      if (!force && slotIndex === state.lastDecodeSlot) return;
+      state.lastDecodeSlot = slotIndex;
+      scheduleDecodeWindow(state, !state.decodeReady);
+    };
+
+    const applyStaticTransform = (state) => {
+      state.track.style.transform = `translate3d(${-state.offset.toFixed(3)}px, 0, 0)`;
+    };
+
+    const readMotionOffset = (state) => {
+      const animation = state.motionAnimation;
+      if (!isAnimation(animation) || typeof state.motionOffsetAtTime !== 'function') {
+        return state.offset;
+      }
+      const currentTime = Number(animation.currentTime);
+      if (!Number.isFinite(currentTime)) return state.offset;
+      return state.motionOffsetAtTime(currentTime);
+    };
+
+    const syncOffsetFromMotion = (state) => {
+      state.offset = readMotionOffset(state);
+    };
+
+    const clearMaintenance = (state) => {
+      if (state.maintenanceTimer === 0) return;
+      window.clearTimeout(state.maintenanceTimer);
+      state.maintenanceTimer = 0;
+    };
+
+    const stopMotion = (state, preserveOffset = true) => {
+      clearMaintenance(state);
+      const animation = state.motionAnimation;
+      if (!isAnimation(animation)) return;
+      if (preserveOffset) syncOffsetFromMotion(state);
+      animation.onfinish = null;
+      animation.cancel();
+      state.motionAnimation = null;
+      state.motionOffsetAtTime = null;
+      state.motionKind = 'none';
+      if (preserveOffset) applyStaticTransform(state);
+    };
+
+    const normalizeOffset = (state) => {
+      if (
+        state.loopWidth <= 0 ||
+        state.slot <= 0 ||
+        !Number.isFinite(state.poolStartSequence)
+      ) {
+        return;
+      }
+      const normalizedOffset = wrap(state.offset, state.loopWidth);
+      const sequenceShift = Math.round((state.offset - normalizedOffset) / state.slot);
+      if (sequenceShift === 0) return;
+      state.offset = normalizedOffset;
+      state.poolStartSequence -= sequenceShift;
+      state.items.forEach((item) => {
+        const sequence = readDataInt(item, 'caseScreensLoopSequence', 0) - sequenceShift;
+        item.dataset.caseScreensLoopSequence = String(sequence);
+        positionItem(state, item, sequence);
+      });
+      setDatasetValue(state.viewport, 'caseScreensLoopPoolStart', state.poolStartSequence);
+      applyStaticTransform(state);
+    };
+
+    const shouldAutoplay = (state) =>
+      !state.destroyed &&
+      !reducedMotionQuery.matches &&
+      state.inViewport &&
+      state.decodeReady &&
+      !document.hidden &&
+      !state.dragging;
+
+    const maintainState = (state) => {
+      state.maintenanceTimer = 0;
+      if (state.destroyed || !state.viewport.isConnected) return;
+      syncOffsetFromMotion(state);
+      if (readDesiredPoolStart(state) !== state.poolStartSequence) {
+        syncVirtualPool(state);
+      }
+      scheduleDecodeWindowIfNeeded(state);
+      if (state.useWaapi && shouldAutoplay(state) && state.motionAnimation) {
+        state.maintenanceTimer = window.setTimeout(
+          () => maintainState(state),
+          maintenanceIntervalMs,
+        );
+      }
+    };
+
+    const scheduleMaintenance = (state, immediate = false) => {
+      clearMaintenance(state);
+      if (!state.useWaapi || !shouldAutoplay(state) || !state.motionAnimation) return;
+      state.maintenanceTimer = window.setTimeout(
+        () => maintainState(state),
+        immediate ? 0 : maintenanceIntervalMs,
+      );
+    };
+
+    const finishMotion = (state, animation) => {
+      if (state.motionAnimation !== animation) return;
+      syncOffsetFromMotion(state);
+      animation.onfinish = null;
+      animation.cancel();
+      state.motionAnimation = null;
+      state.motionOffsetAtTime = null;
+      state.motionKind = 'none';
+      state.inertia = 0;
+      applyStaticTransform(state);
+      syncVirtualPool(state);
+      scheduleDecodeWindowIfNeeded(state, true);
+      normalizeOffset(state);
+      updatePlaybackState(state);
+    };
+
+    const startContinuousMotion = (state) => {
+      if (!state.useWaapi || state.slot <= 0 || state.motionAnimation) return;
+      const startOffset = state.offset;
+      const distance = Math.max(state.slot * motionDistanceSlots, 262144);
+      const duration = (distance / autoplaySpeed) * 1000;
+      let animation;
+      try {
+        animation = state.track.animate(
+          [
+            { transform: `translate3d(${-startOffset.toFixed(3)}px, 0, 0)` },
+            { transform: `translate3d(${-(startOffset + distance).toFixed(3)}px, 0, 0)` },
+          ],
+          { duration, easing: 'linear', fill: 'both' },
+        );
+      } catch {
+        state.useWaapi = false;
+        state.viewport.dataset.caseScreensLoopEngine = 'raf-fallback';
+        fallbackLoop.start();
+        return;
+      }
+      animation.id = 'goomy-screens-loop-autoplay';
+      animation.playbackRate = state.speed / autoplaySpeed;
+      state.motionAnimation = animation;
+      state.motionKind = 'continuous';
+      state.motionOffsetAtTime = (timeMs) =>
+        startOffset + distance * clamp(timeMs / duration, 0, 1);
+      animation.onfinish = () => finishMotion(state, animation);
+      state.viewport.dataset.caseScreensLoopEngine = 'waapi-compositor';
+      scheduleMaintenance(state, true);
+    };
+
+    const startInertiaMotion = (state) => {
+      if (!state.useWaapi || !shouldAutoplay(state) || Math.abs(state.inertia) <= 0.1) {
+        state.inertia = 0;
+        updatePlaybackState(state);
+        return;
+      }
+      stopMotion(state, true);
+      const startOffset = state.offset;
+      const durationSeconds = inertiaDurationMs / 1000;
+      const inertia = state.inertia;
+      const speed = state.speed;
+      const offsetAtSeconds = (seconds) =>
+        startOffset +
+        speed * seconds +
+        (inertia / inertiaDecay) * (1 - Math.exp(-inertiaDecay * seconds));
+      const keyframes = Array.from({ length: 9 }, (_, index) => {
+        const progress = index / 8;
+        const offset = offsetAtSeconds(progress * durationSeconds);
+        return {
+          offset: progress,
+          transform: `translate3d(${-offset.toFixed(3)}px, 0, 0)`,
+        };
+      });
+      let animation;
+      try {
+        animation = state.track.animate(keyframes, {
+          duration: inertiaDurationMs,
+          easing: 'linear',
+          fill: 'both',
+        });
+      } catch {
+        state.useWaapi = false;
+        state.viewport.dataset.caseScreensLoopEngine = 'raf-fallback';
+        fallbackLoop.start();
+        return;
+      }
+      animation.id = 'goomy-screens-loop-inertia';
+      state.motionAnimation = animation;
+      state.motionKind = 'inertia';
+      state.motionOffsetAtTime = (timeMs) =>
+        offsetAtSeconds(clamp(timeMs / 1000, 0, durationSeconds));
+      animation.onfinish = () => finishMotion(state, animation);
+      scheduleMaintenance(state, true);
+    };
+
+    const updateMotionSpeed = (state, speed) => {
+      state.speed = speed;
+      const animation = state.motionAnimation;
+      if (!isAnimation(animation) || state.motionKind !== 'continuous') return;
+      const playbackRate = speed / autoplaySpeed;
+      if (typeof animation.updatePlaybackRate === 'function') {
+        animation.updatePlaybackRate(playbackRate);
+      } else {
+        animation.playbackRate = playbackRate;
+      }
+    };
+
+    const updatePlaybackState = (state) => {
+      if (state.destroyed || state.slot <= 0) return;
+      if (state.useWaapi) {
+        if (shouldAutoplay(state)) {
+          if (!state.motionAnimation) startContinuousMotion(state);
+          else if (state.motionAnimation.playState === 'paused') state.motionAnimation.play();
+          scheduleMaintenance(state, true);
+        } else {
+          stopMotion(state, true);
+          normalizeOffset(state);
+        }
+        return;
+      }
+      if (shouldAutoplay(state) || Math.abs(state.inertia) > 0.1) {
+        fallbackLoop.start();
+      }
+    };
+
+    const renderFallback = (state) => {
+      if (readDesiredPoolStart(state) !== state.poolStartSequence) syncVirtualPool(state);
+      applyStaticTransform(state);
+      scheduleDecodeWindowIfNeeded(state);
+    };
+
+    const fallbackLoop = createRafLoop((deltaMs) => {
+      const dt = clamp(deltaMs / 1000, 0, 0.05);
+      let active = false;
+      for (const state of states.values()) {
+        if (state.useWaapi || state.destroyed || !state.viewport.isConnected) continue;
+
+        if (shouldAutoplay(state)) {
+          state.offset += state.speed * dt;
+          active = true;
+        }
+        if (!state.dragging && Math.abs(state.inertia) > 0.1) {
+          state.offset += state.inertia * dt;
+          state.inertia *= Math.exp(-dt * inertiaDecay);
+          active = true;
+        }
+        renderFallback(state);
+      }
+      return active;
     });
 
     const bindPointer = (state) => {
@@ -366,6 +933,7 @@ const titleId = 'case-screens-loop-title';
       const onPointerDown = (event) => {
         if (!(event instanceof PointerEvent)) return;
         if (event.pointerType === 'mouse' && event.button !== 0) return;
+        stopMotion(state, true);
         state.dragging = true;
         state.pointerId = event.pointerId;
         state.lastX = event.clientX;
@@ -380,11 +948,12 @@ const titleId = 'case-screens-loop-title';
         const now = performance.now();
         const dx = event.clientX - state.lastX;
         const elapsed = Math.max(1, now - state.lastTs);
-        state.offset = wrap(state.offset - dx, state.loopWidth);
+        state.offset -= dx;
         state.inertia = clamp((-dx / elapsed) * 1000, -960, 960);
         state.lastX = event.clientX;
         state.lastTs = now;
-        render(state);
+        renderFallback(state);
+        scheduleDecodeWindowIfNeeded(state);
       };
       const finishPointer = (event) => {
         if (!(event instanceof PointerEvent)) return;
@@ -395,12 +964,19 @@ const titleId = 'case-screens-loop-title';
         if (viewport.hasPointerCapture(event.pointerId)) {
           viewport.releasePointerCapture(event.pointerId);
         }
+        if (state.useWaapi) {
+          startInertiaMotion(state);
+        } else {
+          updatePlaybackState(state);
+        }
       };
       const onPointerEnter = () => {
         state.hovered = true;
+        updateMotionSpeed(state, hoverSpeed);
       };
       const onPointerLeave = () => {
         state.hovered = false;
+        updateMotionSpeed(state, autoplaySpeed);
       };
 
       viewport.addEventListener('pointerdown', onPointerDown);
@@ -422,25 +998,60 @@ const titleId = 'case-screens-loop-title';
         return;
       }
       const track = root.querySelector('[data-case-screens-loop-track]');
+      const manifestElement = root.querySelector('[data-case-screens-loop-manifest]');
       const baseCount = readDataInt(root, 'caseScreensLoopCount', 0);
-      if (!(track instanceof HTMLElement) || baseCount < 2) {
+      const initialSlots = readDataInt(root, 'caseScreensLoopInitialSlots', 3);
+      const visualBufferSlots = readDataInt(root, 'caseScreensLoopVisualBufferSlots', 2);
+      const decodeBufferSlots = readDataInt(root, 'caseScreensLoopDecodeBufferSlots', 4);
+      if (
+        !(track instanceof HTMLElement) ||
+        !(manifestElement instanceof HTMLScriptElement) ||
+        baseCount < 2
+      ) {
         return;
       }
+      let manifest = [];
+      try {
+        const parsedManifest = JSON.parse(manifestElement.textContent || '[]');
+        if (Array.isArray(parsedManifest)) manifest = parsedManifest;
+      } catch {
+        return;
+      }
+      if (manifest.length !== baseCount) return;
       const items = Array.from(track.querySelectorAll('[data-case-screens-loop-item]'));
-      if (items.length < baseCount * 2) {
-        return;
-      }
+      if (items.length < 2 || !(items[0] instanceof HTMLElement)) return;
 
       root.dataset.caseScreensLoopInit = 'true';
       const state = {
         viewport: root,
         track,
         items,
+        manifest,
         baseCount,
+        initialSlots,
+        visualBufferSlots,
+        decodeBufferSlots,
+        poolStartSequence: Number.NaN,
+        recycleCount: 0,
+        recycleMissCount: 0,
+        initialRequired: null,
+        decodeReady: false,
+        preloadActive: false,
+        preloadImages: Array.from({ length: baseCount }, () => null),
+        prepared: new Set(),
+        pending: new Set(),
+        queued: new Set(),
+        decodeQueue: [],
+        activeDecodes: 0,
+        lastDecodeSlot: -1,
+        destroyed: false,
         slot: 0,
+        itemWidth: 0,
+        trackBaseLeft: 0,
+        viewportWidth: 0,
         loopWidth: 0,
         offset: 0,
-        speed: 48,
+        speed: autoplaySpeed,
         inertia: 0,
         hovered: false,
         dragging: false,
@@ -448,13 +1059,22 @@ const titleId = 'case-screens-loop-title';
         lastX: 0,
         lastTs: 0,
         inViewport: true,
+        useWaapi:
+          typeof track.animate === 'function' && typeof window.Animation === 'function',
+        motionAnimation: null,
+        motionOffsetAtTime: null,
+        motionKind: 'none',
+        maintenanceTimer: 0,
         cleanups: [],
       };
+      root.dataset.caseScreensLoopEngine = state.useWaapi
+        ? 'waapi-compositor'
+        : 'raf-fallback';
 
       bindPointer(state);
       const resizeObserver = new ResizeObserver(() => {
         readMetrics(state);
-        render(state);
+        scheduleDecodeWindowIfNeeded(state, true);
       });
       resizeObserver.observe(root);
       state.cleanups.push(() => resizeObserver.disconnect());
@@ -462,23 +1082,44 @@ const titleId = 'case-screens-loop-title';
       const intersectionObserver = new IntersectionObserver(
         ([entry]) => {
           state.inViewport = Boolean(entry?.isIntersecting);
+          updatePlaybackState(state);
         },
         { threshold: [0, 0.02] },
       );
       intersectionObserver.observe(root);
       state.cleanups.push(() => intersectionObserver.disconnect());
 
+      const preloadObserver = new IntersectionObserver(
+        ([entry]) => {
+          if (!entry?.isIntersecting || state.preloadActive) return;
+          state.preloadActive = true;
+          scheduleDecodeWindowIfNeeded(state, true);
+          preloadObserver.disconnect();
+        },
+        { rootMargin: '1200px 0px', threshold: 0 },
+      );
+      preloadObserver.observe(root);
+      state.cleanups.push(() => preloadObserver.disconnect());
+      state.cleanups.push(() => {
+        state.destroyed = true;
+        stopMotion(state, false);
+        clearMaintenance(state);
+      });
+
       states.set(root, state);
       readMetrics(state);
-      render(state);
-      loop.start();
+      scheduleDecodeWindowIfNeeded(state, true);
+      updatePlaybackState(state);
     };
 
     const mount = () => {
-      document.querySelectorAll(rootSelector).forEach(init);
-      if (states.size > 0) {
-        loop.start();
+      for (const [root, state] of states) {
+        if (root.isConnected) continue;
+        state.cleanups.forEach((cleanup) => cleanup());
+        states.delete(root);
       }
+      document.querySelectorAll(rootSelector).forEach(init);
+      states.forEach(updatePlaybackState);
     };
 
     const existingRuntime = getWindowRuntime(runtimeKey);
@@ -490,7 +1131,7 @@ const titleId = 'case-screens-loop-title';
     lifecycle.addCleanup(onAstroPageLoad(mount));
     lifecycle.addCleanup(onDomReady(mount));
     lifecycle.on(document, 'visibilitychange', () => {
-      if (!document.hidden) loop.start();
+      states.forEach(updatePlaybackState);
     });
     lifecycle.onMediaQueryChange(reducedMotionQuery, () => {
       if (reducedMotionQuery.matches) {
@@ -498,7 +1139,7 @@ const titleId = 'case-screens-loop-title';
           state.inertia = 0;
         }
       }
-      loop.start();
+      states.forEach(updatePlaybackState);
     });
 
     const runtime = {
@@ -508,7 +1149,7 @@ const titleId = 'case-screens-loop-title';
           state.cleanups.forEach((cleanup) => cleanup());
         }
         states.clear();
-        loop.stop();
+        fallbackLoop.stop();
         lifecycle.dispose();
       },
     };

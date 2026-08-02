@@ -1,9 +1,33 @@
 import { expect, test } from '@playwright/test';
 
-const readTrackX = async (page: import('@playwright/test').Page) =>
-  page.locator('[data-case-screens-loop-track]').evaluate((track) => {
-    const transform = getComputedStyle(track).transform;
-    return transform === 'none' ? 0 : new DOMMatrixReadOnly(transform).m41;
+const readLoopPhase = async (page: import('@playwright/test').Page) =>
+  page.locator('[data-case-screens-loop]').evaluate((viewport) => {
+    const viewportBounds = viewport.getBoundingClientRect();
+    const items = Array.from(
+      viewport.querySelectorAll<HTMLElement>('[data-case-screens-loop-item]'),
+    );
+    const positionedItems = items
+      .map((item) => ({
+        item,
+        bounds: item.getBoundingClientRect(),
+        sequence: Number(item.dataset.caseScreensLoopSequence ?? 0),
+      }))
+      .sort((left, right) => left.sequence - right.sequence);
+    const firstVisible = positionedItems.find(({ bounds }) => {
+      return bounds.right > viewportBounds.left && bounds.left < viewportBounds.right;
+    });
+    if (!firstVisible) return 0;
+    const firstIndex = positionedItems.indexOf(firstVisible);
+    const neighbour = positionedItems[firstIndex + 1] ?? positionedItems[firstIndex - 1];
+    const sequenceDelta = neighbour ? neighbour.sequence - firstVisible.sequence : 1;
+    const slot = neighbour
+      ? (neighbour.bounds.left - firstVisible.bounds.left) / sequenceDelta
+      : firstVisible.bounds.width;
+    return (
+      firstVisible.bounds.left -
+      viewportBounds.left -
+      firstVisible.sequence * slot
+    );
   });
 
 test.describe('GoomY case', () => {
@@ -13,6 +37,10 @@ test.describe('GoomY case', () => {
     await page.setViewportSize({ width: 2048, height: 1200 });
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/goomy');
+    await expect(page.locator('[data-case-screens-loop]')).toHaveAttribute(
+      'data-case-screens-loop-virtual-ready',
+      'true',
+    );
 
     const layout = await page.evaluate(() => {
       const main = document.querySelector<HTMLElement>('main.page-shell--goomy');
@@ -32,7 +60,16 @@ test.describe('GoomY case', () => {
       const viewport = document.querySelector<HTMLElement>('[data-case-screens-loop]');
       const items = Array.from(
         document.querySelectorAll<HTMLElement>('[data-case-screens-loop-item]'),
-      ).slice(0, 6);
+      )
+        .filter((item) => {
+          const sequence = Number(item.dataset.caseScreensLoopSequence ?? Number.NaN);
+          return sequence >= 0 && sequence < 6;
+        })
+        .sort(
+          (left, right) =>
+            Number(left.dataset.caseScreensLoopSequence) -
+            Number(right.dataset.caseScreensLoopSequence),
+        );
 
       if (
         !main ||
@@ -109,22 +146,46 @@ test.describe('GoomY case', () => {
     expect(layout!.rightArrow.y - layout!.section.y).toBeCloseTo(55, 1);
     expect(layout!.leftArrow.width).toBeCloseTo(94, 1);
     expect(layout!.leftArrow.height).toBeCloseTo(102, 1);
-    await expect(
-      page.locator(
-        '.case-screens-loop-section__arrow--left .case-screens-loop-section__arrow-art',
-      ),
-    ).toHaveAttribute('src', '/media/cases/goomy/screens-loop/arrow-left.svg');
-    await expect(
-      page.locator(
-        '.case-screens-loop-section__arrow--right .case-screens-loop-section__arrow-art',
-      ),
-    ).toHaveAttribute('src', '/media/cases/goomy/screens-loop/arrow-right.svg');
-    expect(layout!.items[0].x).toBeCloseTo(232, 1);
+    const leftArrowArt = page.locator(
+      '.case-screens-loop-section__arrow--left .case-screens-loop-section__arrow-art',
+    );
+    const rightArrowArt = page.locator(
+      '.case-screens-loop-section__arrow--right .case-screens-loop-section__arrow-art',
+    );
+    await expect(leftArrowArt).toHaveAttribute(
+      'style',
+      /--themed-svg-icon-mask: url\("\/media\/cases\/goomy\/screens-loop\/arrow-left\.svg"\)/,
+    );
+    await expect(rightArrowArt).toHaveAttribute(
+      'style',
+      /--themed-svg-icon-mask: url\("\/media\/cases\/goomy\/screens-loop\/arrow-right\.svg"\)/,
+    );
+    await expect(page.locator('.case-screens-loop-section__arrow-art[src]')).toHaveCount(0);
+
+    await page.evaluate(() => {
+      document.documentElement.dataset.theme = 'light';
+    });
+    const screensLoopBadge = page.locator('.case-screens-loop-section__badge');
+    await expect(screensLoopBadge).toHaveAttribute('data-badge-type', 'default');
+    await expect(screensLoopBadge).toHaveCSS('background-color', 'rgb(192, 189, 109)');
+    await expect(leftArrowArt).toHaveCSS('background-color', 'rgb(192, 189, 109)');
+    await expect(rightArrowArt).toHaveCSS('background-color', 'rgb(192, 189, 109)');
+
+    await page.evaluate(() => {
+      document.documentElement.dataset.theme = 'dark';
+    });
+    await expect(screensLoopBadge).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    await expect(screensLoopBadge).toHaveCSS('border-top-style', 'solid');
+    await expect(leftArrowArt).toHaveCSS('background-color', 'rgb(121, 176, 226)');
+    await expect(rightArrowArt).toHaveCSS('background-color', 'rgb(121, 176, 226)');
+    expect(layout!.items[0].x).toBeCloseTo(-572, 1);
     layout!.items.forEach((item, index) => {
-      expect(item.x).toBeCloseTo(232 + index * 268, 1);
+      expect(item.x).toBeCloseTo(-572 + index * 268, 1);
       expect(item.width).toBeCloseTo(244, 1);
       expect(item.height).toBeCloseTo(501, 1);
     });
+    expect(layout!.items[2].x).toBeLessThanOrEqual(0);
+    expect(layout!.items[2].x + layout!.items[2].width).toBeGreaterThan(0);
   });
 
   test('renders the finished sections and a draggable, hover-slowed screen loop', async ({ page }) => {
@@ -136,10 +197,37 @@ test.describe('GoomY case', () => {
     await expect(page.locator('.goomy-intro-section')).toBeVisible();
     await expect(page.locator('.goomy-case-challenge')).toBeVisible();
     await expect(page.locator('.case-process-section--goomy')).toBeVisible();
+    await expect(page.locator('.goomy-feature-cards')).toBeVisible();
     await expect(page.locator('.goomy-screens-loop')).toBeVisible();
     await expect(page.locator('.goomy-design-system-section')).toBeVisible();
     await expect(page.locator('.goomy-case-switcher')).toBeVisible();
-    await expect(page.locator('.fora-feature-cards-section')).toHaveCount(0);
+
+    const featureCards = page.locator('.goomy-feature-cards .fora-feature-card');
+    await expect(featureCards).toHaveCount(3);
+    await expect(page.locator('.goomy-feature-cards')).toHaveAttribute(
+      'aria-label',
+      'GoomY feature cards',
+    );
+    await expect(featureCards.nth(0).locator('video')).toHaveAttribute(
+      'src',
+      '/media/cases/goomy/flows/goomy-onboarding-v1.webm',
+    );
+    await expect(featureCards.nth(0).locator('video')).toHaveAttribute(
+      'poster',
+      '/media/cases/goomy/flows/goomy-onboarding-v1-poster.png',
+    );
+    await expect(featureCards.nth(1).locator('video')).toHaveAttribute(
+      'src',
+      '/media/cases/goomy/flows/goomy-paywall-activation-v1.webm',
+    );
+    await expect(featureCards.nth(2).locator('video')).toHaveAttribute(
+      'src',
+      '/media/cases/goomy/flows/goomy-recipe-cooking-v1.webm',
+    );
+    await expect(featureCards.nth(2).locator('video')).toHaveAttribute(
+      'poster',
+      '/media/cases/goomy/flows/goomy-recipe-cooking-v1-poster.png',
+    );
 
     const updatedFigmaGeometry = await page.evaluate(() => {
       const relativeRect = (
@@ -165,6 +253,9 @@ test.describe('GoomY case', () => {
       const challengeArrows = document.querySelectorAll(
         '.goomy-case-challenge .case-challenge-scene-wrap--desktop .case-challenge-arrow',
       );
+      const challengeNotes = document.querySelectorAll(
+        '.goomy-case-challenge .case-challenge-scene-wrap--desktop .case-challenge-note',
+      );
       const designScene = document.querySelector(
         '.goomy-design-system-section .fora-design-system-scene',
       );
@@ -174,6 +265,15 @@ test.describe('GoomY case', () => {
 
       return {
         challengeBottomRight: relativeRect(challengeArrows[3] ?? null, challengeScene),
+        challengeBottomRightText: relativeRect(challengeNotes[3] ?? null, challengeScene),
+        challengeBottomRightTransform:
+          challengeArrows[3] instanceof HTMLElement
+            ? getComputedStyle(challengeArrows[3]).transform
+            : 'none',
+        challengeBottomRightMask:
+          challengeArrows[3] instanceof HTMLElement
+            ? getComputedStyle(challengeArrows[3]).maskImage
+            : '',
         designTop: relativeRect(
           document.querySelector(
             '.goomy-design-system-section .fora-design-system-arrow--top',
@@ -197,6 +297,16 @@ test.describe('GoomY case', () => {
       width: 67,
       height: 40,
     });
+    expect(updatedFigmaGeometry.challengeBottomRightText).toEqual({
+      x: 621,
+      y: 351,
+      width: 184,
+      height: 44,
+    });
+    expect(updatedFigmaGeometry.challengeBottomRightTransform).toBe('none');
+    expect(updatedFigmaGeometry.challengeBottomRightMask).toContain(
+      '/media/cases/goomy/challenge/arrow-active-controls@3x.png',
+    );
     expect(updatedFigmaGeometry.designTop).toEqual({
       x: 237,
       y: 132,
@@ -218,16 +328,35 @@ test.describe('GoomY case', () => {
     const track = page.locator('[data-case-screens-loop-track]');
     await viewport.scrollIntoViewIfNeeded();
     await expect(viewport).toHaveAttribute('data-case-screens-loop-count', '31');
-    await expect(track.locator('[data-case-screens-loop-item]')).toHaveCount(62);
+    await expect(viewport).toHaveAttribute('data-case-screens-loop-visual-buffer-slots', '2');
+    await expect(viewport).toHaveAttribute('data-case-screens-loop-decode-buffer-slots', '4');
+    await expect(viewport).toHaveAttribute('data-case-screens-loop-virtual-ready', 'true');
+    await expect(viewport).toHaveAttribute(
+      'data-case-screens-loop-engine',
+      'waapi-compositor',
+    );
+    await expect(track.locator('[data-case-screens-loop-item]')).toHaveCount(14);
 
-    const screenSequence = await track
-      .locator('[data-case-screens-loop-item]')
-      .evaluateAll((items) =>
-        items.slice(0, 31).map((item) => ({
-          group: item.getAttribute('data-case-screens-loop-group'),
-          src: item.querySelector('img')?.getAttribute('src') ?? '',
-        })),
+    const virtualization = await viewport.evaluate((element) => {
+      const trackElement = element.querySelector<HTMLElement>('[data-case-screens-loop-track]');
+      const items = Array.from(
+        element.querySelectorAll<HTMLElement>('[data-case-screens-loop-item]'),
       );
+      return {
+        poolSize: Number(element.dataset.caseScreensLoopPoolSize ?? 0),
+        logicalCount: Number(element.dataset.caseScreensLoopCount ?? 0),
+        trackWidth: trackElement?.getBoundingClientRect().width ?? 0,
+        sequences: items.map((item) => Number(item.dataset.caseScreensLoopSequence ?? 0)),
+      };
+    });
+    expect(virtualization.poolSize).toBe(14);
+    expect(virtualization.poolSize).toBeLessThan(virtualization.logicalCount);
+    expect(virtualization.trackWidth).toBeLessThan(4000);
+    expect(new Set(virtualization.sequences).size).toBe(virtualization.poolSize);
+
+    const screenSequence = await viewport.locator('[data-case-screens-loop-manifest]').evaluate(
+      (manifest) => JSON.parse(manifest.textContent || '[]'),
+    );
     expect(screenSequence.map((screen) => screen.group)).toEqual([
       ...Array(15).fill('onboarding'),
       ...Array(16).fill('core'),
@@ -254,11 +383,38 @@ test.describe('GoomY case', () => {
     );
     expect(screenAssetDimensions).toHaveLength(31);
     screenAssetDimensions.forEach((image) => {
-      expect(image.width).toBe(1206);
-      expect(image.height).toBe(2622);
-      expect(image.width).toBeGreaterThanOrEqual(244 * 3);
-      expect(image.height).toBeGreaterThanOrEqual(501 * 3);
+      expect(image.width).toBe(662);
+      expect(image.height).toBe(1439);
     });
+
+    await expect(viewport).toHaveAttribute('data-case-screens-loop-decode-ready', 'true', {
+      timeout: 15_000,
+    });
+    const decodeWindow = await viewport.evaluate((element) => {
+      const prepared = Number(element.getAttribute('data-case-screens-loop-prepared-count') ?? 0);
+      const required = Number(
+        element.getAttribute('data-case-screens-loop-initial-required-count') ?? 0,
+      );
+      const rootBounds = element.getBoundingClientRect();
+      const visibleImages = Array.from(
+        element.querySelectorAll<HTMLImageElement>('.device-mockup__media'),
+      ).filter((image) => {
+        const bounds = image.getBoundingClientRect();
+        return bounds.right > rootBounds.left && bounds.left < rootBounds.right;
+      });
+      return {
+        prepared,
+        required,
+        visibleCount: visibleImages.length,
+        visibleReady: visibleImages.every(
+          (image) => image.complete && image.naturalWidth > 0 && image.naturalHeight > 0,
+        ),
+      };
+    });
+    expect(decodeWindow.required).toBeGreaterThanOrEqual(10);
+    expect(decodeWindow.prepared).toBeGreaterThanOrEqual(decodeWindow.required);
+    expect(decodeWindow.visibleCount).toBeGreaterThan(0);
+    expect(decodeWindow.visibleReady).toBe(true);
 
     await page.locator('.goomy-design-system-section').scrollIntoViewIfNeeded();
     await expect
@@ -320,27 +476,42 @@ test.describe('GoomY case', () => {
       bounds!.y > 24 ? 8 : Math.min(1092, bounds!.y + bounds!.height + 24);
     await page.mouse.move(1400, outsideY);
     await page.waitForTimeout(250);
-    const normalStart = await readTrackX(page);
+    const normalStart = await readLoopPhase(page);
     await page.waitForTimeout(700);
-    const normalEnd = await readTrackX(page);
+    const normalEnd = await readLoopPhase(page);
     const normalDistance = Math.abs(normalEnd - normalStart);
 
     await page.mouse.move(bounds!.x + bounds!.width / 2, bounds!.y + 160);
     await page.waitForTimeout(350);
-    const hoverStart = await readTrackX(page);
+    const hoverStart = await readLoopPhase(page);
     await page.waitForTimeout(700);
-    const hoverEnd = await readTrackX(page);
+    const hoverEnd = await readLoopPhase(page);
     const hoverDistance = Math.abs(hoverEnd - hoverStart);
 
     expect(normalDistance).toBeGreaterThan(10);
     expect(hoverDistance).toBeGreaterThan(3);
     expect(hoverDistance).toBeLessThan(normalDistance * 0.75);
 
+    const recycleCountBeforeDrag = Number(
+      (await viewport.getAttribute('data-case-screens-loop-recycle-count')) ?? 0,
+    );
     await page.mouse.move(bounds!.x + bounds!.width / 2, bounds!.y + 240);
     await page.mouse.down();
-    await page.mouse.move(bounds!.x + bounds!.width / 2 - 120, bounds!.y + 240, { steps: 8 });
+    await page.mouse.move(bounds!.x + bounds!.width / 2 - 420, bounds!.y + 240, { steps: 12 });
     await page.mouse.up();
     await expect(viewport).toHaveAttribute('data-dragging', 'false');
+    await expect
+      .poll(async () => Number((await viewport.getAttribute('data-case-screens-loop-recycle-count')) ?? 0))
+      .toBeGreaterThan(recycleCountBeforeDrag);
+    await expect(viewport).toHaveAttribute('data-case-screens-loop-recycle-miss-count', '0');
+    await expect(track.locator('[data-case-screens-loop-item]')).toHaveCount(14);
+    await expect
+      .poll(() =>
+        track.locator('[data-case-screens-loop-item]').evaluateAll((items) =>
+          items.map((item) => Number((item as HTMLElement).dataset.caseScreensLoopCell ?? -1)),
+        ),
+      )
+      .toEqual(Array.from({ length: 14 }, (_, index) => index));
   });
 
   test('keeps all mobile sections inside the viewport and scales the design-system scene', async ({
@@ -353,6 +524,7 @@ test.describe('GoomY case', () => {
     await expect(page.locator('.site-desktop-shell')).toBeVisible();
     await expect(page.locator('.fora-intro-screens-slider')).toBeVisible();
     await expect(page.locator('.case-challenge-scene-wrap--mobile')).toBeVisible();
+    await expect(page.locator('.goomy-feature-cards')).toBeVisible();
     await expect(page.locator('.goomy-screens-loop')).toBeVisible();
     await expect(page.locator('.goomy-design-system-section')).toBeVisible();
 

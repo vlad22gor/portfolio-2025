@@ -98,6 +98,7 @@ export interface CaseFeatureCardItem {
   mock: {
     kind: 'video';
     src: string;
+    poster?: string;
   };
 }
 
@@ -177,6 +178,7 @@ export type CaseDetailSection =
   | {
       type: 'featureCards';
       cards: CaseFeatureCardItem[];
+      ariaLabel?: string;
       className?: string;
     }
   | {

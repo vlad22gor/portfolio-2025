@@ -286,7 +286,7 @@
     display: block;
   }
 
-  body[data-route-case-detail='true'] .page-shell--goomy>:not(.goomy-intro-section):not(.fora-intro-screens-section):not(.goomy-case-challenge):not(.case-process-section):not(.case-screens-loop-section):not(.goomy-design-system-section):not(.case-switcher-section) {
+  body[data-route-case-detail='true'] .page-shell--goomy>:not(.goomy-intro-section):not(.fora-intro-screens-section):not(.goomy-case-challenge):not(.case-process-section):not(.goomy-feature-cards):not(.case-screens-loop-section):not(.goomy-design-system-section):not(.case-switcher-section) {
     display: none;
   }
 
@@ -303,6 +303,10 @@
   body[data-route-case-detail='true'] .page-shell--goomy>.case-process-section {
     display: flex;
     margin-top: 144px;
+  }
+
+  body[data-route-case-detail='true'] .page-shell--goomy>.goomy-feature-cards {
+    display: flex;
   }
 
   body[data-route-case-detail='true'] .page-shell--goomy>.case-screens-loop-section,
@@ -400,7 +404,8 @@
   }
 
   body[data-route-case-detail='true'] .page-shell--fora>.fora-feature-cards-section,
-  body[data-route-case-detail='true'] .page-shell--kissa>.fora-feature-cards-section {
+  body[data-route-case-detail='true'] .page-shell--kissa>.fora-feature-cards-section,
+  body[data-route-case-detail='true'] .page-shell--goomy>.fora-feature-cards-section {
     width: var(--case-mobile-grid-width);
     min-width: 0;
     max-width: var(--case-mobile-grid-width);
@@ -413,7 +418,8 @@
   }
 
   body[data-route-case-detail='true'] .page-shell--fora .fora-feature-card,
-  body[data-route-case-detail='true'] .page-shell--kissa .fora-feature-card {
+  body[data-route-case-detail='true'] .page-shell--kissa .fora-feature-card,
+  body[data-route-case-detail='true'] .page-shell--goomy .fora-feature-card {
     width: 100%;
     min-height: 0;
     height: auto;
@@ -423,7 +429,8 @@
   }
 
   body[data-route-case-detail='true'] .page-shell--fora .fora-feature-card__mock,
-  body[data-route-case-detail='true'] .page-shell--kissa .fora-feature-card__mock {
+  body[data-route-case-detail='true'] .page-shell--kissa .fora-feature-card__mock,
+  body[data-route-case-detail='true'] .page-shell--goomy .fora-feature-card__mock {
     order: 1;
     flex: 0 0 auto;
     width: 100%;
@@ -432,7 +439,8 @@
   }
 
   body[data-route-case-detail='true'] .page-shell--fora .fora-feature-card__text,
-  body[data-route-case-detail='true'] .page-shell--kissa .fora-feature-card__text {
+  body[data-route-case-detail='true'] .page-shell--kissa .fora-feature-card__text,
+  body[data-route-case-detail='true'] .page-shell--goomy .fora-feature-card__text {
     order: 2;
     flex: 0 0 auto;
     width: 100%;

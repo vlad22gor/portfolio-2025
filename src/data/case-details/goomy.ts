@@ -273,9 +273,9 @@ export const GOOMY_CASE_DETAIL_CONFIG: CaseDetailConfig = {
             id: 'active-controls',
             text: 'active controls messed up with inactive tags',
             left: 621,
-            top: 343,
+            top: 351,
             width: 184,
-            arrowSrc: '/media/cases/goomy/challenge/arrow-bottom-right.svg',
+            arrowSrc: '/media/cases/goomy/challenge/arrow-active-controls@3x.png',
             arrowLeft: 540,
             arrowTop: 366,
             arrowWidth: 67,
@@ -354,6 +354,61 @@ export const GOOMY_CASE_DETAIL_CONFIG: CaseDetailConfig = {
       type: 'process',
       inViewPreset: 'appear-v1',
       data: GOOMY_PROCESS_SECTION,
+    },
+    {
+      type: 'featureCards',
+      className: 'goomy-feature-cards',
+      ariaLabel: 'GoomY feature cards',
+      cards: [
+        {
+          mockSide: 'left',
+          device: 'phone',
+          badges: [
+            { label: 'Onboarding', tone: 'blue' },
+            { label: 'Product Value', tone: 'gray' },
+          ],
+          title: 'Value before commitment',
+          description:
+            'Three focused screens introduce saving social recipes, planning meals and building collections before permissions and the trial decision',
+          mock: {
+            kind: 'video',
+            src: '/media/cases/goomy/flows/goomy-onboarding-v1.webm',
+            poster: '/media/cases/goomy/flows/goomy-onboarding-v1-poster.png',
+          },
+        },
+        {
+          mockSide: 'right',
+          device: 'phone',
+          badges: [
+            { label: 'Monetization', tone: 'orange' },
+            { label: 'Activation', tone: 'gray' },
+          ],
+          title: 'From trial to first saved recipe',
+          description:
+            'Plans and benefits stay accessible through a sticky CTA; activation continues through hold-to-commit, recipe selection and the first save',
+          mock: {
+            kind: 'video',
+            src: '/media/cases/goomy/flows/goomy-paywall-activation-v1.webm',
+            poster: '/media/cases/goomy/flows/goomy-paywall-activation-v1-poster.png',
+          },
+        },
+        {
+          mockSide: 'left',
+          device: 'phone',
+          badges: [
+            { label: 'Recipes', tone: 'green' },
+            { label: 'Cooking Mode', tone: 'gray' },
+          ],
+          title: 'A recipe view built for cooking',
+          description:
+            'Users adjust servings, check off ingredients or open the original source, then switch to step-by-step cooking with persistent progress',
+          mock: {
+            kind: 'video',
+            src: '/media/cases/goomy/flows/goomy-recipe-cooking-v1.webm',
+            poster: '/media/cases/goomy/flows/goomy-recipe-cooking-v1-poster.png',
+          },
+        },
+      ],
     },
     {
       type: 'screensLoop',

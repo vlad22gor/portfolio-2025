@@ -15,6 +15,7 @@ const packagePath = path.join(root, 'package.json');
 const verifyDist = process.argv.includes('--dist');
 const allowedDialKitSourcePaths = new Set([
   'src/components/dev/ForaHoverDialKit.tsx',
+  'src/components/dev/GoomYChallengeDialKit.tsx',
 ]);
 const forbiddenAuthoringPaths = [
   'src/pages/goomy-onboarding-motion.astro',
@@ -34,6 +35,7 @@ const forbiddenDistPatterns = [
   { label: 'DialKit bundle marker', pattern: /dialkit/i },
   { label: 'Fora hover tuning panel id', pattern: /fora-hover-assets-v1/i },
   { label: 'Fora hover dev env marker', pattern: /PUBLIC_FORA_HOVER_DIALS/i },
+  { label: 'GoomY challenge dev env marker', pattern: /PUBLIC_GOOMY_CHALLENGE_DIALS/i },
 ];
 
 async function exists(filePath) {

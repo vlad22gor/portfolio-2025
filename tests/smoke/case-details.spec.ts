@@ -629,6 +629,52 @@ test.describe('Case details smoke', () => {
       .toBeNull();
   });
 
+  test('case switcher soft navigation starts an in-view feature-card video', async ({ page }) => {
+    test.setTimeout(60_000);
+    await page.setViewportSize({ width: 1440, height: 1100 });
+    await page.goto('/kissa');
+
+    await page.evaluate(() => {
+      const runtimeWindow = window as Window & { __caseSwitcherVideoSoftNavMarker?: string };
+      runtimeWindow.__caseSwitcherVideoSoftNavMarker = 'preserved';
+    });
+
+    const switcher = page.locator('.case-switcher-section');
+    await switcher.scrollIntoViewIfNeeded();
+    await page.locator('.case-switcher-button--next').click({ noWaitAfter: true });
+    await expect(page).toHaveURL(/\/goomy\/?$/);
+
+    await expect
+      .poll(() =>
+        page.evaluate(() => {
+          const runtimeWindow = window as Window & { __caseSwitcherVideoSoftNavMarker?: string };
+          return runtimeWindow.__caseSwitcherVideoSoftNavMarker ?? null;
+        }),
+      )
+      .toBe('preserved');
+
+    const video = page.locator('.goomy-feature-cards .fora-feature-card').first().locator('video');
+    await video.scrollIntoViewIfNeeded();
+    await expect(video).toHaveAttribute('data-video-playback-init', 'true');
+    await expect
+      .poll(
+        () =>
+          video.evaluate(
+            (node) =>
+              node instanceof HTMLVideoElement &&
+              node.currentSrc.endsWith('/media/cases/goomy/flows/goomy-onboarding-v1.webm') &&
+              node.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+              !node.paused &&
+              node.currentTime > 0.1,
+          ),
+        {
+          timeout: 15_000,
+          message: 'Feature-card video should select its src and play after Astro soft navigation',
+        },
+      )
+      .toBe(true);
+  });
+
   test('case card click from home and cases uses sequential fade->navigate transition', async ({ page }) => {
     test.setTimeout(90_000);
 
@@ -1964,7 +2010,7 @@ test.describe('Case details mobile intro smoke', () => {
         });
 
         expect(snapshot).not.toBeNull();
-        const expectedCount = 7;
+        const expectedCount = pathname === '/goomy' ? 8 : 7;
         expect(snapshot!.visibleSections.length).toBe(expectedCount);
         expect(
           snapshot!.visibleSections.every((section) =>

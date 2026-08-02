@@ -4,9 +4,10 @@ interface Props {
   tone?: 'blue' | 'gray' | 'orange' | 'green';
   type?: 'default' | 'outlined';
   as?: 'span' | 'li' | 'div';
+  class?: string;
 }
 
-const { label, tone = 'blue', type = 'default', as = 'span' } = Astro.props;
+const { label, tone = 'blue', type = 'default', as = 'span', class: className = '' } = Astro.props;
 const Element = as;
 const toneClassMap = {
   blue: 'case-badge--blue',
@@ -19,6 +20,9 @@ const toneClass = resolvedType === 'default' ? toneClassMap[tone] ?? toneClassMa
 const outlinedClass = resolvedType === 'outlined' ? 'case-badge--outlined' : '';
 ---
 
-<Element class={`case-badge ${toneClass} ${outlinedClass}`} data-badge-type={resolvedType}>
+<Element
+  class={`case-badge ${toneClass} ${outlinedClass} ${className}`.trim()}
+  data-badge-type={resolvedType}
+>
   <span class="case-badge__label">{label}</span>
 </Element>

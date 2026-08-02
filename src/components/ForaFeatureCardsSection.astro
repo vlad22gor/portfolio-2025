@@ -4,6 +4,7 @@ import type { CaseFeatureCardItem } from '../data/case-details/types';
 
 interface Props {
   cards?: CaseFeatureCardItem[];
+  ariaLabel?: string;
   class?: string;
 }
 
@@ -55,10 +56,14 @@ const defaultFeatureCards: CaseFeatureCardItem[] = [
   },
 ];
 
-const { cards = defaultFeatureCards, class: className = '' } = Astro.props as Props;
+const {
+  cards = defaultFeatureCards,
+  ariaLabel = 'Feature cards',
+  class: className = '',
+} = Astro.props as Props;
 const rootClassName = ['fora-feature-cards-section', className].filter(Boolean).join(' ');
 ---
 
-<section class={rootClassName} aria-label="Fora feature cards">
+<section class={rootClassName} aria-label={ariaLabel}>
   {cards.map((card) => <FeatureCard {...card} />)}
 </section>

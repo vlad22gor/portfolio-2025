@@ -2594,6 +2594,13 @@
 - Обновлены generic mobile route contracts и smoke-тесты; добавлен отдельный GoomY smoke для структуры страницы, отсутствия unfinished feature cards, `3×` растр-контракта, loop/hover/drag и mobile layout.
 - Проверки: production build — PASS (`7` routes; agent-readable, themed SVG, motion isolation и dist DialKit isolation — PASS); GoomY smoke — `2 passed`; generic mobile case-detail — `3 passed`; temporary adaptive — `1 passed`; three-card home contract — `1 passed`; `git diff --check` — PASS. Дополнительный browser QA проверил desktop/mobile screenshots, normal delta `34.36px/700ms`, hover delta `11.67px/700ms`, drag и inertia.
 
+## 2026-07-30 — GoomY cover v4: стекло, тени и очистка UI-фона
+
+- Создана недеструктивная версия `/Users/vladyslavhorovyy/Desktop/goomy case/cover/v4/cover-glass-highlights-clean.png`; исходный `cover.png` не перезаписан.
+- Второй исходник использован только как reference формы блика, реакции рамки и направления тени; серый выключенный экран не переносился.
+- Светло-кремовый фон интерфейса визуально выровнен, загрязнения Photoshop-маски приглушены; добавлены мягкие стеклянные отражения и уточнён контакт телефона с диваном.
+- Проверки: итог визуально проверен; UI остаётся читаемым; подтверждены RGB PNG и исходный размер 1123×1400; хеш отличается от исходника.
+
 ## 2026-07-30 — GoomY screen loop: восстановление layout и Figma fidelity
 
 - Исправлена причина wide-desktop поломки: `100vw` viewport галереи вынесен из intrinsic grid sizing в absolutely positioned viewport внутри rail, поэтому GoomY снова сохраняет общую case-колонку `816px` как Fora.
@@ -2608,12 +2615,63 @@
 - Design system и challenge, включая нижнюю правую стрелку, уже побайтово совпадали с актуальной Figma и поэтому оставлены без бессмысленной перезаписи.
 - Проверки: browser QA трёх секций — PASS; production build — PASS (`7` routes и isolation guards); `tests/smoke/goomy-case.spec.ts --workers=1` — `3 passed`; первый параллельный запуск ожидаемо пересёкся с перестройкой `dist`, последовательный повтор прошёл полностью.
 
+## 2026-07-30 — GoomY cover v4: выравнивание цвета текста стикера
+
+- Исследован стикер `RECIPE OF THE MOMENT`: визуальный кроп и цветовая кластеризация подтвердили неравномерное затемнение зелёных букв после генеративной обработки.
+- Генеративный кандидат использован только как проверка направления исправления и отклонён для полного кадра из-за лишних изменений сцены.
+- В `/Users/vladyslavhorovyy/Desktop/goomy case/cover/v4/cover-glass-highlights-clean-sticker-fixed.png` локально выровнена заливка тёмно-зелёных букв до исходного `#206842`; исходный обработанный файл не перезаписан.
+- Проверки: PNG `1123×1400`; изменён только 1361 пиксель (`0,087%` кадра) внутри области стикера; полный кадр и увеличенный кроп визуально проверены.
+
+## 2026-07-30 — GoomY cover v4: повторные блики с сохранением UI-цветов
+
+- Предыдущее локальное перекрашивание стикера признано недостаточным; работа перезапущена от чистого `cover.png`.
+- Full-frame imagegen-кандидат использован только для проверки характера света и отклонён из-за генеративного изменения сцены.
+- Финальный `/Users/vladyslavhorovyy/Desktop/goomy case/cover/v4/cover-glass-color-preserved.png` собран контролируемым композитом: две нейтральные низко-opacity световые полосы по перспективе стекла, без перерисовки UI и окружения.
+- Добавлена protection-mask стикера `RECIPE OF THE MOMENT`; его центральная область совпадает с исходником пиксель-в-пиксель (`AE=0`, `RMSE=0`).
+- Проверки: RGB PNG `1123×1400`; визуально проверены полный кадр и блик; исходный файл не перезаписан.
+
+## 2026-07-30 — Approved GoomY cover v4
+
+- Пользователь подтвердил, что `/Users/vladyslavhorovyy/Desktop/goomy case/cover/v4/cover-glass-highlights-clean-sticker-fixed.png` уже является хорошим итоговым вариантом.
+- Дальнейшая коррекция стикера и экспериментальный `cover-glass-color-preserved.png` не считаются заменой approved-файла.
+- Новых изменений изображения не выполнялось.
+
+## 2026-07-30 — Approved GoomY cover v4: формат карточки сайта
+
+- Из approved-файла `cover-glass-highlights-clean-sticker-fixed.png` создана недеструктивная версия `cover-glass-highlights-clean-sticker-fixed-1323x1189.png`.
+- Композиция приведена к пользовательскому референсу: сохранена полная ширина, применён crop `1123×1009` с вертикальным offset `y=200`, затем детерминированный LanczosSharp-upscale `1,18×`.
+- Дизайн, цвета, текст, блики и геометрия не перегенерировались.
+- Проверки: RGB PNG, sRGB, 8-bit, точный размер `1323×1189`; итог визуально проверен.
+
 ## 2026-07-30 — Геометрия стрелок и handoff-copy GoomY
 
 - Exact Figma nodes `193:15230`, `193:15408`, `193:15412` сопоставлены по structured context, screenshot, parent metadata, SHA-256 и browser bounds; сами runtime SVG уже совпадали с Figma.
 - Challenge bottom-right перенесена на `x=540, y=366, 67×40`; design-system top — на `x=237, y=132, 166×59`; design-system bottom-left — на `x=254, y=645, 109×90`.
 - В handoff-copy добавлен жёсткий перенос перед `tokens` через `\n + white-space: pre-line`, scoped только на GoomY variant.
 - Добавлен browser smoke-контракт на три геометрии и перенос. Visual QA — PASS; production build — PASS (`7` routes и isolation guards); `tests/smoke/goomy-case.spec.ts --workers=1` — `3 passed`.
+
+## 2026-07-30 — Финальная обложка GoomY на сайте
+
+- Пользовательский `/Users/vladyslavhorovyy/Desktop/goomy case/cover/v4/final.png` установлен как обложка карточки GoomY через существующий runtime-путь `public/media/cases/goomy/card/cover.webp`; исходный PNG не изменялся.
+- Выполнена WebP-конвертация `quality=95`, `method=6`: sRGB, `1323×1189`, 493 032 байта. Код и геометрия карточки не менялись.
+- Проверки: runtime-файл корректно декодируется; копия в `dist` побайтово совпадает; `npm run build` — PASS (`7` routes); целевой Playwright smoke `case cards follow the three-card Figma layout and orientation contract` — `1 passed`.
+
+## 2026-08-02 — High-resolution UI recomposite для GoomY cover
+
+- AI-edit-кандидат через built-in `imagegen` проверен и отклонён: модель слегка перегенерировала фото и геометрию мокапа; в runtime он не использован.
+- Найден authoritative UI `/Users/vladyslavhorovyy/Desktop/goomy case/cover/Explore for mock.png` (`1206×2622`) и детерминированно репроецирован в approved `/Users/vladyslavhorovyy/Desktop/goomy case/cover/v4/final.png` по homography: `512` RANSAC-inliers, median reprojection error `0,415 px`, p95 `1,341 px`.
+- В дисплей перенесена только high-resolution детализация UI; low-frequency отражения/цветовой отклик стекла сохранены из approved cover. Dynamic Island защищён отдельной маской. Вне области дисплея `pixel diff = 0`; dark core Dynamic Island `pixel diff = 0`.
+- Созданы `/Users/vladyslavhorovyy/Desktop/goomy case/cover/v4/final-ui-hires.png` (`1323×1189`) и 2× master `final-ui-hires-2x.png` (`2646×2378`); исходные `final.png` и UI не перезаписывались.
+- `public/media/cases/goomy/card/cover.webp` обновлён из `final-ui-hires.png` (`quality=95`, `method=6`, 513 658 байт). Проверки: `npm run build` — PASS (`7` routes); целевой Playwright smoke карточек — `1 passed`; asset в `dist` побайтово совпадает с runtime.
+
+## 2026-08-02 — Диагностика softness при Photoshop-вставке UI
+
+- Уточнено, что основной дефект — не mask-edge, а размягчение всей UI-плоскости после перспективного уменьшения и повторного resize/export.
+- Проверены размеры: authoritative UI `1206×2622`, GoomY cover `1323×1189`; при проекции UI локально уменьшается примерно втрое, а экспорт в меньший размер создаёт второй ресемплинг.
+- По официальной документации Adobe Smart Object сохраняет исходник, но конечный raster render всё равно ограничен числом пикселей target-плоскости; отдельного известного бага blur-transform в актуальном списке Photoshop не найдено.
+- Код и изображения не изменялись; обновлено только устойчивое правило в `tasks/lessons.md`.
+- После уточнения пользователя активный Photoshop-документ проверен read-only через scripting API: canvas `1123×1400 @72ppi`, embedded source сохранён полностью как `1206×2622 @216ppi`, но perspective quad имеет лишь `≈328–335px` ширины и `≈734–754px` высоты; layer `Normal/100%`, Smart Filters отсутствуют.
+- Текущая preference приложения фактически `BICUBICAUTOMATIC`. Контрольный временный Lanczos-render по тем же четырём точкам не выявил low-resolution proxy или отдельную экспортную деградацию; основное различие — локальный downsample `≈3,6×` и потеря microcontrast. Пользовательские изображения не изменялись.
 
 ## 2026-08-02 — Полный набор экранов GoomY carousel
 
@@ -2622,3 +2680,165 @@
 - В carousel-разметку добавлен group-контракт; стартовое eager-окно расширено до 8 экранов, остальные остаются lazy. Это устранило пустые mockup в движущемся viewport без одновременного decode всех 31 изображений.
 - Исправлен общий raster optimizer: для `libwebp` добавлен `bgra`, удалён lossy-reset через `preset`; до фикса `webpinfo` показывал `Lossy/VP8`, после — `Lossless/VP8L`.
 - Проверки: visual browser QA — все видимые карточки заполнены; `npm run build` — PASS; `tests/smoke/goomy-case.spec.ts --workers=1` — `3 passed`, включая порядок групп, recipe-позиции, последовательный decode всех 31 файлов, точный размер и минимум `3×`.
+
+## 2026-08-02 — Case-specific стрелка GoomY challenge
+
+- Удалена попытка исправить bottom-right стрелку через общий `scaleY(-1)` и дополнительный флаг в shared challenge-компоненте.
+- Из exact Figma parent-node `193:15230` экспортирован самостоятельный GoomY asset `arrow-active-controls@3x.png` (`201×120`, render `67×40`); фон export переведён в прозрачный alpha-канал, а внутренний transform и layout нода сохранены без CSS-обработки.
+- Новый asset подключён только к desktop note `active-controls` в GoomY challenge; мобильный GoomY и challenge-наборы Fora/Kissa не изменялись.
+- Smoke-контракт дополнен проверкой отсутствия runtime-transform и точного case-specific mask URL.
+- Проверки: Figma screenshot + browser viewport — PASS; `npm run build` — PASS (`7` routes); отдельный `tests/smoke/goomy-case.spec.ts --workers=1` — `3 passed`. Первый параллельный запуск smoke с build дал временный preview `404`; последовательный повтор подтвердил отсутствие продуктового сбоя.
+
+## 2026-08-02 — Посадка подписи GoomY active-controls
+
+- Подпись `active controls messed up with inactive tags` опущена на `8px`: desktop `top 343 → 351`.
+- Утверждённая стрелка `arrow-active-controls@3x.png`, её позиция `540/366` и shared challenge-компонент не менялись.
+- Smoke-контракт дополнен отдельной проверкой bounds подписи `621/351/184×44`.
+- Добавлен dev-only DialKit `GoomY challenge text` с единственным persistent-контролом `activeControls.y` (`351`, range `300–430`, step `1`) и отдельной командой `npm run dev:goomy-dials`; production-изоляция DialKit расширена новым allowlist/marker-контрактом.
+- Проверки: browser DialKit `351 → 365` синхронно изменил только CSS `top` подписи; `npm run build` — PASS и DialKit отсутствует в production bundle; GoomY smoke — `3 passed`.
+
+## 2026-08-02 — Feature cards в кейсе GoomY
+
+- После уточнения пользователя Figma оставлена без структурных и media-изменений: обновлён только черновой copy трёх карточек; блок реализован в коде после process-секции.
+- Подключён общий feature-cards компонент с тремя GoomY flow: onboarding, paywall activation и recipe cooking; для каждого указан versioned WebM и явный immutable poster. В общий data-contract добавлены optional poster и доступный aria-label.
+- Финальный `goomy-recipe-cooking-v1` получен из Motion Lab только после `verified + source.dirty=false`, опубликован через logical target `portfolio` после dry-run; publish подтвердил SHA-256 readback для WebM, poster и manifest.
+- Mobile route-contract расширен на GoomY: секция видима, карточки складываются в вертикальный поток и остаются внутри `350px` case-grid.
+- Проверки: desktop/mobile visual QA feature cards — PASS; `npm run build` — PASS (`7` routes; `3 verified video set(s)`); `tests/smoke/goomy-case.spec.ts --workers=1` — `3 passed`; desktop regression Fora/Kissa — `2 passed`; `git diff --check` — PASS.
+
+## 2026-08-02 — Тематические стрелки GoomY screens loop
+
+- Стрелки секции с экранами переведены с прямого `<img>` на `ThemedSvgIcon`/CSS mask с токеном `--color-accent-green`: в light сохраняется olive `#c0bd6d`, в dark применяется системный blue `#79b0e2`.
+- В `verify-themed-svg-icons` добавлены namespace и class стрелок GoomY, чтобы прямой `<img>` больше не проходил prebuild; smoke-контракт проверяет оба theme-state и отсутствие `src`.
+- Проверки: `verify:svg-icons` — PASS; production build — PASS (`7` routes и isolation guards); `tests/smoke/goomy-case.spec.ts --workers=1` — `3 passed`; browser-QA подтвердил обе mask и цвета light `rgb(192, 189, 109)` / dark `rgb(121, 176, 226)` при прежнем размере `98.7×101.4`.
+
+## 2026-08-02 — Новый финальный cover GoomY
+
+- Канонический `/Users/vladyslavhorovyy/Desktop/goomy case/cover/v4/final-upscaled.png` установлен в `public/media/cases/goomy/card/cover.webp` без ресайза и изменения runtime-пути.
+- Выполнена WebP-конвертация `quality=95`, `method=6`; итог — RGB VP8 `1323×1189`. Визуальный readback проверен.
+- Проверки: production build — PASS (`7` routes); целевой smoke карточек — `1 passed`; runtime и `dist` cover побайтово совпадают; `git diff --check` — PASS.
+
+## 2026-08-02 — DialKit default подписи GoomY challenge
+
+- В конфигурации `useDialKit('GoomY challenge text', …)` authoring default `activeControls.y` изменён с `351` на `373`; range `300–430`, step `1`, panel id и persistence не менялись.
+- Production fallback и утверждённая smoke-геометрия оставлены на `351`: изменение ограничено dev-only DialKit.
+- Проверки: source isolation — PASS; production build — PASS (`7` routes); dist isolation подтвердила отсутствие DialKit bundle; `git diff --check` — PASS.
+
+## 2026-08-02 — Dark badge и стартовая позиция GoomY screens loop
+
+- Локальный badge секции заменён общим `Badge tone='green' type='default'`: light сохраняет fill, dark использует системный transparent outline-контракт.
+- Loop получает declarative initial offset `3` слота и соответствующий prepaint transform: `804px` desktop / `582px` mobile. На wide viewport слева сразу виден частично обрезанный предыдущий экран без стартовой пустоты.
+
+## 2026-08-02 — DialKit высоты правой нижней стрелки GoomY challenge
+
+- В dev-only панели `GoomY challenge tuning` добавлен persistent-контрол `activeControlsArrow.height` с default `40px`, диапазоном `10–120px` и шагом `1` для desktop-стрелки `active-controls`.
+- Desktop-стрелка получила `data-note-id`, а runtime DialKit применяет значение через `--case-arrow-height`; production fallback и mobile-геометрия не изменялись.
+- Panel id повышен до `goomy-challenge-tuning-v2`, чтобы не наследовать старое persistent-хранилище без нового поля.
+- Проверки: `git diff --check` — PASS; `npm run verify:motion-isolation` — PASS; `npm run build` — PASS (`7` routes, DialKit отсутствует в dist); `tests/smoke/goomy-case.spec.ts --workers=1` — `3 passed`.
+- Проверки: production build — PASS (`7` routes); GoomY smoke — `3 passed`, включая geometry, hover и drag; browser-QA на `1440px` подтвердил dark `transparent + 1px outline`, light olive fill и старт трека около `-804px` с экраном, пересекающим левую границу.
+
+## 2026-08-02 — Диагностика микрофризов GoomY screens loop
+
+- Production-замер подтвердил периодический lazy decode: при скорости `48px/s` новый слот приходит примерно раз в `5.6s`; в trace следующий screen WebP стартовал около `5.0s`, loaded count изменился `11 → 12`, одновременно возник кластер длинных кадров.
+- Текущий набор: `31` уникальный lossless WebP (`21.6MB`) по `1206×2622`, до `~374MiB` decoded pixels; DOM удваивает последовательность до `62` mockup, а moving `will-change` track имеет ширину около `16.6k CSS px`.
+- Уточнено правило качества: фактический image aperture на desktop — `219.5×479.5 CSS px`, поэтому корректный текущий `3×` delivery target — минимум `659×1439` после crop либо `662×1439` с сохранением source-ratio. Production-код и assets в рамках диагностики не менялись.
+
+## 2026-08-02 — Коррекция DialKit: Y-позиция стрелки GoomY challenge
+
+- По уточнению пользователя контрол `activeControlsArrow.height` удалён: он менял размер контейнера стрелки.
+- Теперь DialKit управляет `activeControlsArrow.y` через `--case-arrow-top`, default `366px`, range `300–430px`, step `1`; размер `67×40` не меняется.
+- Panel id повышен до `goomy-challenge-tuning-v3`, чтобы сбросить persistent schema предыдущего контрола.
+
+## 2026-08-02 — Новые defaults DialKit GoomY challenge tuning
+
+- В `useDialKit('GoomY challenge tuning', …)` установлены authoring defaults `activeControls.y = 338` и `activeControlsArrow.y = 327`.
+- Диапазоны, шаги, runtime-применение и production fallback не изменялись.
+
+## 2026-08-02 — Playback feature-card видео после case switcher
+
+- Исправлен soft-navigation edge case Astro: новый `<video>` мог иметь объявленный `src`, но оставаться с пустым `currentSrc`, `NETWORK_NO_SOURCE` и poster-overlay после DOM swap.
+- In-view runtime теперь вызывает `load()` для видимого видео с объявленным, но ещё не выбранным source; offscreen-видео не переводятся на eager preload.
+- Добавлен regression smoke Kissa → GoomY: тест подтверждает сохранение `window` при soft-nav, выбранный GoomY WebM, frame data, активный playback и растущий `currentTime`.
+- Проверки: case-switcher smoke — `8 passed`; GoomY smoke — `3 passed`; production build — PASS (`7` routes, `3 verified video set(s)`); `git diff --check` — PASS.
+
+## 2026-08-02 — Отключение GoomY DialKit
+
+- Убрано подключение GoomY DialKit из `BaseLayout.astro`: панель больше не монтируется даже при старом env-флаге.
+- Удалена команда `dev:goomy-dials` из `package.json`; authoring-компоненты сохранены в `src/components/dev/` без runtime-подключения.
+
+## 2026-08-02 — Финализация направления copy для GoomY feature cards
+
+- Сверены Figma-драфты с тремя опубликованными motion flows: onboarding, paywall → activation и recipe → cooking.
+- Зафиксирован copy-принцип: конкретное решение + показанная механика + пользовательский результат; без воды, ложных badge-категорий и закрытых метрик.
+- Код сайта и Figma не менялись; подготовлен только финальный текстовый вариант на согласование.
+
+## 2026-08-02 — Синхронизация финального copy GoomY feature cards
+
+- В Figma `193:15313` и `src/data/case-details/goomy.ts` синхронно обновлены badge `Product Value`, три title и три description; структура карточек и motion assets не менялись.
+- Figma readback подтвердил семь точных строк; screenshot показал корректный перенос всех title/body без обрезки.
+- Проверки: production build — PASS (`7` routes, `3 verified video set(s)`); GoomY smoke — `3 passed`; dist содержит все семь строк; `git diff --check` — PASS.
+
+## 2026-08-02 — GoomY feature-card copy без terminal periods
+
+- По корректировке пользователя удалены точки в конце трёх descriptions в Figma `193:15313` и `src/data/case-details/goomy.ts`.
+- Figma readback подтвердил `endsWithPeriod=false` для всех трёх строк при неизменной геометрии `312×96`.
+- Проверки: production build — PASS (`7` routes, `3 verified video set(s)`); `git diff --check` — PASS.
+
+## 2026-08-02 — Этап 1 оптимизации GoomY screens loop
+
+- Все `31` уникальных screen asset переведены из lossless WebP `1206×2622` в lossless WebP `662×1439`: это соответствует реальному desktop aperture `219.5×479.5 CSS px` при `3×`, а не размеру исходного Figma frame. Общий transfer-size уменьшен с `21.6MiB` до `10.07MiB`, decoded footprint — примерно с `374MiB` до `112.7MiB`.
+- В loop добавлен proximity-prewarm за `1200px`, арифметическое initial window с буфером `3` логических слота с каждой стороны, очередь decode с concurrency `2`, gate автодвижения до готовности окна и rolling buffer, который пересчитывается только при смене слота или drag.
+- Smoke-контракт проверяет фактический CSS render-size изображения, достаточный `3×`, готовность initial decode window, валидные visible images, hover slowdown, drag и mobile layout.
+- Проверки: `npm run build` — PASS (`7` routes); `tests/smoke/goomy-case.spec.ts --workers=1` — `3 passed`; все `31` assets — `662×1439`, lossless; `git diff --check` — PASS; browser-QA подтвердил `12/12` initial required screens prepared и отсутствие визуальных дыр.
+- Production-профиль: новые screen resources декодировались за `13–15ms` против прежнего lazy spike около `306ms`; многосекундный пик исчез. Остаточные редкие compositor/frame spikes возможны из-за трека из `62` DOM-mockup шириной около `16.6k CSS px`; его виртуализация относится к отдельному этапу 2.
+
+## 2026-08-02 — Обновлённый recipe-cooking flow в feature cards
+
+- После завершения внешнего render-agent дождались финального Motion Lab portfolio artifact со статусом `verified`, чистым source commit `ad6e29f…` и новым WebM SHA `a4274323…`.
+- Штатный publish dry-run показал замену только WebM и manifest существующего `goomy-recipe-cooking-v1`; poster остался побайтово неизменным. По явному запросу пользователя подтверждённая замена выполнена через logical target `portfolio` с hash-readback.
+- Runtime-путь третьей feature card не менялся; сайт автоматически использует обновлённый `goomy-recipe-cooking-v1.webm` (`1206×2622`, VP9, 60 fps, 22.717s, 1363 кадров).
+- Проверки: SHA/manifest/ffprobe — PASS; прямой browser playback третьей карточки — `readyState=4`, `paused=false`, `currentTime=1.20s`; production build — PASS (`7` routes, `3 verified video set(s)`); GoomY smoke — `3 passed`; soft-navigation playback regression — `1 passed`; `git diff --check` — PASS.
+
+## 2026-08-02 — Этап 2 оптимизации GoomY screens loop
+
+- Удвоенный render-track из `62` полноценных device mockup заменён кольцевым virtual pool: SSR создаёт `20` элементов, runtime расширяет пул только для viewport, которому этого недостаточно. Полный порядок `31` screen хранится в JSON manifest и назначается ячейкам циклически.
+- При смене логического слота крайний offscreen-item переносится на противоположный край; transform считается от непрерывной logical position и pool start, поэтому auto-motion, hover slowdown, inertia и drag сохраняют координату без визуального скачка.
+- Decode-контракт этапа 1 сохранён: initial/rolling window работает по logical index, а отдельный preload image гарантирует подготовку screen source до входа переиспользованной ячейки в видимую область.
+- Движущийся слой на `1440px` уменьшен примерно с `16.6k` до `5.336k CSS px`; browser-QA подтвердил `20` DOM-mockup, `31` logical screen, готовые visible images и отсутствие дыр. За `7s` прошли `2` recycle, максимальный межкадровый phase delta — `0.854px`.
+- Production-профиль `15s`: `894` frames, average `16.76ms`, p95 `17.6ms`, p99 `17.7ms`, max `49.6ms`, `3` recycle; после этапа 1 тот же lab давал average `21.28ms`, p95 `50.1ms`, p99 `100ms`, max `133.8ms`.
+- Проверки: `npm run build` — PASS (`7` routes); `tests/smoke/goomy-case.spec.ts --workers=1` — `3 passed`, включая pool-size/track-width/recycle, desktop geometry, hover, drag и mobile; visual browser-QA — PASS; `git diff --check` — PASS.
+
+## 2026-08-02 — Повторное обновление recipe-cooking flow
+
+- Дождались нового внешнего portfolio render: manifest `verified`, source commit `96f7f7fe…`, `source.dirty=false`, WebM SHA изменился `a4274323… → e0399935…`; poster остался неизменным.
+- После reviewed dry-run заменены только `goomy-recipe-cooking-v1.webm` и manifest через logical target `portfolio` с explicit overwrite token и destination hash-readback.
+- Media readback: VP9/yuv420p, `1206×2622`, `60fps`, `22.717s`; browser playback третьей карточки — `readyState=4`, `paused=false`, `currentTime=1.19s`.
+- Проверки: production build — PASS (`7` routes, `3 verified video set(s)`); GoomY smoke — `3 passed`; soft-navigation playback regression — `1 passed`; `git diff --check` — PASS.
+
+## 2026-08-02 — Сглаживание периодических hitch GoomY screen loop
+
+- Диагностика разделила остаточные spikes: recycle делал `append/prepend + src` примерно раз в `5.6s`, а `syncVirtualPool` читал coverage на каждом RAF. Контроль `visible/hidden/runtime removed` показал, что не все spikes принадлежат карусели, но работа runtime повышала частоту кадров `>40ms`.
+- Базовый virtual pool уменьшен `20 → 14`, visual buffer `3 → 2`; на `1440px` moving track стал `3728px` вместо `5336px`. Runtime по-прежнему может только расширить pool для реально более широкого viewport.
+- Decode window отделён от render-pool: logical buffer увеличен до `4`, ближайшие recycle-target в обе стороны входят в initial readiness gate, остальные guard-источники декодируются фоном. `recycle-miss` учитывается только после `decodeReady` и остаётся `0` в auto/drag smoke.
+- Virtual coverage/sizing теперь выполняется только при boundary или resize; обычный RAF делает arithmetic boundary-check и один `translate3d`, без `clientWidth` read и pool/dataset работы на каждом кадре.
+- Production trace `24s`: pool `14`, track `3728px`, `5` recycle; average `16.73ms`, p95 `18.5ms`, p99 `18.7ms`, max `48ms`, `1` frame `>40ms`. Screen resource work больше не стартует одновременно с recycle, а подготавливает следующий target заранее.
+- Проверки: production build — PASS (`7` routes); GoomY smoke — `3 passed`, включая `pool=14`, `visual=2`, `decode=4`, `recycle-miss=0`, geometry, hover, drag и mobile; visual browser-QA — PASS; `git diff --check` — PASS.
+
+## 2026-08-02 — Compositor-driven GoomY screen loop
+
+- Постоянный main-thread RAF заменён длинной линейной WAAPI-анимацией `transform`; steady motion теперь принадлежит compositor, а main thread обслуживает logical boundary раз в `400ms`.
+- Пул зафиксирован на `14` absolute-positioned mockup: recycle больше не делает `append/prepend`, DOM-порядок стабилен, свободный offscreen-item получает новую sequence-position.
+- Decode pipeline хранит один канонический `<img>` на logical screen и вставляет именно этот уже декодированный узел; замена `src` рабочего item при recycle удалена.
+- Hover переключает скорость через `updatePlaybackRate(1/3 ↔ 1)`, drag временно фиксирует transform, inertia выполняется отдельной `900ms` WAAPI-фазой и возвращается к autoplay; reduced-motion/visibility/in-view lifecycle сохранены, для старых браузеров оставлен RAF fallback.
+- Проверки: `npx astro build` — PASS (`7` routes); `tests/smoke/goomy-case.spec.ts --workers=1` — `3 passed`; production browser-QA — `engine=waapi-compositor`, pool `14`, `recycle-miss=0`, за recycle `0` direct child mutations и стабильный DOM-order, hover rate `0.333 → 1`, drag `inertia → autoplay`; visual screenshot — без дыр/геометрических сдвигов; `git diff --check` — PASS.
+
+## 2026-08-02 — Обновление Settings-экрана в GoomY carousel
+
+- Figma node `236:20346` (`App / Settings / Default`) сопоставлен с существующим logical screen `core-settings-default`; порядок и runtime карусели не менялись.
+- Узел экспортирован из Figma в `3×` (`1206×2622`), затем нормализован под фактический render-контракт в lossless WebP `662×1439` и точечно заменён в `public/media/cases/goomy/screens-loop/core/core-settings-default.webp`.
+- Проверки: design context + Figma screenshot — PASS; data-path/readback — PASS; WebP `VP8L`, `662×1439`, без ошибок — PASS; `npm run build` — PASS (`7` routes, `3 verified video set(s)`).
+
+## 2026-08-02 — Release preflight GoomY case
+
+- Scope релиза проверен перед staging: все tracked-изменения относятся к GoomY case/cover/screens loop, shared runtime, theme/media guards, smoke-контрактам и журналам; локальные `.playwright-cli/`, `output/` и `scripts/verify-motion-isolation 2.mjs` исключены.
+- Устаревший mobile smoke ожидал `7` root-секций для всех кейсов; после появления GoomY feature cards контракт уточнён до `GoomY=8`, `Fora/Kissa=7`. Production layout не менялся.
+- Проверки: `verify:posters` — `16` пар; production build — PASS (`7` routes, DialKit отсутствует в dist); CI-mode smoke — `92 passed, 4 skipped`; WebKit mobile stress — `2 passed`; `git diff --check` — PASS.

@@ -279,10 +279,14 @@
           setVideoPreload(video, 'auto');
         }
 
+        const hasDeclaredUnselectedSource =
+          video.currentSrc.length === 0 &&
+          Boolean(video.getAttribute('src')) &&
+          video.networkState !== HTMLMediaElement.NETWORK_LOADING;
         const shouldForceLoadForWarmup = isIOSWebKit
           ? video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA &&
             video.networkState !== HTMLMediaElement.NETWORK_LOADING
-          : video.networkState === HTMLMediaElement.NETWORK_EMPTY;
+          : video.networkState === HTMLMediaElement.NETWORK_EMPTY || hasDeclaredUnselectedSource;
         if (shouldForceLoadForWarmup) {
           try {
             video.load();

@@ -68,7 +68,11 @@ const { config, currentCase, prevCase, nextCase } = Astro.props as Props;
       )}
 
       {section.type === 'featureCards' && (
-        <ForaFeatureCardsSection cards={section.cards} class={section.className} />
+        <ForaFeatureCardsSection
+          cards={section.cards}
+          ariaLabel={section.ariaLabel}
+          class={section.className}
+        />
       )}
 
       {section.type === 'screensLoop' && (

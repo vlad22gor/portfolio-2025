@@ -15,6 +15,7 @@ const restrictedPathPrefixes = [
   '/media/cases/fora/design-system/',
   '/media/cases/kissa/artifact-photos/',
   '/media/cases/fora/team-photo/',
+  '/media/cases/goomy/screens-loop/',
 ];
 
 const restrictedLegacyClassFragments = [
@@ -26,6 +27,7 @@ const restrictedLegacyClassFragments = [
   'fora-design-system-arrow',
   'kissa-artifact-photos-arrow',
   'fora-team-photo-heart',
+  'case-screens-loop-section__arrow-art',
 ];
 
 const collectFiles = async (dir, extension, acc = []) => {
