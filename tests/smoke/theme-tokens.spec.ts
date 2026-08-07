@@ -1509,6 +1509,24 @@ test.describe('Theme tokens smoke', () => {
       )
       .toBeGreaterThan(0.05);
 
+    const rightOutlineContract = await page.evaluate((selector) => {
+      const cover = document.querySelector(selector);
+      const outlinePath = cover?.querySelector('.scallop-outline-frame path[stroke]');
+      if (!(outlinePath instanceof SVGPathElement)) {
+        return null;
+      }
+      return {
+        strokeWidth: outlinePath.getAttribute('stroke-width'),
+        vectorEffect: outlinePath.getAttribute('vector-effect'),
+        usesOutsideMask: outlinePath.getAttribute('mask')?.startsWith('url(#perimeter-outline-mask-') ?? false,
+      };
+    }, rightArrowCoverPerimeterSelector);
+    expect(rightOutlineContract).toEqual({
+      strokeWidth: '10',
+      vectorEffect: null,
+      usesOutsideMask: true,
+    });
+
     await page.hover(leftArrowCoverSelector);
     await expect
       .poll(

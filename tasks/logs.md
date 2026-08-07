@@ -2900,3 +2900,10 @@
 - Runtime `public/media/cases/goomy/card/cover.webp` заменён утверждённым `final-natural-light-closeup-crop.webp`; SHA-256 источника и runtime совпадает: `5f589d4a300ef5cf03ea9fa139045b0e11e2b4e7debd981c095b5ae3ba59ea05`.
 - Проверки: WebP `1323×1189`; локальный static preview загрузил правильный `currentSrc`, natural size `1323×1189`, render `480×432`; карточка визуально проверена в light/dark-compatible layout.
 - Полный `npm run build` локально остановился на source verifier из-за старых untracked-дубликатов с суффиксом ` 2`, не входящих в deploy-scope; прямой `astro build` повторил известное зависание окружения без вывода и был остановлен. Чистый GitHub CI остаётся обязательным deployment gate.
+
+## 2026-08-06 — Arc/Retina: восстановлена толщина hover-обводки CaseCard
+
+- Причина: Arc 1.158.1 / Chromium 151 на macOS Retina растрировал geometric SVG outline с `vector-effect='non-scaling-stroke'` примерно в device px, поэтому заданные `5 CSS px` выглядели вдвое тоньше; Chrome 150 показывал корректно.
+- В `QuantizedPerimeter` у geometric outline удалён `non-scaling-stroke`; doubled stroke `10` и inverse outside-mask сохранены, поэтому контракт видимых `5px` не изменён.
+- В `theme-tokens` smoke добавлен regression-контракт: `stroke-width='10'`, outside-mask присутствует, `vector-effect` отсутствует.
+- Проверки: `git diff --check` — PASS; source-contract (`non-scaling-stroke` отсутствует в `QuantizedPerimeter`) — PASS; browser readback локального preview — `hoverActive=true`, `stroke-width=10`, outside-mask присутствует, `vector-effect=null`. Целевой Playwright smoke и прямой `astro build` локально не завершились: процессы зависают на импорте зависимостей до старта теста/сборки и без диагностического вывода; оба были остановлены.
