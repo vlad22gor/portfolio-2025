@@ -187,6 +187,70 @@ test.describe('GoomY case', () => {
     });
     expect(layout!.items[2].x).toBeLessThanOrEqual(0);
     expect(layout!.items[2].x + layout!.items[2].width).toBeGreaterThan(0);
+
+    const screensLoopViewport = page.locator('[data-case-screens-loop]');
+    await screensLoopViewport.scrollIntoViewIfNeeded();
+    await expect(screensLoopViewport).toHaveAttribute(
+      'data-case-screens-loop-decode-ready',
+      'true',
+      { timeout: 15_000 },
+    );
+
+    const screensLoopBounds = await screensLoopViewport.boundingBox();
+    expect(screensLoopBounds).not.toBeNull();
+    await page.mouse.move(
+      screensLoopBounds!.x + screensLoopBounds!.width / 2 + 450,
+      screensLoopBounds!.y + 250,
+    );
+    await page.mouse.down();
+    await page.mouse.move(
+      screensLoopBounds!.x + screensLoopBounds!.width / 2 - 450,
+      screensLoopBounds!.y + 250,
+      { steps: 12 },
+    );
+    await page.mouse.up();
+
+    const commitmentItem = screensLoopViewport.locator(
+      '[data-case-screens-loop-index="14"]',
+    );
+    await expect(commitmentItem).toHaveCount(1);
+    await expect(commitmentItem.locator('img.device-mockup__media')).toHaveAttribute(
+      'src',
+      '/media/cases/goomy/screens-loop/onboarding/onboarding-commitment-holding.webp',
+      { timeout: 15_000 },
+    );
+    const recycledImageCoverage = await commitmentItem.evaluate((item) => {
+      const screen = item.querySelector<HTMLElement>('.device-mockup__screen');
+      const media = screen?.querySelector<HTMLImageElement>('img.device-mockup__media');
+      if (!screen || !media) return null;
+
+      const screenRect = screen.getBoundingClientRect();
+      const mediaRect = media.getBoundingClientRect();
+      const mediaStyle = getComputedStyle(media);
+      return {
+        display: mediaStyle.display,
+        objectFit: mediaStyle.objectFit,
+        ready: media.complete && media.naturalWidth > 0 && media.naturalHeight > 0,
+        gaps: [
+          Math.max(0, mediaRect.top - screenRect.top),
+          Math.max(0, screenRect.right - mediaRect.right),
+          Math.max(0, screenRect.bottom - mediaRect.bottom),
+          Math.max(0, mediaRect.left - screenRect.left),
+        ],
+      };
+    });
+
+    expect(recycledImageCoverage).not.toBeNull();
+    expect(recycledImageCoverage!.display).toBe('block');
+    expect(recycledImageCoverage!.objectFit).toBe('cover');
+    expect(recycledImageCoverage!.ready).toBe(true);
+    recycledImageCoverage!.gaps.forEach((gap) => {
+      expect(gap).toBeLessThanOrEqual(0.2);
+    });
+    await expect(screensLoopViewport).toHaveAttribute(
+      'data-case-screens-loop-recycle-miss-count',
+      '0',
+    );
   });
 
   test('renders the finished sections and a draggable, hover-slowed screen loop', async ({ page }) => {
